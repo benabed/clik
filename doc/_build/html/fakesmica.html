@@ -1,0 +1,161 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Creating synthetic likelihoods &mdash; clik v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="clik v1.0 documentation" href="index.html" />
+    <link rel="prev" title="Interfacing the library with python" href="interfacingpy.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="interfacingpy.html" title="Interfacing the library with python"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="creating-synthetic-likelihoods">
+<h1>Creating synthetic likelihoods<a class="headerlink" href="#creating-synthetic-likelihoods" title="Permalink to this headline">¶</a></h1>
+<p>The tool <strong class="program">synthetic_smica</strong> allows to create synthetic likelihood files based on input power spectra and a description of the instrument. The likelihood approximation used is teh so-called SMICA likelihood (an offset inverse wishart shape). The program expects a single command line argument, the path to a parameter file. The directory <tt class="docutils literal"><span class="pre">examples</span></tt> in the clik package contains a few example parameter files.</p>
+<p>Here is an example with some explanation of the meaning of the different options.</p>
+<div class="highlight-python"><pre># this is a likelihood for the HFI channels 143 and 217
+# TT TE EE
+
+#cl file
+# it can be either the output from CAMB (tot_cls) or the cls corresponding to the has_cl from l=0
+cl = bestfit_lensedCls.dat
+
+#lmax for all the cls. The file can contain more mode, they will be discarded
+lmax = 1500
+
+# optional lmin. Do not use mode below lmin
+# lmin = 32
+
+# list of flags for the presence of each power spectra
+# order is TT EE BB TE TB EB
+has_cl =    1  1  0  1  0  0
+
+
+# optional list of mix values this is the gain of each detector. Better leave it to 1
+mixcol = 1 1 1 1
+# or file containing the same info
+# Acmb =
+
+# optional file containing the binning matrix
+# bins =
+# or size for each bin
+binsz = 10
+
+
+# number of Temperature channels
+nT = 2
+# number of Polar channels
+nP = 2
+
+# optional offset matrix file
+# Rq_0 =
+
+# optional noise matrix file
+# nQ =
+# or list of noise level for each channel (T then P)
+# noise is in microK^2
+noise = 0.0005 0.0001 0.001 0.0002
+
+# list of full width half max for each channel (T then P)
+fwhm = 9.6 7 9.6 7
+
+# optional fsky
+fsky = .8
+# or weight for each bin (in a file)
+# wq =
+
+# name of the resulting lkl file
+res_object = fake_smica_TE_32_1500_b10_100x143.h5
+
+
+# if meanfield is set to 1, no synthetic data is produced
+# meanfield = 1
+
+# optional seed for fake data
+# seed = 123456</pre>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="interfacingpy.html"
+                        title="previous chapter">Interfacing the library with python</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/fakesmica.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="interfacingpy.html" title="Interfacing the library with python"
+             >previous</a> |</li>
+        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, K. Benabed, S. Prunet, E. Hivon, J.F. Cardoso.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+    </div>
+  </body>
+</html>

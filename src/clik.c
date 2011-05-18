@@ -1,0 +1,139 @@
+/*
+ *  clik.c
+ *  lowly_project
+ *
+ *  Created by Karim Benabed on 16/03/11.
+ *  Copyright 2011 Institut d'Astrophysique de Paris. All rights reserved.
+ *
+ */
+
+
+#include "clik.h"
+#include "clik_helper.h"
+
+
+// NO USER SERVICEABLE PART HERE.
+// THINGS CAN CHANGE WITHOUT NOTICE. 
+
+
+
+// ARE YOU STILL READING ?
+
+// YOU HAVE BEEN WARNED !
+
+clik_object* clik_init(char* hdffilepath, error **_err) {
+  hid_t file_id,group_id;
+  herr_t hstat;
+  int n_lkl,i_lkl;
+  int lmax[6];
+  char cur_lkl[100];
+  cmblkl **clkl;
+  int cli,n_cl,n_extra;
+  zero_bs* zbs;
+  distribution *target;
+  parname lkl_type;
+  
+  _dealwitherr;
+  
+  file_id = H5Fopen( hdffilepath, H5F_ACC_RDONLY, H5P_DEFAULT);
+  _testErrorRetVA(file_id<0,hdf5_base,"cannot open  file %s (got %d)",*err,__LINE__,NULL,hdffilepath,file_id);
+  
+  hstat = H5LTget_attribute_int( file_id, "/clik", "n_lkl_object",  &n_lkl);
+  _testErrorRetVA(hstat<0,hdf5_base,"cannot read /clik/n_lkl_object in file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);
+  
+  hstat = H5LTget_attribute_int( file_id, "/clik", "lmax",  lmax);
+  _testErrorRetVA(hstat<0,hdf5_base,"cannot read /clik/lmax in file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);
+  
+  // no extra names for now.
+  n_extra = 0;
+  
+  clkl = malloc_err(sizeof(cmblkl*)*n_lkl,err);
+  _forwardError(*err,__LINE__,NULL);
+  
+  for (i_lkl=0;i_lkl<n_lkl;i_lkl++) {
+    sprintf(cur_lkl,"clik/lkl_%d",i_lkl);
+    group_id = H5Gopen(file_id, cur_lkl, H5P_DEFAULT );
+    _testErrorRetVA(group_id<0,hdf5_base,"cannot read lkl %s in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);
+
+    clkl[i_lkl] = clik_lklobject_init(group_id,cur_lkl,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    cmblkl_check_lmax(clkl[i_lkl],lmax,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    hstat = H5Gclose(group_id);
+    _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);    
+  }
+  
+  n_cl = 0;
+  for(cli=0;cli<6;cli++) {
+    n_cl += lmax[cli]+1;
+  }
+  
+  zbs = init_zero_bs(lmax, err);
+  _forwardError(*err,__LINE__,NULL);
+  
+  target = init_multilklbs_distribution(n_cl + n_extra, clkl,n_lkl,
+                                        zbs, &zero_bs_compute, &free_zero_bs, lmax, err);
+  _forwardError(*err,__LINE__,NULL);
+  
+  return target;
+}
+
+void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **err) {
+  distribution *target;
+  lklbs *lbs;
+  int cli;
+  
+  target = clikid;
+  lbs = target->data;
+  for(cli=0;cli<6;cli++) {
+    //fprintf(stderr," %d %d ",cli,lbs->offset_lmax[cli]);
+    if (lbs->offset_lmax[cli]!=-1) {
+      has_cl[cli]=1;
+    } else {
+      has_cl[cli]=0;
+    }
+  }
+}
+
+void clik_get_lmax(clik_object *clikid, int lmax[6],error **err) {
+  distribution *target;
+  lklbs *lbs;
+  zero_bs* zbs;
+  int cli;
+  
+  target = clikid;
+  lbs = target->data;
+  zbs = lbs->bs;
+  
+  for(cli=0;cli<6;cli++) {
+    lmax[cli] = zbs->lmax[cli];
+  }
+}
+
+int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error **_err) {
+  parname *pn;
+  _dealwitherr;
+  
+  //for now, no extr parameters
+  pn = malloc_err(1*sizeof(parname),err);
+  _forwardError(*err,__LINE__,-1);
+  
+  *names = pn;
+  return 0;
+}
+
+void clik_cleanup(clik_object** pclikid) {
+  free_distribution(pclikid);
+}
+
+double clik_compute(clik_object* clikid, double* cl_and_pars,error **_err) {
+  double res;
+  _dealwitherr;
+  
+  res = distribution_lkl(clikid, cl_and_pars,err);
+  _forwardError(*err,__LINE__,-1);
+  return res;
+}
+

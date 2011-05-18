@@ -1,0 +1,142 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installing &mdash; clik v1.0 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="clik v1.0 documentation" href="index.html" />
+    <link rel="next" title="Interfacing the library with a c executable" href="interfacingc.html" />
+    <link rel="prev" title="Design choices" href="designchoices.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="interfacingc.html" title="Interfacing the library with a c executable"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="designchoices.html" title="Design choices"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installing">
+<h1>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h1>
+<p>The library has a lot of external dependencies. This should not evolve in the future, hopefully.</p>
+<p>First, it relies heavily on functions that are provided in pmclib. So the first step is to compile pmclib. pmclib will require gsl (1.10+), fftw3, hdf5 (1.8+)  and the intel mkl. Apart from the mkl, all those can be installed for you by the pmclib installer.</p>
+<p>Luckily most of the dependencies of clik are shared with pmclib, so after this step, there is only one extra (mandatory) dependency the c version of the Healpix library, compiled as a shared library.</p>
+<p>Optionnaly, you will also need a fortran compiler for the f90 wrapper, and python, cython, numpy and h5py for the python wrapper and the synthetic smica likelihood generator.</p>
+<p>I the following, 64 bits compilation is assumed. To switch to 32 bits, replace the &#8211;m64 command line option by &#8211;m32.</p>
+<div class="section" id="installing-pmclib">
+<h2>Installing pmclib<a class="headerlink" href="#installing-pmclib" title="Permalink to this headline">¶</a></h2>
+<p>Please only use the pmclib provided along with the clik lib. The installation in this package is simplified (sic...) compared to the one currently publicly available (1.1). That will change in the future.</p>
+<p>Assuming you have unzipped and untard the pmclib package, and that the install of your mkl library is located at MYMKLPATH, the following line should configure your pmclib before building and install for you the gsl, fftw3 and hdf5 lib into at the path given in the prefix option (in this case, your current working directory). The library will also install itself in the directory pointed by prefix.</p>
+<p>$ ./waf configure &#8211;m64 &#8211;prefix=`pwd` &#8211;lapack_mkl=MYMKLPATH &#8211;hdf5_install &#8211;gsl_install &#8211;fftw3_install</p>
+<p>If you already have inatalled some of the dependency (say for example, gsl), replace the option &#8211;gsl_install by gsl_prefix=MYGSLPATH, so that MYGSLPATH/lib points to the libs, and MYGSLPATH/include points to the include files of your gsl install.</p>
+<p>More options are available by running</p>
+<p>$ ./waf &#8211;help</p>
+<p>Once the configure step is passed successfully, you can build and install the pmclib using the command</p>
+<p>$ ./waf install</p>
+</div>
+<div class="section" id="installing-clik">
+<h2>Installing clik<a class="headerlink" href="#installing-clik" title="Permalink to this headline">¶</a></h2>
+<p>After the installation of pmclib, cliklib can also be installed. Assuming that you have unzipped and untard the clik package,</p>
+<p>$ ./waf configure &#8211;m64 &#8211;prefix=`pwd` &#8211;pmc_prefix=MYPMCLIBPATH &#8211;chealpix_prefix=MYHEALPIXPATH</p>
+<p>If h5py cannot be found it can be installed adding the &#8211;h5py_install command line option to the previous configure command.</p>
+<p>The library and its dependency will be installed at the path pointed by prefix (in this case the current directory).</p>
+<p>Once the configure step is passed successfully, you can build and install the clik using the command</p>
+<p>$ ./waf install</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installing</a><ul>
+<li><a class="reference internal" href="#installing-pmclib">Installing pmclib</a></li>
+<li><a class="reference internal" href="#installing-clik">Installing clik</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="designchoices.html"
+                        title="previous chapter">Design choices</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="interfacingc.html"
+                        title="next chapter">Interfacing the library with a c executable</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/installing.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="interfacingc.html" title="Interfacing the library with a c executable"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="designchoices.html" title="Design choices"
+             >previous</a> |</li>
+        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, K. Benabed, S. Prunet, E. Hivon, J.F. Cardoso.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+    </div>
+  </body>
+</html>
