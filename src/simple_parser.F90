@@ -35,16 +35,16 @@ CONTAINS
 
     INTEGER :: iarg
 
-    INTERFACE
-       FUNCTION iargc()
-         INTEGER iargc
-       END FUNCTION iargc
+!    INTERFACE
+!       FUNCTION iargc()
+!         INTEGER iargc
+!       END FUNCTION iargc
 
-       SUBROUTINE getarg (num, res)
-         INTEGER, INTENT(in) :: num
-         CHARACTER(len=*), INTENT(out) :: res
-       END SUBROUTINE getarg
-    END INTERFACE
+!       SUBROUTINE getarg (num, res)
+!         INTEGER, INTENT(in) :: num
+!         CHARACTER(len=*), INTENT(out) :: res
+!       END SUBROUTINE getarg
+!    END INTERFACE
 
 
     lfound = .FALSE.

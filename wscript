@@ -38,10 +38,6 @@ def configure(ctx):
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
   ctx.load("try_ifort","waf_tools")
-  ctx.env.FCSHLIB_MARKER = [""]
-  ctx.env.FCSTLIB_MARKER = [""]
-  ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
-  #ctx.env.append_value("LINKFLAGS_fc_omp","-openmp")
   
   ctx.load("local_install","waf_tools")
   
