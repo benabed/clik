@@ -41,6 +41,7 @@ cdef extern from "clik.h":
   void clik_get_lmax(clik_object *self, int lmax[6],error **err)
   double clik_compute(clik_object* self, double* cl_and_pars,error **err)
   void clik_cleanup(clik_object** pself)
+  int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err)
   
 cdef class clik:
   cdef clik_object* celf
@@ -114,6 +115,14 @@ cdef class clik:
     cdef parname *names
     
     n_names = clik_get_extra_parameter_names(self.celf, &names, self.err)    
+    res = ["%s"%names[i] for i in range(n_names)]
+    stdlib.free(names)
+    return tuple(res)
+
+  def get_extra_parameter_names_by_lkl(self,int ilkl):
+    cdef parname *names
+
+    n_names = clik_get_extra_parameter_names_by_lkl(self.celf,ilkl, &names, self.err)    
     res = ["%s"%names[i] for i in range(n_names)]
     stdlib.free(names)
     return tuple(res)

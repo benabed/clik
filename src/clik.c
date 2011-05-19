@@ -114,14 +114,53 @@ void clik_get_lmax(clik_object *clikid, int lmax[6],error **err) {
 
 int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error **_err) {
   parname *pn;
+  distribution *target;
+  lklbs *lbs;
+  int i;
   _dealwitherr;
+
+  target = clikid;
+  lbs = target->data;
   
-  //for now, no extr parameters
-  pn = malloc_err(1*sizeof(parname),err);
-  _forwardError(*err,__LINE__,-1);
-  
+  if (lbs->xdim==0) {
+    //for now, no extr parameters
+    pn = malloc_err(1*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+  } else {
+    pn = malloc_err(lbs->xdim*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+  }
+  for(i=0;i<lbs->xdim;i++) {
+    sprintf(pn[i],"%s",lbs->xnames[i]);
+  }
   *names = pn;
-  return 0;
+  return lbs->xdim;
+}
+
+int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err) {
+  parname *pn;
+  distribution *target;
+  lklbs *lbs;
+  int i;
+  _dealwitherr;
+
+  target = clikid;
+  lbs = target->data;
+  _testErrorRetVA(ilkl>lbs->nlkl,-11010,"Asked for lkl %d, while there are only %d objects",*err,__LINE__,-1,ilkl,lbs->nlkl);
+  
+  if (lbs->lkls[ilkl]->xdim==0) {
+    //for now, no extr parameters
+    pn = malloc_err(1*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+  } else {
+    pn = malloc_err(lbs->lkls[ilkl]->xdim*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+  }
+  for(i=0;i<lbs->lkls[ilkl]->xdim;i++) {
+    sprintf(pn[i],"%s",lbs->lkls[ilkl]->xnames[i]);
+  }
+  *names = pn;
+  return lbs->lkls[ilkl]->xdim;
 }
 
 void clik_cleanup(clik_object** pclikid) {
