@@ -49,17 +49,23 @@ def configure(ctx):
   ctx.env.append_value("RPATH",ctx.env.PREFIX+"/lib")
 
   #configure pmc
+  ctx.env.has_pmc = False
   ctx.load("pmclib","waf_tools")
-  
-  if "hdf5" not in ctx.env.LIB_pmc:
+
+  if (not ctx.env.has_pmc) or ("hdf5" not in ctx.env.LIB_pmc):
     #configure hdf5
     ctx.env.has_hdf5 = True
     ctx.load("autoinstall_hdf5","waf_tools")
   
-  if "HAS_LAPACK" not in ctx.env.DEFINES_pmc:
+  if (not ctx.env.has_pmc) or ("HAS_LAPACK" not in ctx.env.DEFINES_pmc):
     #configure lapack
     ctx.env.has_lapack = True
     ctx.load("any_lapack","waf_tools")
+
+  if (not ctx.env.has_pmc) or ("gsl" not in ctx.env.LIB_pmc):
+    # configure gsl
+    ctx.env.has_gsl = True
+    ctx.load("autoinstall_gsl","waf_tools")
 
   #configure chealpix
   ctx.env.has_chealpix = True

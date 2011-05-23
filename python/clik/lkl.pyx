@@ -156,21 +156,22 @@ def powly_javel(masks, maps,noise,ell,cl,has_cl,U,G=None):
   cdef double *map_T,*map_Q, *map_U
   cdef double *N, *Ndiag,*_U,*_G
   cdef nm.ndarray[nm.uint8_t] mask_T_py,mask_P_py
-  cdef nm.ndarray[nm.double_t] map_T_py,map_Q_py,map_U_py,noisevar,Cl_proxy,U_proxy,G_proxy,a_bar,H,cl_fid
+  cdef nm.ndarray[nm.double_t] map_T_py,map_Q_py,map_U_py,noisevar,Cl_proxy,a_bar,cl_fid
+  cdef nm.ndarray[nm.double_t,ndim=2] U_proxy,G_proxy,H
   cdef nm.ndarray[nm.int32_t] ell_py,has_cl_py
   cdef powly *ply
   cdef error *_err,**err
   
   if len(masks)==2:
     mask_T_py = nm.array(masks[0],dtype=nm.uint8)
-    mask_T = <unsigned char*> mask_T_py
+    mask_T = <unsigned char*> mask_T_py.data
 
     mask_P_py = nm.array(masks[1],dtype=nm.uint8)    
-    mask_P = <unsigned char*> mask_P_py
+    mask_P = <unsigned char*> mask_P_py.data
   else:
     mask_T_py = nm.array(masks,dtype=nm.uint8)
-    mask_T = <unsigned char*> mask_T_py
-    mask_P=NULL
+    mask_T = <unsigned char*> mask_T_py.data
+    mask_P = mask_T
   
   if len(maps)==3:
     map_T_py = nm.array(maps[0],dtype=nm.double)
@@ -182,7 +183,9 @@ def powly_javel(masks, maps,noise,ell,cl,has_cl,U,G=None):
   else:
     map_T_py = nm.array(maps,dtype=nm.double)
     map_T = <double*> map_T_py.data
-  
+    map_Q = NULL
+    map_U = NULL
+    
   nside = int(nm.sqrt(nm.size(mask_T_py)/12))
   
   if isinstance(noise,(int,float)):
@@ -199,16 +202,17 @@ def powly_javel(masks, maps,noise,ell,cl,has_cl,U,G=None):
       Ndiag = <double*>noisevar.data
       N = NULL
 
+  has_cl_py = nm.array([int(v) for v in has_cl],dtype=nm.int32)
   Cl_proxy = nm.array(cl).flat[:]
   lmax = len(Cl_proxy)/6-1
-  
+  print lmax
   if ell!=None:
-    ell_py = nm.array(ell)
+    #print ell
+    ell_py = nm.array(ell,dtype=nm.int32)
   else:
     ell_py = nm.arange(lmax+1,dtype=nm.int32)
   nls = len(ell_py)
   
-  has_cl_py = nm.array([int(v) for v in has_cl],dtype=nm.int32)
   
   U_proxy = nm.array(U)
   _U = <double*> U_proxy.data

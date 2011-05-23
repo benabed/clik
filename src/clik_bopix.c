@@ -1,9 +1,5 @@
 #include "clik.h"
-#include "hdf5.h"
-#include "lklbs.h"
-#include "aplowly.h"
-#include "fowly.h"
-#include "smica.h"
+#include "clik_helper.h"
 #include <errno.h>
 #include <string.h>
 

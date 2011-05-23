@@ -10,50 +10,7 @@ import clik.parobject as php
 import clik
 import re
 
-class transformme:
-  def __init__(self,tfunc,pf):
-    self.tfunc = tfunc
-    self.pf =pf
-  def __getattr__(self,val):
-    return self.tfunc(self.pf[val])
-    
-class miniparse(object):
-  def __init__(self, pfn):
-    print "read parameter file %s"%pfn
-    pff =open(pfn)
-    txt = "\n".join([to.split("#")[0] for to in pff])+"\n"
-    pf = dict(re.findall("(?<!#)(\w+)\s*=\s*(.+?)\n",txt))
-    self.pf = pf
-  
-  def __contains__(self,val):
-    return val in self.pf
-  
-  @property
-  def int(self):
-    return transformme(int,self.pf)
 
-  @property
-  def int_array(self):
-    return transformme(lambda vl:nm.array([int(v) for v in vl.split() if v]),self.pf)
-
-  @property
-  def float(self):
-    return transformme(float,self.pf)
-
-  @property
-  def float_array(self):
-    return transformme(lambda vl:nm.array([float(v) for v in vl.split() if v]),self.pf)
-
-  @property
-  def str(self):
-    return transformme(lambda x:x,self.pf)
-
-  @property
-  def str_array(self):
-    return transformme(lambda vl:vl.split(),self.pf)
-
-  def __getattr__(self,val):
-    return getattr(self.str,val)
     
     
 def do_nlbl(fwhm,ns,Acmb,lmin,lmax,bins=None):
@@ -200,11 +157,13 @@ def read_cl(pars,ncl,hascl):
     # could I be dealing with a camb cl ?
     if nm.sum(cl[0:10,0]-nm.arange(2,12) )==0:
       # that's it !
+      ell = cl[:,0]
+      llp1 = ell*(ell+1)/2./nm.pi
       print "I think this is a cl from WMAP !"
       mcl = []
       for i in range(4):
         if hascl[i]:
-          mcl+=[nm.concatenate(([0.,0.],cl[:,i+1]))]
+          mcl+=[nm.concatenate(([0.,0.],cl[:,i+1]/llp1))]
       for i in range(4,6):
         if hascl[i]:
           mcl+=[0*nm.concatenate(([0.,0.],cl[:,0]))]
@@ -278,7 +237,7 @@ def read_somearray(somepath):
   return nm.loadtxt(somepath) 
   
 def main(argv):
-  pars = miniparse(argv[1])
+  pars = clik.miniparse(argv[1])
 
   #get hascl
   print "read cl"

@@ -55,6 +55,7 @@ def add_lib(conf,prefix,include,libpath,libname, funcname="",headername="",libs 
     defines=[defines]
     
   conf.parse_flags(flagline,uselib=libname)
+
   conf.check_cc(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
   for fnc in funcname:
     conf.check_cc(
@@ -130,8 +131,10 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
           libs=libs,uselib=uselib,defines=defines,frameworkpath=frameworkpath,framework=framework,flagline=flagline)
 
     setattr(ctx.env,"use_%s"%name,name)
+    setattr(ctx.env,"has_%s"%name,name)
 
   except Exception,e:
+    ctx.env["INCLUDES_%s"%name]=[]
     if not getattr(ctx.env,"has_"+name,False):
       Logs.pprint("BLUE","Optional %s not found"%name)
       Logs.pprint("BLUE","Compilation will continue without it")
@@ -143,7 +146,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
         Logs.pprint("PINK", msg)      
       if install:
         Logs.pprint("PINK", "or install automatically using cmdline option --%s_install"%(name))      
-    raise e
+      raise e
 
 def installsmthg_pre(ctx,where,what):
 

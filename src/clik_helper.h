@@ -9,6 +9,10 @@
 #ifndef _CLIK_HLP_
 #define _CLIK_HLP_
 
+#ifndef hdf5_base
+#define hdf5_base  -1000
+#endif
+
 #define _dealwitherr error *lerr,**err; if(_err==NULL) {lerr=NULL;err=&lerr;} else {err=_err;}
 
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}

@@ -1,5 +1,11 @@
+#! /usr/bin/env python
+
 import numpy as nm
 import healpy as hp
+
+import sys
+if __name__ == "__main__":
+  sys.path = ["$REPLACEPATH"]+sys.path
 
 def mode(l,m,nside,field,ordering="ring",all=False):
   if m==0:
@@ -294,8 +300,10 @@ def prepdats(masks, maps,noise,ell,cl,has_cl,svdCut=None):
   else:
     nside = int(nm.sqrt(len(maps)/12))
 
-  U,G = prepUG(nside,mask,ls,has_cl,svdCut)
+  U,G = prepUG(nside,masks,ell,has_cl,svdCut)
   
+  if masks == None:
+    masks = nm.ones(12*nside*nside,dtype=nm.uint8)
   return clik.lkl.powly_javel(masks, maps,noise,ell,cl,has_cl,U,G)
   
   
@@ -305,3 +313,47 @@ def hdf_lowl(hf,cl_fid,a_bar,H):
   hf.create_dataset('a_bar', data=a_bar)  
   hf.create_dataset('H', data=H.flat[:])
   
+
+def main(argv):
+  import clik
+  pars = clik.miniparse(argv[1])
+  
+  hascl = nm.array([int(ss) for ss in pars.str_array.has_cl])
+  if hascl[3]:
+    if not (hascl[0] and hascl[1]):
+      raise Exception("bad 1")
+  if hascl[4]:
+    if not (hascl[0] and hascl[2]):
+      raise Exception("bad 2")
+  if hascl[5]:
+    if not (hascl[1] and hascl[2]):
+      raise Exception("bad 3")
+  ncl = nm.sum(hascl)
+  if ncl == 0:
+    raise Exception("argl")
+  
+  if nm.sum(hascl[1:])==0:
+    rmaps = hp.read_map(pars.str.mapfile)
+    print rmaps[0]
+  else:
+    rmaps = [hp.read_map(pars.str.mapfile,i) for i in range(3)]
+    print rmaps[0][0],rmaps[1][0],rmaps[2][0]
+    
+  cl = nm.loadtxt(pars.str.clfile)
+  wl = nm.loadtxt(pars.str.beamfile)
+  cl.shape=[ncl,-1]
+  
+  allcl = nm.zeros((6,cl.shape[1]),dtype=nm.double)
+  j=0
+  for i in range(6):
+    if hascl[i]:
+      allcl[i] = cl[j]*wl
+      j+=1
+  clw = allcl.flat[:]
+  print clw
+  res = prepdats(None,rmaps,pars.float.noise,nm.arange(pars.int.lmin,pars.int.lmax+1),clw,hascl)
+  
+  return 0
+if __name__ == "__main__":
+  main(sys.argv)
+

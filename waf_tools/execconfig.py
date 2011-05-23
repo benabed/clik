@@ -51,6 +51,7 @@ def bld_inc_line(bld,name):
   return ""
 def bld_def_line(bld,name):
   if name:
+    #print "DEFINES_%s = %s"%(name,getattr(bld.env,"DEFINES_"+name))
     return mkstr(bld.env.DEFINES_ST,getattr(bld.env,"DEFINES_"+name))
   return ""
 
