@@ -275,9 +275,9 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   sprintf(init_func_name,"clik_%s_init",lkl_type);
 #ifdef HAS_RTLD_DEFAULT 
   dlhandle = RTLD_DEFAULT;
-#else:
+#else
   dlhandle = NULL;
-#endif;
+#endif
   clik_dl_init = dlsym(dlhandle,init_func_name);
   testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,cur_lkl,dlerror());  \
 
