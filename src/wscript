@@ -36,7 +36,7 @@ def build(bld):
       features = 'fc cshlib',
       source = 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90',
       target = 'mybopix',
-      uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
+      uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime fcshlib',
       )
   
   bld.stlib(

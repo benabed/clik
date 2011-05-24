@@ -21,7 +21,7 @@ def configure(ctx):
       ifort_conf(ctx)
       return
     except:
-      Logs.pprint("PINK", "icc not found, defaulting to gcc")
+      Logs.pprint("PINK", "ifort not found, defaulting to gfortran")
   gfortran_conf(ctx)
   
   
