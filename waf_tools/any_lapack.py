@@ -69,7 +69,7 @@ def configure(ctx):
 def installlapack(ctx):
   filen = version+".tgz"
   atl.installsmthg_pre(ctx,"http://www.netlib.org/lapack/"+filen,filen)
-  from waflib import Options, Environment,Utils,Errors
+  from waflib import Utils,Errors
   dii = {"FCC":ctx.env.FC,"FCFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fcshlib),"FLINKFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.LINKFLAGS_fcshlib),"SO":ctx.env.shsuffix,"MFLAG":" ".join(ctx.env.FCFLAGS) }
   Logs.pprint("PINK","build blas")
   f=open("build/%s/make.inc"%version,"w")

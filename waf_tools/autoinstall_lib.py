@@ -156,7 +156,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
 def installsmthg_pre(ctx,where,what):
 
-  from waflib import Options, Environment,Utils,Errors
+  from waflib import Utils,Errors
   import urllib2
   import re
   import os.path as osp
@@ -191,7 +191,7 @@ def installsmthg_pre(ctx,where,what):
     raise Errors.WafError("Cannot untar "+what)
 
 def installsmthg_post(ctx,where,what,extra_config=""):
-  from waflib import Options, Environment,Utils
+  from waflib import Utils,Errors
   CCMACRO = "\"gcc %s\""%ctx.env.mopt
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"gcc -E\" CXXCPP=\"g++ -E\" "
