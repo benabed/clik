@@ -80,6 +80,7 @@ def configure(ctx):
       from waflib.Logs import warn
       warn("reverting to current executable")
       ctx.env.PYTHON[0]=sys.executable
+      os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
     try:
       ctx.check_python_headers()
       # remove unwanted flags for darwin
