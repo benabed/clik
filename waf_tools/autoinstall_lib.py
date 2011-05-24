@@ -105,16 +105,16 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   if not opt_name:
     opt_name=name
   # do install if needed
-  if install:
+  if install and getattr(ctx.options,opt_name+"_install",False):
     # first try without install !
     try:
       setattr(ctx.env,"has_"+name,True)
+      setattr(ctx.options,"%s_islocal"%opt_name,1)
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
+      return
     except Exception,e:
       Logs.pprint("RED","%s not found, try to install it"%name)
-      if getattr(ctx.options,opt_name+"_install"):
-        install(ctx)
-        setattr(ctx.options,"%s_islocal"%opt_name,1)
+      install(ctx)
   # compute paths
   prefix,include,lib,link = opt_to_libpaths(ctx,opt_name)
   

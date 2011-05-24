@@ -76,7 +76,10 @@ def configure(ctx):
 
   if not ctx.options.no_pytools:
     ctx.load("python")
-    
+    if ctx.env.PYTHON[0]!=sys.executable:
+      from waflib.Logs import warn
+      warn("reverting to current executable")
+      ctx.env.PYTHON[0]=sys.executable
     try:
       ctx.check_python_headers()
       # remove unwanted flags for darwin
@@ -209,10 +212,16 @@ def configure_h5py(ctx):
         os.makedirs(ctx.env.PYTHONDIR)
       except Exception,e:
         print e
-      cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=$(PYTHONPATH):%s python setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHONDIR)
+      cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
       waflib.Logs.pprint("PINK",cmdline)
-      if ctx.cmd_and_log(cmdline)!=0:
+      ret = ctx.exec_command(cmdline)
+      if ret!=0:
         raise Errors.ConfigurationError("Cannot build h5py")
+      eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if "h5py" in v][0]
+      if eggdir!="h5py":
+        mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if "h5py" in v][0]
+        import os
+        os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,"h5py"))
   try:
     import h5py
   except Exception,e: 

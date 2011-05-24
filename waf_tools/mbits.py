@@ -12,9 +12,9 @@ def configure(ctx):
     if ctx.options.m32:    
       mopt += "-arch i386 "    
   else:
-    mopt = "-m32"
-    if ctx.options.m64:
-      mopt = "-m64"
+    mopt = "-m64"
+    if ctx.options.m32:
+      mopt = "-m32"
       
   ctx.env.mopt=mopt
   ctx.env.append_value('CCFLAGS',mopt.split())
