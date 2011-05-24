@@ -34,6 +34,7 @@ def options(ctx):
 
   
 def configure(ctx):
+  
   ctx.load("try_icc","waf_tools")
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
@@ -91,7 +92,11 @@ def configure(ctx):
       ctx.check_tool("cython")
       configure_h5py(ctx)
     except Exception,e:
-      pass
+      ctx.options.no_pytools = True
+      Logs.pprint("BLUE","No suitable python distribution found")
+      Logs.pprint("BLUE","Cause : '%s'"%e)
+      Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
+      
       
   print "configure ok\n\nrun './waf build install' now !"
   
