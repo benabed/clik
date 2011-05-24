@@ -110,7 +110,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
     try:
       setattr(ctx.env,"has_"+name,True)
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
-    except Execption,e:
+    except Exception,e:
       Logs.pprint("RED","%s not found, try to install it"%name)
       if getattr(ctx.options,opt_name+"_install"):
         install(ctx)
