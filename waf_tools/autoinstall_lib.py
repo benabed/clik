@@ -86,13 +86,14 @@ def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",l
   for inc in libs:
     if inc:
       conf.env.append_value("LIB_%s"%(libname),inc)
-  return
+  
   #print dir(conf)
-  conf.check_fortran(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
+  #conf.check_fortran(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
   for fnc in funcname:
-    conf.check_fortran(
-      errmsg="failed (check whether lib is compiled in 32 or 64bits)",
-      function_name=fnc,header_name=headername,uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework)
+    #self.check_cc(fragment=FC_FRAGMENT,compile_filename='test.f',features='fc fcprogram',msg='Compiling a simple fortran app')
+    conf.check_cc(
+      errmsg="failed (check whether lib is compiled in 32 or 64bits)",msg='checking for module %s'%fnc,
+      uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework, fragment = "program test\n  use %s\n end program test\n"%fnc,compile_filename='test.f90',features='fc fcprogram')
 
 
 
