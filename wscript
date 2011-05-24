@@ -80,6 +80,8 @@ def configure(ctx):
       from waflib.Logs import warn
       warn("reverting to current executable")
       ctx.env.PYTHON[0]=sys.executable
+      import os
+      import os.path as osp
       os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
     try:
       ctx.check_python_headers()
