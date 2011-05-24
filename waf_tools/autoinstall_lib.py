@@ -156,7 +156,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
 def installsmthg_pre(ctx,where,what):
 
-  from waflib, import Options, Environment,Utils,Errors
+  from waflib import Options, Environment,Utils,Errors
   import urllib2
   import re
   import os.path as osp
