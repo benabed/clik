@@ -150,7 +150,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
 def installsmthg_pre(ctx,where,what):
 
-  import Options, Environment,Utils
+  import Options, Environment,Utils,Errors
   import urllib2
   import re
   import os.path as osp
@@ -182,7 +182,7 @@ def installsmthg_pre(ctx,where,what):
   tf.close()
   Logs.pprint("PINK","untar "+what)
   if ctx.exec_command("cd build/;tar -zxf "+what)!=0:
-    raise Utils.WscriptError("Cannot untar "+what)
+    raise Errors.WafError("Cannot untar "+what)
 
 def installsmthg_post(ctx,where,what,extra_config=""):
   import Options, Environment,Utils
@@ -192,6 +192,6 @@ def installsmthg_post(ctx,where,what,extra_config=""):
   cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make;make install"%(where,ctx.env.mprefix,extra_config,CCMACRO, CPPMACRO)
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
-    raise Utils.WscriptError("Cannot build %s"%what)
+    raise Errors.WafError("Cannot build %s"%what)
   #Logs.pprint("GREEN","You can now run ./waf configure, adding the following option '--%s_islocal'"%what)
 

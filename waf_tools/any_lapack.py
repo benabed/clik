@@ -45,12 +45,17 @@ def configure(ctx):
       else:
         # assume it's 10 on linux
         # check whether it's 10.3
-        libsuffix="/lib/em64t"
+        if ctx.options.m32:
+          libsuffix="/lib/32"
+          libdep = "-lmkl_intel"
+        else:
+          libsuffix="/lib/em64t"
+          libdep = "-lmkl_intel_lp64"
         if ctx.options.lapack_link=="":
-          ctx.options.lapack_link = "-lmkl_lapack -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def"
-        if osp.exists(ctx.options.lapack_mkl+"/lib/intel64"):
+          ctx.options.lapack_link = "-lmkl_lapack -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
+        if not ctx.options.m32 and osp.exists(ctx.options.lapack_mkl+"/lib/intel64"):
           libsuffix="/lib/intel64"
-          ctx.options.lapack_link = "-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread"
+          ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" + libdep
         ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
         ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix
   
@@ -64,7 +69,7 @@ def configure(ctx):
 def installlapack(ctx):
   filen = version+".tgz"
   atl.installsmthg_pre(ctx,"http://www.netlib.org/lapack/"+filen,filen)
-  import Options, Environment,Utils
+  import Options, Environment,Utils,Errors
   dii = {"FCC":ctx.env.FC,"FCFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fcshlib),"FLINKFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.LINKFLAGS_fcshlib),"SO":ctx.env.shsuffix,"MFLAG":" ".join(ctx.env.FCFLAGS) }
   Logs.pprint("PINK","build blas")
   f=open("build/%s/make.inc"%version,"w")
@@ -72,14 +77,14 @@ def installlapack(ctx):
   f.close()
   cmdline = "cd build/%s; make blaslib"%version
   if ctx.exec_command(cmdline)!=0:
-    raise Utils.WscriptError("Cannot build %s"%version)
+    raise Errors.WafError("Cannot build %s"%version)
   Logs.pprint("PINK","build lapack")
   f=open("build/%s/make.inc"%version,"w")
   print >>f,make_inc_lapack%dii
   f.close()
   cmdline = "cd build/%s; make lapacklib"%version
   if ctx.exec_command(cmdline)!=0:
-    raise Utils.WscriptError("Cannot build %s"%version)
+    raise Errors.WafError("Cannot build %s"%version)
   
   import shutil
   shutil.copyfile("build/%s/liblapack_clik.%s"%(version,ctx.env.shsuffix), osp.join(ctx.env.LIBDIR,"liblapack_clik.%s"%ctx.env.shsuffix))
