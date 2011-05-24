@@ -106,9 +106,15 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
     opt_name=name
   # do install if needed
   if install:
-    if getattr(ctx.options,opt_name+"_install"):
-      install(ctx)
-      setattr(ctx.options,"%s_islocal"%opt_name,1)
+    # first try without install !
+    try:
+      setattr(ctx.env,"has_"+name,True)
+      conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
+    except Execption,e:
+      Logs.pprint("RED","%s not found, try to install it"%name)
+      if getattr(ctx.options,opt_name+"_install"):
+        install(ctx)
+        setattr(ctx.options,"%s_islocal"%opt_name,1)
   # compute paths
   prefix,include,lib,link = opt_to_libpaths(ctx,opt_name)
   
@@ -150,7 +156,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
 def installsmthg_pre(ctx,where,what):
 
-  import Options, Environment,Utils,Errors
+  from waflib, import Options, Environment,Utils,Errors
   import urllib2
   import re
   import os.path as osp
@@ -185,7 +191,7 @@ def installsmthg_pre(ctx,where,what):
     raise Errors.WafError("Cannot untar "+what)
 
 def installsmthg_post(ctx,where,what,extra_config=""):
-  import Options, Environment,Utils
+  from waflib import Options, Environment,Utils
   CCMACRO = "\"gcc %s\""%ctx.env.mopt
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"gcc -E\" CXXCPP=\"g++ -E\" "
