@@ -238,7 +238,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
         raise Errors.ConfigurationError("Cannot build %s"%name)
       # deal with eggs...
       eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if name in v][0]
-      if eggdir!=name:
+      if eggdir!=name and eggdir!=name+".py":
         mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if name in v][0]
         import os
         os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,name))
