@@ -9,6 +9,7 @@ def build(bld):
   source_clik = [src for src in source_clik if src]
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl' ).split() if ff]
+  uselib_bopix = []
   
   bld.shlib(
     source   = source_clik,
@@ -19,33 +20,37 @@ def build(bld):
     cflags = "-fopenmp"
     )
   bld.install_files('${PREFIX}/include/', 
-                    'clik.h minipmc/pmc.h minipmc/io.h minipmc/errorlist.h')
+                    'clik.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
 
-  pmclinkline = " ".join([excc.bld_link_line(bld,nn) for nn in uselib_clik])
+  if not bld.options.no_bopix:
+    bld(
+      features = 'fc cshlib fcshlib',
+      source = 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90',
+      target = 'mybopix',
+      uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
+      )
+    uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+    
+  pmclinkline = " ".join([excc.bld_link_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
   pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik",)])
-  pmcincline = " ".join([excc.bld_inc_line(bld,nn) for nn in uselib_clik])
+  pmcincline = " ".join([excc.bld_inc_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
   pmcincline += ' '+excc.mkstr(bld.env.CPPPATH_ST,[bld.env.PREFIX+"/include"])
-  pmcdefline = " ".join([excc.bld_def_line(bld,nn) for nn in uselib_clik])
+  pmcdefline = " ".join([excc.bld_def_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
   
   bld.load("execconfig","waf_tools")  
   bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik-config", install_path='${BINDIR}')
 
-  # Fortran
-  if not bld.options.no_bopix:
-    bld(
-      features = 'fc cshlib',
-      source = 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90',
-      target = 'mybopix',
-      uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime fcshlib',
-      )
   
-  bld.stlib(
+  bld(
+    features = "fc cshlib c fcshlib",
     source = 'clik_fortran.c clik.f90',
     target = 'clik_f90',
     includes = '.'+" minipmc/"*(not bld.env.has_pmc),
-    use = 'clik'
+    use = 'clik',
+    uselib = 'fc_runtime'
     )
     
+  pmclinkline += " ".join([excc.bld_link_line(bld,nn) for nn in ['fc_runtime']])
   pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik_f90",)])    
   bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik_f90-config", install_path='${BINDIR}')
 

@@ -34,14 +34,25 @@ def ifort_conf(ctx):
   if not ctx.options.fortran_flagline:
     ifort_path = osp.dirname(osp.realpath(ctx.env.FC))
     #print ifort_path
-    try:
-      f=open(osp.join(ifort_path,'ifortvars_intel64.sh'))
-    except:
-      f=open(osp.join(ifort_path,'ifortvars_ia32.sh'))
+    if ctx.options.m32:
+      try:
+        f=open(osp.join(ifort_path,'ifortvars_ia32.sh'))
+      except:
+        raise Errors.wafError("Can't locate ifort configuration file")
+    else:
+      try:
+        f=open(osp.join(ifort_path,'ifortvars_intel64.sh'))
+      except:
+        raise Errors.wafError("Can't locate ifort configuration file")
+
     txt = f.read()
     f.close()
     #print txt
-    res = re.findall("DYLD_LIBRARY_PATH\s*=\s*\"(.+)\"",txt)[0]
+    if sys.platform.lower()=="darwin":
+      sp = "DYLD_LIBRARY_PATH"
+    else:
+      sp = "LD_LIBRARY_PATH"
+    res = re.findall("\s"+sp+"\s*=\s*\"(.+)\"",txt)[0]
     for pth in res.split(":"):
       ctx.env.append_value("LIBPATH_fc_runtime",pth)
       ctx.env.append_value("RPATH_fc_runtime",pth)

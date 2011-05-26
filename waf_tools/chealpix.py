@@ -7,6 +7,8 @@ def options(ctx):
   atl.add_lib_option("healpix",ctx,install=True)
   
 def configure(ctx):
+  if ctx.options.healpix_install:
+    ctx.options.healpix_islocal=True
   try:
     atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cshlib"])
     atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fcshlib"])
@@ -39,7 +41,7 @@ def install_cfitsio(ctx):
 def install_healpix(ctx):
   hpdir = "Healpix_2.20a"
   atl.installsmthg_pre(ctx,"http://sourceforge.net/projects/healpix/files/Healpix_2.20a/Healpix_2.20a_2011Feb09.tar.gz/download","Healpix_2.20a_2011Feb09.tar.gz")
-  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+ctx.env.FCFLAGS_fcshlib)}
+  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+ctx.env.CFLAGS_cshlib),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+ctx.env.FCFLAGS_fcshlib)}
   f=open(osp.join("build",hpdir,"conf.cmd"),"w")
   print >>f,cnf_tmpl%dii
   f.close()

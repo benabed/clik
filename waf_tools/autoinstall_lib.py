@@ -202,3 +202,44 @@ def installsmthg_post(ctx,where,what,extra_config=""):
     raise Errors.WafError("Cannot build %s"%what)
   #Logs.pprint("GREEN","You can now run ./waf configure, adding the following option '--%s_islocal'"%what)
 
+def check_python_module(ctx,name):
+  try:
+    ctx.start_msg("Checking python module '%s'"%name)
+    __import__(name)
+    ctx.end_msg(True)
+  except Exception,e: 
+    ctx.end_msg(False)
+    raise e
+
+def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
+  import waflib.Logs
+  import os
+  from waflib import Errors
+  import os.path as osp
+  import autoinstall_lib as atl
+  ctx.load("python")
+  doit = False
+  import sys
+  sys.path+=[ctx.env.PYTHONDIR]
+
+  try:
+    check_python_module(ctx,name)
+  except Exception,e: 
+    if getattr(ctx.options,name+"_install",False):
+      waflib.Logs.pprint("PINK","Install python module '%s'"%name)
+      atl.installsmthg_pre(ctx,url,packtgz)
+      if not osp.exists(ctx.env.PYTHONDIR):
+        os.makedirs(ctx.env.PYTHONDIR)
+      if cmdline==None:
+        cmdline =  "cd build/%s; PYTHONPATH=%s %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
+      waflib.Logs.pprint("PINK",cmdline)
+      ret = ctx.exec_command(cmdline)
+      if ret!=0:
+        raise Errors.ConfigurationError("Cannot build %s"%name)
+      # deal with eggs...
+      eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if name in v][0]
+      if eggdir!=name:
+        mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if name in v][0]
+        import os
+        os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,name))
+    check_python_module(ctx,name)

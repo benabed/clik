@@ -28,7 +28,9 @@ def options(ctx):
     ctx.load("cython",dowload=True)
   except Exception,e:
     pass
+  options_numpy(ctx)
   options_h5py(ctx)
+  options_cython(ctx)
   ctx.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
   ctx.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
 
@@ -95,8 +97,10 @@ def configure(ctx):
       ctx.env.LIBPATH_PYEXT=ctx.env.LIBPATH_PYEMBED+[get_config_var("LIBPL")]     
       import waflib.Configure
       #waflib.Configure.download_tool("cython",ctx=ctx)
-      ctx.check_tool("cython")
+      configure_numpy(ctx)
       configure_h5py(ctx)
+      configure_cython(ctx)
+      
     except Exception,e:
       ctx.options.no_pytools = True
       Logs.pprint("BLUE","No suitable python distribution found")
@@ -180,56 +184,42 @@ def post(ctx):
     shutil.copy('build/clik.mod',ctx.env.PREFIX+'/include/')
     # go around a waf bug which set the wrong chmod to fortran exec
     os.chmod("bin/clik_example_f90",Utils.O755)
+
 def options_h5py(ctx):
   ctx.load("python")
   ctx.add_option("--h5py_install",action="store_true",default="",help="try to install h5py")
+def options_numpy(ctx):
+  ctx.load("python")
+  ctx.add_option("--numpy_install",action="store_true",default="",help="try to install numpy")
+def options_cython(ctx):
+  ctx.load("python")
+  ctx.add_option("--cython_install",action="store_true",default="",help="try to install numpy")
 
 def configure_h5py(ctx):
-  import waflib.Logs
-  import os
-  from waflib import Errors
-  ctx.load("python")
-  doit = False
-  import sys
-  sys.path+=[ctx.env.PYTHONDIR]
-
+  import autoinstall_lib as atl
+  cmdline=None
   if ctx.options.h5py_install:
-    try:
-      import h5py
-      #raise Exception()
-    except Exception,e: 
-      doit=True
-    if doit:
-      import os.path as osp
-      import autoinstall_lib as atl
-      atl.installsmthg_pre(ctx,"http://h5py.googlecode.com/files/h5py-1.3.1.tar.gz","h5py-1.3.1.tar.gz")
-      if ctx.env.INCLUDES_hdf5:
-        HDF5_DIR=osp.split(ctx.env.INCLUDES_hdf5[0])[0]
-      else:
-        fi = ctx.find_file("hdf5.h",ctx.env.INCLUDES_pmc)
-        #print fi
-        HDF5_DIR=osp.split(osp.split(fi)[0])[0]
-      HDF5_API="18"
-      #print HDF5_DIR
-      try:
-        os.makedirs(ctx.env.PYTHONDIR)
-      except Exception,e:
-        print e
-      cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
-      waflib.Logs.pprint("PINK",cmdline)
-      ret = ctx.exec_command(cmdline)
-      if ret!=0:
-        raise Errors.ConfigurationError("Cannot build h5py")
-      eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if "h5py" in v][0]
-      if eggdir!="h5py":
-        mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if "h5py" in v][0]
-        import os
-        os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,"h5py"))
-  try:
-    import h5py
-  except Exception,e: 
-    if not doit:
-      waflib.Logs.pprint("PINK", "You can install automatically h5py using cmdline option --h5py_install")      
+    if ctx.env.INCLUDES_hdf5:
+      HDF5_DIR=osp.split(ctx.env.INCLUDES_hdf5[0])[0]
     else:
-      waflib.Logs.pprint("RED", "Autoinstall h5py has failed !")      
-    raise e
+      fi = ctx.find_file("hdf5.h",ctx.env.INCLUDES_pmc)
+      #print fi
+      HDF5_DIR=osp.split(osp.split(fi)[0])[0]
+    HDF5_API="18"
+    cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
+
+  atl.configure_python_module(ctx,"h5py","http://h5py.googlecode.com/files/h5py-1.3.1.tar.gz","h5py-1.3.1.tar.gz","h5py-1.3.1",cmdline)
+
+def configure_numpy(ctx):
+  import autoinstall_lib as atl
+  atl.configure_python_module(ctx,"numpy","http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz","numpy-1.6.0")
+
+def configure_cython(ctx):
+  import autoinstall_lib as atl
+  import os.path as osp
+  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
+  try:
+    ctx.load("cython")
+  except:
+    ctx.env.CYTHON=osp.join(ctx.env.BINDIR,"cython")
+
