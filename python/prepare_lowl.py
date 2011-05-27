@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! $PYTHONEXE
 
 import numpy as nm
 import healpy as hp

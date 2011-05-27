@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! $PYTHONEXE
 
 import sys
 sys.path = ["$REPLACEPATH"]+sys.path

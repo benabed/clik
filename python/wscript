@@ -6,6 +6,7 @@ def build(ctx):
     f=open(src)
     txt = f.read()
     txt = re.sub("\$REPLACEPATH",ctx.env.PYTHONDIR,txt)
+    txt = re.sub("\$PYTHONEXE",ctx.env.PYTHON[0],txt)
     f=open(tgt,"w")
     print >>f,txt,
     f.close()
