@@ -203,9 +203,13 @@ def installsmthg_post(ctx,where,what,extra_config=""):
   #Logs.pprint("GREEN","You can now run ./waf configure, adding the following option '--%s_islocal'"%what)
 
 def check_python_module(ctx,name):
+  import sys
+  import imp
+  if ctx.env.PYTHONDIR not in sys.path:
+    sys.path=[ctx.env.PYTHONDIR]+sys.path
   try:
     ctx.start_msg("Checking python module '%s'"%name)
-    __import__(name)
+    imp.find_module(name)
     ctx.end_msg(True)
   except Exception,e: 
     ctx.end_msg(False)
@@ -220,7 +224,6 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
   ctx.load("python")
   doit = False
   import sys
-  sys.path+=[ctx.env.PYTHONDIR]
 
   try:
     check_python_module(ctx,name)
@@ -243,3 +246,5 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
         import os
         os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,name))
       check_python_module(ctx,name)
+    else:
+      raise e

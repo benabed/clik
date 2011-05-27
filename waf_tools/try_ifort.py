@@ -56,7 +56,7 @@ def ifort_conf(ctx):
     for pth in res.split(":"):
       ctx.env.append_value("LIBPATH_fc_runtime",pth)
       ctx.env.append_value("RPATH_fc_runtime",pth)
-    ctx.env.append_value("LIB_fc_runtime",["ifcore","intlc","ifport","imf","irc","svml","iomp5"])
+    ctx.env.append_value("LIB_fc_runtime",["ifcore","intlc","ifport","imf","irc","svml","iomp5","pthread"])
     ctx.env.FCSHLIB_MARKER = [""]
     ctx.env.FCSTLIB_MARKER = [""]
 

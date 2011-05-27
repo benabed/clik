@@ -90,13 +90,7 @@ def configure(ctx):
       # remove unwanted flags for darwin
       _remove_arch(ctx,"CFLAGS_PYEXT")
       _remove_arch(ctx,"LINKFLAGS_PYEXT")
-      import numpy
-      ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
       from distutils.sysconfig import get_config_var
-      ctx.env.LIB_PYEXT=ctx.env.LIB_PYEMBED     
-      ctx.env.LIBPATH_PYEXT=ctx.env.LIBPATH_PYEMBED+[get_config_var("LIBPL")]     
-      import waflib.Configure
-      #waflib.Configure.download_tool("cython",ctx=ctx)
       configure_numpy(ctx)
       configure_h5py(ctx)
       configure_cython(ctx)
@@ -106,7 +100,6 @@ def configure(ctx):
       Logs.pprint("BLUE","No suitable python distribution found")
       Logs.pprint("BLUE","Cause : '%s'"%e)
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
-      
       
   print "configure ok\n\nrun './waf build install' now !"
   
@@ -173,7 +166,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* waf_tools/*.py" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* waf_tools/*.py clik.pdf" )
   
 def post(ctx):
   import shutil
@@ -184,7 +177,48 @@ def post(ctx):
     shutil.copy('build/clik.mod',ctx.env.PREFIX+'/include/')
     # go around a waf bug which set the wrong chmod to fortran exec
     os.chmod("bin/clik_example_f90",Utils.O755)
-
+    build_env_files(ctx)
+    
+def build_env_files(ctx):
+  import os
+  import os.path as ops
+  full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
+  
+  if osp.basename(os.environ["SHELL"]) in ("csh","tcsh","zsh"):
+    name = "clik_profile.csh"
+    shebang = "#! /bin/tcsh"
+    block_tmpl = """
+if !($?%(VAR)s) then
+  setenv %(VAR)s %(PATH)s
+else
+  setenv %(VAR)s %(PATH)s:${%(VAR)s}
+endif
+"""
+  else:
+    name = "clik_profile.sh"
+    shebang = "#! /bin/sh"
+    block_tmpl = """
+if [ -z "${%(VAR)s}" ]; then
+  %(VAR)s=%(PATH)s
+else
+  %(VAR)s=%(PATH)s:${%(VAR)s}
+fi
+export %(VAR)s
+"""
+  if sys.platform.lower()=="darwin":
+    LD_LIB = "DYLD_LIBRARY_PATH"
+  else:
+    LD_LIB = "LD_LIBRARY_PATH"
+  f = open(osp.join(ctx.env.BINDIR,name),"w")
+  print >>f,"# this code cannot be run directly"
+  print >>f,"# do 'source %s' from your %s shell or put it in your profile"%(osp.join(ctx.env.BINDIR,name),osp.basename(os.environ["SHELL"]))
+  print >>f,block_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}
+  print >>f,block_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
+  print >>f,block_tmpl%{"PATH":":".join(full_libpath),"VAR":LD_LIB}
+  f.close()
+  
+  print "Use %s to set the environment variables needed by clik"%osp.join(ctx.env.BINDIR,name)
+  
 def options_h5py(ctx):
   ctx.load("python")
   ctx.add_option("--h5py_install",action="store_true",default="",help="try to install h5py")
@@ -213,13 +247,26 @@ def configure_h5py(ctx):
 def configure_numpy(ctx):
   import autoinstall_lib as atl
   atl.configure_python_module(ctx,"numpy","http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz","numpy-1.6.0")
-
+  import numpy
+  ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
+  
 def configure_cython(ctx):
   import autoinstall_lib as atl
+  from waflib import Utils
   import os.path as osp
+  import os
+  
   atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
   try:
     ctx.load("cython")
   except:
-    ctx.env.CYTHON=osp.join(ctx.env.BINDIR,"cython")
+    ctx.env.CYTHON=[osp.join(ctx.env.BINDIR,"cython")]
+    f=open(osp.join(ctx.env.BINDIR,"cython"))
+    cytxt = f.readlines()
+    f.close()
+    cytxt[1:1] = ["import sys\n","sys.path+=['%s']\n"%str(ctx.env.PYTHONDIR)]
+    f=open(osp.join(ctx.env.BINDIR,"cython"),"w")
+    f.write("".join(cytxt))
+    f.close()
+    os.chmod(osp.join(ctx.env.BINDIR,"cython"),Utils.O755)
 

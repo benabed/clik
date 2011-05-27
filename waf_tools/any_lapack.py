@@ -110,7 +110,7 @@ BLASLIB      = ../../libblas_clik.%(SO)s
 ARCH = %(FCC)s 
 ARCHFLAGS = %(FLINKFLAGS)s -L../ -lblas_clik -o
 RANLIB = echo
-LAPACKLIB    = liblapack_clik.dylib
+LAPACKLIB    = liblapack_clik.%(SO)s
 """
 
 make_inc_blas="""
@@ -125,7 +125,7 @@ BLASLIB      = ../../libblas_clik.%(SO)s
 ARCH = %(FCC)s 
 ARCHFLAGS = %(FLINKFLAGS)s -o
 RANLIB = echo
-LAPACKLIB    = liblapack_clik.dylib
+LAPACKLIB    = liblapack_clik.%(SO)s
 """
 
 extra_inc = """
