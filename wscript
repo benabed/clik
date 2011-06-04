@@ -33,15 +33,20 @@ def options(ctx):
   options_cython(ctx)
   ctx.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
   ctx.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
-
+  ctx.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
+  ctx.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
+  
   
 def configure(ctx):
-  
   ctx.load("try_icc","waf_tools")
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
-  ctx.load("try_ifort","waf_tools")
-  
+  try:
+    ctx.load("try_ifort","waf_tools")
+    ctx.env.has_f90 = True
+  except:
+    Logs.pprint("BLUE","No fortran compiler found. Will keep on working without it")
+    ctx.env.has_f90 = False
   ctx.load("local_install","waf_tools")
   
   # dl
@@ -74,8 +79,14 @@ def configure(ctx):
   ctx.env.has_chealpix = True
   ctx.load("chealpix","waf_tools")
   
-  
-
+  #bopix
+  ctx.env.no_bopix = ctx.options.no_bopix
+  # wmap
+  if ctx.options.wmap_install:
+    atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
+    ctx.options.wmap_src = "likelihood_v4p1"
+  ctx.env.wmap_src =   ctx.options.wmap_src
+    
   if not ctx.options.no_pytools:
     ctx.load("python")
     if ctx.env.PYTHON[0]!=sys.executable:
@@ -256,7 +267,25 @@ def configure_cython(ctx):
   import os.path as osp
   import os
   
-  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
+  vv=False
+  try:
+    # check for cython
+    atl.check_python_module(ctx,"cython")
+    vv=True
+    version_str = "unknown"
+    ctx.start_msg("Checking cython version (>0.12)")
+    import Cython.Compiler.Version
+    version_str = Cython.Compiler.Version.version
+    version = [int(v) for v in version_str.split(".")]
+    #print version
+    assert version[1]>=12
+    ctx.end_msg(version_str)
+  except Exception,e:
+    if vv:
+      ctx.end_msg("no (%s)"%version_str,'YELLOW')
+    # no cython, install it !
+    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",forceinstall=True)
+
   try:
     ctx.load("cython")
   except:

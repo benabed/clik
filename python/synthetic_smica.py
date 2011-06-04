@@ -9,6 +9,7 @@ import numpy.linalg as la
 import clik.parobject as php
 import clik
 import re
+import h5py
 
 
     
@@ -309,6 +310,7 @@ def main(argv):
   lkl_grp.attrs["A_cmb"] = Acmb
   lkl_grp.attrs["n_component"] = 1  
   
+  
   hf.close()
   
     
@@ -316,9 +318,16 @@ def main(argv):
   # reread the likelihood !
   if hasattr(clik,"clik"):
     mlkl = clik.clik(pars.res_object)
-  
-    print "lkl for init cl %g"%mlkl(mcl)
-  
+    res = mlkl(mcl)
+    print "lkl for init cl %g"%res
+    del(mlkl)
+    
+    # add check pars
+    hf = h5py.File(pars.res_object, 'r+')
+    root_grp = hf["clik"]
+    root_grp.create_dataset("check_param",data=mcl)
+    root_grp.create_dataset("check_value",data=res)
+    hf.close()
   
 import sys
 if __name__=="__main__":

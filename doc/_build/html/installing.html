@@ -49,30 +49,69 @@
             
   <div class="section" id="installing">
 <h1>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h1>
-<p>The library has a lot of external dependencies. This should not evolve in the future, hopefully.</p>
-<p>First, it relies heavily on functions that are provided in pmclib. So the first step is to compile pmclib. pmclib will require gsl (1.10+), fftw3, hdf5 (1.8+)  and the intel mkl. Apart from the mkl, all those can be installed for you by the pmclib installer.</p>
-<p>Luckily most of the dependencies of clik are shared with pmclib, so after this step, there is only one extra (mandatory) dependency the c version of the Healpix library, compiled as a shared library.</p>
-<p>Optionnaly, you will also need a fortran compiler for the f90 wrapper, and python, cython, numpy and h5py for the python wrapper and the synthetic smica likelihood generator.</p>
-<p>I the following, 64 bits compilation is assumed. To switch to 32 bits, replace the &#8211;m64 command line option by &#8211;m32.</p>
-<div class="section" id="installing-pmclib">
-<h2>Installing pmclib<a class="headerlink" href="#installing-pmclib" title="Permalink to this headline">¶</a></h2>
-<p>Please only use the pmclib provided along with the clik lib. The installation in this package is simplified (sic...) compared to the one currently publicly available (1.1). That will change in the future.</p>
-<p>Assuming you have unzipped and untard the pmclib package, and that the install of your mkl library is located at MYMKLPATH, the following line should configure your pmclib before building and install for you the gsl, fftw3 and hdf5 lib into at the path given in the prefix option (in this case, your current working directory). The library will also install itself in the directory pointed by prefix.</p>
-<p>$ ./waf configure &#8211;m64 &#8211;prefix=`pwd` &#8211;lapack_mkl=MYMKLPATH &#8211;hdf5_install &#8211;gsl_install &#8211;fftw3_install</p>
-<p>If you already have inatalled some of the dependency (say for example, gsl), replace the option &#8211;gsl_install by gsl_prefix=MYGSLPATH, so that MYGSLPATH/lib points to the libs, and MYGSLPATH/include points to the include files of your gsl install.</p>
-<p>More options are available by running</p>
-<p>$ ./waf &#8211;help</p>
-<p>Once the configure step is passed successfully, you can build and install the pmclib using the command</p>
-<p>$ ./waf install</p>
+<p>The library has a lot of external dependencies.</p>
+<p>You will need <a class="reference external" href="http://python.org">python</a> (version&gt;2.5, with library and header files) a c compiler (gcc or icc), a fortran compiler (gfortran or ifort), <a class="reference external" href="http://www.gnu.org/software/gsl/">gsl</a> (version&gt;1.10), <a class="reference external" href="http://www.hdfgroup.org/HDF5">hdf5</a> (version&gt;1.8), <a class="reference external" href="http://healpix.jpl.nasa.gov/">healpix c and f90</a> (version&gt;2.20), a blas and lapack distribution (preferably intel MKL), the <a class="reference external" href="http://alfven.org/wp/hdf5-for-python/">h5py</a> python package (version&gt;1.3), the <a class="reference external" href="http://numpy.scipy.org/">numpy</a> python package (version&gt;1.1), the <a class="reference external" href="http://cython.org/">cython</a> python package (version&gt;1.12). Optionnaly, it can use pmclib (version&gt;1.5) if you have it on your system, and retrieve the location of most of those external library from it (as pmclib as mostly the same requirements).</p>
+<p>If some of those dependencies are unavaliable, clik will lack a few facilities.
+If the fortran compiler is absent, neither the BOPIX likelihood nor the clik fortran wrapper and example code will be compiled.
+If the library and headr of the python package or any of the required modules are absent, neither the clik python wrapper, nor the likelihood file manipulation utilities will be compiled.</p>
+<p>Finally, the clik installer can also (try to) install for you some of the dependencies, namelly, gsl, hdf5, blas/lapack, healpix, h5py, numpy and cython. In this case, no particular system specific optimization will be attempted. This is mainly a problem for the blas/lapack library that will be much less efficient than (for example) the intel MKL library, and will not take advantage of multicore cpus.</p>
+<div class="section" id="install-tool">
+<h2>Install tool<a class="headerlink" href="#install-tool" title="Permalink to this headline">¶</a></h2>
+<p>The library and executables must be installed with the &#8216;waf&#8217; tool. It is distributed in the package. Please have a look at <a class="reference external" href="http://waf.googlecode.com">the waf webpage</a>.</p>
+<p>The installer must first be configured using:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure</pre>
 </div>
-<div class="section" id="installing-clik">
-<h2>Installing clik<a class="headerlink" href="#installing-clik" title="Permalink to this headline">¶</a></h2>
-<p>After the installation of pmclib, cliklib can also be installed. Assuming that you have unzipped and untard the clik package,</p>
-<p>$ ./waf configure &#8211;m64 &#8211;prefix=`pwd` &#8211;pmc_prefix=MYPMCLIBPATH &#8211;chealpix_prefix=MYHEALPIXPATH</p>
-<p>If h5py cannot be found it can be installed adding the &#8211;h5py_install command line option to the previous configure command.</p>
-<p>The library and its dependency will be installed at the path pointed by prefix (in this case the current directory).</p>
-<p>Once the configure step is passed successfully, you can build and install the clik using the command</p>
-<p>$ ./waf install</p>
+<p>then the codes can be compiled and installed with:</p>
+<div class="highlight-python"><pre>$&gt; ./waf install</pre>
+</div>
+<p>The command line options given during the <cite>configure</cite> step allow to pass to the installer the locations of the different dependencies. For a complete list of options, do:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure</pre>
+</div>
+<p>Only the most important one will be described here.</p>
+<div class="section" id="setting-the-architecture">
+<h3>Setting the architecture<a class="headerlink" href="#setting-the-architecture" title="Permalink to this headline">¶</a></h3>
+<p>The architecture (32 or 64bits) can be set using the <tt class="docutils literal"><span class="pre">--m32</span></tt> or <tt class="docutils literal"><span class="pre">--m64</span></tt> flags. 64bits is the default.</p>
+</div>
+<div class="section" id="setting-installation-path">
+<h3>Setting installation path<a class="headerlink" href="#setting-installation-path" title="Permalink to this headline">¶</a></h3>
+<p>The installation path can be set using the <tt class="docutils literal"><span class="pre">--prefix=SOMEPATH</span></tt> option. To isntall in the current directory, one can use the <tt class="docutils literal"><span class="pre">--local</span></tt> option which is equivallent to <tt class="docutils literal"><span class="pre">--prefix=`pwd`</span></tt></p>
+</div>
+<div class="section" id="setting-the-location-of-a-library">
+<h3>Setting the location of a library<a class="headerlink" href="#setting-the-location-of-a-library" title="Permalink to this headline">¶</a></h3>
+<p>The location of the library dependencies (gsl, hdf5, healpix, blas/lapack) must be known to the installer. By default, it will look for them in the classical system
+locations:  <tt class="docutils literal"><span class="pre">/usr/lib</span></tt>, <tt class="docutils literal"><span class="pre">/usr/lib64</span></tt>, <tt class="docutils literal"><span class="pre">/usr/local/lib</span></tt>, <tt class="docutils literal"><span class="pre">/usr/local/lib64</span></tt> for the library, <tt class="docutils literal"><span class="pre">/usr/include</span></tt> and <tt class="docutils literal"><span class="pre">/usr/local/include</span></tt> for the include files. One can
+change the lookup path on a library by library basis. If a given dependency, <tt class="docutils literal"><span class="pre">XXX</span></tt>, is installed on the system such that its lib are in <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH/lib</span></tt> and its
+include files in <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH/include</span></tt>, setting the command line option <tt class="docutils literal"><span class="pre">--XXX_prefix=SOMEPREFIXPATH</span></tt>  will allow the clik install system. If <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH</span></tt> is identical to the the install path of clik, this option can be replaced by <tt class="docutils literal"><span class="pre">-XXX_islocal</span></tt>.</p>
+<p>If the library are at
+<tt class="docutils literal"><span class="pre">SOMEWEIRDPATH</span></tt> and the includes at <tt class="docutils literal"><span class="pre">SOMEDIFFERENTPATH</span></tt>, then setting the two options  <tt class="docutils literal"><span class="pre">--XXX_lib=SOMEWEIRDPATH</span> <span class="pre">--XXX_include=SOMEDIFFERENTPATH</span></tt> will allow the clik
+install system to find them.</p>
+<p>Finally, if the name of the library files differs from the usual ones one can set the option <tt class="docutils literal"><span class="pre">--XXX_link=THELINKLINE</span></tt>.</p>
+</div>
+<div class="section" id="special-case-the-mkl-library">
+<h3>Special case: the mkl library<a class="headerlink" href="#special-case-the-mkl-library" title="Permalink to this headline">¶</a></h3>
+<p>An extra special option is present for the blas/lapack dependency when one want to compile against the intel MKL library. Setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).</p>
+</div>
+<div class="section" id="telling-clik-to-install-the-dependencies">
+<h3>Telling clik to install the dependencies<a class="headerlink" href="#telling-clik-to-install-the-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>Setting the option <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> will tell the clik install system to attempt at installing the dependency. It will first download it from the net, and then try to compile and install it. Installation will be perfomed at the same location as where clik itself will install. The download and install will only be done if needed.
+This is only possible for the following dependencies : gsl, hdf5, healpix, blas/lapack, numpy, cython, h5py.</p>
+</div>
+<div class="section" id="putting-it-all-together">
+<h3>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h3>
+<p>The following command:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --local --gsl_install --hdf5_install --lapack_install --healpix_install --h5py_install --cython_install --numpy_install</pre>
+</div>
+<p>will tell the clik install system to install all the possible external dependency in the current directory. All will be compiled in 64bit mode. Clik will be compiled in 64bit as well and installed in the same directory.</p>
+<p>The following command:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --local --lapack_mkl=/opt/intel/mkl --healpix_install --hdf5_install --h5py_install</pre>
+</div>
+<p>will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library
+will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.</p>
+</div>
+</div>
+<div class="section" id="environment-variables">
+<h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
+<p>Depending of your shell, a configuration file named <tt class="docutils literal"><span class="pre">clik_profile.sh</span></tt> of <tt class="docutils literal"><span class="pre">clik_profile.csh</span></tt> will be installed in the <tt class="docutils literal"><span class="pre">bin</span></tt> directory at the install location of clik. One can source it on the command line, or include it in its startup configuration file to set the environment variable needed by clik.</p>
 </div>
 </div>
 
@@ -85,8 +124,16 @@
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Installing</a><ul>
-<li><a class="reference internal" href="#installing-pmclib">Installing pmclib</a></li>
-<li><a class="reference internal" href="#installing-clik">Installing clik</a></li>
+<li><a class="reference internal" href="#install-tool">Install tool</a><ul>
+<li><a class="reference internal" href="#setting-the-architecture">Setting the architecture</a></li>
+<li><a class="reference internal" href="#setting-installation-path">Setting installation path</a></li>
+<li><a class="reference internal" href="#setting-the-location-of-a-library">Setting the location of a library</a></li>
+<li><a class="reference internal" href="#special-case-the-mkl-library">Special case: the mkl library</a></li>
+<li><a class="reference internal" href="#telling-clik-to-install-the-dependencies">Telling clik to install the dependencies</a></li>
+<li><a class="reference internal" href="#putting-it-all-together">Putting it all together</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#environment-variables">Environment variables</a></li>
 </ul>
 </li>
 </ul>

@@ -4,63 +4,25 @@ import os.path as osp
 def build(bld):
   
   source_clik = 'aplowly.c erfinv.c fowly.c clik.c lklbs.c lowly.c lowly_common.c lowly_pol.c smica.c clik_helper.c clik_hfipack.c'.split()
-  source_clik += ['clik_bopix.c']*(bld.options.no_bopix==False)
+  source_clik += ['clik_bopix.c']*(bld.env.no_bopix==False)
+  source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   source_clik = [src for src in source_clik if src]
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl' ).split() if ff]
   uselib_bopix = []
+  uselib_wmap = []
   
   bld.shlib(
     source   = source_clik,
     target   = 'clik', 
     includes = '.'+" minipmc/"*(not bld.env.has_pmc),
     uselib   = uselib_clik,
-    use = "mybopix"* (bld.options.no_bopix==False),
+    use = "mybopix"* (bld.env.no_bopix==False)+" mywmap"*bool(bld.env.wmap_src),
     cflags = "-fopenmp"
     )
   bld.install_files('${PREFIX}/include/', 
                     'clik.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
-
-  if not bld.options.no_bopix:
-    bld(
-      features = 'fc cshlib fcshlib',
-      source = 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90',
-      target = 'mybopix',
-      uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
-      )
-    uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
-    
-  pmclinkline = " ".join([excc.bld_link_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
-  pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik",)])
-  pmcincline = " ".join([excc.bld_inc_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
-  pmcincline += ' '+excc.mkstr(bld.env.CPPPATH_ST,[bld.env.PREFIX+"/include"])
-  pmcdefline = " ".join([excc.bld_def_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
-  
-  bld.load("execconfig","waf_tools")  
-  bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik-config", install_path='${BINDIR}')
-
-  
-  bld(
-    features = "fc cshlib c fcshlib",
-    source = 'clik_fortran.c clik.f90',
-    target = 'clik_f90',
-    includes = '.'+" minipmc/"*(not bld.env.has_pmc),
-    use = 'clik',
-    uselib = 'fc_runtime'
-    )
-    
-  pmclinkline += " ".join([excc.bld_link_line(bld,nn) for nn in ['fc_runtime']])
-  pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik_f90",)])    
-  bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik_f90-config", install_path='${BINDIR}')
-
-  bld(
-    features = 'fc fcprogram',
-    source = 'clik_example_f90.f90',
-    includes = '.',
-    target = 'clik_example_f90',
-    use = 'clik_f90'
-  )
 
   bld(
     features = 'c cprogram',
@@ -68,4 +30,58 @@ def build(bld):
     target = 'clik_example_C',
     use = 'clik',
     includes = '.'+" minipmc/"*(not bld.env.has_pmc)
-  )
+    )
+  
+  if bld.env.has_f90:  
+    if not bld.env.no_bopix:
+      bld(
+        features = 'fc cshlib fcshlib',
+        source = 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90',
+        target = 'mybopix',
+        uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
+        )
+      uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+    
+    if bld.env.wmap_src:
+      wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'read_archive_map.f90 read_fits.f90 br_mod_dist.f90 WMAP_7yr_options.F90 WMAP_7yr_util.F90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.F90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
+      bld(
+         features = 'fc cshlib fcshlib',
+         source = wmap_src,
+         target = 'mywmap',
+         uselib = 'healpix_f90 lapack fc_omp fc_runtime',
+         )
+      uselib_wmap = [ff for ff in ('healpix_f90 lapack fc_omp fc_runtime').split() if ff]
+   
+
+  
+    bld(
+      features = "fc cshlib c fcshlib",
+      source = 'clik_fortran.c clik.f90',
+      target = 'clik_f90',
+      includes = '.'+" minipmc/"*(not bld.env.has_pmc),
+      use = 'clik',
+      uselib = 'fc_runtime'
+      )
+    
+
+    bld(
+      features = 'fc fcprogram',
+      source = 'clik_example_f90.f90',
+      includes = '.',
+      target = 'clik_example_f90',
+      use = 'clik_f90'
+      )
+
+  pmclinkline = " ".join([excc.bld_link_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
+  pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik",)])
+  pmcincline = " ".join([excc.bld_inc_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
+  pmcincline += ' '+excc.mkstr(bld.env.CPPPATH_ST,[bld.env.PREFIX+"/include"])
+  pmcdefline = " ".join([excc.bld_def_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
+
+  bld.load("execconfig","waf_tools")  
+  bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik-config", install_path='${BINDIR}')
+
+  if bld.env.has_f90:  
+    pmclinkline += " ".join([excc.bld_link_line(bld,nn) for nn in ['fc_runtime']])
+    pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik_f90",)])    
+    bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik_f90-config", install_path='${BINDIR}')

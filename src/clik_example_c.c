@@ -18,13 +18,13 @@ int main(int argc, char **argv) {
   testErrorExitVA(argc<3,-1,"Bad number of command line args!\nusage : %s clikidfile clfile [clfile ...]",*err,__LINE__,argv[0]);
   
   clikid = clik_init(argv[1],err);
-  exitOnError(*err,__LINE__);
+  quitOnError(*err,__LINE__,stderr);
   
   // retrieve has_cl and lmax
   clik_get_has_cl(clikid,has_cl,err);
-  exitOnError(*err,__LINE__);
+  quitOnError(*err,__LINE__,stderr);
   clik_get_lmax(clikid,lmax,err);
-  exitOnError(*err,__LINE__);
+  quitOnError(*err,__LINE__,stderr);
   
   sprintf(clnames[0],"TT");
   sprintf(clnames[1],"EE");
@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   }
   
   nextra = clik_get_extra_parameter_names(clikid,&names,err);
-  exitOnError(*err,__LINE__);
+  quitOnError(*err,__LINE__,stderr);
   
   if (nextra!=0) {
     fprintf(stdout,"With %d extra parameters\n",nextra);
@@ -63,10 +63,10 @@ int main(int argc, char **argv) {
   for(i=2;i<argc;i++) {
     // read cl as ascii file
     cl_and_pars = read_double_vector(argv[i],ndim,err);
-    exitOnError(*err,__LINE__);
+    quitOnError(*err,__LINE__,stderr);
 
     log_clikid = clik_compute(clikid,cl_and_pars,err);
-    exitOnError(*err,__LINE__);
+    quitOnError(*err,__LINE__,stderr);
     
     fprintf(stdout,"Log likelihood for file %s : %g\n",argv[i],log_clikid);
     

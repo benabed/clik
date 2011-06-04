@@ -13,7 +13,25 @@ def baseCreateParobject(parobject):
   root_grp.attrs["lmax"] = [-1,-1,-1,-1,-1,-1]
   
   return root_grp,hf
-
+  
+def add_external_data(directory,lkl_grp,tar=False):
+  import os.path as osp
+  import tempfile
+  import tarfile
+  import numpy as nm
+  if not tar:
+    lkl_grp.attrs["external_dir"] = osp.realpath(directory)
+  else:
+    tmp = tempfile.TemporaryFile()
+    tartmp = tarfile.TarFile(mode = "w", fileobj=tmp)
+    tartmp.add(directory)
+    tartmp.close()
+    tmp.seek(0)
+    dat = nm.frombuffer(tmp.read(),dtype=nm.uint8)
+    lkl_grp.create_dataset("external_data",data=dat.flat[:])
+    tmp.close()
+    
+    
 def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=None,nbins=0,bins=None,compress_bns=True):
   ilkl = root_grp.attrs["n_lkl_object"]
   lmaxs = root_grp.attrs["lmax"]

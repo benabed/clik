@@ -102,15 +102,16 @@ add_lib_dict = {
   "f90" : add_lib_f90
 }
 
-def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[],frameworkpath=[],framework=[],install=False,msg="",uselib=[],flagline="",opt_name="",add_lib_code="c"):
+def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[],frameworkpath=[],framework=[],install=False,msg="",uselib=[],flagline="",opt_name="",add_lib_code="c",forceinstall=False):
   if not opt_name:
     opt_name=name
   # do install if needed
-  if install and getattr(ctx.options,opt_name+"_install",False):
+  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False)):
     # first try without install !
+    setattr(ctx.env,"has_"+name,True)
+    setattr(ctx.options,"%s_islocal"%opt_name,1)
     try:
-      setattr(ctx.env,"has_"+name,True)
-      setattr(ctx.options,"%s_islocal"%opt_name,1)
+      assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
       return
     except Exception,e:
@@ -155,7 +156,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
         Logs.pprint("PINK", "or install automatically using cmdline option --%s_install"%(name))      
       raise e
 
-def installsmthg_pre(ctx,where,what):
+def installsmthg_pre(ctx,where,what,whereto="build/"):
 
   from waflib import Utils,Errors
   import urllib2
@@ -167,28 +168,28 @@ def installsmthg_pre(ctx,where,what):
   
   #ctx.env = Environment.Environment(filename="build/c4che/default.cache.py")
 
-  if osp.exists("build/"+what):
+  if osp.exists(osp.join(whereto,what)):
     Logs.pprint("PINK","%s already downloaded"%what)
   else:
     Logs.pprint("PINK","download from "+where)
     luaf = urllib2.urlopen(where)
     #if luaf.code!=200 and luaf.code!=None:
     #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
-    f=open("build/"+what,"w")
+    f=open(osp.join(whereto,what),"w")
     print >>f,luaf.read(),
     luaf.close()
     f.close()
-  tf = tarfile.open("build/"+what)
+  tf = tarfile.open(osp.join(whereto,what))
   #Logs.pprint("RED","LALALALA")
   for ff in [ff.name for ff in tf.getmembers()]:
-    if osp.exists("build/"+ff):
-      if osp.isdir("build/"+ff):
-        shutil.rmtree("build/"+ff)
+    if osp.exists(osp.join(whereto,ff)):
+      if osp.isdir(osp.join(whereto,ff)):
+        shutil.rmtree(osp.join(whereto,ff))
       else:
-        os.remove("build/"+ff)
+        os.remove(osp.join(whereto,ff))
   tf.close()
   Logs.pprint("PINK","untar "+what)
-  if ctx.exec_command("cd build/;tar -zxf "+what)!=0:
+  if ctx.exec_command("cd %s/;tar -zxf %s"%(whereto,what))!=0:
     raise Errors.WafError("Cannot untar "+what)
 
 def installsmthg_post(ctx,where,what,extra_config=""):
@@ -202,7 +203,7 @@ def installsmthg_post(ctx,where,what,extra_config=""):
     raise Errors.WafError("Cannot build %s"%what)
   #Logs.pprint("GREEN","You can now run ./waf configure, adding the following option '--%s_islocal'"%what)
 
-def check_python_module(ctx,name):
+def check_python_module(ctx,name,extracmd=""):
   import sys
   import imp
   if ctx.env.PYTHONDIR not in sys.path:
@@ -210,12 +211,15 @@ def check_python_module(ctx,name):
   try:
     ctx.start_msg("Checking python module '%s'"%name)
     imp.find_module(name)
+    if extracmd:
+      #print extracmd
+      exec(extracmd)
     ctx.end_msg(True)
   except Exception,e: 
     ctx.end_msg(False)
     raise e
 
-def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
+def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False):
   import waflib.Logs
   import os
   from waflib import Errors
@@ -226,7 +230,8 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
   import sys
 
   try:
-    check_python_module(ctx,name)
+    assert forceinstall==False
+    check_python_module(ctx,name,extracmd)
   except Exception,e: 
     if getattr(ctx.options,name+"_install",False):
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
@@ -245,6 +250,6 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None):
         mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if name in v][0]
         import os
         os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,name))
-      check_python_module(ctx,name)
+      check_python_module(ctx,name,extracmd)
     else:
       raise e

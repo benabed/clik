@@ -72,4 +72,11 @@ def build(ctx):
     install_path = ctx.env.BINDIR
     )    
 
+  ctx(
+    execrule = injectpath,
+    source = "prepare_wmap.py",
+    target = "prepare_wmap",
+    install_path = ctx.env.BINDIR
+    )    
+
 

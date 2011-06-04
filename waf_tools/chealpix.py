@@ -41,7 +41,22 @@ def install_cfitsio(ctx):
 def install_healpix(ctx):
   hpdir = "Healpix_2.20a"
   atl.installsmthg_pre(ctx,"http://sourceforge.net/projects/healpix/files/Healpix_2.20a/Healpix_2.20a_2011Feb09.tar.gz/download","Healpix_2.20a_2011Feb09.tar.gz")
-  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+ctx.env.CFLAGS_cshlib),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+ctx.env.FCFLAGS_fcshlib)}
+  fpic_c = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
+  fpic_f90 = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
+  
+  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+fpic_f90)}
+  # if I am here, I found cfitsio
+  # could it be somewhere else ?
+  cfitsiopath=""
+  for pth in ["/usr/local/lib","/usr/lib","/lib",ctx.env.LIBDIR]:    
+    if osp.exists(osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")):
+      cfitsiopath = pth
+      break
+  if not bool(cfitsiopath):
+    raise Exception("cannot find cfitsio !")
+  dii["CFITSIOPATH"]=cfitsiopath
+  dii["CFITSIOPATHINC"]=osp.realpath(cfitsiopath+"/../include")
+  
   f=open(osp.join("build",hpdir,"conf.cmd"),"w")
   print >>f,cnf_tmpl%dii
   f.close()
@@ -61,8 +76,8 @@ y
 -O2 -Wall %(CFLAGS)s
 
 
-%(LIBDIR)s
-%(INCDIR)s
+%(CFITSIOPATH)s
+%(CFITSIOPATHINC)s
 y
 n
 3
@@ -75,7 +90,7 @@ n
 -O %(CFLAGS)s
 
 
-%(LIBDIR)s
+%(CFITSIOPATH)s
 
 
 0

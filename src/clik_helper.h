@@ -32,4 +32,8 @@ int clik_getenviron_numthread(char* name, int sfg, error **err);
 // init lkls
 cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err);
 typedef cmblkl* clik_lkl_init_func(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err);
+
+void clik_external_data_init(char *pwd,char * dirname,hid_t group_id, char* cur_lkl,error **err);
+void clik_external_data_cleanup(char *pwd,char* dirname,error **err);
+
 #endif

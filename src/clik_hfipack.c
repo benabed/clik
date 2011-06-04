@@ -84,6 +84,51 @@ cmblkl* clik_lowly_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   return cing;  
 }
 
+void al_bl_cor(hid_t group_id, char* cur_lkl, int *_n, double **_al, double **_bl, double **_nl, double **_cor,int *_isdiag,error **err) {
+  double *al, *bl, *corr,*nl;
+  int n,isdiag;
+  herr_t hstat;
+  
+  n = *_n;
+  // get al
+  al = hdf5_double_datarray(group_id, cur_lkl,"al",&n,err);
+  forwardError(*err,__LINE__,);
+
+  // get bl
+  bl = hdf5_double_datarray(group_id, cur_lkl,"bl",&n,err);
+  forwardError(*err,__LINE__,);
+
+  // get nl
+  nl = NULL;
+  hstat = H5LTfind_dataset(group_id, "nl");
+  if (hstat==1) {
+    nl = hdf5_double_datarray(group_id, cur_lkl,"nl",&n,err);
+    forwardError(*err,__LINE__,);
+  }
+
+  // get cor
+  corr = NULL;
+  hstat = H5LTfind_dataset(group_id, "cor");
+  if (hstat==1) {
+    int ncor;
+    ncor=-1;
+    corr = hdf5_double_datarray(group_id, cur_lkl,"cor",&ncor,err);
+    forwardError(*err,__LINE__,);
+    testErrorRetVA((ncor!=n) && (ncor!=n*n),hdf5_base,"Bad size for %s in %s (got %d expected %d or %d)",*err,__LINE__,,"cor",cur_lkl,ncor,n,n*n);
+    isdiag = 0;
+    if (ncor==n) {
+      isdiag = 1;
+    } 
+  }
+  
+  *_al = al;
+  *_bl = bl;
+  *_nl = nl;
+  *_cor = corr;
+  *_isdiag = isdiag;
+  
+}
+
 cmblkl* clik_ivg_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   tease *ing;
   cmblkl *cing;
@@ -106,40 +151,15 @@ cmblkl* clik_ivg_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* ha
     Ml = NULL;
   }
   
-  
-  // get al
-  al = hdf5_double_datarray(group_id, cur_lkl,"al",&n,err);
+  al_bl_cor(group_id,cur_lkl, &n, &al, &bl, &nl, &corr, &isdiag,err);
   forwardError(*err,__LINE__,NULL);
   
-  // get bl
-  bl = hdf5_double_datarray(group_id, cur_lkl,"bl",&n,err);
-  forwardError(*err,__LINE__,NULL);
-  
-  // get nl
-  nl = &zero;
-  nlcst = 1;
-  hstat = H5LTfind_dataset(group_id, "nl");
-  if (hstat==1) {
-    nlcst = 0;
-    nl = hdf5_double_datarray(group_id, cur_lkl,"nl",&n,err);
-    forwardError(*err,__LINE__,NULL);
+  nlcst = 0;
+  if (nl == NULL) {
+    nl = &zero;
+    nlcst = 1;    
   }
-  
-  // get cor
-  corr = NULL;
-  hstat = H5LTfind_dataset(group_id, "cor");
-  if (hstat==1) {
-    int ncor;
-    ncor=-1;
-    corr = hdf5_double_datarray(group_id, cur_lkl,"cor",&ncor,err);
-    forwardError(*err,__LINE__,NULL);
-    testErrorRetVA((ncor!=n) && (ncor!=n*n),hdf5_base,"Bad size for %s in %s (got %d expected %d or %d)",*err,__LINE__,NULL,"cor",cur_lkl,ncor,n,n*n);
-    isdiag = 0;
-    if (ncor==n) {
-      isdiag = 1;
-    } 
-  }
-  
+    
   ing = tease_init(n,Ml,al, bl, nl, nlcst, corr, isdiag, err);
   forwardError(*err,__LINE__,NULL);
   
@@ -172,7 +192,8 @@ cmblkl* clik_gauss_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   int *Ml;
   hsize_t ndum;
   H5T_class_t dum;
-  size_t ddum;  herr_t hstat;
+  size_t ddum;  
+  herr_t hstat;
   
   zero = 0;
   n=nell;
@@ -182,38 +203,13 @@ cmblkl* clik_gauss_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     Ml = NULL;
   }
   
-  
-  // get al
-  al = hdf5_double_datarray(group_id, cur_lkl,"al",&n,err);
+  al_bl_cor(group_id,cur_lkl, &n, &al, &bl, &nl, &corr, &isdiag,err);
   forwardError(*err,__LINE__,NULL);
   
-  // get bl
-  bl = hdf5_double_datarray(group_id, cur_lkl,"bl",&n,err);
-  forwardError(*err,__LINE__,NULL);
-  
-  // get nl
-  nl = &zero;
-  nlcst = 1;
-  hstat = H5LTfind_dataset(group_id, "nl");
-  if (hstat==1) {
-    nlcst = 0;
-    nl = hdf5_double_datarray(group_id, cur_lkl,"nl",&n,err);
-    forwardError(*err,__LINE__,NULL);
-  }
-  
-  // get cor
-  corr = NULL;
-  hstat = H5LTfind_dataset(group_id, "cor");
-  if (hstat==1) {
-    int ncor;
-    ncor=-1;
-    corr = hdf5_double_datarray(group_id, cur_lkl,"cor",&ncor,err);
-    forwardError(*err,__LINE__,NULL);
-    testErrorRetVA((ncor!=n) && (ncor!=n*n),hdf5_base,"Bad size for %s in %s (got %d expected %d or %d)",*err,__LINE__,NULL,"cor",cur_lkl,ncor,n,n*n);
-    isdiag = 0;
-    if (ncor==n) {
-      isdiag = 1;
-    } 
+  nlcst = 0;
+  if (nl == NULL) {
+    nl = &zero;
+    nlcst = 1;    
   }
   
   ing = gausslkl_init(n,Ml,al, bl, nl, nlcst, corr, isdiag, err);
@@ -372,7 +368,11 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
       forwardError(*err,__LINE__,NULL);    
     }
     
+    hstat = H5Gclose(comp_id);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in  %s (got %d)",*err,__LINE__,NULL,cur_cmp,cur_lkl,hstat);    
+    
     testErrorRetVA(SCs[ic] == NULL,-1000,"Unknown component %s",*err,__LINE__,NULL,comp_type);
+    
   }
   
   smic = Smica_init(nb, wq, m, rq_hat, rq_0, nc, SCs,err);

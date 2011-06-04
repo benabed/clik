@@ -64,6 +64,7 @@ def ifort_conf(ctx):
 def gfortran_conf(ctx):
   ctx.check_tool('gfortran')
   ctx.env.append_value("FCFLAGS_fc_omp","-fopenmp")
+  ctx.env.append_value("FCFLAGS","-DGFORTRAN")
   mopt = ctx.env.mopt
   if sys.platform.lower()=="darwin":
     if "i386" in ctx.env.mopt:

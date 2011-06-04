@@ -28,7 +28,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   int lmax[6];
   char cur_lkl[100];
   cmblkl **clkl;
-  int cli,n_cl,n_extra;
+  int cli,n_cl;
   zero_bs* zbs;
   distribution *target;
   parname lkl_type;
@@ -43,10 +43,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   
   hstat = H5LTget_attribute_int( file_id, "/clik", "lmax",  lmax);
   _testErrorRetVA(hstat<0,hdf5_base,"cannot read /clik/lmax in file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);
-  
-  // no extra names for now.
-  n_extra = 0;
-  
+    
   clkl = malloc_err(sizeof(cmblkl*)*n_lkl,err);
   _forwardError(*err,__LINE__,NULL);
   
@@ -73,9 +70,37 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   zbs = init_zero_bs(lmax, err);
   _forwardError(*err,__LINE__,NULL);
   
-  target = init_multilklbs_distribution(n_cl + n_extra, clkl,n_lkl,
+  target = init_multilklbs_distribution(n_cl , clkl,n_lkl,
                                         zbs, &zero_bs_compute, &free_zero_bs, lmax, err);
   _forwardError(*err,__LINE__,NULL);
+  
+  group_id = H5Gopen(file_id,"clik", H5P_DEFAULT );
+  hstat = H5LTfind_dataset(group_id, "check_param");
+
+  if (hstat==1) {
+    int npar;
+    double *chkp;
+    double res,res2;
+    npar = clik_get_extra_parameter_names(target,NULL,err) + n_cl;
+    _forwardError(*err,__LINE__,NULL);
+    
+    chkp = hdf5_double_datarray(group_id, "clik","check_param",&npar,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    hstat = H5LTread_dataset_double(group_id, "check_value",&res);
+    _testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,"check_value","/clik",hstat);
+    
+    res2 = clik_compute(target,chkp,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    printf("Checking likelihood '%s' on test data. got %g expected %g (diff %g)\n",hdffilepath,res2,res,res-res2);
+    free(chkp);
+  }
+  hstat = H5Gclose(group_id);
+  _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik",hdffilepath,hstat);    
+  
+  hstat = H5Fclose(file_id);
+  _testErrorRetVA(hstat<0,hdf5_base,"cannot close ile %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);    
   
   return target;
 }
@@ -121,19 +146,20 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
 
   target = clikid;
   lbs = target->data;
-  
-  if (lbs->xdim==0) {
-    //for now, no extr parameters
-    pn = malloc_err(1*sizeof(parname),err);
-    _forwardError(*err,__LINE__,-1);
-  } else {
-    pn = malloc_err(lbs->xdim*sizeof(parname),err);
-    _forwardError(*err,__LINE__,-1);
+  if (names!=NULL) {
+    if (lbs->xdim==0) {
+      //for now, no extr parameters
+      pn = malloc_err(1*sizeof(parname),err);
+      _forwardError(*err,__LINE__,-1);
+    } else {
+      pn = malloc_err(lbs->xdim*sizeof(parname),err);
+      _forwardError(*err,__LINE__,-1);
+    }
+    for(i=0;i<lbs->xdim;i++) {
+      sprintf(pn[i],"%s",lbs->xnames[i]);
+    }
+    *names = pn;  
   }
-  for(i=0;i<lbs->xdim;i++) {
-    sprintf(pn[i],"%s",lbs->xnames[i]);
-  }
-  *names = pn;
   return lbs->xdim;
 }
 

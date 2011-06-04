@@ -309,3 +309,74 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   
   return clkl;
 }
+
+void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_lkl,error **err) {
+  herr_t hstat;
+  char dirtmpl[2048*4];
+  char *drn;
+  hsize_t ndum;
+  char fpix_data_name[2048*4];
+  FILE *fpix_data;
+  char command[4096*4];
+  int status;
+   
+  testErrorRetVA(getcwd(pwd,4096),-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
+  
+  // do we need to extract the data ?
+  hstat = H5LTfind_dataset (group_id, "tardata");
+  if (hstat==1) {
+    char *data;
+    
+    // yes !
+    sprintf(dirtmpl,"/tmp/clik_XXXXXX");
+    drn = mkdtemp(dirtmpl);
+    testErrorRetVA(drn==NULL,-100,"cannot create temporary dir (cause = '%s')",*err,__LINE__,,strerror(errno));
+
+    // read tarfile from hdffile
+    hstat = H5LTget_dataset_info( group_id, "external_data", &ndum, NULL,NULL);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+    data = malloc_err(sizeof(char)*ndum,err);
+    forwardError(*err,__LINE__,);
+    hstat = H5LTread_dataset_char(group_id,"external_data",data);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+
+    // save to file !
+    sprintf(fpix_data_name,"%s/data.tar",drn);
+    fpix_data = fopen_err(fpix_data_name,"w",err);
+    forwardError(*err,__LINE__,);
+    testErrorRetVA(fwrite(data,1,ndum,fpix_data)<ndum,-100,"Cannot write to file %s",*err,__LINE__,,fpix_data_name);
+    fclose(fpix_data);
+    free(data);
+
+    // change dir
+    testErrorRetVA(chdir(drn)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,drn,strerror(errno));
+
+    // call tar to recreate the files  
+    sprintf(command,"tar xf %s",fpix_data_name);
+    status = system(command);
+    testErrorRetVA(status!=0,-100,"cannot untar, command '%s' got status %d",*err,__LINE__,,command,status);
+    sprintf(dirname,"%s",drn);
+    
+  }  else {
+    memset( fpix_data_name,0,2048*4);
+    hstat = H5LTget_attribute_string( group_id, ".", "external_dir",   fpix_data_name);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read external_dir in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+    testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
+    dirname[0]='\0';
+  }
+}
+
+void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {
+  char command[4096*4];
+  int status;
+  
+   // delete all files (like a macho !)
+  testErrorRetVA(chdir(pwd)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,pwd,strerror(errno));
+  
+  if (dirname[0]!='\0') {
+    // remove files
+    sprintf(command,"rm -rf %s",dirname); 
+    status = system(command);
+    testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
+  }
+}
