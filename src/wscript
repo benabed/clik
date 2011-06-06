@@ -51,11 +51,11 @@ def build(bld):
          uselib = 'healpix_f90 lapack fc_omp fc_runtime',
          )
       uselib_wmap = [ff for ff in ('healpix_f90 lapack fc_omp fc_runtime').split() if ff]
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join(bld.env.wmap_src,'test.F90'),
-        use = 'mywmap',
-        target = 'test_wmap')
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join(bld.env.wmap_src,'test.F90'),
+      #  use = 'mywmap',
+      #  target = 'test_wmap')
 
   
     bld(
