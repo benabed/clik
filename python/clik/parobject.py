@@ -98,3 +98,17 @@ def uncompress_bins(shape,b_ws,blmin,blmax):
     bins[i,blmin[i]:blmax[i]+1] = b_ws[lc:lc+bsz]
     lc+=bsz
   return bins
+  
+def add_selfcheck(fname,pars):
+  import lkl
+  mlkl = lkl.clik(fname)
+  res = mlkl(pars)
+  del(mlkl)
+  
+  # add check pars
+  hf = h5py.File(fname, 'r+')
+  root_grp = hf["clik"]
+  root_grp.create_dataset("check_param",data=pars)
+  root_grp.create_dataset("check_value",data=res)
+  hf.close()
+  return res

@@ -320,10 +320,10 @@ void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_l
   char command[4096*4];
   int status;
    
-  testErrorRetVA(getcwd(pwd,4096),-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
+  testErrorRetVA(getcwd(pwd,4096)==NULL,-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
   
   // do we need to extract the data ?
-  hstat = H5LTfind_dataset (group_id, "tardata");
+  hstat = H5LTfind_dataset (group_id, "external_data");
   if (hstat==1) {
     char *data;
     
@@ -364,6 +364,7 @@ void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_l
     testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
     dirname[0]='\0';
   }
+
 }
 
 void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {

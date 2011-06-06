@@ -20,7 +20,7 @@ def main(argv):
   extn = clikl.extra_parameter_names
   print "  number of extra parameters = %d %s"%(len(extn),extn)
   ilkl = 0
-  for lkli_n in lkl:
+  for lkli_n in ("lkl_%d"%v for v in range(lkl.attrs["n_lkl_object"])):
     lkli = lkl[lkli_n]
     print "  %s"%lkli_n
     print "    lkl_type = %s"%lkli.attrs["lkl_type"]

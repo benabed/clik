@@ -29,7 +29,7 @@ cmblkl* clik_bopix_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   herr_t hstat;
   
   bopix_extra_only_one_(&bok);
-  testErrorRet(bok==0,-100,"Bopix already initialized",*err,__LINE__,NULL);
+  testErrorRet(bok!=0,-100,"Bopix already initialized",*err,__LINE__,NULL);
   
   clik_external_data_init(directory_name,pwd,group_id,cur_lkl,err);
   forwardError(*err,__LINE__,NULL);

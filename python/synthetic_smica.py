@@ -317,17 +317,8 @@ def main(argv):
   print "file created !"
   # reread the likelihood !
   if hasattr(clik,"clik"):
-    mlkl = clik.clik(pars.res_object)
-    res = mlkl(mcl)
+    res = php.add_selfcheck(pars.res_object,mcl)
     print "lkl for init cl %g"%res
-    del(mlkl)
-    
-    # add check pars
-    hf = h5py.File(pars.res_object, 'r+')
-    root_grp = hf["clik"]
-    root_grp.create_dataset("check_param",data=mcl)
-    root_grp.create_dataset("check_value",data=res)
-    hf.close()
   
 import sys
 if __name__=="__main__":
