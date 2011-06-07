@@ -56,7 +56,8 @@ SUBROUTINE BOPIX_EXTRA_LKL(LKL,CL)
 	!BB
 	cur = cur + CLIK_LMAX+1
 	DO i = 0,CLIK_LMAX
-		CLIK_CL(i,3)=CL(cur+i)
+		!CLIK_CL(i,3)=CL(cur+i)
+		CLIK_CL(i,3)=0
 	END DO	
 	!TE
 	cur = cur + CLIK_LMAX+1
