@@ -148,12 +148,12 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       Logs.pprint("BLUE","Compilation will continue without it")
     else:
       Logs.pprint("RED","%s not found"%name)
-      Logs.pprint("PINK", "check that %s_prefix or %s_lib and %s_include command line options point toward your %s install"%(name,name,name,name))
+      Logs.pprint("PINK", "check that %s_prefix or %s_lib and %s_include command line options point toward your %s install"%(opt_name,opt_name,opt_name,opt_name))
       Logs.pprint("PINK", "or check that %s is compiled in %d bit"%(name,{True:64}.get(ctx.options.m64,32)))
       if msg:
         Logs.pprint("PINK", msg)      
       if install:
-        Logs.pprint("PINK", "or install automatically using cmdline option --%s_install"%(name))      
+        Logs.pprint("PINK", "or install automatically using cmdline option --%s_install"%(opt_name))      
       raise e
 
 def installsmthg_pre(ctx,where,what,whereto="build/"):
