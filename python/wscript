@@ -27,56 +27,12 @@ def build(ctx):
     install_path = "${PYTHONDIR}/clik"
   )
   
-  ctx(
-    execrule = injectpath,
-    source = "synthetic_smica.py",
-    target = "synthetic_smica",
-    install_path = ctx.env.BINDIR
-    )    
-  ctx(
-    execrule = injectpath,
-    source = "clik_example_py.py",
-    target = "clik_example_py",
-    install_path = ctx.env.BINDIR
-    )    
-  ctx(
-    execrule = injectpath,
-    source = "clik_join.py",
-    target = "clik_join",
-    install_path = ctx.env.BINDIR
-    )    
-  ctx(
-    execrule = injectpath,
-    source = "clik_disjoin.py",
-    target = "clik_disjoin",
-    install_path = ctx.env.BINDIR
-    )    
-  ctx(
-    execrule = injectpath,
-    source = "clik_print.py",
-    target = "clik_print",
-    install_path = ctx.env.BINDIR
-    )    
-
-  ctx(
-    execrule = injectpath,
-    source = "create_lowl_problem.py",
-    target = "create_lowl_problem",
-    install_path = ctx.env.BINDIR
-    )    
-
-  ctx(
-    execrule = injectpath,
-    source = "prepare_lowl.py",
-    target = "prepare_lowl",
-    install_path = ctx.env.BINDIR
-    )    
-
-  ctx(
-    execrule = injectpath,
-    source = "prepare_wmap.py",
-    target = "prepare_wmap",
-    install_path = ctx.env.BINDIR
-    )    
-
-
+  # python execs
+  
+  for cde in ["synthetic_smica","clik_example_py","clik_join","clik_disjoin","clik_print","create_lowl_problem","prepare_lowl","prepare_wmap","prepare_bopix","clik_include_external","clik_extract_external"]:  
+    ctx(
+      execrule = injectpath,
+      source = cde+".py",
+      target = cde,
+      install_path = ctx.env.BINDIR
+      )    

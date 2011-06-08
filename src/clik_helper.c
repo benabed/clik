@@ -130,7 +130,7 @@ int clik_getenviron_numthread(char* name, int sfg, error **err) {
   np = clik_getenviron_integer(fullname,sfg,err);
   forwardError(*err,__LINE__,sfg);
   
-  testErrorRetVA(np>0 && np!=sfg, -100,"%s env variable meaningless (found '%s')",*err,__LINE__,sfg,fullname,np);
+  testErrorRetVA(np<0 && np!=sfg, -100,"%s env variable meaningless",*err,__LINE__,sfg,fullname);
   return np;
 }
 

@@ -11,8 +11,9 @@ def main(argv):
     print "usage : %s lkl_file"
     sys.exit(1)
   
-  lkl = h5py.File(sys.argv[1])["clik"]
   clikl = clik.clik(sys.argv[1])
+  
+  lkl = h5py.File(sys.argv[1])["clik"]
   
   print "clik lkl file =  %s"%sys.argv[1]
   print "  number of likelihoods = %d"%lkl.attrs["n_lkl_object"]
