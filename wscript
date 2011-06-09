@@ -162,6 +162,7 @@ def _prepare_src(ctx):
 
 
 def dist(ctx):
+  print "private"
   import re
   try:
     _prepare_src(ctx)
@@ -175,7 +176,13 @@ def dist(ctx):
   f.close()
   ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* src/bopix/* waf_tools/*.py clik.pdf" )
   
+import waflib
+class Dist_public(waflib.Scripting.Dist):
+  cmd = 'dist_public'
+  fun = 'dist_public'
+  
 def dist_public(ctx):
+  print "public"
   import re
   try:
     _prepare_src(ctx)
@@ -188,7 +195,7 @@ def dist_public(ctx):
   print >>f,svnversion
   f.close()
   ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* waf_tools/*.py clik.pdf" )
-
+  
 def post(ctx):
   import shutil
   from waflib import Utils
