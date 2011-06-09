@@ -61,6 +61,12 @@ Special case: the mkl library
 
 An extra special option is present for the blas/lapack dependency when one want to compile against the intel MKL library. Setting the option ``--lapack_mkl=PATH_OF_THE_MKL_INSTALL`` will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).
 
+Special case: WMAP likelihood
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`.
+
+
 Telling clik to install the dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

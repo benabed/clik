@@ -45,7 +45,7 @@ fsky = .8
 # wq = 
 
 # name of the resulting lkl file
-res_object = fake_smica_TE_32_1500_b10_100x143x217.h5
+res_object = fake_smica_TE_32_1500_b10_100x143x217.clik
 cl_save = fake_smica_TE_32_1500_b10_100x143x217.h5
 
 # optional set meanfield to 1 to avoid sampling fake data

@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installing &mdash; clik v1.0 documentation</title>
+    <title>Installing &mdash; clik v1.5 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.0',
+        VERSION:     '1.5',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.0 documentation" href="index.html" />
+    <link rel="top" title="clik v1.5 documentation" href="index.html" />
     <link rel="next" title="Interfacing the library with a c executable" href="interfacingc.html" />
     <link rel="prev" title="Design choices" href="designchoices.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="designchoices.html" title="Design choices"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -91,6 +91,10 @@ install system to find them.</p>
 <h3>Special case: the mkl library<a class="headerlink" href="#special-case-the-mkl-library" title="Permalink to this headline">¶</a></h3>
 <p>An extra special option is present for the blas/lapack dependency when one want to compile against the intel MKL library. Setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).</p>
 </div>
+<div class="section" id="special-case-wmap-likelihood">
+<h3>Special case: WMAP likelihood<a class="headerlink" href="#special-case-wmap-likelihood" title="Permalink to this headline">¶</a></h3>
+<p>Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option <tt class="docutils literal"><span class="pre">--wmap_src=WMAP7SRCPATH</span></tt> or let the install system download it for you by setting the option <tt class="docutils literal"><span class="pre">--wmap_install</span></tt>. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at <a class="reference internal" href="usingwmap.html#wmap"><em>Using WMAP7 likelihood</em></a>.</p>
+</div>
 <div class="section" id="telling-clik-to-install-the-dependencies">
 <h3>Telling clik to install the dependencies<a class="headerlink" href="#telling-clik-to-install-the-dependencies" title="Permalink to this headline">¶</a></h3>
 <p>Setting the option <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> will tell the clik install system to attempt at installing the dependency. It will first download it from the net, and then try to compile and install it. Installation will be perfomed at the same location as where clik itself will install. The download and install will only be done if needed.
@@ -129,6 +133,7 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
 <li><a class="reference internal" href="#setting-installation-path">Setting installation path</a></li>
 <li><a class="reference internal" href="#setting-the-location-of-a-library">Setting the location of a library</a></li>
 <li><a class="reference internal" href="#special-case-the-mkl-library">Special case: the mkl library</a></li>
+<li><a class="reference internal" href="#special-case-wmap-likelihood">Special case: WMAP likelihood</a></li>
 <li><a class="reference internal" href="#telling-clik-to-install-the-dependencies">Telling clik to install the dependencies</a></li>
 <li><a class="reference internal" href="#putting-it-all-together">Putting it all together</a></li>
 </ul>
@@ -178,7 +183,7 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
         <li class="right" >
           <a href="designchoices.html" title="Design choices"
              >previous</a> |</li>
-        <li><a href="index.html">clik v1.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

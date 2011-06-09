@@ -1,6 +1,6 @@
 # prepare a file for calling the wmap full likelihood through clik
 
-res_object = wmap_7_2-32_gibbs.h5
+res_object = wmap_7_2-32_gibbs.clik
 
 ttmin = 2
 ttmax = 32

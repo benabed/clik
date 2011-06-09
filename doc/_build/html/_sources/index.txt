@@ -20,7 +20,8 @@ Contents:
    interfacingf90
    interfacingpy
    fakesmica
-   
+   usingwmap
+   utils
 
 Indices and tables
 ==================

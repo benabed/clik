@@ -1,6 +1,6 @@
 # prepare a file for calling the wmap full likelihood through clik
 
-res_object = wmap_7_32-1200.h5
+res_object = wmap_7_32-1200.clik
 
 ttmin = 32
 ttmax = 1200

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Index &mdash; clik v1.5 documentation</title>
+    <title>Using WMAP7 likelihood &mdash; clik v1.5 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -21,15 +21,19 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.5 documentation" href="index.html" /> 
+    <link rel="top" title="clik v1.5 documentation" href="index.html" />
+    <link rel="prev" title="Creating synthetic likelihoods" href="fakesmica.html" /> 
   </head>
   <body>
     <div class="related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="#" title="General Index"
+          <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="fakesmica.html" title="Creating synthetic likelihoods"
+             accesskey="P">previous</a> |</li>
         <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
       </ul>
     </div>  
@@ -39,32 +43,24 @@
         <div class="bodywrapper">
           <div class="body">
             
+  <div class="section" id="using-wmap7-likelihood">
+<span id="wmap"></span><h1>Using WMAP7 likelihood<a class="headerlink" href="#using-wmap7-likelihood" title="Permalink to this headline">¶</a></h1>
+<p>If the sources for the wmap7 likelihood are available, one can also use this likelihood code along with the WMAP7 likelihood data file whithin clik. To do so, one must also create likelihood files that refers to the WMAP7 dataset. The tool <strong class="program">prepare_wmap</strong> allows to prepare this files. It needs a parameter file describing the location of the WMAP data the description of the range of ells to use and a few flags. Example parameter files are present in the <tt class="docutils literal"><span class="pre">examples</span></tt> directory. See for <tt class="docutils literal"><span class="pre">wmap_full.par</span></tt> that defines likelihood using all of the WMAP7 data for all ells.</p>
+<div class="highlight-python"><pre># prepare a file for calling the wmap full likelihood through clik
 
-   <h1 id="index">Index</h1>
+res_object = wmap_7_full.h5
 
-   <div class="genindex-jumpbox">
-   <a href="#C"><strong>C</strong></a> | <a href="#R"><strong>R</strong></a> 
-   </div>
-<h2 id="C">C</h2>
-<table width="100%" class="indextable genindextable"><tr>
-  <td width="33%" valign="top"><dl>
-    <dt><a href="interfacingf90.html#clik_cleanup">clik_cleanup (C function)</a></dt>
-    <dt><a href="interfacingf90.html#clik_get_extra_parameter_names">clik_get_extra_parameter_names (C function)</a></dt>
-    <dt><a href="interfacingf90.html#clik_get_has_cl">clik_get_has_cl (C function)</a></dt>
-</dl></td>
-  <td width="33%" valign="top"><dl>
-    <dt><a href="interfacingf90.html#clik_get_lmax">clik_get_lmax (C function)</a></dt>
-    <dt><a href="interfacingf90.html#clik_init">clik_init (C function)</a></dt>
-</dl></td>
-</tr></table>
+ttmin = 2
+ttmax = 1200
+temin = 2
+temax = 1200
+use_gibbs = 0
+use_lowl_pol = 1
 
-<h2 id="R">R</h2>
-<table width="100%" class="indextable genindextable"><tr>
-  <td width="33%" valign="top"><dl>
-    <dt><a href="interfacingf90.html#real">real (C function)</a></dt>
-</dl></td>
-</tr></table>
-
+wmap_data = /THE/PATH/TO/likelihood_v4p1
+cl_save = wmap_7_full.cltest</pre>
+</div>
+</div>
 
 
           </div>
@@ -72,9 +68,14 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
-
-   
-
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fakesmica.html"
+                        title="previous chapter">Creating synthetic likelihoods</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/usingwmap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
@@ -96,8 +97,11 @@
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
-          <a href="#" title="General Index"
+          <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="fakesmica.html" title="Creating synthetic likelihoods"
+             >previous</a> |</li>
         <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
       </ul>
     </div>
