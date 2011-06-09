@@ -80,7 +80,7 @@ def configure(ctx):
   ctx.load("chealpix","waf_tools")
   
   #bopix
-  ctx.env.no_bopix = ctx.options.no_bopix
+  ctx.env.no_bopix = ctx.options.no_bopix or not osp.exists("src/bopix")
   # wmap
   if ctx.options.wmap_install:
     atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
@@ -179,6 +179,20 @@ def dist(ctx):
   f.close()
   ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* src/bopix/* waf_tools/*.py clik.pdf" )
   
+def dist(ctx):
+  import re
+  try:
+    _prepare_src(ctx)
+  except Exception,e:
+    pass
+  ctx.base_name = 'clik-1.5.public'
+  res = ctx.cmd_and_log("cd ..;svn log -r BASE")
+  svnversion = re.findall("(r\d+)",res)[0]
+  f=open("svnversion","w")
+  print >>f,svnversion
+  f.close()
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* waf_tools/*.py clik.pdf" )
+
 def post(ctx):
   import shutil
   from waflib import Utils

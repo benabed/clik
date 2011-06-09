@@ -1,7 +1,7 @@
 Design choices
 ==============
 
-The idea was to build an interface so that people interested into testing their prefered cosmological model against the Planck likelihood will be able to do so in a relatively easy way. This is the reason why the library has **no user serviceable part**. You are playing around with the code, you are on your own!
+The idea was to build an interface so that people interested into testing their prefered cosmological model against the Planck likelihood will be able to do so in a relatively easy way. This is the reason why the library has **no user serviceable part**. If you start playing around with the code, you are on your own!
 
 That being said, here are a few key ideas on the library.
 
@@ -10,7 +10,10 @@ A likelihood is entirely defined by a likelihood file.
 
 Aong with the code, likelihood files will be distributed. They contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood (maps, cl, whatnot),but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood. 
 
+As an exception to this rule, are the WMAP and BOPIX likelihood that rely on external data. This data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory. The latter case improve the efficiency of the initialization of clik when using this knd of likelihood files.
+
 In order to use the library, the first step is thus to initialize it with such a file. Functions or subroutine to perform this initialization are available in each language. Another function is provided to cleanup the memory at the end of the use of a given likelihood. Several likelihoods can be initialized within the same session, allowing to perform comparison between different likelihood approximation whithin the same run.
+
 
 The library computes an approximation of the log likelihood
 -----------------------------------------------------------
