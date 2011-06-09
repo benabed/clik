@@ -179,7 +179,7 @@ def dist(ctx):
   f.close()
   ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* src/bopix/* waf_tools/*.py clik.pdf" )
   
-def dist(ctx):
+def dist_public(ctx):
   import re
   try:
     _prepare_src(ctx)
