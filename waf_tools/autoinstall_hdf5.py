@@ -1,6 +1,6 @@
 import autoinstall_lib as atl
 
-version = "hdf5-1.8.7"
+version = "hdf5-1.8.6"
 tool = "hdf5"
 
 #print "-> loading %s autoinstall (using version %s)"%(tool,version)
