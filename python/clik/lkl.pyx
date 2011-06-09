@@ -1,8 +1,8 @@
 cimport numpy as nm
 import numpy as nm
 nm.import_array()
-cimport libc.stdlib as stdlib
-cimport libc.stdio as stdio
+cimport stdlib as stdlib
+cimport stdio as stdio
 
 cdef extern from "errorlist.h":
   ctypedef struct error:

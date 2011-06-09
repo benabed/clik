@@ -112,6 +112,12 @@ This is only possible for the following dependencies : gsl, hdf5, healpix, blas/
 <p>will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library
 will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.</p>
 </div>
+<div class="section" id="best-choice">
+<h3>Best choice<a class="headerlink" href="#best-choice" title="Permalink to this headline">¶</a></h3>
+<p>If you are not in a hurry, here is the recommanded configure line command:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --local --m64 --lapack_mkl=/opt/intel/mkl --healpix_install --hdf5_install --h5py_install --cython_install --numpy_install --wmap_install</pre>
+</div>
+</div>
 </div>
 <div class="section" id="environment-variables">
 <h2>Environment variables<a class="headerlink" href="#environment-variables" title="Permalink to this headline">¶</a></h2>
@@ -136,6 +142,7 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
 <li><a class="reference internal" href="#special-case-wmap-likelihood">Special case: WMAP likelihood</a></li>
 <li><a class="reference internal" href="#telling-clik-to-install-the-dependencies">Telling clik to install the dependencies</a></li>
 <li><a class="reference internal" href="#putting-it-all-together">Putting it all together</a></li>
+<li><a class="reference internal" href="#best-choice">Best choice</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#environment-variables">Environment variables</a></li>

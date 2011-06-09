@@ -90,7 +90,17 @@ The following command::
 will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library 
 will be the one from an mkl install located at --lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.
 
-    
+ 
+Best choice 
+^^^^^^^^^^^
+
+If you are not in a hurry, here is the recommanded configure line command::
+
+    $> ./waf configure --local --m64 --lapack_mkl=/opt/intel/mkl --healpix_install --hdf5_install --h5py_install --cython_install --numpy_install --wmap_install
+
+
+
+   
 Environment variables
 ---------------------
 

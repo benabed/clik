@@ -2,10 +2,6 @@ from waflib import Logs
 import sys
 import os.path as osp
 
-from waflib import Logs
-import sys
-import os.path as osp
-
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
 
@@ -38,6 +34,8 @@ def options(ctx):
   
   
 def configure(ctx):
+  import os
+  import os.path as osp
   ctx.load("try_icc","waf_tools")
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
@@ -93,8 +91,6 @@ def configure(ctx):
       from waflib.Logs import warn
       warn("reverting to current executable")
       ctx.env.PYTHON[0]=sys.executable
-      import os
-      import os.path as osp
       os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
     try:
       ctx.check_python_headers()

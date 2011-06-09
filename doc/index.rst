@@ -22,6 +22,7 @@ Contents:
    fakesmica
    usingwmap
    utils
+   changes
 
 Indices and tables
 ==================
