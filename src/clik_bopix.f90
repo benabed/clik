@@ -4,7 +4,7 @@ MODULE BOPIX_EXTRA
 
 	INTEGER:: BOK = 0
 	INTEGER:: CLIK_LMAX
-	REAL(4),DIMENSION(0:200,1:4):: CLIK_CL
+	REAL(4),DIMENSION(1:200,1:4):: CLIK_CL
 
 END MODULE BOPIX_EXTRA
 SUBROUTINE BOPIX_EXTRA_SET_LMAX(LMAX)
@@ -43,28 +43,38 @@ SUBROUTINE BOPIX_EXTRA_LKL(LKL,CL)
 	REAL(8),INTENT(IN),DIMENSION(0:4*CLIK_LMAX+3)::CL
 	INTEGER::i,cur
 
+	CLIK_CL=0
 	!TT
 	cur = 0
-	DO i = 0,CLIK_LMAX
+	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,1)=CL(cur+i)
 	END DO	
+	WRITE (*,*) "TT uu",CL(cur+2:cur+5)
 	!EE
 	cur = cur + CLIK_LMAX+1
-	DO i = 0,CLIK_LMAX
+	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,3)=CL(cur+i)
 	END DO	
+	WRITE (*,*) "EE uu",CL(cur+2:cur+5)
 	!BB
-	cur = cur + CLIK_LMAX+1
-	DO i = 0,CLIK_LMAX
+	!cur = cur + CLIK_LMAX+1
+	DO i = 1,CLIK_LMAX
 		!CLIK_CL(i,3)=CL(cur+i)
 		CLIK_CL(i,4)=0
 	END DO	
 	!TE
 	cur = cur + CLIK_LMAX+1
-	DO i = 0,CLIK_LMAX
+	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,2)=CL(cur+i)
 	END DO	
-
+	WRITE (*,*) "TE uu",CL(cur+2:cur+5)
+	
+	WRITE (*,*) "TT aa",CLIK_CL(2:5,1)
+	WRITE (*,*) "EE aa",CLIK_CL(2:5,3)
+	WRITE (*,*) "BB aa",CLIK_CL(2:5,4)
+	WRITE (*,*) "TE aa",CLIK_CL(2:5,2)
+	
+	
 	CALL BOPIX_LIKELIHOOD(CLIK_CL,MENOLOGLIK_S)
 	LKL = -MENOLOGLIK_S
 END SUBROUTINE 	BOPIX_EXTRA_LKL

@@ -31,6 +31,15 @@
 !      TOT_WALL_TIME = ETIME(ELAPSED)      
 !      WRITE(6,*)'TEMPO TRASCORSO ',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2)
 
+	WRITE (*,*) "TT in ",CL(2:5,1)
+	WRITE (*,*) "EE in ",CL(2:5,3)
+	WRITE (*,*) "BB in ",CL(2:5,4)
+	WRITE (*,*) "TE in ",CL(2:5,2)
+	WRITE (*,*) "TT fid",BOPIX_CL(0,2:5)
+	WRITE (*,*) "EE fid",BOPIX_CL(2,2:5)
+	WRITE (*,*) "BB fid",BOPIX_CL(3,2:5)
+	WRITE (*,*) "TE fid",BOPIX_CL(1,2:5)
+	
   SELECT CASE (BOPIX_CL_FILE)
 
 
@@ -74,6 +83,11 @@
       CL1(1,2:200)                 = DBLE(CL(2:200,3))
       CL1(0,2:200)                 = DBLE(CL(2:200,1))
    END SELECT
+
+	WRITE (*,*) "TT out ",CL1(0,2:5)
+	WRITE (*,*) "EE out ",CL1(1,2:5)
+	WRITE (*,*) "BB out ",CL1(2,2:5)
+	WRITE (*,*) "TE out ",CL1(3,2:5)
 
 !      WRITE (6,*) 'TT l=2,35', CL1(0,2), CL1(0,35) 
 

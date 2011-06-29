@@ -65,6 +65,10 @@ def main(argv):
   mcl[1,2:] = cls[:31,3]/llp1s2pi
   mcl[2,2:] = cls[:31,2]/llp1s2pi
   
+  print "TT wow",mcl[0,2:6]
+  print "EE wow",mcl[1,2:6]
+  print "TE wow",mcl[2,2:6]
+  
   if hasattr(clik,"clik"):
     res = php.add_selfcheck(pars.res_object,mcl.flat[:])
     print "lkl for init cl %g"%res

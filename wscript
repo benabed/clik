@@ -42,8 +42,8 @@ def configure(ctx):
   try:
     ctx.load("try_ifort","waf_tools")
     ctx.env.has_f90 = True
-  except:
-    Logs.pprint("BLUE","No fortran compiler found. Will keep on working without it")
+  except Exception,e:
+    Logs.pprint("BLUE","No fortran compiler found. Will keep on working without it (cause: '%s')"%e)
     ctx.env.has_f90 = False
   ctx.load("local_install","waf_tools")
   

@@ -5,7 +5,7 @@ import os.path as osp
 
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
-lapack_funcs = "dtrsv dpotrf dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr"     
+lapack_funcs = "dtrsv dpotrf dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot"     
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
@@ -166,6 +166,7 @@ void dsyr(const char *uplo, const int *n, const double *alpha, const double *x, 
 void dsymm(const char *side, const char *uplo, const int *m, const int *n,
            const double *alpha, const double *a, const int *lda, const double *b, const int *ldb,
            const double *beta, double *c, const int *ldc);
+double ddot(int* N,double *DX, int* INCX,double *DY,int* INCY);
            
          
 """

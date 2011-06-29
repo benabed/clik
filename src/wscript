@@ -33,7 +33,7 @@ def build(bld):
     )
   
   if bld.env.has_f90:  
-    if not bld.env.no_bopix:
+    if not bld.env.no_bopix and False:
       bld(
         features = 'fc cshlib fcshlib',
         source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
@@ -41,11 +41,11 @@ def build(bld):
         uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
         )
       uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
-      #bld(
-      #  features = 'fc fcprogram',
-      #  source = osp.join('bopix','sest.f90'),
-      #  use = 'mybopix',
-      #  target = 'test_bopix')
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join('bopix','sest.f90'),
+        use = 'mybopix',
+        target = 'test_bopix')
       
     if bld.env.wmap_src:
       wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'read_archive_map.f90 read_fits.f90 br_mod_dist.f90 WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]

@@ -4,6 +4,7 @@ import Options
 import os.path as osp
 from waflib import Logs
 from waflib import  Context
+from waflib import Errors
 
 def options(ctx):
   ctx.add_option("--gfortran",action="store_true",default=False,help="Do not test for ifort and only use gfortran")
@@ -20,8 +21,8 @@ def configure(ctx):
     try:
       ifort_conf(ctx)
       return
-    except:
-      Logs.pprint("PINK", "ifort not found, defaulting to gfortran")
+    except Exception,e:
+      Logs.pprint("PINK", "ifort not found, defaulting to gfortran (cause: '%s')"%e)
   gfortran_conf(ctx)
   
   
@@ -32,18 +33,21 @@ def ifort_conf(ctx):
   ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   if not ctx.options.fortran_flagline:
+    if "/" not in ctx.env.FC:
+      ctx.env.FC = ctx.cmd_and_log("which %s"%ctx.env.FC).strip()
+      print ctx.env.FC
     ifort_path = osp.dirname(osp.realpath(ctx.env.FC))
     #print ifort_path
     if ctx.options.m32:
       try:
         f=open(osp.join(ifort_path,'ifortvars_ia32.sh'))
       except:
-        raise Errors.wafError("Can't locate ifort configuration file")
+        raise Errors.WafError("Can't locate ifort configuration file")
     else:
       try:
         f=open(osp.join(ifort_path,'ifortvars_intel64.sh'))
       except:
-        raise Errors.wafError("Can't locate ifort configuration file")
+        raise Errors.WafError("Can't locate ifort configuration file")
 
     txt = f.read()
     f.close()
@@ -76,6 +80,15 @@ def gfortran_conf(ctx):
   else:
     ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
   
+  v90 = ctx.cmd_and_log(ctx.env.FC+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
+  if len(version90)<1:
+    Logs.pprint("PINK","Can't get gfortran version... Let's hope for the best")
+  else:
+    version90 = version90[0]
+    vmid = int(version90.split(".")[1])
+    if vmid<3:
+      raise Errors.WafError("need gfortran version above 4.3 got %s"%version90)
   lgfpath = ctx.cmd_and_log(ctx.env.FC+" %s -print-file-name=libgfortran.dylib"%mopt,quiet=Context.STDOUT)    
   lpath = [osp.dirname(osp.realpath(lgfpath))]
   lgfpath = ctx.cmd_and_log(ctx.env.FC+" %s -print-file-name=libgomp.dylib"%mopt,quiet=Context.STDOUT)    
