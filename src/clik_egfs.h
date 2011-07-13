@@ -18,7 +18,11 @@ typedef struct {
   int cid[30];
   } egfs;
   
-  egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, int lmin, int lmax, double* cib_clustering,double *patchy_ksz, double *homogeneous_ksz,double *tsz,double *cib_decor_clust, double * cib_decor_poisson, error **err);
+egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, 
+                int lmin, int lmax, double* cib_clustering,double *patchy_ksz, 
+                double *homogeneous_ksz,double *tsz,
+                double *cib_decor_clust, double * cib_decor_poisson, error **err);
+                
 void egfs_compute(egfs *self, double *pars, double *rq, double *drq, error **err);
 void egfs_free(void **pelf);
 

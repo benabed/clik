@@ -76,6 +76,26 @@ double* hdf5_double_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, e
   return res;
 }
 
+char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err) {
+  hsize_t ndum;
+  H5T_class_t dum;
+  size_t ddum;
+  herr_t hstat;
+  char *res;
+  
+  hstat = H5LTget_attribute_info( group_id, ".",name, &ndum, &dum, &ddum);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
+  testErrorRetVA((ndum!=*sz && *sz>0),hdf5_base,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,name,cur_lkl,ndum,*sz);
+  res = malloc_err(sizeof(char)*ndum,err);
+  forwardError(*err,__LINE__,NULL);
+  hstat = H5LTget_attribute_char(group_id, ".",name,res);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
+  if (*sz<0) {
+    *sz = ndum;
+  }
+  return res;
+}
+
 int clik_getenviron_integer(char* name, int sfg, error **err) {
   int res;
   char *cres;
@@ -145,8 +165,19 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   int lmin, lmax;
   char init_func_name[2048];
   clik_lkl_init_func *clik_dl_init;
+  clik_addon_init_func *clik_addondl_init;
   void* dlhandle;   
+  char cur_addon[256],addon_type[256];
+  int i_add,n_addons;
+  hid_t add_group_id;
   
+
+#ifdef HAS_RTLD_DEFAULT 
+  dlhandle = RTLD_DEFAULT;
+#else
+  dlhandle = NULL;
+#endif
+
   // get the lkl type
   memset(lkl_type,0,_pn_size*sizeof(char));
 
@@ -227,7 +258,7 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
         ncl++;
       }
     }
-    hstat = H5LTfind_dataset(group_id, "nbins");
+    hstat = H5LTfind_dataset(group_id, "bins");
     
     if (hstat==1) { // full binning matrix
       int nbn;
@@ -273,31 +304,12 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   clkl = NULL;
 
   sprintf(init_func_name,"clik_%s_init",lkl_type);
-#ifdef HAS_RTLD_DEFAULT 
-  dlhandle = RTLD_DEFAULT;
-#else
-  dlhandle = NULL;
-#endif
   clik_dl_init = dlsym(dlhandle,init_func_name);
-  testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,cur_lkl,dlerror());  \
+  testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,cur_lkl,dlerror()); 
 
   clkl = clik_dl_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
   forwardError(*err,__LINE__,NULL); 
 
-  /*if (strcasecmp(lkl_type, "ivg")==0) {
-    clkl = clik_ivg_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
-    forwardError(*err,__LINE__,NULL);
-  }  
-  if (strcasecmp(lkl_type, "gauss")==0) {
-    clkl = clik_gauss_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
-    forwardError(*err,__LINE__,NULL);
-  }
-  if (strcasecmp(lkl_type, "smica")==0) {
-    clkl = clik_smica_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
-    forwardError(*err,__LINE__,NULL);
-  }
-  testErrorRetVA(clkl == NULL,-1000,"Unknown lkl %s",*err,__LINE__,NULL,lkl_type);
-  */
   // cleanups
   if(wl!=NULL) {
     free(wl);    
@@ -306,6 +318,37 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
     free(bins);    
   }
   free(ell);
+  
+  // look for addons
+  n_addons = 0;
+  hstat = H5LTfind_attribute(group_id, "n_addons");
+  if (hstat==1) {
+    hstat = H5LTget_attribute_int(group_id, ".", "n_addons",&n_addons);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read n_addons in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  }
+  
+  for (i_add=0;i_add<n_addons;i_add++) {
+    sprintf(cur_addon,"addon_%d",i_add);
+    add_group_id = H5Gopen(group_id, cur_addon, H5P_DEFAULT );
+    testErrorRetVA(group_id<0,hdf5_base,"cannot read addon %s in %s (got %d)",*err,__LINE__,NULL,cur_addon,cur_lkl,hstat);
+    
+    memset(addon_type,0,256*sizeof(char));
+    hstat = H5LTget_attribute_string( add_group_id, ".", "addon_type",  addon_type);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read addon_type in %s/%s (got %d)",*err,__LINE__,NULL,cur_lkl,cur_addon,hstat);
+
+    sprintf(init_func_name,"clik_addon_%s_init",addon_type);
+    clik_addondl_init = dlsym(dlhandle,init_func_name);
+    testErrorRetVA(clik_addondl_init==NULL,-1111,"Cannot initialize addon type %s from %s/%s dl error : %s",*err,__LINE__,NULL,addon_type,cur_lkl,cur_addon,dlerror());
+    
+    // pretty print purpose
+    sprintf(cur_addon,"%s/addon_%d",cur_lkl,i_add);
+    
+    clkl = clik_addondl_init(clkl,add_group_id,cur_addon,err);
+    forwardError(*err,__LINE__,NULL);  
+
+    hstat = H5Gclose(add_group_id);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot close %s (got %d)",*err,__LINE__,NULL,cur_addon,hstat);
+  }
   
   return clkl;
 }

@@ -2,6 +2,8 @@ from waflib import Logs
 import sys
 import os.path as osp
 
+clik_version = "1.5.3"
+
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
 
@@ -170,7 +172,7 @@ def dist(ctx):
     _prepare_src(ctx)
   except Exception,e:
     pass
-  ctx.base_name = 'clik-1.5'
+  ctx.base_name = 'clik-'+clik_version
   res = ctx.cmd_and_log("cd ..;svn log -r BASE")
   svnversion = re.findall("(r\d+)",res)[0]
   f=open("svnversion","w")
@@ -190,7 +192,7 @@ def dist_public(ctx):
     _prepare_src(ctx)
   except Exception,e:
     pass
-  ctx.base_name = 'clik-1.5.public'
+  ctx.base_name = 'clik-'+clik_version+'.public'
   res = ctx.cmd_and_log("cd ..;svn log -r BASE")
   svnversion = re.findall("(r\d+)",res)[0]
   f=open("svnversion","w")
@@ -217,6 +219,7 @@ def build_env_files(ctx):
   if osp.basename(os.environ["SHELL"]) in ("csh","tcsh","zsh"):
     name = "clik_profile.csh"
     shebang = "#! /bin/tcsh"
+    single_tmpl = "setenv %(VAR)s %(PATH)s\n"
     block_tmpl = """
 if !($?%(VAR)s) then
   setenv %(VAR)s %(PATH)s
@@ -227,6 +230,7 @@ endif
   else:
     name = "clik_profile.sh"
     shebang = "#! /bin/sh"
+    single_tmpl = "%(VAR)s=%(PATH)s\nexport %(VAR)s\n"
     block_tmpl = """
 if [ -z "${%(VAR)s}" ]; then
   %(VAR)s=%(PATH)s
@@ -245,6 +249,7 @@ export %(VAR)s
   print >>f,block_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}
   print >>f,block_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
   print >>f,block_tmpl%{"PATH":":".join(full_libpath),"VAR":LD_LIB}
+  print >>f,single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
   f.close()
   
   print "Use %s to set the environment variables needed by clik"%osp.join(ctx.env.BINDIR,name)
