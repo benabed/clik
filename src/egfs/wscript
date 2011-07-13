@@ -1,0 +1,10 @@
+def build(bld):
+  bld(
+    features = 'fc cshlib fcshlib pyext',
+    source = ['clik_egfs.f90','egfs.f90','keysvalues.f90','clik_egfs.c','../minipmc/errorlist.c','../minipmc/io.c','egfs.pyx'], 
+    target = 'egfs',
+    uselib = 'fc_runtime',
+    includes = '.'+" ../minipmc/",
+    install_path = "${PYTHONDIR}"
+    )
+  

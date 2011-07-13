@@ -15,7 +15,7 @@
 struct _pmc_simu_struct_;
 struct _distribution_struct_;
 
-typedef double posterior_log_pdf_func(void *, const double *, error **);
+typedef double posterior_log_pdf_func(void *, double *, error **);
 typedef posterior_log_pdf_func log_pdf_func;
 
 typedef void retrieve_ded_func(const void *, double *, error **);

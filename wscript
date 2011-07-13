@@ -115,6 +115,8 @@ def build(ctx):
   ctx.recurse("src")
   if not ctx.options.no_pytools:
     ctx.recurse("python")
+  #ctx.recurse("src/egfs")
+  
   ctx.add_post_fun(post)
 
 def _remove_arch(ctx,evn):
@@ -137,7 +139,7 @@ def _prepare_src(ctx):
   import os
   
   # deals with .h
-  [shutil.copy("../include/target/%s"%ff,"src") for ff in [
+  [os.symlink(osp.realpath("../include/target/%s"%ff),"src/%s"%ff) for ff in [
     "aplowly.h",
     "erfinv.h",
     "fowly.h",
@@ -149,7 +151,7 @@ def _prepare_src(ctx):
     ]]
   
   # deals with .c
-  [shutil.copy("../src/target/%s"%ff,"src") for ff in [
+  [os.symlink(osp.realpath("../src/target/%s"%ff),"src/%s"%ff) for ff in [
     "aplowly.c",
     "erfinv.c",
     "fowly.c",

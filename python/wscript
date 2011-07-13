@@ -19,8 +19,19 @@ def build(ctx):
       target  = "lkl",
       includes = "../src"+" ../src/minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
+      cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
+    if (ctx.env.has_f90):
+      ctx(
+        features = "c cshlib pyext",
+        source = "clik/egfs.pyx",
+        target  = "egfs",
+        includes = "../src"+" ../src/minipmc/"*(not ctx.env.has_pmc),
+        use = "clik",
+        cflags = "-fopenmp",
+        install_path = "${PYTHONDIR}/clik"
+      )
   
   ctx(
     source = "clik/parobject.py clik/__init__.py",
