@@ -73,7 +73,7 @@ void fortran_clik_get_extra_parameter_names__(long* pself, char* names) {
 void fortran_clik_get_extra_parameter_names_(long* pself, char* names) {
 #endif  
   clik_object* self;
-  int i;
+  int i,ii;
   int numnames;
   parname *pnames;
   self = *pself;
@@ -81,6 +81,7 @@ void fortran_clik_get_extra_parameter_names_(long* pself, char* names) {
 
   // Copy parameter names in fortran character array
   for (i=0;i<numnames;i++) {
+    memset(&names[i*_pn_size],' ',sizeof(char)*256);
     sprintf(&names[i*_pn_size],"%s",pnames[i]);
   }
   // Get rid of pnames

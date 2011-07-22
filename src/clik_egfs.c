@@ -20,9 +20,11 @@ egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** val
   for(i=0;i<ndefaults;i++) {
     sprintf((self->keys[i]),"%s",keys[i]);
     sprintf((self->values[i]),"%s",values[i]);
+    //_DEBUGHERE_("%s = %s",self->keys[i],self->values[i]);
   }
   for(i=self->ndf;i<self->nkv;i++) {
     sprintf((self->keys[i]),"%s",keyvars[i-self->ndf]);
+    //_DEBUGHERE_("%s = ?",self->keys[i]);
   }  
   
   self->nell = lmax-lmin+1;

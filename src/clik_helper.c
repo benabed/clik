@@ -83,12 +83,14 @@ char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error
   herr_t hstat;
   char *res;
   
-  hstat = H5LTget_attribute_info( group_id, ".",name, &ndum, &dum, &ddum);
+  ndum = 1020;
+  hstat = H5LTget_attribute_info( group_id, ".",name, &ddum, &dum, &ndum);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
   testErrorRetVA((ndum!=*sz && *sz>0),hdf5_base,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,name,cur_lkl,ndum,*sz);
+  //_DEBUGHERE_("%s size %ld hst %d ff %d",name,ndum,hstat,ddum);
   res = malloc_err(sizeof(char)*ndum,err);
   forwardError(*err,__LINE__,NULL);
-  hstat = H5LTget_attribute_char(group_id, ".",name,res);
+  hstat = H5LTget_attribute_string(group_id, ".",name,res);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
   if (*sz<0) {
     *sz = ndum;

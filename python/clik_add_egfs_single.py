@@ -12,6 +12,7 @@ import os.path as osp
 import os
 import shutil
 import h5py
+import clik.egfs
 
 def exprep(inar):
   outar = nm.zeros((inar.shape[0]+1,inar.shape[1]-1),dtype=nm.double)
@@ -22,9 +23,9 @@ def gettpl(pars,name,default):
   if hasattr(pars,name):
     fcib = getattr(pars,name)
   else:
-    fcib = ops.join(os.environ["CLIK_DATA"],"egfs/%s"%default)
+    fcib = osp.join(os.environ["CLIK_DATA"],"egfs/%s"%default)
   cibc=nm.loadtxt(fcib)
-  ribc = experp(cibc)
+  ribc = exprep(cibc)
   return ribc
  
 def pack256(*li):
@@ -36,19 +37,32 @@ def pack256(*li):
 def main(argv):
   pars = clik.miniparse(argv[1])
   
-  template_names = ["cib_clustering_template","patchy_ksz_template","homogenous_ksz_template","tsz_template"]
+  template_names = ["cib_clustering_template","patchy_ksz_template","homogeneous_ksz_template","tsz_template"]
   # read the templates
   tpls = [gettpl(pars,name,default) for name,default in zip(
     template_names,
     ["clustered_flat.dat","ksz_patchy.dat","ksz_ov.dat","tsz.dat"])]
   
   # read defaults
-  defaults = pars.str_array.defaults
-  values = pars.str_array.values
+  defaults = []
+  values = []
+  if hasattr(pars,"defaults"):
+    defaults = pars.str_array.defaults
+    values = pars.str_array.values
   
   #read pars
   vpars = pars.str_array.pars
   
+  codels = []
+  if hasattr(pars,"models"):
+    codels = pars.str_array.models
+  
+  defs,vpars,pv = clik.egfs.default_models(defmodels=codels,varpars=vpars)
+  oefs = dict(zip(defaults,values))
+  
+  defs.update(oefs)
+  defaults = defs.keys()
+  values = [defs[k] for k in defaults]
   
   # frequency
   frq = pars.freq
@@ -73,8 +87,10 @@ def main(argv):
   if "n_addons" in outhf["clik/lkl_0"].attrs.keys():
     n_addons = outhf["clik/lkl_0"].attrs["n_addons"]
   
-  agrp = h5py.create_group("clik/lkl_0/addon_%d"%n_addons)
+  
+  agrp = outhf.create_group("clik/lkl_0/addon_%d"%n_addons)
   n_addons+=1
+  outhf["clik/lkl_0"].attrs["n_addons"] = n_addons
   
   agrp.attrs["addon_type"] = "egfs_single"
 
@@ -96,7 +112,7 @@ def main(argv):
     del(outhf["clik/check_param"])
     del(outhf["clik/check_value"])
     outhf.close()
-    if hasattr(pars,"test_values")
+    if hasattr(pars,"test_values"):
       tval = pars.float_array.test_values
       php.add_selfcheck(pars.res_object,nm.concatenate((cls,tval)))
 

@@ -50,8 +50,8 @@ contains
        allocate(names(numnames))
        ! Get the numnames, and copy into the names array
        call fortran_clik_get_extra_parameter_names(clikid%ptr,buf_names)
-       do i=1,numnames
-          names(i) = buf_names(1+i*PN_SIZE:(i+1)*PN_SIZE)
+				do i=1,numnames
+          names(i) = buf_names(1+(i-1)*PN_SIZE:(i)*PN_SIZE)
        enddo
     endif
 

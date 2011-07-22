@@ -97,7 +97,7 @@ def build_rq_noise(cnq,np,hascl):
   if hascl[1] and hascl[2]:
     ncnq = nm.concatenate((cnq,cnq[-np:]))
   rq0 = nm.zeros((ncnq.shape[1],ncnq.shape[0],ncnq.shape[0]))
-  for iq in range(len(ncnq[1])):
+  for iq in range(ncnq.shape[1]):
     rq0[iq] = nm.diag(ncnq[:,iq])
   return rq0
   
@@ -153,6 +153,7 @@ def read_cl(pars,ncl,hascl):
   
   #read cls
   # for now an ascii file
+  print pars.cl
   cl = read_somearray(pars.cl)
   if len(cl.shape)==2:
     # could I be dealing with a camb cl ?

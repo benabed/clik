@@ -123,9 +123,7 @@ cdef class egfs:
     if self.celf!=NULL:
       egfs_free(<void**>&(self.celf))
     
-  
-def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
-  import os.path as osp
+def default_models(defmodels=[],varmodels=[],varpars=[]):
   prs = """
   # cib clustering
   alpha_dg_cl     = 3.8
@@ -168,16 +166,6 @@ def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
   pn = [vv.split("=")[0].strip() for vv in lprs if vv.strip() and vv.strip()[0]!="#"]  
 
   aps = dict(zip(pn,pv))
-  
-  defs = {}
-  defs["template_cib_clustering"]=osp.join(datapath,"clustered_150.dat")
-  defs["template_patchy_ksz"]=osp.join(datapath,"ksz_patchy.dat")
-  defs["template_homogenous_ksz"]=osp.join(datapath,"ksz_ov.dat")
-  defs["template_tsz"]=osp.join(datapath,"tsz.dat")
-
-  defs["rg_flux_cut"]="330"
-  defs["norm_rg_flux_cut"]="330"
-
   if varpars==[]:
     if varmodels==[]:
       varmodels = pfs.keys()
@@ -193,12 +181,31 @@ def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
       
   dmm = set(defmodels)
   dmm.update(varmodels)
+  
+  defs = {}
   for dm in dmm:
     for pn in pfs[dm]:
       if pn not in varpars:
         defs[pn] = str(aps[pn])
-  
   return defs,varpars,[aps[pn] for pn in varpars]
+  
+def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
+  import os.path as osp
+  
+  defs = {}
+  defs["template_cib_clustering"]=osp.join(datapath,"clustered_150.dat")
+  defs["template_patchy_ksz"]=osp.join(datapath,"ksz_patchy.dat")
+  defs["template_homogenous_ksz"]=osp.join(datapath,"ksz_ov.dat")
+  defs["template_tsz"]=osp.join(datapath,"tsz.dat")
+
+  defs["rg_flux_cut"]="330"
+  defs["norm_rg_flux_cut"]="330"
+  
+  oefs,varpars,pv = default_models(defmodels,varmodels,varpars)
+  
+  defs.update(oefs)
+    
+  return defs,varpars,pv
     
 def simple_egfs(lmin,lmax,freq,norm_freq,varpars=[],varmodels=[],defmodels=[],datapath="./",defs={}):
   oefs,pn,pv =  init_defaults(datapath,defmodels,varmodels,varpars)
