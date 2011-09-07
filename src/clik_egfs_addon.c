@@ -176,7 +176,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
     cib_decor_poisson = hdf5_double_datarray(group_id,cur_lkl,"cib_decor_poisson",&dz, err);
     forwardError(*err,__LINE__,NULL);
   }
-
+  
   egfs_model = egfs_init( nvar, keyvars, ndef, keys, values, 
                          lmin, lmax, cib_clustering,patchy_ksz, 
                          homogeneous_ksz,tsz,
@@ -359,7 +359,7 @@ SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m
 
   egfs_model = clik_egfs_init_hdf5(comp_id,cur_lkl,err);
   forwardError(*err,__LINE__,NULL);
-
+  
   testErrorRetVA(egfs_model->nfr!=m,-98765,"Bad number of channels fot egfs model (expected %d got %d)",*err,__LINE__,NULL,m,egfs_model->nfr);
   testErrorRetVA(egfs_model->lmin!=lmin,-98765,"Bad lmin (expected %d got %d)",*err,__LINE__,NULL,lmin,egfs_model->lmin);
   testErrorRetVA(egfs_model->lmax!=lmax,-98765,"Bad lmin (expected %d got %d)",*err,__LINE__,NULL,lmax,egfs_model->lmax);
@@ -370,6 +370,9 @@ SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m
   }
   testErrorRet(eb!=0,-7693,"egfs does not work with polarized data yet",*err,__LINE__,NULL);
   
+  egfs_pay = malloc_err(sizeof(egfs_smica),err);
+  forwardError(*err,__LINE__,NULL);
+    
   egfs_pay->egfs_model = egfs_model;  
   egfs_pay->unit = unit;
   egfs_pay->nell = nell;

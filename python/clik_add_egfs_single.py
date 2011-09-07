@@ -33,7 +33,7 @@ def pack256(*li):
   for l in li:
     rr += l+'\0'*(256-len(l))
   return rr
-   
+
 def main(argv):
   pars = clik.miniparse(argv[1])
   
@@ -44,18 +44,13 @@ def main(argv):
     ["clustered_flat.dat","ksz_patchy.dat","ksz_ov.dat","tsz.dat"])]
   
   # read defaults
-  defaults = []
-  values = []
-  if hasattr(pars,"defaults"):
-    defaults = pars.str_array.defaults
-    values = pars.str_array.values
+  defaults = pars.str_array(default=[]).defaults
+  values = pars.str_array(default=[]).values
   
   #read pars
   vpars = pars.str_array.pars
   
-  codels = []
-  if hasattr(pars,"models"):
-    codels = pars.str_array.models
+  codels = pars.str_array(default=[]).models
   
   defs,vpars,pv = clik.egfs.default_models(defmodels=codels,varpars=vpars)
   oefs = dict(zip(defaults,values))
@@ -71,7 +66,7 @@ def main(argv):
   models = ["cib_clustering","cib_poisson","radio_poisson","tsz","ksz"]
   
   defaults += ["nfr"] + ["eff_fr_"+v for v in models] + ["norm_fr_"+v for v in models]
-  values   += ["1"]   + [frq]*5                       + [n_frq]*5
+  values   += ["%d"%len(frq.split())]   + [frq]*5                       + [n_frq]*5
   
   # flux cut
   defaults += ["rg_flux_cut"    , "norm_rg_flux_cut"]
@@ -83,17 +78,28 @@ def main(argv):
   lmin = outhf["clik/lkl_0"].attrs["lmin"]
   lmax = outhf["clik/lkl_0"].attrs["lmax"]
   
-  n_addons = 0
-  if "n_addons" in outhf["clik/lkl_0"].attrs.keys():
-    n_addons = outhf["clik/lkl_0"].attrs["n_addons"]
-  
-  
-  agrp = outhf.create_group("clik/lkl_0/addon_%d"%n_addons)
-  n_addons+=1
-  outhf["clik/lkl_0"].attrs["n_addons"] = n_addons
-  
-  agrp.attrs["addon_type"] = "egfs_single"
+  if outhf["clik/lkl_0"].attrs["lkl_type"].lower() in ("ivg","gauss","lowly"):
+    addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls)
+  elif outhf["clik/lkl_0"].attrs["lkl_type"].lower() in ("smica",):
+    smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq)
 
+  if "check_param" in outhf["clik"]:
+    cls = outhf["clik/check_param"]
+    del(outhf["clik/check_param"])
+    del(outhf["clik/check_value"])
+    outhf.close()
+    if hasattr(pars,"test_values"):
+      tval = pars.float_array.test_values
+      php.add_selfcheck(pars.res_object,nm.concatenate((cls,tval)))
+ 
+
+def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpls):     
+  nc = 0
+  if n_name in outhf["clik/lkl_0"].attrs.keys():
+    nc = outhf["clik/lkl_0"].attrs[n_name]
+  agrp = outhf.create_group("clik/lkl_0/%s_%d"%(name,nc))
+  nc+=1
+  outhf["clik/lkl_0"].attrs[n_name] = nc
   agrp.attrs["ndim"] = len(vpars)
   agrp.attrs["keys"] = pack256(*vpars)
   
@@ -107,15 +113,19 @@ def main(argv):
   for nnm,vvv in zip(template_names,tpls):
     agrp.create_dataset(nnm, data=vvv.flat[:])
 
-  if "check_param" in outhf["clik"]:
-    cls = outhf["clik/check_param"]
-    del(outhf["clik/check_param"])
-    del(outhf["clik/check_value"])
-    outhf.close()
-    if hasattr(pars,"test_values"):
-      tval = pars.float_array.test_values
-      php.add_selfcheck(pars.res_object,nm.concatenate((cls,tval)))
+  return agrp
+  
+ 
+def addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls):     
+  agrp = add_xxx(outhf,"n_addons","addon",vpars,defaults,values,lmin,lmax,template_names,tpls)
+  
+  agrp.attrs["addon_type"] = "egfs_single"
 
+def smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq):
+  agrp = add_xxx(outhf,"n_component","component",vpars,defaults,values,lmin,lmax,template_names,tpls)
+  agrp.attrs["component_type"] = "egfs"
+
+    
 import sys
 if __name__=="__main__":
   main(sys.argv)

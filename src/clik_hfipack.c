@@ -224,7 +224,7 @@ cmblkl* clik_gauss_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     free(corr);
   }
   
-  cing = init_cmblkl(ing, &tease_log_pdf, 
+  cing = init_cmblkl(ing, &gausslkl_log_pdf, 
                      &tease_free,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,0,err);
@@ -344,7 +344,7 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     
     // get type
     memset(comp_type,0,_pn_size*sizeof(char));
-    hstat = H5LTget_attribute_char(comp_id, ".", "component_type",  comp_type);
+    hstat = H5LTget_attribute_string(comp_id, ".", "component_type",  comp_type);
     testErrorRetVA(hstat<0,hdf5_base,"cannot read component_type in %s/%s (got %d)",*err,__LINE__,NULL,cur_lkl,cur_cmp,hstat);
     
     
@@ -370,7 +370,7 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     xnames_buf = malloc_err(sizeof(parname)*xdim,err);
     forwardError(*err,__LINE__,NULL);
     cnt = 0;
-    for(ic=0;ic<nc;ic++) {
+    for(ic=1;ic<nc;ic++) {
       int ix;
       for(ix=0;ix<SCs[ic]->ndim;ix++) {
         if (SCs[ic]->names!=NULL) {

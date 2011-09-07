@@ -130,7 +130,7 @@ void clik_get_lmax(clik_object *clikid, int lmax[6],error **err) {
   
   target = clikid;
   lbs = target->data;
-  zbs = lbs->bs;
+  zbs = lbs->rbs->bs;
   
   for(cli=0;cli<6;cli++) {
     lmax[cli] = zbs->lmax[cli];
