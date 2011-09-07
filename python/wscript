@@ -41,7 +41,7 @@ def build(ctx):
   # python execs
   
   for cde in ["synthetic_smica","clik_example_py","clik_join","clik_disjoin","clik_print","create_lowl_problem",
-              "prepare_lowl","prepare_wmap","prepare_bopix","clik_include_external","clik_extract_external","clik_add_egfs_single"]:  
+              "prepare_lowl","prepare_wmap","prepare_bopix","clik_include_external","clik_extract_external","clik_add_egfs"]:  
     ctx(
       execrule = injectpath,
       source = cde+".py",
