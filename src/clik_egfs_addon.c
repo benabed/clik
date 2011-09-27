@@ -277,13 +277,20 @@ typedef struct {
 
 void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
   egfs_smica *egfs_pay;
+  SmicaComp* SC;
   double *wl,*wl0,one;
-  int inc,il;
+  int inc,il,im;
   double res;
   
-  egfs_pay = data;
+
+  SC = data;
+  egfs_pay = SC->data;
+
+  //_DEBUGHERE_("%g",locpars[0]);
+
   egfs_compute(egfs_pay->egfs_model, locpars, egfs_pay->rq, NULL, err);
   forwardError(*err,__LINE__,);
+  
   
   // apply wl and binning
   one=1;
@@ -295,35 +302,58 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
     inc = 1;
   }
   
+
+  //_DEBUGHERE_("%g %g",egfs_pay->rq[0],egfs_pay->rq[2]);
   wl=wl0;
-  for(il=0;il<egfs_pay->nell*egfs_pay->m*egfs_pay->m;il++) {
-    egfs_pay->rq[il] = egfs_pay->rq[il] * *wl * egfs_pay->unit;
+  for(il=0;il<egfs_pay->nell;il++) {
+    int ip;
+    ip = il*egfs_pay->m*egfs_pay->m;
+    for(im=0;im<egfs_pay->m*egfs_pay->m;im++) {
+      egfs_pay->rq[ip+im] = egfs_pay->rq[ip+im] * *wl * egfs_pay->unit;  
+    }
     wl+=inc;
   }
-  
+  //_DEBUGHERE_("%g %g %g",egfs_pay->rq[0],egfs_pay->rq[2],egfs_pay->unit);
   
   // apply binning if needed
   if (egfs_pay->bins!=NULL) {
     char transa,transb;
     int npar;
     double done,dzero;
-    int one;
+    int one,nbns,nell;
     int ndim;
-    
-    transa='T';
-    transb='T';
+  //  int ii;
+  //  double rq0,rq2;
+  //  double poc;
+
+    transa='N';
+    transb='N';
     ndim = egfs_pay->m*egfs_pay->m;
     one = 1;
     done = 1.;
     dzero = 0;
+    nbns = egfs_pay->nbins;
+    nell = egfs_pay->nell;
     
-    dgemm(&transa, &transb, &ndim,&egfs_pay->nbins, &egfs_pay->nell, &done, egfs_pay->rq, &ndim, egfs_pay->bins, &egfs_pay->nell, &done, rq, &ndim);
-    
+    /*rq0=rq[0];
+    rq2=rq[2];
+    _DEBUGHERE_("%g %g",rq[0],rq[2]);
+    _DEBUGHERE_("%g %g",rq[0]-rq0,rq[2]-rq2);
+    _DEBUGHERE_("m %d n %d k %d",ndim, nbns,nell);*/  
+    dgemm(&transa, &transb, &ndim, &nbns,&nell, &done, egfs_pay->rq, &ndim, egfs_pay->bins, &nell, &done, rq, &ndim);
+    /*_DEBUGHERE_("","");
+    poc = 0;
+    for(ii=0;ii<10;ii++) {
+      _DEBUGHERE_("%g %g %g",egfs_pay->rq[ii*ndim],egfs_pay->rq[ii*ndim+2],egfs_pay->bins[ii]);
+      poc += egfs_pay->rq[ii*ndim] * egfs_pay->bins[ii];
+    }
+    _DEBUGHERE_("%g %g %g",rq[0]-rq0,rq[2]-rq2,poc);*/
   } else {
     for(il=0;il<egfs_pay->nell*egfs_pay->m*egfs_pay->m;il++) {
       rq[il] += egfs_pay->rq[il];
     }
-  }  
+  }
+    
 }
 
 void free_comp_egfs(void** data) {
@@ -345,6 +375,7 @@ void free_comp_egfs(void** data) {
   free(SC);
   *data = NULL;
 }
+
 SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   egfs* egfs_model;
   egfs_smica *egfs_pay;
@@ -373,8 +404,10 @@ SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m
   egfs_pay = malloc_err(sizeof(egfs_smica),err);
   forwardError(*err,__LINE__,NULL);
     
+  egfs_pay->m = m;
   egfs_pay->egfs_model = egfs_model;  
   egfs_pay->unit = unit;
+  _DEBUGHERE_("unit %g",unit);
   egfs_pay->nell = nell;
 
   egfs_pay->nbins = nbins;
