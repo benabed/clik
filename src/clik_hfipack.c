@@ -310,7 +310,8 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   // now deal with the CMB component
   // read A_cmb
   A_cmb = hdf5_double_attarray(group_id,cur_lkl,"A_cmb",&m,err);
-  
+  forwardError(*err,__LINE__,NULL);    
+
   // init cmb comp
   SCs[0] = comp_CMB_init(nb, mT,mP, has_cl, A_cmb, err);
   forwardError(*err,__LINE__,NULL);    

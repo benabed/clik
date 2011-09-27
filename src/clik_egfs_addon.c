@@ -273,6 +273,7 @@ typedef struct {
   double unit;
   int *ell;
   double *bins,*wl;
+  double *A;
   } egfs_smica;
 
 void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
@@ -307,9 +308,12 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
   wl=wl0;
   for(il=0;il<egfs_pay->nell;il++) {
     int ip;
+    int im1,im2;
     ip = il*egfs_pay->m*egfs_pay->m;
-    for(im=0;im<egfs_pay->m*egfs_pay->m;im++) {
-      egfs_pay->rq[ip+im] = egfs_pay->rq[ip+im] * *wl * egfs_pay->unit;  
+    for(im1=0;im1<egfs_pay->m;im1++) {
+      for(im2=0;im2<egfs_pay->m;im2++) {
+        egfs_pay->rq[ip+im1*egfs_pay->m+im2] = egfs_pay->rq[ip+im1*egfs_pay->m+im2] * *wl * egfs_pay->unit * egfs_pay->A[im1]*egfs_pay->A[im2];  
+      }
     }
     wl+=inc;
   }
@@ -370,7 +374,8 @@ void free_comp_egfs(void** data) {
     free(egfs_pay->wl);
   }
   egfs_free(&(egfs_pay->egfs_model));
-  
+  free(egfs_pay->A);
+
   free(SC->data);
   free(SC);
   *data = NULL;
@@ -407,7 +412,10 @@ SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m
   egfs_pay->m = m;
   egfs_pay->egfs_model = egfs_model;  
   egfs_pay->unit = unit;
-  _DEBUGHERE_("unit %g",unit);
+  
+  egfs_pay->A = hdf5_double_attarray(comp_id,cur_lkl,"A_cmb",&m,err);
+  forwardError(*err,__LINE__,NULL);    
+
   egfs_pay->nell = nell;
 
   egfs_pay->nbins = nbins;
