@@ -9,7 +9,6 @@ clik documentation!
 clik is a C library containing codes to compute different approximations for the Planck likelihood.
 Wrappers are provided so that the functions can also be called from python and f90.
 
-Contents:
 
 .. toctree::
    :maxdepth: 2

@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Design choices &mdash; clik v1.5 documentation</title>
+    <title>Design choices &mdash; clik v1.6 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5',
+        VERSION:     '1.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.5 documentation" href="index.html" />
+    <link rel="top" title="clik v1.6 documentation" href="index.html" />
     <link rel="next" title="Installing" href="installing.html" />
     <link rel="prev" title="clik documentation!" href="index.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="index.html" title="clik documentation!"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -68,12 +68,12 @@ A function is provided in each language to compute the log likelihood, give a se
 Since the likelihood is defined by the likelihood file the exact range of power spectra needed by this function can vary from likelihood approximation to likelihood approximations. The same holds for the nuisance parameters.
 Functions are provided to query a likelihood file and obtain this info. More precisely, three such function are available.</p>
 <blockquote>
-<ul class="simple">
+<div><ul class="simple">
 <li>clik_get_has_cl: retrieve an array of 6 flags, describing the power spectra needed (1 if needed 0 otherwise). The order is TT, EE, BB, TE, TB, EB. Thus if this function answers (1,1,0,1,0,0) it means that the input vector of the compute function must contain, in that order, the power spectra for TT, EE an TE.</li>
 <li>clik_get_lmax: retrieve an array of 6 integer giving the lmax value for each power spectra. Order is same as above. -1 means that the spectra is not needed. Thus if this function answer (2000,1000,-1,2000,-1,-1). This means that the vector must contain, in that order, the first 2001 multipoles of the TT power spectra (from 0 to 2000 included) followed by the first 1001 multipoles of the EE power spectra (0 to 1000 included) and next by the first 2001 multipoles of the TE power spectra (0 to 2000 included). Thus the first 5003 elements of the parameter vectors are the values of different power spectra. Note that this is also the sum of the result array of clik_get_lmax plus 6. Isn&#8217;t this fantastic ?</li>
 <li>clik_get_parameter_names: returns the number of nuisance parameters and fills an array of string giving their names. For example, if this function returns 2, and (&#8216;sigma8&#8217;, &#8216;fwhm_error&#8217;) it means that the last two elements of the parameter vector must be the value of sigma8 and fwhm_error, whatever those parameters mean.</li>
 </ul>
-</blockquote>
+</div></blockquote>
 <p>To sumarize, the input vector of the compute function must be an array of N = Ncl + Nnuis doubles. Ncl being the sum + 6 of the return array of clik_get_lmax, and Nnuis is the return of clik_get_parameter_names. The power spectra must be the Ncl first elements of that array. They start at C0 and en up at some Clmax[i] (included), the ith elements of the return of clik_get_lmax. The ordering of the power spectra is always TT EE BB TE TB EB. The Cls are in microK^2. The nuisnce parameters are the Nnuis last element of the parameter vector. Their names are given by the return array of the function clik_get_parameter_names.</p>
 </div>
 <div class="section" id="pitfalls">
@@ -116,7 +116,7 @@ Functions are provided to query a likelihood file and obtain this info. More pre
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -142,12 +142,12 @@ Functions are provided to query a likelihood file and obtain this info. More pre
         <li class="right" >
           <a href="index.html" title="clik documentation!"
              >previous</a> |</li>
-        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, K. Benabed, S. Prunet, E. Hivon, J.F. Cardoso.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
     </div>
   </body>
 </html>

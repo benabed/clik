@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Interfacing the library with a f90 executable &mdash; clik v1.5 documentation</title>
+    <title>Interfacing the library with a f90 executable &mdash; clik v1.6 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.5',
+        VERSION:     '1.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.5 documentation" href="index.html" />
+    <link rel="top" title="clik v1.6 documentation" href="index.html" />
     <link rel="next" title="Interfacing the library with python" href="interfacingpy.html" />
     <link rel="prev" title="Interfacing the library with a c executable" href="interfacingc.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="interfacingc.html" title="Interfacing the library with a c executable"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -97,7 +97,7 @@ subroutine <tt class="descname">clik_get_extra_parameter_names</tt><big>(</big>c
 <h3>Computing the log likelihood<a class="headerlink" href="#computing-the-log-likelihood" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="real">
-<tt class="descname">real</tt><big>(</big>kind=8) function<em> clik_compute(clikid</em>, cl_and_pars<big>)</big><a class="headerlink" href="#real" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">real</tt><big>(</big>kind=8) function<em>&nbsp;clik_compute(clikid</em>, cl_and_pars<big>)</big><a class="headerlink" href="#real" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function returns the value of the log likelihood for the parameter vector <tt class="docutils literal"><span class="pre">cl_and_pars</span></tt>. The content of this vector is described in <a class="reference internal" href="designchoices.html#querying"><em>The input of the compute function are multipoles of the power spectra and nuisance parameters.</em></a>. The first argument of the function must be the return value from a previous call to <a class="reference internal" href="#clik_init" title="clik_init"><tt class="xref c c-func docutils literal"><span class="pre">clik_init()</span></tt></a>.  In case of error the program exit with an explaining message. This function can be called as many time as the user wants.</p>
 </dd></dl>
 
@@ -106,13 +106,13 @@ subroutine <tt class="descname">clik_get_extra_parameter_names</tt><big>(</big>c
 <h3>Cleanup<a class="headerlink" href="#cleanup" title="Permalink to this headline">¶</a></h3>
 <p>When a likelihood object is no more needed (i.e. when no more computation will be needed in the program), the memory it uses can be cleaned up calling</p>
 <blockquote>
-<dl class="function">
+<div><dl class="function">
 <dt id="clik_cleanup">
 subroutine <tt class="descname">clik_cleanup</tt><big>(</big>clikid<big>)</big><a class="headerlink" href="#clik_cleanup" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <p>The first argument of the function must be the return value from a previous call to <a class="reference internal" href="#clik_init" title="clik_init"><tt class="xref c c-func docutils literal"><span class="pre">clik_init()</span></tt></a>.</p>
-</blockquote>
+</div></blockquote>
 </div>
 </div>
 </div>
@@ -152,7 +152,7 @@ subroutine <tt class="descname">clik_cleanup</tt><big>(</big>clikid<big>)</big><
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -178,12 +178,12 @@ subroutine <tt class="descname">clik_cleanup</tt><big>(</big>clikid<big>)</big><
         <li class="right" >
           <a href="interfacingc.html" title="Interfacing the library with a c executable"
              >previous</a> |</li>
-        <li><a href="index.html">clik v1.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, K. Benabed, S. Prunet, E. Hivon, J.F. Cardoso.
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.5.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.8.
     </div>
   </body>
 </html>
