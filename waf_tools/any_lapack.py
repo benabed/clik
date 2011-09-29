@@ -9,7 +9,8 @@ lapack_funcs = "dtrsv dpotrf dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesv
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
-  ctx.add_option("--lapack_mkl",action="store",default="",help="if lapack is mkl, location of the mkl install")
+  grp = ctx.parser.get_option_group("--lapack_install")
+  grp.add_option("--lapack_mkl",action="store",default="",help="if lapack is mkl, location of the mkl install")
 
 def configure(ctx):
   # no veclib !
@@ -59,7 +60,7 @@ def configure(ctx):
         ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
         ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix
   
-  if ctx.options.lapack_install or ctx.options.lapack_islocal:
+  if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or ctx.options.install_all_deps:
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
     lapack_extradefs += ["LAPACK_CLIK"]

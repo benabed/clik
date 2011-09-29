@@ -3,13 +3,17 @@ import sys
 import os.path as osp
 
 def add_lib_option(libname,opt,default="/usr/local/",install=True):
-  opt.add_option("--%s_islocal"%libname,action="store_true",default=False,help="%s has been installed with install%s"%(libname,libname))
-  opt.add_option("--%s_prefix"%libname,action="store",default=default,help="%s include/lib path prefix"%libname)
-  opt.add_option("--%s_include"%libname,action="store",default="",help="%s include path"%libname)
-  opt.add_option("--%s_lib"%libname,action="store",default="",help="%s lib path"%libname)
-  opt.add_option("--%s_link"%libname,action="store",default="",help="%s link line"%libname)
+  import optparse
+  grp=optparse.OptionGroup(opt.parser,libname+" options")
+  grp.add_option("--%s_islocal"%libname,action="store_true",default=False,help="%s has been installed previsouly using --%s_install or --%s_forceinstall"%(libname,libname,libname))
+  grp.add_option("--%s_prefix"%libname,action="store",default=default,help="%s include/lib path prefix"%libname)
+  grp.add_option("--%s_include"%libname,action="store",default="",help="%s include path"%libname)
+  grp.add_option("--%s_lib"%libname,action="store",default="",help="%s lib path"%libname)
+  grp.add_option("--%s_link"%libname,action="store",default="",help="%s link line"%libname)
   if install:
-    opt.add_option("--%s_install"%libname,action="store_true",default="",help="%s try to install"%libname)
+    grp.add_option("--%s_installifneeded"%libname,action="store_true",default=False,help="if %s is not found, install it try to install"%libname,dest="%s_install"%libname)
+    grp.add_option("--%s_install"%libname,action="store_true",default=False,help="install %s"%libname,dest="%s_forceinstall"%libname)
+  opt.add_option_group(grp)
     
 
 def noemptylist(li):
@@ -106,16 +110,25 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   if not opt_name:
     opt_name=name
   # do install if needed
-  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False)):
+  #print install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False))
+  #print install ,(getattr(ctx.options,opt_name+"_install",False) ,getattr(ctx.options,opt_name+"_forceinstall",False))
+  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False) or ctx.options.install_all_deps):
+    #print "LALALA"
     # first try without install !
     setattr(ctx.env,"has_"+name,True)
-    setattr(ctx.options,"%s_islocal"%opt_name,1)
+    setattr(ctx.options,"%s_islocal"%opt_name,True)
     try:
-      assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False
+      #print forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False
+      #print forceinstall==False,getattr(ctx.options,opt_name+"_forceinstall",False)==False
+      #print "LALALA",getattr(ctx.options,opt_name+"_forceinstall","MUMUMU")
+      assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and ctx.options.install_all_deps==False
+      #print "wowow"
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
       return
     except Exception,e:
-      Logs.pprint("RED","%s not found, try to install it"%name)
+      #print e
+      if forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and ctx.options.install_all_deps==False:
+        Logs.pprint("RED","%s not found, try to install it"%name)
       install(ctx)
   # compute paths
   prefix,include,lib,link = opt_to_libpaths(ctx,opt_name)
@@ -144,8 +157,9 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   except Exception,e:
     ctx.env["INCLUDES_%s"%name]=[]
     if not getattr(ctx.env,"has_"+name,False):
-      Logs.pprint("BLUE","Optional %s not found"%name)
-      Logs.pprint("BLUE","Compilation will continue without it")
+      if not getattr(ctx.env,"silent_"+name,False):
+        Logs.pprint("BLUE","Optional %s not found"%name)
+        Logs.pprint("BLUE","Compilation will continue without it")
     else:
       Logs.pprint("RED","%s not found"%name)
       Logs.pprint("PINK", "check that %s_prefix or %s_lib and %s_include command line options point toward your %s install"%(opt_name,opt_name,opt_name,opt_name))
@@ -167,7 +181,7 @@ def installsmthg_pre(ctx,where,what,whereto="build/"):
   import os
   
   #ctx.env = Environment.Environment(filename="build/c4che/default.cache.py")
-
+  Logs.pprint("PINK","Install '%s'"%what)
   if osp.exists(osp.join(whereto,what)):
     Logs.pprint("PINK","%s already downloaded"%what)
   else:
@@ -219,6 +233,16 @@ def check_python_module(ctx,name,extracmd=""):
     ctx.end_msg(False)
     raise e
 
+def add_python_option(ctx,name):
+  import optparse
+  grp = ctx.parser.get_option_group("--nopyo")
+  if grp==None:
+    grp=optparse.OptionGroup(ctx.parser,"python module options")
+  
+  grp.add_option("--%s_install"%name,action="store_true",default=False,help="install %s"%name,dest="%s_forceinstall"%name)
+  grp.add_option("--%s_installifneeded"%name,action="store_true",default=False,help="if %s is not found, install it try to install"%name,dest="%s_install"%name)
+  ctx.add_option_group(grp)  
+
 def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False):
   import waflib.Logs
   import os
@@ -230,10 +254,10 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
   import sys
 
   try:
-    assert forceinstall==False
+    assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and ctx.options.install_all_deps==False
     check_python_module(ctx,name,extracmd)
   except Exception,e: 
-    if getattr(ctx.options,name+"_install",False):
+    if getattr(ctx.options,name+"_install",False) or getattr(ctx.options,name+"_forceinstall",False) or ctx.options.install_all_deps:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
       atl.installsmthg_pre(ctx,url,packtgz)
       if not osp.exists(ctx.env.PYTHONDIR):
