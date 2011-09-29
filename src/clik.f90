@@ -97,7 +97,7 @@ contains
     real(kind=8), dimension(:), pointer,intent(out) :: cl_and_pars
     real(kind=8), dimension(:), intent(in) :: clTT,clEE,clBB,clTE,clTB,clEB,extrapars
     logical,intent(in) ::  flag_cl_start_at_two,flag_is_llp1_over_2pi
-    integer :: l, offl, cur,cli
+    integer :: l, offl, curl,cli
     real(kind=8):: llp1_over_2pi,over_2pi
     integer(kind=4), dimension(6) :: lmax
     integer(kind=4) :: nextra, ntot, clmax

@@ -26,7 +26,7 @@ def build(bld):
     use = use_clik,
     cflags = "-fopenmp"
     )
-  bld.install_files('${PREFIX}/include/', 
+  bld.install_files('${INCDIR}', 
                     'clik.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
   bld.install_files('${PREFIX}/share/clik/egfs', 
                     'egfs/egfs_data/clustered_150.dat egfs/egfs_data/clustered_flat.dat egfs/egfs_data/ksz_ov.dat egfs/egfs_data/ksz_patchy.dat egfs/egfs_data/tsz.dat')
@@ -98,7 +98,7 @@ def build(bld):
   pmclinkline = " ".join([excc.bld_link_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
   pmclinkline += " "+bld.env.LIBPATH_ST%bld.env.LIBDIR+" "+bld.env.RPATH_ST%bld.env.LIBDIR+" "+" ".join([bld.env.LIB_ST%l for l in ("clik",)])
   pmcincline = " ".join([excc.bld_inc_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
-  pmcincline += ' '+excc.mkstr(bld.env.CPPPATH_ST,[bld.env.PREFIX+"/include"])
+  pmcincline += ' '+excc.mkstr(bld.env.CPPPATH_ST,[bld.env.INCDIR])
   pmcdefline = " ".join([excc.bld_def_line(bld,nn) for nn in set(uselib_clik+uselib_bopix)])
 
   bld.load("execconfig","waf_tools")  
