@@ -124,7 +124,7 @@ def addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls):
 def smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq):
   agrp = add_xxx(outhf,"n_component","component",vpars,defaults,values,lmin,lmax,template_names,tpls)
   agrp.attrs["component_type"] = "egfs"
-
+  agrp.attrs["A_cmb"] = outhf["clik/lkl_0"].attrs["A_cmb"]
     
 import sys
 if __name__=="__main__":
