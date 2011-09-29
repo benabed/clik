@@ -2,12 +2,14 @@ from waflib import Logs
 import sys
 import os.path as osp
 
-clik_version = "1.5.3"
+clik_version = "1.6"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
 
 def options(ctx):
+  ctx.add_option('--install_all_deps',action='store_true',default=False,help='Install all dependencies')
+
   ctx.load("local_install","waf_tools")
   ctx.load("try_icc","waf_tools")
   ctx.load("try_ifort","waf_tools")
@@ -15,7 +17,6 @@ def options(ctx):
   ctx.load("autoinstall_gsl","waf_tools")
   ctx.load("autoinstall_hdf5","waf_tools")
   ctx.load("any_lapack","waf_tools")
-  ctx.load("pmclib","waf_tools")
   ctx.load("chealpix","waf_tools")
   ctx.load("pmclib","waf_tools")
   ctx.load("python")
@@ -26,29 +27,67 @@ def options(ctx):
     ctx.load("cython",dowload=True)
   except Exception,e:
     pass
+
+  
+  import optparse
+  grp=optparse.OptionGroup(ctx.parser,"Python options")
+  grp.add_option('--nopyc',action='store_false',default=1,help='Do not install bytecode compiled .pyc files (configuration) [Default:install]',dest='pyc')
+  grp.add_option('--nopyo',action='store_false',default=1,help='Do not install optimised compiled .pyo files (configuration) [Default:install]',dest='pyo')
+
+  grp.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
+  ctx.add_option_group(grp)
   options_numpy(ctx)
   options_h5py(ctx)
   options_cython(ctx)
-  ctx.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
-  ctx.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
-  ctx.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
-  ctx.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
+  
+  grp=optparse.OptionGroup(ctx.parser,"Plugins options")
+  grp.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
+  grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
+  grp.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
+  ctx.add_option_group(grp)
   
   
 def configure(ctx):
   import os
   import os.path as osp
-  ctx.load("try_icc","waf_tools")
+  allgood = True
+  try:
+    ctx.load("try_icc","waf_tools")
+  except Exception,e:
+    Logs.pprint("RED","No suitable c compiler found (cause: '%s')"%e)
+    ctx.fatal('The configuration failed') 
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
   try:
     ctx.load("try_ifort","waf_tools")
     ctx.env.has_f90 = True
   except Exception,e:
-    Logs.pprint("BLUE","No fortran compiler found. Will keep on working without it (cause: '%s')"%e)
+    Logs.pprint("RED","No suitable fortran compiler found (cause: '%s')"%e)
+    ctx.fatal('The configuration failed') 
     ctx.env.has_f90 = False
+    allgood = False
   ctx.load("local_install","waf_tools")
   
+  if not ctx.options.no_pytools:
+    ctx.load("python")
+    if ctx.env.PYTHON[0]!=sys.executable:
+      from waflib.Logs import warn
+      warn("reverting to current executable")
+      ctx.env.PYTHON[0]=sys.executable
+      os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
+    try:
+      ctx.check_python_headers()
+      # remove unwanted flags for darwin
+      _remove_arch(ctx,"CFLAGS_PYEXT")
+      _remove_arch(ctx,"LINKFLAGS_PYEXT")
+      from distutils.sysconfig import get_config_var
+      
+    except Exception,e:
+      #ctx.options.no_pytools = True
+      Logs.pprint("BLUE","No suitable python distribution found")
+      Logs.pprint("BLUE","Cause : '%s'"%e)
+      Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
+      allgood = False
   # dl
   ctx.check_cc(lib="dl",mandatory=1,uselib_store="dl")
   ctx.check_cc(lib="dl",mandatory=0,defines=["HAS_RTLD_DEFAULT"],fragment="#include <dlfcn.h> \nint main() {void* tt = RTLD_DEFAULT;}",msg="checking for RTLD_DEFAULT in dl",uselib_store="dl")
@@ -58,6 +97,7 @@ def configure(ctx):
 
   #configure pmc
   ctx.env.has_pmc = False
+  ctx.env.silent_pmc = True
   ctx.load("pmclib","waf_tools")
 
   if (not ctx.env.has_pmc) or ("hdf5" not in ctx.env.LIB_pmc):
@@ -82,35 +122,28 @@ def configure(ctx):
   #bopix
   ctx.env.no_bopix = ctx.options.no_bopix or not osp.exists("src/bopix")
   # wmap
-  if ctx.options.wmap_install:
+  if ctx.options.wmap_install or ctx.options.install_all_deps:
     atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
     ctx.options.wmap_src = "likelihood_v4p1"
   ctx.env.wmap_src =   ctx.options.wmap_src
     
   if not ctx.options.no_pytools:
-    ctx.load("python")
-    if ctx.env.PYTHON[0]!=sys.executable:
-      from waflib.Logs import warn
-      warn("reverting to current executable")
-      ctx.env.PYTHON[0]=sys.executable
-      os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
     try:
-      ctx.check_python_headers()
-      # remove unwanted flags for darwin
-      _remove_arch(ctx,"CFLAGS_PYEXT")
-      _remove_arch(ctx,"LINKFLAGS_PYEXT")
-      from distutils.sysconfig import get_config_var
       configure_numpy(ctx)
       configure_h5py(ctx)
       configure_cython(ctx)
       
     except Exception,e:
-      ctx.options.no_pytools = True
+      #ctx.options.no_pytools = True
       Logs.pprint("BLUE","No suitable python distribution found")
       Logs.pprint("BLUE","Cause : '%s'"%e)
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
-      
-  print "configure ok\n\nrun './waf build install' now !"
+      allgood = False
+  
+  if allgood==False:
+    print "configure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
+  else:
+    print "configure ok\n\nrun './waf install' now !"
   
   
 def build(ctx):
@@ -141,7 +174,7 @@ def _prepare_src(ctx):
   import os
   
   # deals with .h
-  [os.symlink(osp.realpath("../include/target/%s"%ff),"src/%s"%ff) for ff in [
+  [os.link(osp.realpath("../include/target/%s"%ff),"src/%s"%ff) for ff in [
     "aplowly.h",
     "erfinv.h",
     "fowly.h",
@@ -153,7 +186,7 @@ def _prepare_src(ctx):
     ]]
   
   # deals with .c
-  [os.symlink(osp.realpath("../src/target/%s"%ff),"src/%s"%ff) for ff in [
+  [os.link(osp.realpath("../src/target/%s"%ff),"src/%s"%ff) for ff in [
     "aplowly.c",
     "erfinv.c",
     "fowly.c",
@@ -178,7 +211,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* src/bopix/* waf_tools/*.py clik.pdf" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript python/**/*.py python/**/*.pyx src/* src/minipmc/* src/bopix/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat clik.pdf" )
   
 import waflib
 class Dist_public(waflib.Scripting.Dist):
@@ -206,7 +239,7 @@ def post(ctx):
   import os
   if ctx.cmd == 'install':
     # install the module file. This is a cheap trick... grml
-    shutil.copy('build/clik.mod',ctx.env.PREFIX+'/include/')
+    shutil.copy('build/clik.mod',ctx.env.INCDIR)
     # go around a waf bug which set the wrong chmod to fortran exec
     os.chmod("bin/clik_example_f90",Utils.O755)
     build_env_files(ctx)
@@ -255,27 +288,23 @@ export %(VAR)s
   print "Use %s to set the environment variables needed by clik"%osp.join(ctx.env.BINDIR,name)
   
 def options_h5py(ctx):
-  ctx.load("python")
-  ctx.add_option("--h5py_install",action="store_true",default="",help="try to install h5py")
+  import autoinstall_lib as atl
+  atl.add_python_option(ctx,"h5py")
 def options_numpy(ctx):
-  ctx.load("python")
-  ctx.add_option("--numpy_install",action="store_true",default="",help="try to install numpy")
+  atl.add_python_option(ctx,"numpy")
 def options_cython(ctx):
-  ctx.load("python")
-  ctx.add_option("--cython_install",action="store_true",default="",help="try to install numpy")
+  atl.add_python_option(ctx,"cython")
 
 def configure_h5py(ctx):
   import autoinstall_lib as atl
-  cmdline=None
-  if ctx.options.h5py_install:
-    if ctx.env.INCLUDES_hdf5:
-      HDF5_DIR=osp.split(ctx.env.INCLUDES_hdf5[0])[0]
-    else:
-      fi = ctx.find_file("hdf5.h",ctx.env.INCLUDES_pmc)
-      #print fi
-      HDF5_DIR=osp.split(osp.split(fi)[0])[0]
-    HDF5_API="18"
-    cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
+  if ctx.env.INCLUDES_hdf5:
+    HDF5_DIR=osp.split(ctx.env.INCLUDES_hdf5[0])[0]
+  else:
+    fi = ctx.find_file("hdf5.h",ctx.env.INCLUDES_pmc)
+    #print fi
+    HDF5_DIR=osp.split(osp.split(fi)[0])[0]
+  HDF5_API="18"
+  cmdline =  "cd build/%s; HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
 
   atl.configure_python_module(ctx,"h5py","http://h5py.googlecode.com/files/h5py-1.3.1.tar.gz","h5py-1.3.1.tar.gz","h5py-1.3.1",cmdline)
 
@@ -292,6 +321,8 @@ def configure_cython(ctx):
   import os
   
   vv=False
+  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
+
   try:
     # check for cython
     atl.check_python_module(ctx,"cython")
@@ -308,7 +339,7 @@ def configure_cython(ctx):
     if vv:
       ctx.end_msg("no (%s)"%version_str,'YELLOW')
     # no cython, install it !
-    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",forceinstall=True)
+    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
 
   try:
     ctx.load("cython")
