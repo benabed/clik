@@ -248,45 +248,79 @@ def build_env_files(ctx):
   import os
   import os.path as ops
   full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
-  
-  if osp.basename(os.environ["SHELL"]) in ("csh","tcsh","zsh"):
-    name = "clik_profile.csh"
-    shebang = "#! /bin/tcsh"
-    single_tmpl = "setenv %(VAR)s %(PATH)s\n"
-    block_tmpl = """
+
+  #tcsh and co
+  shell = "csh"
+  name = "clik_profile.csh"
+  shebang = "#! /bin/tcsh"
+  extra=""
+  single_tmpl = "setenv %(VAR)s %(PATH)s\n"
+  block_tmpl = """
 if !($?%(VAR)s) then
-  setenv %(VAR)s %(PATH)s
+setenv %(VAR)s %(PATH)s
 else
-  setenv %(VAR)s %(PATH)s:${%(VAR)s}
+setenv %(VAR)s %(PATH)s:${%(VAR)s}
 endif
 """
-  else:
-    name = "clik_profile.sh"
-    shebang = "#! /bin/sh"
-    single_tmpl = "%(VAR)s=%(PATH)s\nexport %(VAR)s\n"
-    block_tmpl = """
-if [ -z "${%(VAR)s}" ]; then
-  %(VAR)s=%(PATH)s
+  multi_tmpl = """if !($?%(VAR)s) then
+setenv %(VAR)s %(PATH)s
 else
-  %(VAR)s=%(PATH)s:${%(VAR)s}
+set newvar=$%(VAR)s
+set newvar=`echo ${newvar} | sed s@:%(PATH)s:@:@g`
+set newvar=`echo ${newvar} | sed s@:%(PATH)s\$@@` 
+set newvar=`echo ${newvar} | sed s@^%(PATH)s:@@`  
+set newvar=%(PATH)s:${newvar}                     
+setenv %(VAR)s %(PATH)s:${newvar} 
+endif"""
+  
+  __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath)
+
+  #bash and co
+  shell = "sh"
+  name = "clik_profile.sh"
+  shebang = "#! /bin/sh"
+  extra= """function addvar () {
+local tmp="${!1}" ;
+tmp="${tmp//:${2}:/:}" ; tmp="${tmp/#${2}:/}" ; tmp="${tmp/%:${2}/}" ;
+export $1="${2}:${tmp}" ;
+}"""
+  single_tmpl = "%(VAR)s=%(PATH)s\nexport %(VAR)s\n"
+  block_tmpl = """
+if [ -z "${%(VAR)s}" ]; then 
+%(VAR)s=%(PATH)s
+else
+%(VAR)s=%(PATH)s:${%(VAR)s}
 fi
 export %(VAR)s
 """
+  multi_tmpl = """if [ -z "${%(VAR)s}" ]; then 
+%(VAR)s=%(PATH)s
+export %(VAR)s
+else
+addvar %(VAR)s %(PATH)s
+fi"""
+    
+  __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath)
+  
+  print "Source clik_profile.sh (or clik_profile.csh) to set the environment variables needed by clik"
+ 
+def __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath):
+  import sys
   if sys.platform.lower()=="darwin":
     LD_LIB = "DYLD_LIBRARY_PATH"
   else:
     LD_LIB = "LD_LIBRARY_PATH"
   f = open(osp.join(ctx.env.BINDIR,name),"w")
   print >>f,"# this code cannot be run directly"
-  print >>f,"# do 'source %s' from your %s shell or put it in your profile"%(osp.join(ctx.env.BINDIR,name),osp.basename(os.environ["SHELL"]))
-  print >>f,block_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}
-  print >>f,block_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
-  print >>f,block_tmpl%{"PATH":":".join(full_libpath),"VAR":LD_LIB}
-  print >>f,single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
+  print >>f,"# do 'source %s' from your %s shell or put it in your profile\n"%(osp.join(ctx.env.BINDIR,name),shell)
+  print >>f,extra,"\n"
+  print >>f,multi_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}
+  print >>f,multi_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
+  for pt in full_libpath:
+    print >>f,multi_tmpl%{"PATH":pt,"VAR":LD_LIB}
+  print >>f,multi_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
   f.close()
-  
-  print "Use %s to set the environment variables needed by clik"%osp.join(ctx.env.BINDIR,name)
-  
+
 def options_h5py(ctx):
   import autoinstall_lib as atl
   atl.add_python_option(ctx,"h5py")
