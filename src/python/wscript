@@ -17,7 +17,7 @@ def build(ctx):
       features = "c cshlib pyext",
       source = "clik/lkl.pyx",
       target  = "lkl",
-      includes = "../src"+" ../src/minipmc/"*(not ctx.env.has_pmc),
+      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
       cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
@@ -27,7 +27,7 @@ def build(ctx):
         features = "c cshlib pyext",
         source = "clik/egfs.pyx",
         target  = "egfs",
-        includes = "../src"+" ../src/minipmc/"*(not ctx.env.has_pmc),
+        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
         use = "clik",
         cflags = "-fopenmp",
         install_path = "${PYTHONDIR}/clik"
