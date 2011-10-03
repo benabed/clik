@@ -206,8 +206,8 @@ def dist(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'clik-'+clik_version
-  res = ctx.cmd_and_log("cd ..;svn log -r BASE")
-  svnversion = re.findall("(r\d+)",res)[0]
+  res = ctx.cmd_and_log("svnversion")
+  svnversion = res
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
