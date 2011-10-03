@@ -90,11 +90,34 @@ Having a full python installation (i.e. including the library and header, often 
 <p>Setting the option <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> will install all the dependencies for you. This is the recommanded base option. Installing clik can be as simple as:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps</pre>
 </div>
-<p>Beware, this is slow and use a lot of disc space.</p>
+<p>Beware, this is slow and use a lot of disk space.</p>
 </div>
 </div>
 <div class="section" id="advanced-install-options">
 <h2>Advanced install options<a class="headerlink" href="#advanced-install-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installing-with-a-particular-python-executable">
+<h3>Installing with a particular Python executable<a class="headerlink" href="#installing-with-a-particular-python-executable" title="Permalink to this headline">¶</a></h3>
+<p>It is possible to install clik with a python install different from the default one. For example if the default python installation does not contains the required header and libraries. To do so, call waf this way:</p>
+<div class="highlight-python"><pre>$&gt; /path/to/special/python waf configure</pre>
+</div>
+<p>and then:</p>
+<div class="highlight-python"><pre>$&gt; /path/to/special/python waf install</pre>
+</div>
+</div>
+<div class="section" id="bypassing-the-default-compilers">
+<h3>Bypassing the default compilers<a class="headerlink" href="#bypassing-the-default-compilers" title="Permalink to this headline">¶</a></h3>
+<p>To bypass the c compiler detection, set the <tt class="docutils literal"><span class="pre">CC</span></tt> environment variable.
+To bypass the fortran compiler detection, set the <tt class="docutils literal"><span class="pre">FC</span></tt> environment variable. Beware, you can only set the <tt class="docutils literal"><span class="pre">FC</span></tt> environment variable to either an intel fortran compiler or a gfortran compiler.</p>
+<p>Shortcuts for some classical cases are provided:</p>
+<blockquote>
+<div><ul class="simple">
+<li><tt class="docutils literal"><span class="pre">--icc</span></tt> causes the installer to use icc as c compiler.</li>
+<li><tt class="docutils literal"><span class="pre">--ifort</span></tt> causes the installer to use ifort as fortran compiler.</li>
+<li><tt class="docutils literal"><span class="pre">--gcc</span></tt> causes the installer to use gcc as c compiler.</li>
+<li><tt class="docutils literal"><span class="pre">--gfortran</span></tt> causes the installer to use gfortran as fortran compiler.</li>
+</ul>
+</div></blockquote>
+</div>
 <div class="section" id="setting-the-architecture">
 <h3>Setting the architecture<a class="headerlink" href="#setting-the-architecture" title="Permalink to this headline">¶</a></h3>
 <p>The architecture (32 or 64bits) can be set using the <tt class="docutils literal"><span class="pre">--m32</span></tt> or <tt class="docutils literal"><span class="pre">--m64</span></tt> flags. 64bits is the default.</p>
@@ -192,6 +215,8 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced-install-options">Advanced install options</a><ul>
+<li><a class="reference internal" href="#installing-with-a-particular-python-executable">Installing with a particular Python executable</a></li>
+<li><a class="reference internal" href="#bypassing-the-default-compilers">Bypassing the default compilers</a></li>
 <li><a class="reference internal" href="#setting-the-architecture">Setting the architecture</a></li>
 <li><a class="reference internal" href="#setting-installation-path">Setting installation path</a></li>
 <li><a class="reference internal" href="#telling-clik-to-install-the-dependencies">Telling clik to install the dependencies</a></li>

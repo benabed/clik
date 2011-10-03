@@ -12,6 +12,7 @@ def options(ctx):
   if grp==None:
     grp=optparse.OptionGroup(ctx.parser,"compiler options")
   grp.add_option("--gfortran",action="store_true",default=False,help="Do not test for ifort and only use gfortran")
+  grp.add_option("--ifort",action="store_true",default=False,help="Do not test for gfortran and only use ifort")
   grp.add_option("--fortran_flagline",action="store",default="",help="flagline to link fortran object to c using ld")
   ctx.add_option_group(grp)  
   
@@ -27,6 +28,8 @@ def configure(ctx):
       ifort_conf(ctx)
       return
     except Exception,e:
+      if Options.options.ifort:
+        raise
       Logs.pprint("PINK", "ifort not found, defaulting to gfortran (cause: '%s')"%e)
   gfortran_conf(ctx)
   

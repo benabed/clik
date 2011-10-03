@@ -4,6 +4,7 @@ def options(ctx):
   if grp==None:
     grp=optparse.OptionGroup(ctx.parser,"compiler options")
   grp.add_option("--gcc",action="store_true",default=False,help="Do not test for icc and only use gcc")
+  grp.add_option("--icc",action="store_true",default=False,help="Do not test for gcc and only use icc")
   ctx.add_option_group(grp)  
 
 def configure(ctx):
@@ -18,6 +19,8 @@ def configure(ctx):
         mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
       return
     except:
+      if Options.options.icc:
+        raise
       Logs.pprint("PINK", "icc not found, defaulting to gcc")
   ctx.check_tool('gcc')
   ctx.check_cc(

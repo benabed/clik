@@ -58,10 +58,37 @@ Setting the option ``--install_all_deps`` will install all the dependencies for 
 
 	$> ./waf configure --install_all_deps
 
-Beware, this is slow and use a lot of disc space.
+Beware, this is slow and use a lot of disk space.
+
 
 Advanced install options
 ------------------------
+
+Installing with a particular Python executable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to install clik with a python install different from the default one. For example if the default python installation does not contains the required header and libraries. To do so, call waf this way::
+
+    $> /path/to/special/python waf configure 
+
+and then::
+
+    $> /path/to/special/python waf install 
+
+
+Bypassing the default compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To bypass the c compiler detection, set the ``CC`` environment variable. 
+To bypass the fortran compiler detection, set the ``FC`` environment variable. Beware, you can only set the ``FC`` environment variable to either an intel fortran compiler or a gfortran compiler. 
+
+Shortcuts for some classical cases are provided:
+
+    * ``--icc`` causes the installer to use icc as c compiler.
+    * ``--ifort`` causes the installer to use ifort as fortran compiler.
+    * ``--gcc`` causes the installer to use gcc as c compiler.
+    * ``--gfortran`` causes the installer to use gfortran as fortran compiler.
+
 
 Setting the architecture
 ^^^^^^^^^^^^^^^^^^^^^^^^
