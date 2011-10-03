@@ -69,6 +69,8 @@ def configure(ctx):
   ctx.load("local_install","waf_tools")
   
   if not ctx.options.no_pytools:
+    ctx.env.append_value("LIB_PYEMBED",['m','dl','util'])
+    ctx.env.append_value("LIB_PYEXT",['m','dl','util'])
     ctx.load("python")
     if ctx.env.PYTHON[0]!=sys.executable:
       from waflib.Logs import warn
