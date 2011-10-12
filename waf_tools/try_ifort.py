@@ -70,10 +70,11 @@ def ifort_conf(ctx):
     except:
       ctx.end_msg(False)
       raise
-    for pth in rL:
+    for pth in list(rL) + ["/lib","/lib64"]:
       ctx.env.append_value("LIBPATH_fc_runtime",pth)
       ctx.env.append_value("RPATH_fc_runtime",pth)
-    ctx.env.append_value("LIB_fc_runtime",list(rl))
+    
+    ctx.env.append_value("LIB_fc_runtime",list(rl)+["pthread"])
     ctx.end_msg(True)
   show_linkline(ctx)
 
