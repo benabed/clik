@@ -22,7 +22,6 @@ def configure(ctx):
   if sys.platform.lower()=="darwin":
     ctx.env.fcshlib_PATTERN = 'lib%s.dylib'
 
-
   if not Options.options.gfortran:
     try:
       ifort_conf(ctx)
@@ -33,20 +32,70 @@ def configure(ctx):
       Logs.pprint("PINK", "ifort not found, defaulting to gfortran (cause: '%s')"%e)
   gfortran_conf(ctx)
   
+
+def show_linkline(ctx):
+  ctx.start_msg("fortran link line")
+  ctx.end_msg(" ".join(["-L%s"%vv for vv in ctx.env.LIBPATH_fc_runtime])+" "+" ".join(["-l%s"%vv for vv in ctx.env.LIB_fc_runtime]))
   
 def ifort_conf(ctx):
+  import waflib
+  import os
   ctx.env.FC=[]
   ctx.check_tool('ifort')
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
   ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
+  ctx.env.FCSHLIB_MARKER = [""]
+  ctx.env.FCSTLIB_MARKER = [""]
+  ctx.check_cc(
+    errmsg="failed",msg='Compile a test code with ifort',
+    mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
+  if not ctx.options.fortran_flagline:
+    ctx.start_msg("retrieve ifort link line")
+    try:
+      #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
+      llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS)), output=waflib.Context.BOTH)
+      #print "RET",llgo,llge
+      L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
+      l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
+      rL = set()
+      rl = set()
+      for Li in L:
+        oli = os.listdir(Li)
+        for li in l:
+          if ctx.env.cshlib_PATTERN%li in oli:
+            rl.add(li)
+            rL.add(Li)
+    except:
+      ctx.end_msg(False)
+      raise
+    for pth in rL:
+      ctx.env.append_value("LIBPATH_fc_runtime",pth)
+      ctx.env.append_value("RPATH_fc_runtime",pth)
+    ctx.env.append_value("LIB_fc_runtime",list(rl))
+    ctx.end_msg(True)
+  show_linkline(ctx)
+
+def ifort_conf_(ctx):
+  ctx.env.FC=[]
+  ctx.check_tool('ifort')
+  if sys.platform.lower()=="darwin":
+    ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
+  ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
+  ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
+  ctx.env.FCSHLIB_MARKER = [""]
+  ctx.env.FCSTLIB_MARKER = [""]
+  ctx.check_cc(
+    errmsg="failed",msg='Compile a test code with ifort',
+    mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
   if not ctx.options.fortran_flagline:
     ctx.start_msg("retrieve ifort link line")
     if "/" not in ctx.env.FC:
       ctx.env.FC = ctx.cmd_and_log("which %s"%ctx.env.FC).strip()
       #print ctx.env.FC
     ifort_path = osp.dirname(osp.realpath(ctx.env.FC))
+    
     #print ifort_path
     if ctx.options.m32:
       try:
@@ -74,12 +123,7 @@ def ifort_conf(ctx):
       ctx.env.append_value("RPATH_fc_runtime",pth)
     ctx.env.append_value("LIB_fc_runtime",["ifcore","intlc","ifport","imf","irc","svml","iomp5","pthread"])
     ctx.end_msg(True)
-  ctx.env.FCSHLIB_MARKER = [""]
-  ctx.env.FCSTLIB_MARKER = [""]
-  ctx.check_cc(
-    errmsg="failed",msg='Compile a test code with ifort',
-    mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
-  
+  show_linkline(ctx)  
   
 def gfortran_conf(ctx):
   ctx.env.FC=[]
@@ -113,6 +157,13 @@ def gfortran_conf(ctx):
       raise Errors.WafError("need gfortran version above 4.3 got %s"%version90)
     ctx.end_msg(v90)
   
+  # kludge !
+  ctx.env.FCSHLIB_MARKER = [""]
+  ctx.env.FCSTLIB_MARKER = [mopt]
+  ctx.check_cc(
+      errmsg="failed",msg='Compile a test code with gfortran',
+      mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
+
   ctx.start_msg("retrieve gfortran link line")
   lgfpath = ctx.cmd_and_log(ctx.env.FC+" %s -print-file-name=libgfortran.dylib"%mopt,quiet=Context.STDOUT)    
   lpath = [osp.dirname(osp.realpath(lgfpath))]
@@ -124,10 +175,5 @@ def gfortran_conf(ctx):
   ctx.env.append_value("LIBPATH_fc_runtime",list(lpath))
   ctx.env.append_value("RPATH_fc_runtime",list(lpath))
   ctx.end_msg(True)
-  # kludge !
-  ctx.env.FCSHLIB_MARKER = [""]
-  ctx.env.FCSTLIB_MARKER = [mopt]
-  ctx.check_cc(
-      errmsg="failed",msg='Compile a test code with gfortran',
-      mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
   
+  show_linkline(ctx)

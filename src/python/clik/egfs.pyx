@@ -193,7 +193,7 @@ def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
   import os.path as osp
   
   defs = {}
-  defs["template_cib_clustering"]=osp.join(datapath,"clustered_150.dat")
+  defs["template_cib_clustering"]=osp.join(datapath,"clustered_1108.4614.dat")
   defs["template_patchy_ksz"]=osp.join(datapath,"ksz_patchy.dat")
   defs["template_homogenous_ksz"]=osp.join(datapath,"ksz_ov.dat")
   defs["template_tsz"]=osp.join(datapath,"tsz.dat")

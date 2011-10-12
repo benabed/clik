@@ -41,7 +41,7 @@ def main(argv):
   # read the templates
   tpls = [gettpl(pars,name,default) for name,default in zip(
     template_names,
-    ["clustered_flat.dat","ksz_patchy.dat","ksz_ov.dat","tsz.dat"])]
+    ["clustered_1108.4614.dat","ksz_patchy.dat","ksz_ov.dat","tsz.dat"])]
   
   # read defaults
   defaults = pars.str_array(default=[]).defaults

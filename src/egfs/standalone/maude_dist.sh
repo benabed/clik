@@ -12,6 +12,6 @@ cp ../../python/clik/egfs.pyx egfs_maude
 cp setup.py egfs_maude
 cp Makefile egfs_maude
 mkdir egfs_maude/data
-cp -r ../data/*.dat egfs_maude/data
+cp -r ../egfs_data/*.dat egfs_maude/data
 
 tar -jcvf egfs_maude.tar.bz2 egfs_maude/

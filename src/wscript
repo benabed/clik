@@ -47,7 +47,7 @@ def build(bld):
       uselib = 'fc_runtime',
       )
       
-    if not bld.env.no_bopix and False:
+    if True : #not bld.env.no_bopix and False:
       bld(
         features = 'fc cshlib fcshlib',
         source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
