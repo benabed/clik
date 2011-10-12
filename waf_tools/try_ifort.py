@@ -55,7 +55,7 @@ def ifort_conf(ctx):
     ctx.start_msg("retrieve ifort link line")
     try:
       #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
-      llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS)), output=waflib.Context.BOTH)
+      llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp)), output=waflib.Context.BOTH)
       #print "RET",llgo,llge
       L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
       l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
