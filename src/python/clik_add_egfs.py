@@ -77,11 +77,17 @@ def main(argv):
 
   lmin = outhf["clik/lkl_0"].attrs["lmin"]
   lmax = outhf["clik/lkl_0"].attrs["lmax"]
-  
+
+  cib_decor_clustering = None
+  if "cib_decor_clustering" in pars:
+    cib_decor_clustering = pars.float_array.cib_decor_clustering
+    cib_decor_clustering = nm.array(cib_decor_clustering)*1.
+    assert len(cib_decor_clustering.flat[:])==len(frq.split())**2
+    
   if outhf["clik/lkl_0"].attrs["lkl_type"].lower() in ("ivg","gauss","lowly"):
-    addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls)
+    addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
   elif outhf["clik/lkl_0"].attrs["lkl_type"].lower() in ("smica",):
-    smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq)
+    smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq,cib_decor_clustering)
 
   if "check_param" in outhf["clik"]:
     cls = outhf["clik/check_param"]
@@ -93,7 +99,7 @@ def main(argv):
       php.add_selfcheck(pars.res_object,nm.concatenate((cls,tval)))
  
 
-def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpls):     
+def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering):     
   nc = 0
   if n_name in outhf["clik/lkl_0"].attrs.keys():
     nc = outhf["clik/lkl_0"].attrs[n_name]
@@ -113,16 +119,19 @@ def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpl
   for nnm,vvv in zip(template_names,tpls):
     agrp.create_dataset(nnm, data=vvv.flat[:])
 
+  if cib_decor_clustering!=None:
+    agrp.attrs["cib_decor_clustering"] = cib_decor_clustering.flat[:]
+
   return agrp
   
  
-def addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls):     
-  agrp = add_xxx(outhf,"n_addons","addon",vpars,defaults,values,lmin,lmax,template_names,tpls)
+def addon_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering):     
+  agrp = add_xxx(outhf,"n_addons","addon",vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
   
   agrp.attrs["addon_type"] = "egfs_single"
 
-def smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq):
-  agrp = add_xxx(outhf,"n_component","component",vpars,defaults,values,lmin,lmax,template_names,tpls)
+def smica_egfs(outhf,vpars,defaults,values,lmin,lmax,template_names,tpls,frq,cib_decor_clustering):
+  agrp = add_xxx(outhf,"n_component","component",vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
   agrp.attrs["component_type"] = "egfs"
   agrp.attrs["A_cmb"] = outhf["clik/lkl_0"].attrs["A_cmb"]
     

@@ -29,7 +29,7 @@ def build(bld):
   bld.install_files('${INCDIR}', 
                     'clik.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
   bld.install_files('${PREFIX}/share/clik/egfs', 
-                    'egfs/egfs_data/clustered_150.dat egfs/egfs_data/clustered_flat.dat egfs/egfs_data/ksz_ov.dat egfs/egfs_data/ksz_patchy.dat egfs/egfs_data/tsz.dat')
+                    'egfs/egfs_data/clustered_150.dat egfs/egfs_data/clustered_flat.dat egfs/egfs_data/ksz_ov.dat egfs/egfs_data/ksz_patchy.dat egfs/egfs_data/tsz.dat egfs/egfs_data/clustered_1108.4614.dat')
 
   bld(
     features = 'c cprogram',

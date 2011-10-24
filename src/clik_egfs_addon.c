@@ -165,7 +165,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   hstat = H5LTfind_attribute (group_id, "cib_decor_clustering");
   if (hstat==1) {
     dz  = -1;
-    cib_decor_clust = hdf5_double_datarray(group_id,cur_lkl,"cib_decor_clustering",&dz, err);
+    cib_decor_clust = hdf5_double_attarray(group_id,cur_lkl,"cib_decor_clustering",&dz, err);
     forwardError(*err,__LINE__,NULL);
   }
   
@@ -173,7 +173,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   hstat = H5LTfind_attribute (group_id, "cib_decor_poisson");
   if (hstat==1) {
     dz  = -1;
-    cib_decor_poisson = hdf5_double_datarray(group_id,cur_lkl,"cib_decor_poisson",&dz, err);
+    cib_decor_poisson = hdf5_double_attarray(group_id,cur_lkl,"cib_decor_poisson",&dz, err);
     forwardError(*err,__LINE__,NULL);
   }
   
