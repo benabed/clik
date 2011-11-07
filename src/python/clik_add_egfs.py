@@ -48,7 +48,7 @@ def main(argv):
   values = pars.str_array(default=[]).values
   
   #read pars
-  vpars = pars.str_array.pars
+  vpars = pars.str_array(default=[]).pars
   
   codels = pars.str_array(default=[]).models
   
