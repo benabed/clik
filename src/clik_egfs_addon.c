@@ -107,8 +107,13 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   keyvartable = hdf5_char_attarray(group_id,cur_lkl,"keys",&dz, err);
   forwardError(*err,__LINE__,NULL);
   
-  keyvars = malloc_err(sizeof(char*)*nvar,err);
-  forwardError(*err,__LINE__,NULL);
+  if (nvar!=0) {
+    keyvars = malloc_err(sizeof(char*)*nvar,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+    keyvars = malloc_err(sizeof(char*)*1,err);
+    forwardError(*err,__LINE__,NULL);
+  }
   //_DEBUGHERE_("keyvars %s",keyvars);
   
   for(i=0;i<nvar;i++) {
@@ -126,10 +131,18 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   valtable = hdf5_char_attarray(group_id,cur_lkl,"values",&dz, err);
   forwardError(*err,__LINE__,NULL);
   
-  keys = malloc_err(sizeof(char*)*ndef,err);
-  forwardError(*err,__LINE__,NULL);
-  values = malloc_err(sizeof(char*)*ndef,err);
-  forwardError(*err,__LINE__,NULL);
+  if (ndef!=0) {
+    keys = malloc_err(sizeof(char*)*ndef,err);
+    forwardError(*err,__LINE__,NULL);
+    values = malloc_err(sizeof(char*)*ndef,err);
+    forwardError(*err,__LINE__,NULL);    
+  } else {
+    keys = malloc_err(sizeof(char*)*1,err);
+    forwardError(*err,__LINE__,NULL);
+    values = malloc_err(sizeof(char*)*1,err);
+    forwardError(*err,__LINE__,NULL);
+
+  }
   
   for(i=0;i<ndef;i++) {
     keys[i] = &(deftable[i*256]);
@@ -438,9 +451,13 @@ SmicaComp * clik_smica_comp_egfs_init(hid_t comp_id, char* cur_lkl,int nb, int m
   SC = alloc_SC(egfs_model->np,nb,m,egfs_pay,&comp_egfs_update,&free_comp_egfs,err);
   forwardError(*err,__LINE__,NULL);
   
-  xnames = malloc_err(sizeof(char*)*(egfs_model->np),err);
-  forwardError(*err,__LINE__,NULL);
-  
+  if (egfs_model->np!=0) {
+    xnames = malloc_err(sizeof(char*)*(egfs_model->np),err);
+    forwardError(*err,__LINE__,NULL);
+  } else{
+    xnames = malloc_err(sizeof(char*)*1,err);
+    forwardError(*err,__LINE__,NULL);
+  }   
   for(i=0;i<egfs_model->np;i++) {
     xnames[i] = egfs_model->keys[egfs_model->ndf+i];
   }

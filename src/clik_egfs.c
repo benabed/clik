@@ -11,10 +11,17 @@ egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** val
   self->ndf = ndefaults;
   self->np = nvar;
   
-  self->keys = malloc_err(sizeof(egfs_parstr)*self->nkv,err);
-  forwardError(*err,__LINE__,NULL);
-  self->values = malloc_err(sizeof(egfs_parstr)*self->nkv,err);
-  forwardError(*err,__LINE__,NULL);
+  if (self->nkv!=0) {
+    self->keys = malloc_err(sizeof(egfs_parstr)*self->nkv,err);
+    forwardError(*err,__LINE__,NULL);
+    self->values = malloc_err(sizeof(egfs_parstr)*self->nkv,err);
+    forwardError(*err,__LINE__,NULL);  
+  } else{
+    self->keys = malloc_err(sizeof(egfs_parstr)*1,err);
+    forwardError(*err,__LINE__,NULL);
+    self->values = malloc_err(sizeof(egfs_parstr)*1,err);
+    forwardError(*err,__LINE__,NULL);
+  }
   memset(self->keys,' ',sizeof(char)*256*self->nkv);
   memset(self->values,' ',sizeof(char)*256*self->nkv);
   for(i=0;i<ndefaults;i++) {
