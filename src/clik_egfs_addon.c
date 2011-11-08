@@ -295,7 +295,7 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
   double *wl,*wl0,one;
   int inc,il,im;
   double res;
-  
+  //double r10[16];
 
   SC = data;
   egfs_pay = SC->data;
@@ -316,20 +316,21 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
     inc = 1;
   }
   
-
-  //_DEBUGHERE_("%g %g",egfs_pay->rq[0],egfs_pay->rq[2]);
+  //_DEBUGHERE_("","");
   wl=wl0;
   for(il=0;il<egfs_pay->nell;il++) {
     int ip;
     int im1,im2;
     ip = il*egfs_pay->m*egfs_pay->m;
+
     for(im1=0;im1<egfs_pay->m;im1++) {
       for(im2=0;im2<egfs_pay->m;im2++) {
-        egfs_pay->rq[ip+im1*egfs_pay->m+im2] = egfs_pay->rq[ip+im1*egfs_pay->m+im2] * *wl * egfs_pay->unit * egfs_pay->A[im1]*egfs_pay->A[im2];  
+        egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] = egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] * *wl * egfs_pay->unit * egfs_pay->A[im1]*egfs_pay->A[im2];  
       }
     }
     wl+=inc;
   }
+  //_DEBUGHERE_("%g %g %g %g",egfs_pay->A[0],egfs_pay->A[1],egfs_pay->A[2],egfs_pay->A[3])
   //_DEBUGHERE_("%g %g %g",egfs_pay->rq[0],egfs_pay->rq[2],egfs_pay->unit);
   
   // apply binning if needed
@@ -357,7 +358,29 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
     _DEBUGHERE_("%g %g",rq[0],rq[2]);
     _DEBUGHERE_("%g %g",rq[0]-rq0,rq[2]-rq2);
     _DEBUGHERE_("m %d n %d k %d",ndim, nbns,nell);*/  
-    dgemm(&transa, &transb, &ndim, &nbns,&nell, &done, egfs_pay->rq, &ndim, egfs_pay->bins, &nell, &done, rq, &ndim);
+    //_DEBUGHERE_("avant egfs","");
+    //memset(r10,0,sizeof(double)*16);
+
+    //printMat(&rq[10*ndim], egfs_pay->m,egfs_pay->m);
+    //printMat(r10, egfs_pay->m,egfs_pay->m);
+    {
+      int il,iq,if1,if2;
+      for(il=0;il<nell;il++) {
+        for(iq=0;iq<nbns;iq++) {
+          for(if1=0;if1<egfs_pay->m;if1++) {
+            for(if2=0;if2<egfs_pay->m;if2++) {
+              rq[iq*ndim+if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];
+              /*if (iq==10)
+                r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
+            }  
+          }
+        }
+      }
+    }
+    //dgemm(&transa, &transb, &ndim, &nbns,&nell, &done, egfs_pay->rq, &ndim, egfs_pay->bins, &nell, &done, rq, &ndim);
+    /*_DEBUGHERE_("apres egfs","");
+    printMat(&rq[10*ndim], egfs_pay->m,egfs_pay->m);
+    printMat(r10, egfs_pay->m,egfs_pay->m);*/
     /*_DEBUGHERE_("","");
     poc = 0;
     for(ii=0;ii<10;ii++) {
@@ -366,13 +389,17 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
     }
     _DEBUGHERE_("%g %g %g",rq[0]-rq0,rq[2]-rq2,poc);*/
   } else {
-    for(il=0;il<egfs_pay->nell*egfs_pay->m*egfs_pay->m;il++) {
-      rq[il] += egfs_pay->rq[il];
+    int if1,if2;
+    for(il=0;il<egfs_pay->nell;il++) {
+      for(if1=0;if1<egfs_pay->m;if1++) {
+        for(if2=0;if2<egfs_pay->m;if2++) {
+          rq[il*egfs_pay->m*egfs_pay->m+if1*egfs_pay->m+if2] += egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];
+        }
+      }
     }
   }
     
 }
-
 void free_comp_egfs(void** data) {
   SmicaComp *SC;
   egfs_smica *egfs_pay;
