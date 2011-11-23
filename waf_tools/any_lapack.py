@@ -61,6 +61,9 @@ def configure(ctx):
         ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix
   iall = atl.shouldIinstall_all(ctx,"lapack")
   if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
+    ctx.env.append_value("LIBPATH_lapack",ctx.env.LIBPATH_fc_runtime)
+    ctx.env.append_value("RPATH_lapack",ctx.env.RPATH_fc_runtime)
+    ctx.env.append_value("LIB_lapack",ctx.env.LIB_fc_runtime)
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
     lapack_extradefs += ["LAPACK_CLIK"]

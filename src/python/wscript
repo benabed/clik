@@ -22,7 +22,7 @@ def build(ctx):
       cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
-    if (ctx.env.has_f90):
+    if (ctx.env.has_f90 and ctx.env.has_egfs):
       ctx(
         features = "c cshlib pyext",
         source = "clik/egfs.pyx",
