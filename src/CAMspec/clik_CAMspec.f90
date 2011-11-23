@@ -98,7 +98,7 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     END IF
     call calc_like(tlkl,  cltt, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, cal1, cal2)
     ! lkl is -2loglike clik returns loglik
-    print *,tlkl
+    !print *,tlkl
     lkl = -tlkl/2.
 
 END SUBROUTINE CAMSPEC_EXTRA_LKL

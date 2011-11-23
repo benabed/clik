@@ -71,8 +71,7 @@ program clik_example_f90
 			read(100,*),cl_and_pars(counter)
       counter = counter + 1
 		enddo
-			
-    lkl = clik_compute(pself,cl_and_pars)
+		lkl = clik_compute(pself,cl_and_pars)
     print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
     close(unit=100)
     deallocate(cl_and_pars)
