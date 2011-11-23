@@ -15,7 +15,7 @@ def build(bld):
   uselib_bopix = []
   uselib_wmap = []
   use_clik = []
-  use_clik += ["mybopix"]* (bld.env.has_bopix)
+  use_clik += ["mybopix"]* bool(bld.env.has_bopix)
   use_clik += ["mywmap"]*bool(bld.env.wmap_src)
   use_clik += ["myegfs"]*bool(bld.env.has_f90 and bld.env.has_egfs)
   use_clik += ["CAMspec"]*bool(bld.env.has_camspec)
