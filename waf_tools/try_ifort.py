@@ -45,6 +45,7 @@ def ifort_conf(ctx):
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
   ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
+  ctx.env["FCFLAGS_fc_omp"]=[]
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
@@ -130,6 +131,7 @@ def gfortran_conf(ctx):
   ctx.env.FC=[]
   ctx.env.FCFLAGS = []
   ctx.check_tool('gfortran')
+  ctx.env["FCFLAGS_fc_omp"]=[]
   ctx.env.append_value("FCFLAGS_fc_omp","-fopenmp")
   ctx.env.append_value("FCFLAGS","-DGFORTRAN")
   ctx.env.append_value("FCFLAGS","-ffixed-line-length-0")

@@ -6,7 +6,7 @@ def add_lib_option(libname,opt,default="/usr/local/",install=True):
   import optparse
   grp=optparse.OptionGroup(opt.parser,libname+" options")
   grp.add_option("--%s_islocal"%libname,action="store_true",default=False,help="%s has been installed previsouly using --%s_install or --%s_forceinstall"%(libname,libname,libname))
-  grp.add_option("--%s_prefix"%libname,action="store",default=default,help="%s include/lib path prefix"%libname)
+  grp.add_option("--%s_prefix"%libname,action="store",default="",help="%s include/lib path prefix"%libname)
   grp.add_option("--%s_include"%libname,action="store",default="",help="%s include path"%libname)
   grp.add_option("--%s_lib"%libname,action="store",default="",help="%s lib path"%libname)
   grp.add_option("--%s_link"%libname,action="store",default="",help="%s link line"%libname)
@@ -27,6 +27,8 @@ def opt_to_libpaths(ctx,name):
     link=[]
   else :
     prefix = getattr(ctx.options,name+"_prefix")
+    if not prefix:
+      prefix = "/usr/local/lib"
     include = getattr(ctx.options,name+"_include").split(":")
     lib = getattr(ctx.options,name+"_lib").split(":")
     link = libsfromlinkline(getattr(ctx.options,name+"_link"))
@@ -105,6 +107,14 @@ add_lib_dict = {
   "c" : add_lib,
   "f90" : add_lib_f90
 }
+def shouldIinstall_all(ctx,name):
+  if ctx.options.install_all_deps==False:
+    return False
+  rr = [(vv,getattr(ctx.options,vv,"")) for vv in dir(ctx.options) if name in vv and vv!=name+"_forceinstall" ]
+  for vv in rr:
+    if vv[1]:
+      return False
+  return True
 
 def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[],frameworkpath=[],framework=[],install=False,msg="",uselib=[],flagline="",opt_name="",add_lib_code="c",forceinstall=False):
   if not opt_name:
@@ -112,7 +122,8 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   # do install if needed
   #print install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False))
   #print install ,(getattr(ctx.options,opt_name+"_install",False) ,getattr(ctx.options,opt_name+"_forceinstall",False))
-  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False) or ctx.options.install_all_deps):
+  iall =shouldIinstall_all(ctx,name)
+  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False) or iall):
     #print "LALALA"
     # first try without install !
     setattr(ctx.env,"has_"+name,True)
@@ -121,13 +132,13 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       #print forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False
       #print forceinstall==False,getattr(ctx.options,opt_name+"_forceinstall",False)==False
       #print "LALALA",getattr(ctx.options,opt_name+"_forceinstall","MUMUMU")
-      assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and ctx.options.install_all_deps==False
+      assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False
       #print "wowow"
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
       return
     except Exception,e:
       #print e
-      if forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and ctx.options.install_all_deps==False:
+      if forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False:
         Logs.pprint("RED","%s not found, try to install it"%name)
       install(ctx)
   # compute paths
@@ -253,11 +264,12 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
   doit = False
   import sys
 
+  iall = shouldIinstall_all(ctx,name)
   try:
-    assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and ctx.options.install_all_deps==False
+    assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and iall==False
     check_python_module(ctx,name,extracmd)
   except Exception,e: 
-    if getattr(ctx.options,name+"_install",False) or getattr(ctx.options,name+"_forceinstall",False) or ctx.options.install_all_deps:
+    if getattr(ctx.options,name+"_install",False) or getattr(ctx.options,name+"_forceinstall",False) or iall:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
       atl.installsmthg_pre(ctx,url,packtgz)
       if not osp.exists(ctx.env.PYTHONDIR):

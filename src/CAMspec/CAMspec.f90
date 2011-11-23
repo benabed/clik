@@ -21,32 +21,71 @@ module temp_like
 contains
 
 
+  subroutine like_init_frommem(mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3, mnp1, mnp2, mnp3, mnX,mX,mc_inv,mlmax_sz,msz_temp)
+    integer,intent(in) :: mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3,mnp1, mnp2, mnp3, mnX,mlmax_sz
+    real(8),dimension(:),intent(in)::mX
+    real(8),dimension(0:),intent(in)::msz_temp
+    real(8),dimension(:,:),intent(in)::mc_inv
+
+    lmin1 = mlmin1
+    lmin2 = mlmin2
+    lmin3 = mlmin3
+    lmax1 = mlmax1
+    lmax2 = mlmax2
+    lmax3 = mlmax3
+    np1 = mnp1
+    np2 = mnp2
+    np3 = mnp3
+    nX = mnX
+    lmax_sz = mlmax_sz
+
+    if (nX>5000) then
+      print*, ' you need to increase the sizes of X and c_inv', nX
+      stop
+    endif
+
+    X(:nX) = mX(:nX)
+    c_inv(:nX,:nX) = mc_inv(:nX,:nX)
+
+    if(lmax_sz>5000) then
+      print*, ' you need to increase the sizes of sz_temp', lmax_sz
+      stop
+    endif      
+
+    sz_temp(0:lmax_sz) = msz_temp(0:lmax_sz)
+    needinit=.false.
+        
+  end subroutine like_init_frommem
+    
   subroutine like_init(like_file, sz_file)
 
     integer :: i, j, l
+    integer:: mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3,mnp1, mnp2, mnp3, mnX,mlmax_sz
+    real(8),dimension(5000)::mX
+    real(8),dimension(0:5000)::msz_temp
+    real(8),dimension(5000,5000)::mc_inv
 
     character*100 like_file, sz_file
     !
     !   read likelihood file
     !
     open(48, file=like_file, form='unformatted', status='unknown')
-    read(48)  lmin1, lmax1, lmin2, lmax2, lmin3, lmax3, np1, np2, np3, nX
-    if(nX.gt.5000) then
-       print*, ' you need to increase the sizes of X and c_inv', nX
+    read(48)  mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3, mnp1, mnp2, mnp3, mnX
+    if(mnX.gt.5000) then
+       print*, ' you need to increase the sizes of X and c_inv', mnX
        stop
     end if
-    read(48) (X(i), i = 1, nX)
+    read(48) (mX(i), i = 1, mnX)
     read(48) 
-    read(48) ((c_inv(i, j), j = 1, nX), i = 1,  nX)
+    read(48) ((mc_inv(i, j), j = 1, mnX), i = 1,  mnX)
     close(48)
 
     open(48, file=sz_file, form='unformatted', status='unknown')
-    read(48) lmax_sz
-    read(48) (sz_temp(l), l = 0, lmax_sz)
+    read(48) mlmax_sz
+    read(48) (msz_temp(l), l = 0, mlmax_sz)
     close(48)
 
-    needinit=.false.
-
+    call like_init_frommem(mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3, mnp1, mnp2, mnp3, mnX,mX,mc_inv,mlmax_sz,msz_temp)
     return
   end subroutine like_init
 

@@ -7,7 +7,8 @@ def options(ctx):
   atl.add_lib_option("healpix",ctx,install=True)
   
 def configure(ctx):
-  if ctx.options.healpix_install or ctx.options.healpix_forceinstall or ctx.options.install_all_deps:
+  iall = atl.shouldIinstall_all(ctx,"healpix")
+  if ctx.options.healpix_install or ctx.options.healpix_forceinstall or iall:
     #print "do install"
     ctx.options.healpix_islocal=True
     ctx.options.healpix_forceinstall=True
@@ -43,6 +44,7 @@ def install_cfitsio(ctx):
     raise Errors.WafError("Cannot build %s"%"cfitsio")
     
 def install_healpix(ctx):
+  import os
   hpdir = "Healpix_2.20a"
   atl.installsmthg_pre(ctx,"http://sourceforge.net/projects/healpix/files/Healpix_2.20a/Healpix_2.20a_2011Feb09.tar.gz/download","Healpix_2.20a_2011Feb09.tar.gz")
   fpic_c = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
@@ -64,18 +66,32 @@ def install_healpix(ctx):
   f=open(osp.join("build",hpdir,"conf.cmd"),"w")
   print >>f,cnf_tmpl%dii
   f.close()
+  # prepare a few things
+  try:
+    os.mkdir(osp.join("build",hpdir,"lib"))
+  except Exception,e:
+    #print e
+    pass
+  try:
+    os.mkdir(osp.join("build",hpdir,"include"))
+  except Exception,e:
+    #print e
+    pass
   cmdline = "cd build/%s; ./configure <conf.cmd; make"%hpdir
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%"Healpix")
   import shutil,os
   for fi in os.listdir(osp.join("build",hpdir,"lib")):
+    #print "copy",osp.join("build",hpdir,"lib",fi),osp.join(ctx.env.LIBDIR,fi)
     shutil.copyfile(osp.join("build",hpdir,"lib",fi),osp.join(ctx.env.LIBDIR,fi))
   for fi in os.listdir(osp.join("build",hpdir,"include")):
+    #print "copy",osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi)
     shutil.copyfile(osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi))
     
-cnf_tmpl="""2
-y
+cnf_tmpl="""6
+n
+2
 %(CC)s
 -O2 -Wall %(CFLAGS)s
 
@@ -83,7 +99,6 @@ y
 %(CFITSIOPATH)s
 %(CFITSIOPATHINC)s
 y
-n
 3
 %(FC)s
 

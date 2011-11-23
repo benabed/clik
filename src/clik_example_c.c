@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
   _err = initError();
   err = &_err;
   
-  testErrorExitVA(argc<3,-1,"Bad number of command line args!\nusage : %s clikidfile clfile [clfile ...]",*err,__LINE__,argv[0]);
+  //testErrorExitVA(argc<3,-1,"Bad number of command line args!\nusage : %s clikidfile clfile [clfile ...]",*err,__LINE__,argv[0]);
   
   clikid = clik_init(argv[1],err);
   quitOnError(*err,__LINE__,stderr);

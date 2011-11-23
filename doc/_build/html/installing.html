@@ -91,6 +91,8 @@ Having a full python installation (i.e. including the library and header, often 
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps</pre>
 </div>
 <p>Beware, this is slow and use a lot of disk space.</p>
+<p>It can be desirable not to install all the dependencies if some are known to be available. Using any of the <tt class="docutils literal"><span class="pre">--XXX_prefix</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_islocal</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_include</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_lib</span></tt>, <tt class="docutils literal"><span class="pre">XXX-link</span></tt> described below will cancel the installing option for the dependency <tt class="docutils literal"><span class="pre">XXX</span></tt>.</p>
+<p>The special dependency pmclib is not affected by this option.</p>
 </div>
 </div>
 <div class="section" id="advanced-install-options">
@@ -150,7 +152,8 @@ install system to find them.</p>
 <h3>Special case: the mkl library<a class="headerlink" href="#special-case-the-mkl-library" title="Permalink to this headline">¶</a></h3>
 <p>This option is only for advanced users.
 The blas/lapack distribution installed automatically is a very inefficient one. To improve the performance of clik (especially the low-l pixel based likelihood), one is advised to use the MKL library, which is fully supported and allow the use of shared memory computer architectures.
-A special option is present to simplify the install using the intel MKL library: setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).</p>
+A special option is present to simplify the install using the intel MKL library: setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).
+Setting this option will cancel the <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> option for the lapack dependency only.</p>
 </div>
 <div class="section" id="special-case-wmap-likelihood">
 <h3>Special case: WMAP likelihood<a class="headerlink" href="#special-case-wmap-likelihood" title="Permalink to this headline">¶</a></h3>

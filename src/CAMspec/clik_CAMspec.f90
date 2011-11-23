@@ -4,8 +4,8 @@ MODULE CAMSPEC_EXTRA
 
     INTEGER:: BOK = 0
     real(8), dimension(:), allocatable :: cltt
-    INTEGER::lmax
-    INTEGER::xcase
+    INTEGER::lmin,lmax
+    INTEGER::xcase,npar
 END MODULE CAMSPEC_EXTRA
 
 
@@ -23,34 +23,31 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(LIKEFILE,SZFILE)
+SUBROUTINE CAMSPEC_EXTRA_INIT(mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3, mnp1, mnp2, mnp3, mnX,mX,mc_inv,mlmax_sz,msz_temp)
     USE CAMSPEC_EXTRA
     USE temp_like
-    CHARACTER(LEN=2048),INTENT(IN)::LIKEFILE,SZFILE
-    CHARACTER(LEN=2048)::DLIKEFILE,DSZFILE
+    implicit none
+    integer,intent(in) :: mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3,mnp1, mnp2, mnp3, mnX,mlmax_sz
+    real(8),dimension(1:mnX)::mX
+    real(8),dimension(0:mlmax_sz),intent(in)::msz_temp
+    real(8),dimension(1:mnX,1:mnX),intent(in)::mc_inv
+    integer::i
+    
+    call like_init_frommem(mlmin1, mlmax1, mlmin2, mlmax2, mlmin3, mlmax3, mnp1, mnp2, mnp3, mnX,mX,mc_inv,mlmax_sz,msz_temp)
 
-    DLIKEFILE = LIKEFILE
-    DLIKEFILE(len_trim(LIKEFILE):len_trim(LIKEFILE)) = ' '   
-    DLIKEFILE = TRIM(ADJUSTL(DLIKEFILE))
-    DSZFILE = SZFILE
-    DSZFILE(len_trim(SZFILE):len_trim(SZFILE)) = ' '     
-    DSZFILE = TRIM(ADJUSTL(DSZFILE))
-
-    call like_init(DLIKEFILE, DSZFILE)
-
-    lmax = lmax1
-    IF (lmax<lmax2) lmax = lmax2
-    IF (lmax<lmax3) lmax = lmax3
-    lmin = lmin1
-    IF (lmin>lmin2 .and. lmax2.ne.0) lmin = lmin2
-    IF (lmin>lmin3 .and. lmax3.ne.0) lmin = lmin3
+    lmax = mlmax1
+    IF (lmax<mlmax2) lmax = mlmax2
+    IF (lmax<mlmax3) lmax = mlmax3
+    lmin = mlmin1
+    IF (lmin>mlmin2 .and. mlmax2.ne.0) lmin = mlmin2
+    IF (lmin>mlmin3 .and. mlmax3.ne.0) lmin = mlmin3
     
 
     xcase = 0
-    IF (lmax2.ne.0) xcase = 1
+    IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
-
+    npar = lmax+1-lmin+5+4*xcase
             
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
@@ -64,14 +61,18 @@ END SUBROUTINE CAMSPEC_EXTRA_GETCASE
 SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     USE CAMSPEC_EXTRA
     use temp_like
+    implicit none
+
     REAL(8),INTENT(OUT)::LKL
-    REAL(8),DIMENSION(0:)::CL
+    REAL(8),DIMENSION(0:npar-1)::CL
     REAL(8)::A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, cal1, cal2
     INTEGER::l
+    real(8)::tlkl
 
     cltt(:lmin-1) = 0
     DO l=lmin,lmax
-        cltt(l)=CL(l-lmin)
+        ! camspec expects cl/2pi !!! argl !
+        cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
     ENDDO
 
     IF (xcase==0) THEN
@@ -95,10 +96,10 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
         cal1      = CL(lmax+1-lmin + 7) 
         cal2      = CL(lmax+1-lmin + 8) 
     END IF
-
-    call calc_like(lkl,  cltt, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, cal1, cal2)
+    call calc_like(tlkl,  cltt, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, cal1, cal2)
     ! lkl is -2loglike clik returns loglik
-    lkl = -lkl/2.
+    print *,tlkl
+    lkl = -tlkl/2.
 
 END SUBROUTINE CAMSPEC_EXTRA_LKL
 

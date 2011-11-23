@@ -122,7 +122,14 @@ def configure(ctx):
   ctx.load("chealpix","waf_tools")
   
   #bopix
-  ctx.env.no_bopix = ctx.options.no_bopix or not osp.exists("src/bopix")
+  ctx.env.has_bopix = not (ctx.options.no_bopix or not osp.exists("src/bopix"))
+
+  #camspec
+  ctx.env.has_camspec = osp.exists("src/CAMspec")
+
+  #egfs 
+  ctx.env.has_egfs = osp.exists("src/egfs")
+
   # wmap
   if ctx.options.wmap_install or ctx.options.install_all_deps:
     atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
@@ -152,7 +159,6 @@ def build(ctx):
   ctx.recurse("src")
   if not ctx.options.no_pytools:
     ctx.recurse("src/python")
-  #ctx.recurse("src/egfs")
   
   ctx.add_post_fun(post)
 
@@ -228,12 +234,12 @@ def dist_public(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'clik-'+clik_version+'.public'
-  res = ctx.cmd_and_log("cd ..;svn log -r BASE")
-  svnversion = re.findall("(r\d+)",res)[0]
+  res = ctx.cmd_and_log("svnversion")
+  svnversion = res
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/* src/minipmc/* waf_tools/*.py clik.pdf" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/*.c src/*.h src/*.f90 src/minipmc/* waf_tools/*.py clik.pdf" )
   
 def post(ctx):
   import shutil

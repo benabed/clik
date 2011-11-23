@@ -60,6 +60,9 @@ Setting the option ``--install_all_deps`` will install all the dependencies for 
 
 Beware, this is slow and use a lot of disk space.
 
+It can be desirable not to install all the dependencies if some are known to be available. Using any of the ``--XXX_prefix``, ``--XXX_islocal``, ``--XXX_installifneeded``, ``--XXX_include``, ``--XXX_lib``, ``XXX-link`` described below will cancel the installing option for the dependency ``XXX``.
+
+The special dependency pmclib is not affected by this option.
 
 Advanced install options
 ------------------------
@@ -135,6 +138,7 @@ Special case: the mkl library
 This option is only for advanced users.
 The blas/lapack distribution installed automatically is a very inefficient one. To improve the performance of clik (especially the low-l pixel based likelihood), one is advised to use the MKL library, which is fully supported and allow the use of shared memory computer architectures.
 A special option is present to simplify the install using the intel MKL library: setting the option ``--lapack_mkl=PATH_OF_THE_MKL_INSTALL`` will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).
+Setting this option will cancel the ``--install_all_deps`` option for the lapack dependency only.
 
 Special case: WMAP likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -176,10 +180,11 @@ Best advanced choice
 
 Use a mkl lapack install and let the other dependencies on auto install::
 
-    $> ./waf configure --lapack_mkl=/opt/intel/mkl \
-        --healpix_install --hdf5_install --h5py_install \
-        --cython_install --numpy_install --wmap_install --gst_install
+    $> ./waf configure --lapack_mkl=/opt/intel/mkl --install_all_deps \
+        --cython_installifneeded --numpy_installifneeded --gsl_installifneeded
 
+This will use your mkl libraries from ``/opt/intel/mkl``, test if numpy, cython and gsl are installed on your computer (often the case) if not install them, 
+and finally install all the other requirements (helpaix, hdf5 and its python wrapper).
 
 Environment variables
 ---------------------

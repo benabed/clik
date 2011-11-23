@@ -59,8 +59,8 @@ def configure(ctx):
           ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" + libdep
         ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
         ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix
-  
-  if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or ctx.options.install_all_deps:
+  iall = atl.shouldIinstall_all(ctx,"lapack")
+  if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
     lapack_extradefs += ["LAPACK_CLIK"]
