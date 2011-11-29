@@ -53,16 +53,21 @@ def install_healpix(ctx):
   dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+fpic_f90)}
   # if I am here, I found cfitsio
   # could it be somewhere else ?
-  cfitsiopath=""
-  for pth in ["/usr/local/lib","/usr/lib","/lib",ctx.env.LIBDIR]:    
-    if osp.exists(osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")):
-      cfitsiopath = pth
-      break
-  if not bool(cfitsiopath):
-    raise Exception("cannot find cfitsio !")
-  dii["CFITSIOPATH"]=cfitsiopath
-  dii["CFITSIOPATHINC"]=osp.realpath(cfitsiopath+"/../include")
-  
+  #cfitsiopath=""
+  #for pth in [ctx.env.LIBDIR,"/usr/local/lib","/usr/lib","/lib"]:
+  #  print pth    
+  #  print osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")
+  #  if osp.exists(osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")):
+  #    cfitsiopath = pth
+  #    break
+  #if not bool(cfitsiopath):
+  #  raise Exception("cannot find cfitsio !")
+  #dii["CFITSIOPATH"]=cfitsiopath
+  #dii["CFITSIOPATHINC"]=osp.realpath(cfitsiopath+"/../include")
+  dii["CFITSIOPATH"]=ctx.env.LIBPATH_cfitsio[0]
+  dii["CFITSIOPATHINC"]=ctx.env.INCLUDES_cfitsio[0]
+  #print dii
+
   f=open(osp.join("build",hpdir,"conf.cmd"),"w")
   print >>f,cnf_tmpl%dii
   f.close()
