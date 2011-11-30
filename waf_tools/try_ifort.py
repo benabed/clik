@@ -157,7 +157,7 @@ def gfortran_conf(ctx):
     vmid = int(version90.split(".")[1])
     if vmid<3:
       ctx.end_msg(v90,color="YELLOW")
-      raise Errors.WafError("need gfortran version above 4.3 got %s"%version90)
+      raise Errors.WafError("gfortran version need to be above 4.3 got %s"%version90)
     ctx.end_msg(v90)
   
   # kludge !
