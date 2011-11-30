@@ -13,7 +13,8 @@ Requisites
 Mandatory requisites that cannot be installed automatically
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`Python <http://python.org>`_ (>2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
+`Python <http://python.org>`_ (>=2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
+Gcc version must be >= 4.2 and gfortran version must be >=4.3.
 Having a full python installation (i.e. including the library and header, often called *python-devel* or *python-dev* in package managers) is very strongly advised.
 
 Mandatory requisites that will be installed automatically if absent
