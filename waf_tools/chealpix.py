@@ -68,6 +68,9 @@ def install_healpix(ctx):
   dii["CFITSIOPATHINC"]=ctx.env.INCLUDES_cfitsio[0]
   #print dii
 
+  f=open(osp.join("build",hpdir,"conf_1.cmd"),"w")
+  print >>f,cnf_tmpl_1%dii
+  f.close()
   f=open(osp.join("build",hpdir,"conf.cmd"),"w")
   print >>f,cnf_tmpl%dii
   f.close()
@@ -82,6 +85,13 @@ def install_healpix(ctx):
   except Exception,e:
     #print e
     pass
+
+  # first part
+  cmdline = "cd build/%s; ./configure <conf_1.cmd"%hpdir
+  Logs.pprint("PINK",cmdline)
+  if ctx.exec_command(cmdline)!=0:
+    Logs.pprint("PINK","first pass failed. Keep going...")
+  
   cmdline = "cd build/%s; ./configure <conf.cmd; make"%hpdir
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
@@ -94,9 +104,11 @@ def install_healpix(ctx):
     #print "copy",osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi)
     shutil.copyfile(osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi))
     
-cnf_tmpl="""6
+cnf_tmpl_1="""6
 n
-2
+0
+"""
+cnf_tmpl="""2
 %(CC)s
 -O2 -Wall %(CFLAGS)s
 

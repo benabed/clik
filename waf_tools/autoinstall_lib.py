@@ -167,6 +167,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
   except Exception,e:
     ctx.env["INCLUDES_%s"%name]=[]
+    ctx.env["DEFINES_%s"%name]=[]
     if not getattr(ctx.env,"has_"+name,False):
       if not getattr(ctx.env,"silent_"+name,False):
         Logs.pprint("BLUE","Optional %s not found"%name)
