@@ -53,6 +53,8 @@ double clik_compute(clik_object* clikid, double* cl_and_pars,error **err);
 // cleanup
 void clik_cleanup(clik_object** pclikid);
 
+//internal
+void* _clik_dig(clik_object* clikid, error **err);
 
 
 #endif

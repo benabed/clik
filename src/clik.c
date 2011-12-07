@@ -22,7 +22,7 @@
 // YOU HAVE BEEN WARNED !
 
 clik_object* clik_init(char* hdffilepath, error **_err) {
-  hid_t file_id,group_id;
+  hid_t file_id,group_id,prior_id;
   herr_t hstat;
   int n_lkl,i_lkl;
   int lmax[6];
@@ -75,6 +75,71 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   _forwardError(*err,__LINE__,NULL);
   
   group_id = H5Gopen(file_id,"clik", H5P_DEFAULT );
+  
+  hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
+  
+  if (hstat==1) {
+    int nepar;
+    parname *pn;
+    int nprior,iprior,j;
+    int *lprior;
+    char *priorname;
+    int nvar;
+    double *loc,*var;
+
+    prior_id = H5Gopen(group_id, "prior", H5P_DEFAULT );
+    nepar = clik_get_extra_parameter_names(target,&pn,err);
+    _forwardError(*err,__LINE__,NULL);
+    _testErrorRetVA(nepar==0,hdf5_base,"cannot add a prior without extra parameters",*err,__LINE__,NULL,"");    
+    
+    nprior = -1;
+    priorname = hdf5_char_attarray(prior_id,cur_lkl,"name",&nprior, err);
+    _forwardError(*err,__LINE__,NULL);
+    nprior = nprior/256;
+    _testErrorRetVA(nepar<nprior,hdf5_base,"too many priors ! Expected less than %d got %d",*err,__LINE__,NULL,nepar,nprior);
+    
+    lprior = malloc_err(sizeof(int)*nprior,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    for(iprior=0;iprior<nprior;iprior++) {
+      lprior[iprior] = -1;
+      for (j=0;j<nepar;j++) {
+        if (strcmp(pn[j],&(priorname[256*iprior]))==0) {
+          lprior[iprior] = n_cl+j;
+          break;   
+        }
+      }
+      _testErrorRetVA(lprior[iprior]==-1,hdf5_base,"Unknown extra parameter %s",*err,__LINE__,NULL,priorname[256*iprior]);
+    }    
+    free(priorname);
+    free(pn);
+    
+    loc = hdf5_double_datarray(prior_id, cur_lkl,"loc",&nprior,err);
+    _forwardError(*err,__LINE__,NULL);  
+      
+    nvar=-1;
+    var = hdf5_double_datarray(prior_id, cur_lkl,"var",&nvar,err);
+    _forwardError(*err,__LINE__,NULL);  
+    
+    if (nvar==nprior) {
+      target = add_gaussian_prior(target, nprior, lprior, loc, var, err);
+      _forwardError(*err,__LINE__,NULL);  
+    } else if (nvar==nprior*nprior) {
+      target = add_gaussian_prior_2(target, nprior, lprior, loc, var, err);
+      _forwardError(*err,__LINE__,NULL);        
+    } else {
+      _testErrorRetVA(1==1,hdf5_base,"I don't feel well",*err,__LINE__,NULL,"");
+    }
+    free(loc);
+    free(var);
+    free(lprior);
+
+    hstat = H5Gclose(prior_id);
+    _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/prior",hdffilepath,hstat);    
+  
+  }
+
+
   hstat = H5LTfind_dataset(group_id, "check_param");
 
   if (hstat==1) {
@@ -105,13 +170,14 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   return target;
 }
 
-void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **err) {
+void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **_err) {
   distribution *target;
   lklbs *lbs;
   int cli;
-  
-  target = clikid;
-  lbs = target->data;
+  _dealwitherr;
+
+  lbs = _clik_dig(clikid,err);
+  _forwardError(*err,__LINE__,);
   for(cli=0;cli<6;cli++) {
     //fprintf(stderr," %d %d ",cli,lbs->offset_lmax[cli]);
     if (lbs->offset_lmax[cli]!=-1) {
@@ -122,14 +188,15 @@ void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **err) {
   }
 }
 
-void clik_get_lmax(clik_object *clikid, int lmax[6],error **err) {
+void clik_get_lmax(clik_object *clikid, int lmax[6],error **_err) {
   distribution *target;
   lklbs *lbs;
   zero_bs* zbs;
   int cli;
+  _dealwitherr;
   
-  target = clikid;
-  lbs = target->data;
+  lbs = _clik_dig(clikid,err);
+  _forwardError(*err,__LINE__,);
   zbs = lbs->rbs->bs;
   
   for(cli=0;cli<6;cli++) {
@@ -144,8 +211,8 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
   int i;
   _dealwitherr;
 
-  target = clikid;
-  lbs = target->data;
+  lbs = _clik_dig(clikid,err);
+  _forwardError(*err,__LINE__,-1);
   if (names!=NULL) {
     if (lbs->xdim==0) {
       //for now, no extr parameters
@@ -170,8 +237,8 @@ int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname 
   int i;
   _dealwitherr;
 
-  target = clikid;
-  lbs = target->data;
+  lbs = _clik_dig(clikid,err);
+  _forwardError(*err,__LINE__,-1);
   _testErrorRetVA(ilkl>lbs->nlkl,-11010,"Asked for lkl %d, while there are only %d objects",*err,__LINE__,-1,ilkl,lbs->nlkl);
   
   if (lbs->lkls[ilkl]->xdim==0) {
@@ -202,3 +269,22 @@ double clik_compute(clik_object* clikid, double* cl_and_pars,error **_err) {
   return res;
 }
 
+void* _clik_dig(clik_object* clikid, error **err) {
+  distribution *target;
+  target = clikid;
+  if (target->log_pdf == &combine_lkl) { 
+    // return the first clik likelihood
+    int i;
+    comb_dist_data* cbd;
+    cbd = target->data;
+    for (i=0;i<cbd->ndist;i++) {
+      if (cbd->dist[i]->log_pdf == &lklbs_lkl) {
+        return cbd->dist[i]->data;
+      }
+    }
+  }
+  if (target->log_pdf==&lklbs_lkl) {
+    return target->data;
+  }
+  testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
+}

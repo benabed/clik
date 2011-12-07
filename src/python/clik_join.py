@@ -6,6 +6,12 @@ import numpy as nm
 import clik
 import h5py 
 
+def pack256(*li):
+  rr=""
+  for l in li:
+    rr += l+'\0'*(256-len(l))
+  return rr
+
 def main(argv):
   if len(sys.argv)<4:
     print "usage : %s lkl_file_1 lkl_file_2 [lkl_file_3 ...] result_lkl_file"
@@ -16,8 +22,29 @@ def main(argv):
   nlkl = 0
   lmax = -nm.ones(6)
   resclik = reslkl.create_group("clik")
+  name = []
+  loc = []
+  var = nm.zeros((0,0))
 
   for lklin in lkls:
+    if "clik/prior" in lklin:
+      pname = [n.strip() for n in prid.attrs["name"].split()]
+      for n in name:
+        if n in pname:
+          raise Exception("already got a prior on %s"%n)
+      ploc = prid["loc"][:]
+      pvar = prid["var"][:]
+      if len(pvar)==len(ploc):
+        pvar = nm.diag(pvar)
+      pvar.shape = (len(ploc),-1)
+      nvar = nm.zeros((len(loc),len(loc)))
+      nvar[:len(loc),:len(loc)] = var
+      nvar[len(loc):,len(loc):] = pvar
+      var = nvar
+      name = list(name) + list(pname)
+      loc = nm.concatenate((loc,ploc))
+
+
     lmaxin = lklin.attrs["lmax"]
     lmax = nm.max((lmax,lmaxin),0)
     nlklin = lklin.attrs["n_lkl_object"]
@@ -27,6 +54,12 @@ def main(argv):
       grpout = "lkl_%d"%nlkl
       nlkl+=1
       lklin.copy(lklin[grpin],resclik,grpout)
+  
+  if len(name):
+    prid = resclik.create_group("prior")
+    prid.attrs["name"] = pack256(*name)
+    prid.create_dataset("loc", data=loc.flat[:])
+    prid.create_dataset("var", data=var.flat[:])
   
   resclik.attrs["lmax"] = lmax
   resclik.attrs["n_lkl_object"] = nlkl

@@ -9,6 +9,8 @@
 
 #include "errorlist.h"
 #include "io.h"
+#include "mvdens.h"
+#include "maths_base.h"
 
 #include <dlfcn.h>
 
@@ -88,6 +90,26 @@ void distribution_set_default(distribution *dist, int ndef, int* idef, double* v
 void distribution_set_default_name(distribution *dist, int ndef, char** idef, double* vdef,error **err);
 
 void distribution_set_default(distribution *dist, int ndef, int* idef, double* vdef,error **err);
+
+distribution * combine_distribution_init(int ndim, int nded, error **err);
+double combine_lkl(void *pcbd, const double* pars, error **err);
+void combine_retrieve(const void *pcbd, double* pded, error **err);
+void add_to_combine_distribution(distribution *comb, distribution *addon, int *dim_idx, int *ded_idx, error **err);
+void add_to_combine_distribution_name(distribution *comb, distribution *addon, error **err);
+void combine_free(void **pcbd);
+
+typedef struct {
+  double *pars,*pded,*dummy;
+  int *ded_from, **dim,**ded;
+  distribution **dist;
+  int ndim,nded,ndist,ndummy;
+} comb_dist_data;
+
+distribution *add_gaussian_prior(distribution *orig, int ndim, int *idim, double* loc, double *var, error **err);
+distribution *add_gaussian_prior_2(distribution *orig, int ndim, int *idim, double* loc, double *var, error **err);
+distribution *add_gaussian_prior_name(distribution *orig, int ndim, char**idim, double* loc, double *var, error **err);
+distribution *add_gaussian_prior_2_name(distribution *orig, int ndim, char**idim, double* loc, double *var, error **err);
+
 
 
 #define pmc_base       -6000

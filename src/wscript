@@ -6,7 +6,8 @@ def build(bld):
   source_clik = 'aplowly.c erfinv.c fowly.c clik.c lklbs.c lowly.c lowly_common.c lowly_pol.c smica.c clik_helper.c clik_hfipack.c'.split()
   source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
-  source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
+  #source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
+  source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c mvdens.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['clik_egfs.c','clik_egfs_addon.c'] * bool(bld.env.has_f90 and bld.env.has_egfs)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
   source_clik = [src for src in source_clik if src]

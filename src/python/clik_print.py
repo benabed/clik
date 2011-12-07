@@ -20,6 +20,17 @@ def main(argv):
   print "  lmax ( "+ " ".join([nl+" = %d"%ll for nl,ll in zip(("TT","EE","BB","TE","TB","EB"),lkl.attrs["lmax"]) if ll >-1])+" )"
   extn = clikl.extra_parameter_names
   print "  number of extra parameters = %d %s"%(len(extn),extn)
+  if "prior" in lkl:
+    print "  gaussian priors on %s"%lkl["prior"].attrs["name"]
+    loc = lkl["prior/loc"][:]
+    print "  at \n    %s"%" ".join([str(l) for l in loc])
+    var = lkl["prior/var"][:]
+    if len(var)==len(loc):
+      var = nm.diag(var)
+    var.shape=(len(loc),-1)
+    print "  with variance"
+    print "\n".join(["    "+" ".join([str(v) for v in vl]) for vl in var])
+
   ilkl = 0
   for lkli_n in ("lkl_%d"%v for v in range(lkl.attrs["n_lkl_object"])):
     lkli = lkl[lkli_n]
