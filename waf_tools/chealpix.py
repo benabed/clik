@@ -91,7 +91,7 @@ def install_healpix(ctx):
   Logs.pprint("PINK",cmdline)
   try:
     rr = ctx.cmd_and_log(cmdline, output=waflib.Context.BOTH)
-  except Exception as e:
+  except Exception,e:
     Logs.pprint("PINK","first pass failed. Keep going...")
     rr=("",)
   addN = ""
@@ -108,7 +108,7 @@ def install_healpix(ctx):
   Logs.pprint("PINK",cmdline)
   try:
     rr = ctx.cmd_and_log(cmdline, output=waflib.Context.BOTH)
-  except Exception as e:
+  except Exception,e:
     raise Errors.WafError("Healpix configure failed. Cannot build healpix")
   if re.findall("Something\s+went\s+wrong",rr[0]+rr[1]) :
     raise Errors.WafError("Healpix configure failed. Cannot build healpix")
