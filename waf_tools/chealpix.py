@@ -1,6 +1,8 @@
 import autoinstall_lib as atl
 from waflib import Logs
 from waflib import Utils,Errors
+import waflib
+
 import os.path as osp
     
 def options(ctx):
@@ -71,9 +73,6 @@ def install_healpix(ctx):
   f=open(osp.join("build",hpdir,"conf_1.cmd"),"w")
   print >>f,cnf_tmpl_1%dii
   f.close()
-  f=open(osp.join("build",hpdir,"conf.cmd"),"w")
-  print >>f,cnf_tmpl%dii
-  f.close()
   # prepare a few things
   try:
     os.mkdir(osp.join("build",hpdir,"lib"))
@@ -86,16 +85,38 @@ def install_healpix(ctx):
     #print e
     pass
 
+  import re
   # first part
   cmdline = "cd build/%s; ./configure <conf_1.cmd"%hpdir
   Logs.pprint("PINK",cmdline)
-  if ctx.exec_command(cmdline)!=0:
+  try:
+    rr = ctx.cmd_and_log(cmdline, output=waflib.Context.BOTH)
+  except Exception as e:
     Logs.pprint("PINK","first pass failed. Keep going...")
+    rr=("",)
+  addN = ""
+  if re.findall("The following line should be inserted into your home",rr[0]) :
+    addN = "n\n"
+
+  dii["addN"]=addN
+  f=open(osp.join("build",hpdir,"conf.cmd"),"w")
+  print >>f,cnf_tmpl%dii
+  f.close()
   
-  cmdline = "cd build/%s; ./configure <conf.cmd; make"%hpdir
+  
+  cmdline = "cd build/%s; ./configure <conf.cmd"%hpdir
   Logs.pprint("PINK",cmdline)
+  try:
+    rr = ctx.cmd_and_log(cmdline, output=waflib.Context.BOTH)
+  except Exception as e:
+    raise Errors.WafError("Healpix configure failed. Cannot build healpix")
+  if re.findall("Something\s+went\s+wrong",rr[0]+rr[1]) :
+    raise Errors.WafError("Healpix configure failed. Cannot build healpix")
+  
+  cmdline = "cd build/%s; make"%hpdir
   if ctx.exec_command(cmdline)!=0:
-    raise Errors.WafError("Cannot build %s"%"Healpix")
+    raise Errors.WafError("Cannot build healpix. Look in build/config.log to understand why")
+    
   import shutil,os
   for fi in os.listdir(osp.join("build",hpdir,"lib")):
     #print "copy",osp.join("build",hpdir,"lib",fi),osp.join(ctx.env.LIBDIR,fi)
@@ -108,7 +129,8 @@ cnf_tmpl_1="""6
 n
 0
 """
-cnf_tmpl="""2
+cnf_tmpl="""6
+%(addN)s2
 %(CC)s
 -O2 -Wall %(CFLAGS)s
 
