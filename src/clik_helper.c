@@ -76,6 +76,26 @@ double* hdf5_double_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, e
   return res;
 }
 
+int* hdf5_int_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err) {
+  hsize_t ndum;
+  H5T_class_t dum;
+  size_t ddum;
+  herr_t hstat;
+  int *res;
+  
+  hstat = H5LTget_attribute_info( group_id, ".",name, &ndum, &dum, &ddum);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
+  testErrorRetVA((ndum!=*sz && *sz>0),hdf5_base,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,name,cur_lkl,ndum,*sz);
+  res = malloc_err(sizeof(double)*ndum,err);
+  forwardError(*err,__LINE__,NULL);
+  hstat = H5LTget_attribute_int(group_id, ".",name,res);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
+  if (*sz<0) {
+    *sz = ndum;
+  }
+  return res;
+}
+
 char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err) {
   hsize_t ndum;
   H5T_class_t dum;
@@ -426,3 +446,96 @@ void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {
     testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
   }
 }
+
+
+/*
+cmblkl* clik_multi_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  wcmblkl *wc;
+  int ic;
+  herr_t hstat;
+  double w0;
+  void* dlhandle;   
+  char **xnames;
+
+#ifdef HAS_RTLD_DEFAULT 
+  dlhandle = RTLD_DEFAULT;
+#else
+  dlhandle = NULL;
+#endif
+
+  wc = malloc_err(sizeof(wcmblkl),*err);
+  forwardError(*err,__LINE__,NULL);
+
+  hstat = H5LTget_attribute_int(group_id, ".", "nc",&(wc->nc));
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read nc in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+    
+  wc->clkl = malloc_err(sizeof(cmblkl*)*wc->nc,err);
+  forwardError(*err,__LINE__,NULL);
+
+  w0 = 0;
+  wc->w = hdf5_int_attarray(group_id,cur_lkl,"w",&(wc->nc),err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(ic=0;ic<wc->nc;ic++) {
+    char mname[256],nur_lkl[256];
+    hid_t multi_id;
+    parname lkl_type;
+    char init_func_name[2048];
+    clik_lkl_init_func *clik_dl_init;
+  
+
+    wc-w[ic] += w0;
+    w0 = wc->w[ic];
+
+    sprintf(mname,"multi_%d",ic);
+    sprintf(nur_lkl,"%s/%s",cur_lkl,mname);
+    
+    multi_id = H5Gopen(group_id, mname, H5P_DEFAULT );
+    testErrorRetVA(group_id<0,hdf5_base,"cannot read multi lkl %s in %s (got %d)",*err,__LINE__,NULL,mname,cur_lkl,hstat);
+
+    // get the lkl type
+    memset(lkl_type,0,_pn_size*sizeof(char));
+
+    hstat = H5LTget_attribute_string( multi_id, ".", "lkl_type",  lkl_type);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read lkl_type in %s (got %d)",*err,__LINE__,NULL,nur_lkl,hstat);
+    
+    sprintf(init_func_name,"clik_%s_init",lkl_type);
+    clik_dl_init = dlsym(dlhandle,init_func_name);
+    testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,nur_lkl,dlerror()); 
+
+    wc->clkl[ic] = clik_dl_init(multi_id,nur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
+    forwardError(*err,__LINE__,NULL); 
+
+    hstat = H5Gclose(multi_id);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot close %s (got %d)",*err,__LINE__,NULL,mname,hstat);
+  }
+
+  xnames = malloc_err(sizeof(char*)*wc->clkl[0]->xdim,err);
+  forwardError(*err,__LINE__,NULL); 
+
+  for(ic=0;ic<wc->clkl[0]->xdim;ic++) {
+    xnames[ic] = wc->clkl[0]->xnames[ic];
+  }  
+  
+
+}
+
+double* wcmblkl_lkl(void* data, double *pars, error **err) {
+  wcmblkl *wc;
+  double res;
+
+  wc = data;
+  wc->cw++;
+  if (wc->cw>wc->w[wc->ic]) {
+    wc->ic++;
+    if(wc->ic==wc->nc) {
+      wc->ic=0;
+      wc->cw=0;
+    }
+  }
+  res = wc->clkl[wc->ic]->lkl_func(wc->clkl[wc->ic]->lkl_data,pars,err);
+  forwardError(*err,__LINE__,0);
+  return res;
+}
+
+*/

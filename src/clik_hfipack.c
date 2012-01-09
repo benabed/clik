@@ -473,4 +473,112 @@ SmicaComp * clik_smica_comp_diag_init(hid_t comp_id, char* cur_lkl,int nb, int m
   return SC;
 }
 
+SmicaComp * clik_smica_comp_cst_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  SmicaComp *SC; 
+  herr_t hstat;
+  double *rq_0;
+  int tt;
 
+  rq_0 =  hdf5_double_datarray(comp_id,cur_lkl,"Rq_0",&tt,err);
+  forwardError(*err,__LINE__,NULL);    
+  testErrorRetVA(tt != m*m*nb,-22345,"%s:cst component does not have the correct number of data (expected %d got %d)",*err,__LINE__,NULL,cur_lkl,m*m*nb,tt)
+
+  SC = comp_cst_init(nb, m, rq_0, err);
+  forwardError(*err,__LINE__,NULL);    
+
+  free(rq_0);
+  return SC;
+}
+
+SmicaComp * clik_smica_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  int *ngcal;
+  double *gcaltpl;
+  SmicaComp *SC;
+  herr_t hstat;
+  int mm,im,tt,ig;
+  char **xnames,*bnames;
+  int binned;
+
+  mm = m;
+  ngcal = hdf5_int_attarray(comp_id,cur_lkl,"ngcal",&mm,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  tt = 0;
+  for(im=0;im<m;im++) {
+    testErrorRetVA(ngcal[im]<0,hdf5_base,"%s: ngcal[%d] does make any sence (got %d)",*err,__LINE__,NULL,cur_lkl,im,ngcal[im]);
+    tt += ngcal[im];
+  }
+  
+  gcaltpl =  hdf5_double_datarray(comp_id,cur_lkl,"gcaltpl",&tt,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  hstat = H5LTget_attribute_int(comp_id, ".", "binned",  &binned);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read binned in component %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  if (binned!=0) {
+    binned = 1;
+  }
+
+  SC = comp_gcal_log_init(nb,m, ngcal, gcaltpl,nell*binned,bins,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  hstat = H5LTfind_attribute(comp_id, "names");
+  if (hstat==1) {
+    int dz;
+    dz =-1;
+    bnames = hdf5_char_attarray(comp_id,cur_lkl,"names",&dz, err);
+    forwardError(*err,__LINE__,NULL); 
+  } else {
+    int ii;
+    bnames = malloc_err(sizeof(char)*256*tt,err);
+    forwardError(*err,__LINE__,NULL); 
+    ii=0;
+    for(im=0;im<m;im++) {
+      for(ig=0;ig<ngcal[im];ig++) {
+        sprintf(&(bnames[ii*256]),"gcal_%d_%d",im,ig);
+        ii++;
+      }
+    }
+  }
+
+  xnames = malloc_err(sizeof(char*)*tt,err);
+  for(im=0;im<tt;im++) {
+    xnames[im] =&(bnames[im*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  free(xnames); 
+  free(bnames); 
+  free(ngcal);
+  free(gcaltpl);
+
+  return SC;
+}
+
+SmicaComp * clik_smica_gcal_lin_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  int *ngcal;
+  double *gcaltpl;
+  SmicaComp *SC;
+  herr_t hstat;
+  int mm,im,tt;
+
+  mm = m;
+  ngcal = hdf5_int_attarray(comp_id,cur_lkl,"ngcal",&mm,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  tt = 0;
+  for(im=0;im<m;im++) {
+    testErrorRetVA(ngcal[im]<0,hdf5_base,"%s: ngcal[%d] does make any sence (got %d)",*err,__LINE__,NULL,cur_lkl,im,ngcal[im]);
+    tt += ngcal[im];
+  }
+  
+  gcaltpl =  hdf5_double_datarray(comp_id,cur_lkl,"gcaltpl",&tt,err);
+  forwardError(*err,__LINE__,NULL);    
+  SC = comp_gcal_lin_init(nb,m, ngcal, gcaltpl,nell,bins,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  free(ngcal);
+  free(gcaltpl);
+
+  return SC;
+}

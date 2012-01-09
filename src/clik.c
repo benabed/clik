@@ -11,12 +11,6 @@
 #include "clik.h"
 #include "clik_helper.h"
 
-
-// NO USER SERVICEABLE PART HERE.
-// THINGS CAN CHANGE WITHOUT NOTICE. 
-
-
-
 // ARE YOU STILL READING ?
 
 // YOU HAVE BEEN WARNED !

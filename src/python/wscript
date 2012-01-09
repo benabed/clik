@@ -34,14 +34,14 @@ def build(ctx):
       )
   
   ctx(
-    source = "clik/parobject.py clik/__init__.py clik/miniparse.py",
+    source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py",
     install_path = "${PYTHONDIR}/clik"
   )
   
   # python execs
   
   for cde in ["synthetic_smica","clik_example_py","clik_join","clik_disjoin","clik_print","create_lowl_problem","clik_add_prior",
-              "prepare_lowl","prepare_wmap","prepare_bopix","clik_include_external","clik_extract_external","clik_add_egfs","prepare_CAMspec"]:  
+              "prepare_lowl","prepare_wmap","prepare_bopix","clik_include_external","clik_extract_external","clik_add_egfs","prepare_CAMspec","clik_smica_add_gcal"]:  
     ctx(
       execrule = injectpath,
       source = cde+".py",

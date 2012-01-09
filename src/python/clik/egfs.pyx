@@ -217,4 +217,27 @@ def testme(datapath="./"):
   megfs,pv = simple_egfs(0,4000,[100,143,217,353,545,857],143,datapath=datapath)
   
   return megfs,pv
-  
+
+try:
+  def add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering):     
+    import parobject as php
+    agrp.attrs["ndim"] = len(vpars)
+    agrp.attrs["keys"] = php.pack256(*vpars)
+    
+    agrp.attrs["ndef"] = len(defaults)
+    agrp.attrs["defaults"] = php.pack256(*defaults)
+    agrp.attrs["values"] = php.pack256(*values)
+
+    agrp.attrs["lmin"] = lmin
+    agrp.attrs["lmax"] = lmax
+
+    for nnm,vvv in zip(template_names,tpls):
+      agrp.create_dataset(nnm, data=vvv.flat[:])
+
+    if cib_decor_clustering!=None:
+      agrp.attrs["cib_decor_clustering"] = cib_decor_clustering.flat[:]
+
+    return agrp  
+except Exception:
+  pass
+    

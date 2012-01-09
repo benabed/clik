@@ -6,11 +6,6 @@ import numpy as nm
 import clik
 import h5py 
 
-def pack256(*li):
-  rr=""
-  for l in li:
-    rr += l+'\0'*(256-len(l))
-  return rr
 
 def main(argv):
   if len(sys.argv)<4:
@@ -57,7 +52,7 @@ def main(argv):
   
   if len(name):
     prid = resclik.create_group("prior")
-    prid.attrs["name"] = pack256(*name)
+    prid.attrs["name"] = php.pack256(*name)
     prid.create_dataset("loc", data=loc.flat[:])
     prid.create_dataset("var", data=var.flat[:])
   

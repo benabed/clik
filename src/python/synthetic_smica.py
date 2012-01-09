@@ -10,7 +10,7 @@ import clik.parobject as php
 import clik
 import re
 import h5py
-
+import clik.smicahlp as smh
 
     
     
@@ -298,18 +298,10 @@ def main(argv):
 
   #save all !
   root_grp,hf = php.baseCreateParobject(pars.res_object)
-  lkl_grp = php.add_lkl_generic(root_grp,"smica",1,hascl,lmax,lmin,nbins = nbins,bins = bins)
-
-  lkl_grp.attrs["m_channel_T"] = pars.int.nT
-  lkl_grp.attrs["m_channel_P"] = pars.int.nP
-  lkl_grp.create_dataset('wq', data=wq)
-  lkl_grp.create_dataset("Rq_hat",data=rqhat.flat[:])
-     
   if (h0):
-    lkl_grp.create_dataset("Rq_0",data=rq0.flat[:])
-  
-  lkl_grp.attrs["A_cmb"] = Acmb
-  lkl_grp.attrs["n_component"] = 1  
+    rq0 = None
+
+  lkl_grp = smh.base_smica(root_grp,hascl,lmin,lmax,pars.int.nT,pars.int.nP,wq,rqhat,Acmb,rq0,bins)
   
   
   hf.close()

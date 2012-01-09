@@ -14,11 +14,7 @@ import shutil
 import h5py
 import clik.egfs
 
-def pack256(*li):
-  rr=""
-  for l in li:
-    rr += l+'\0'*(256-len(l))
-  return rr
+
 
 def main(argv):
   pars = clik.miniparse(argv[1])
@@ -61,7 +57,7 @@ def main(argv):
   var.shape = (len(loc),-1)
   if nm.alltrue(var==nm.diag(nm.diagonal(var))):
     var = nm.diagonal(var)
-  prid.attrs["name"] = pack256(*name)
+  prid.attrs["name"] = php.pack256(*name)
   prid.create_dataset("loc", data=loc.flat[:])
   prid.create_dataset("var", data=var.flat[:])
     

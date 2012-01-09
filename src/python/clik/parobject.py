@@ -2,6 +2,11 @@ import numpy as nm
 import h5py 
 
 
+def pack256(*li):
+  rr=""
+  for l in li:
+    rr += l+'\0'*(256-len(l))
+  return rr
 
 def baseCreateParobject(parobject):
   # init file
@@ -98,7 +103,27 @@ def uncompress_bins(shape,b_ws,blmin,blmax):
     bins[i,blmin[i]:blmax[i]+1] = b_ws[lc:lc+bsz]
     lc+=bsz
   return bins
-  
+
+def read_ell(lkl_grp):
+  if ell in lkl_grp.attrs:
+    return lkl_grp.attrs["ells"]
+  else:
+    lmax = lkl_grp.attrs["lmax"]
+    ell = nm.arange(lmax+1)
+    if "lmin" in lkl_grp.attrs:
+      lmin = lkl_grp.attrs["lmin"]
+      ell = ell[lmin:]
+    return ell
+
+def read_bins(lkl_grp):
+  if "bins" in lkl_grp:
+    bins = lkl_grp["bins"][:]
+    bins.shape = (lkl_grp.attrs["nbins"],-1)
+  else:
+    ell = read_ell(lkl_grp)
+    shape = (lkl_grp.attrs["nbins"],len(ell))
+    return uncompress_bins(shape,lkl_grp["bin_ws"],lkl_grp["bin_lmin"],lkl_grp["bin_lmax"])
+
 def add_selfcheck(fname,pars):
   import lkl
   mlkl = lkl.clik(fname)
@@ -112,3 +137,17 @@ def add_selfcheck(fname,pars):
   root_grp.create_dataset("check_value",data=res)
   hf.close()
   return res
+
+def read_somearray(somepath):
+  # for now only ascii arrays
+  try:
+    import piolib as pio
+    return pio.read(somepath)
+  except Exception:
+    return nm.loadtxt(somepath) 
+
+def copy_and_get_0(pars):
+  if "input_object" in pars:
+    shutil.copyfile(pars.input_object,pars.res_object)
+  outhf = h5py.File(pars.res_object,"r+")
+  return outhf["clik/lkl_0"]

@@ -28,12 +28,6 @@ def gettpl(pars,name,default):
   ribc = exprep(cibc)
   return ribc
  
-def pack256(*li):
-  rr=""
-  for l in li:
-    rr += l+'\0'*(256-len(l))
-  return rr
-
 def main(argv):
   pars = clik.miniparse(argv[1])
   
@@ -107,11 +101,11 @@ def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpl
   nc+=1
   outhf["clik/lkl_0"].attrs[n_name] = nc
   agrp.attrs["ndim"] = len(vpars)
-  agrp.attrs["keys"] = pack256(*vpars)
+  agrp.attrs["keys"] = php.pack256(*vpars)
   
   agrp.attrs["ndef"] = len(defaults)
-  agrp.attrs["defaults"] = pack256(*defaults)
-  agrp.attrs["values"] = pack256(*values)
+  agrp.attrs["defaults"] = php.pack256(*defaults)
+  agrp.attrs["values"] = php.pack256(*values)
 
   agrp.attrs["lmin"] = lmin
   agrp.attrs["lmax"] = lmax

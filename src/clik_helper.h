@@ -21,6 +21,7 @@
 // hdf helpers
 double* hdf5_double_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 int* hdf5_int_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
+int* hdf5_int_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 double* hdf5_double_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 
@@ -39,4 +40,14 @@ typedef SmicaComp * clik_smica_comp_init_func(hid_t comp_id, char* cur_lkl,int n
 void clik_external_data_init(char *pwd,char * dirname,hid_t group_id, char* cur_lkl,error **err);
 void clik_external_data_cleanup(char *pwd,char* dirname,error **err);
 
+/*typedef {
+  int nc;
+  cmblkl** clkl;
+  int* w;
+  int cw; 
+  int ic;
+} wcmblkl;
+
+double* wcmblkl_lkl(void* data, double *pars, error **err);
+*/
 #endif
