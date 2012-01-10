@@ -98,7 +98,7 @@ def add_gcal_component_pars(lkl_grp,pars):
 def setnames(agrp,names):
   agrp.attrs["names"] = php.pack256(*names) 
   
-def add_egfs_component(vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering,position=-1):
+def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering,position=-1):
   import egfs
   agrp = add_component(lkl_grp,"egfs",position)
   egfs.add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
