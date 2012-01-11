@@ -497,7 +497,7 @@ SmicaComp * clik_smica_comp_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, i
   double *gcaltpl;
   SmicaComp *SC;
   herr_t hstat;
-  int mm,im,tt,ig;
+  int mm,im,tt,ig,to;
   char **xnames,*bnames;
   int binned;
 
