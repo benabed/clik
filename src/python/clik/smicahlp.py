@@ -1,4 +1,6 @@
 import parobject as php
+import numpy as nm
+
 
 def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   if bins==None:
@@ -42,14 +44,14 @@ def add_cst_component_pars(lkl_grp,pars):
   rq0 = php.read_somearray(pars.rq0)
   return add_cst_component(lkl_grp,rq0)
 
-def add_gcal_component(lkl_grp,typ,ngcal,galtpl,binned=False,names=[],position=-1):
+def add_gcal_component(lkl_grp,typ,ngcal,gcaltpl,binned=False,names=[],position=-1):
   if typ.lower() == "log":
     typ = "gcal_log"
   else:
     typ = "gcal_lin"
   agrp = add_component(lkl_grp,typ,position)
   agrp.attrs["ngcal"] = nm.array(ngcal,dtype=nm.int) 
-  agrp.create_dataset("gcaltpl",data=gcaltpl)
+  agrp.create_dataset("gcaltpl",data=nm.array(gcaltpl,dtype=nm.double).flat[:])
   if binned:
     agrp.attrs["binned"]=1
   else:
