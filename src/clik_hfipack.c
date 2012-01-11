@@ -521,7 +521,7 @@ SmicaComp * clik_smica_comp_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, i
   gcaltpl =  hdf5_double_datarray(comp_id,cur_lkl,"gcaltpl",&to,err);
   forwardError(*err,__LINE__,NULL);    
  
-  SC = comp_gcal_log_init(nb,m, ngcal, gcaltpl,nell*binned,bins,err);
+  SC = comp_gcal_log_init(nb,m, ngcal, gcaltpl,nell*(1-binned),bins,err);
   forwardError(*err,__LINE__,NULL);    
 
   hstat = H5LTfind_attribute(comp_id, "names");
@@ -588,7 +588,7 @@ SmicaComp * clik_smica_comp_gcal_lin_init(hid_t comp_id, char* cur_lkl,int nb, i
   forwardError(*err,__LINE__,NULL);    
 
   
-  SC = comp_gcal_lin_init(nb,m, ngcal, gcaltpl,nell*binned,bins,err);
+  SC = comp_gcal_lin_init(nb,m, ngcal, gcaltpl,nell*(1-binned),bins,err);
   forwardError(*err,__LINE__,NULL);    
 
   hstat = H5LTfind_attribute(comp_id, "names");
