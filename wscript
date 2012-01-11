@@ -2,7 +2,7 @@ from waflib import Logs
 import sys
 import os.path as osp
 
-clik_version = "1.6.1"
+clik_version = "1.6.2"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
