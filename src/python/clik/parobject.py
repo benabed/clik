@@ -67,7 +67,10 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
   if nbins>0:
     lkl_grp.attrs["nbins"] = int(nbins)
     if compress_bns==True:
+      ish = bins.shape
+      bins.shape=(nbins,-1)
       b_ws,blmin,blmax = compress_bins(bins)
+      bins.shape=ish
       if b_ws.size+2*blmin.size<bins.size:
         print "compressing bins"
         lkl_grp.create_dataset("bin_ws",data=b_ws.flat[:])
