@@ -31,6 +31,7 @@ def add_component(lkl_grp,typ,position=-1):
     del lkl_grp["component_%d"%ic]
   agrp = lkl_grp.create_group("component_%d"%(position))  
   agrp.attrs["component_type"]=typ
+  lkl_grp.attrs["n_component"] = nc+1
   return agrp
 
 def add_cst_component(lkl_grp,rq0,position=-1):
@@ -59,9 +60,10 @@ def add_gcal_component(lkl_grp,typ,ngcal,galtpl,binned=False,names=[],position=-
   return agrp
 
 def read_gcal_data(pars,lkl_grp):
+  return read_gcal_data_(pars.str_array.datacal,pars.float_array.ngcal,pars.int_array(default=[-1]).lmax_tpl,lkl_grp)
+
+def read_gcal_data_(datacal,ngcal,lmax_tpl,lkl_grp):
   # returns the dtemplate data
-  datacal = pars.str_array.datacal
-  ngcal = pars.float_array.ngcal
   lmin = lkl_grp.attrs["lmin"]
   lmax = lkl_grp.attrs["lmax"]
   if len(datacal) == 1:
@@ -70,7 +72,6 @@ def read_gcal_data(pars,lkl_grp):
     assert len(datacal)==len(ngcal)
     dat = ()
     i=0
-    lmax_tpl = pars.int_array(default=[-1]).lmax_tpl
     if len(lmax_tpl)==1:
       lmax_tpl = list(lmax_tpl)*len(ngcal)
     assert len(ngcal)==len(lmax_tpl)
