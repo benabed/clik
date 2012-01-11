@@ -478,7 +478,7 @@ SmicaComp * clik_smica_comp_cst_init(hid_t comp_id, char* cur_lkl,int nb, int m,
   herr_t hstat;
   double *rq_0;
   int tt;
-
+  _DEBUGHERE_("","");
   rq_0 =  hdf5_double_datarray(comp_id,cur_lkl,"Rq_0",&tt,err);
   forwardError(*err,__LINE__,NULL);    
   _DEBUGHERE_("%d %d %d %d",m,nb,nell,tt);
