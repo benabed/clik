@@ -478,10 +478,11 @@ SmicaComp * clik_smica_comp_cst_init(hid_t comp_id, char* cur_lkl,int nb, int m,
   herr_t hstat;
   double *rq_0;
   int tt;
+  tt = -1;
   _DEBUGHERE_("","");
+  _DEBUGHERE_("%d %d %d %d",m,nb,nell,tt);
   rq_0 =  hdf5_double_datarray(comp_id,cur_lkl,"Rq_0",&tt,err);
   forwardError(*err,__LINE__,NULL);    
-  _DEBUGHERE_("%d %d %d %d",m,nb,nell,tt);
   testErrorRetVA(tt != m*m*nb,-22345,"%s:cst component does not have the correct number of data (expected %d got %d)",*err,__LINE__,NULL,cur_lkl,m*m*nb,tt)
 
   SC = comp_cst_init(nb, m, rq_0, err);
