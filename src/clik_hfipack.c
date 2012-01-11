@@ -492,7 +492,7 @@ SmicaComp * clik_smica_comp_cst_init(hid_t comp_id, char* cur_lkl,int nb, int m,
   return SC;
 }
 
-SmicaComp * clik_smica_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
@@ -557,7 +557,7 @@ SmicaComp * clik_smica_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, int m,
   return SC;
 }
 
-SmicaComp * clik_smica_gcal_lin_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_gcal_lin_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
