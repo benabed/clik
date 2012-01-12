@@ -154,3 +154,36 @@ def copy_and_get_0(pars):
     shutil.copyfile(pars.input_object,pars.res_object)
   outhf = h5py.File(pars.res_object,"r+")
   return outhf["clik/lkl_0"]
+
+def add_prior(root_grp,name,loc,var):
+  assert len(name)==len(loc)
+  assert len(name)==len(var) or len(name)**2==len(var)
+  if len(var) == len(loc):
+      var = nm.diag(var)
+  if "prior" in root_grp:
+    prid = root_grp["prior"]
+    pname = [n.strip() for n in prid.attrs["name"].split()]
+    for n in name:
+      if n in pname:
+        raise Exception("already got a prior on %s"%n)
+    ploc = prid["loc"][:]
+    pvar = prid["var"][:]
+    if len(pvar)==len(ploc):
+      pvar = nm.diag(pvar)
+    pvar.shape = (len(ploc),-1)
+    nvar = nm.zeros((len(loc),len(loc)))
+    nvar[:len(loc),:len(loc)] = var
+    nvar[len(loc):,len(loc):] = pvar
+    var = nvar
+    name = list(name) + list(pname)
+    print name
+    loc = nm.concatenate((loc,ploc))
+  else:
+    prid = root_grp.create_group("prior")
+  
+  var.shape = (len(loc),-1)
+  if nm.alltrue(var==nm.diag(nm.diagonal(var))):
+    var = nm.diagonal(var)
+  prid.attrs["name"] = pack256(*name)
+  prid.create_dataset("loc", data=loc.flat[:])
+  prid.create_dataset("var", data=var.flat[:])
