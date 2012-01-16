@@ -31,7 +31,7 @@ def gettpl(pars,name,default):
 def main(argv):
   pars = clik.miniparse(argv[1])
   
-  template_names = ["cib_clustering_template","patchy_ksz_template","homogeneous_ksz_template","tsz_template"]
+  template_names = ["cib_clustering_template","patchy_ksz_template","homogenous_ksz_template","tsz_template"]
   # read the templates
   tpls = [gettpl(pars,name,default) for name,default in zip(
     template_names,

@@ -1,6 +1,6 @@
 #include "clik_egfs.h"
 
-egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, int lmin, int lmax, double* cib_clustering,double *patchy_ksz, double *homogeneous_ksz,double *tsz, double *cib_decor_clust, double * cib_decor_poisson,error **err) {
+egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, int lmin, int lmax, double* cib_clustering,double *patchy_ksz, double *homogenous_ksz,double *tsz, double *cib_decor_clust, double * cib_decor_poisson,error **err) {
   egfs * self;
   int i,npm;
   
@@ -38,7 +38,7 @@ egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** val
   self->lmin = lmin;
   self->lmax = lmax;
   if (cib_clustering!=NULL) {
-    clik_egfs_init_frommem_(&(self->instance_id),self->keys,self->values,&self->ndf,cib_clustering, patchy_ksz, homogeneous_ksz,tsz);
+    clik_egfs_init_frommem_(&(self->instance_id),self->keys,self->values,&self->ndf,cib_clustering, patchy_ksz, homogenous_ksz,tsz);
   } else {
     clik_egfs_init_(&(self->instance_id),self->keys,self->values,&self->ndf);
   }

@@ -107,14 +107,14 @@ subroutine clik_egfs_init(instance_id,c_keys,c_values,nkv)
 
 end subroutine
 
-subroutine clik_egfs_init_frommem(instance_id,c_keys,c_values,nkv,cib_clustering,patchy_ksz,homogeneous_ksz,tsz)
+subroutine clik_egfs_init_frommem(instance_id,c_keys,c_values,nkv,cib_clustering,patchy_ksz,homogenous_ksz,tsz)
 	use clik_egfs_extra
 	integer,intent(out) :: instance_id
 	integer,intent(in) :: nkv
 	character(len=*),intent(in)::c_keys
 	character(len=*),intent(in)::c_values
 	real(8),dimension(1:10000),intent(in)::cib_clustering,patchy_ksz
-	real(8),dimension(1:10000*6),intent(in)::homogeneous_ksz
+	real(8),dimension(1:10000*6),intent(in)::homogenous_ksz
 	real(8),dimension(1:10000*7),intent(in)::tsz
 
 	
@@ -130,7 +130,7 @@ subroutine clik_egfs_init_frommem(instance_id,c_keys,c_values,nkv,cib_clustering
 	endif
 	tkv=nkv
 	call fill_kv_from_c(c_keys,c_values,tkv,keys,values)
-	call initialize_frommem(instance_id,keys,values,tkv,cib_clustering,patchy_ksz,homogeneous_ksz,tsz,errid)
+	call initialize_frommem(instance_id,keys,values,tkv,cib_clustering,patchy_ksz,homogenous_ksz,tsz,errid)
 	deallocate(keys)
 	deallocate(values)
 	if (errid/=0) THEN

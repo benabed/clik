@@ -96,7 +96,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   int dz,i,lmin,lmax;
   char *keyvartable,*deftable,*valtable;
   char **keyvars,**keys,**values;
-  double* cib_clustering,*patchy_ksz, *homogeneous_ksz, *tsz, *cib_decor_clust,*cib_decor_poisson;
+  double* cib_clustering,*patchy_ksz, *homogenous_ksz, *tsz, *cib_decor_clust,*cib_decor_poisson;
   
   // get variable names
   hstat = H5LTget_attribute_int( group_id, ".", "ndim",  &nvar);
@@ -167,7 +167,14 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   forwardError(*err,__LINE__,NULL);
   
   dz  = -1;
-  homogeneous_ksz = hdf5_double_datarray(group_id,cur_lkl,"homogeneous_ksz_template",&dz, err);
+  // LEARN TO SPELL YOU IDIOT !
+  // left for backward compatibility... Sorry about that...
+  homogenous_ksz = hdf5_double_datarray(group_id,cur_lkl,"homogenous_ksz_template",&dz, err);
+  if (isError(*err)) {
+    purgeError(err);
+    dz  = -1;
+    homogenous_ksz = hdf5_double_datarray(group_id,cur_lkl,"homogeneous_ksz_template",&dz, err);
+  }
   forwardError(*err,__LINE__,NULL);
   
   dz  = -1;
@@ -192,7 +199,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   
   egfs_model = egfs_init( nvar, keyvars, ndef, keys, values, 
                          lmin, lmax, cib_clustering,patchy_ksz, 
-                         homogeneous_ksz,tsz,
+                         homogenous_ksz,tsz,
                          cib_decor_clust, cib_decor_poisson,err);
   forwardError(*err,__LINE__,NULL);
 
@@ -204,7 +211,7 @@ egfs* clik_egfs_init_hdf5(hid_t group_id,char* cur_lkl,error **err) {
   free(values);
   free(cib_clustering);
   free(patchy_ksz);
-  free(homogeneous_ksz);
+  free(homogenous_ksz);
   free(tsz);
   if (cib_decor_clust!=NULL) {
     free(cib_decor_clust);

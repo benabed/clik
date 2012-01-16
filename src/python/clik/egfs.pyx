@@ -36,17 +36,17 @@ cdef extern from "clik_egfs.h":
   ctypedef char parname[256]
   ctypedef struct c_egfs "egfs":
     int nfr,nell
-  c_egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, int lmin, int lmax, double* cib_clustering,double *patchy_ksz, double *homogeneous_ksz,double *tsz, double* cib_decor_clust, double * cib_decor_poisson,error **err)
+  c_egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** values, int lmin, int lmax, double* cib_clustering,double *patchy_ksz, double *homogenous_ksz,double *tsz, double* cib_decor_clust, double * cib_decor_poisson,error **err)
   void egfs_compute(c_egfs *self, double *pars, double *rq, double *drq, error **err)
   void egfs_free(void **pelf)
 
 cdef class egfs:
   cdef c_egfs* celf
   cdef int ndim,nfr,nell
-  def __init__(self,parnames,pardef,lmin,lmax,freqs,inorm,cib_clustering=None,patchy_ksz=None,homogeneous_ksz=None,tsz=None,cib_decor_clust=None,cib_decor_poisson=None):
+  def __init__(self,parnames,pardef,lmin,lmax,freqs,inorm,cib_clustering=None,patchy_ksz=None,homogenous_ksz=None,tsz=None,cib_decor_clust=None,cib_decor_poisson=None):
     cdef error *_err,**err
     cdef char *keys[100], *values[100], *keyvars[50]
-    cdef double *_cib_clustering,*_patchy_ksz,*_homogeneous_ksz,*_tsz,*_cib_decor_poisson,*_cib_decor_clust
+    cdef double *_cib_clustering,*_patchy_ksz,*_homogenous_ksz,*_tsz,*_cib_decor_poisson,*_cib_decor_clust
     
     self.celf=NULL
     models = ["cib_clustering","cib_poisson","radio_poisson","tsz","ksz"]
@@ -68,16 +68,16 @@ cdef class egfs:
     
     _cib_clustering = NULL
     _patchy_ksz = NULL
-    _homogeneous_ksz = NULL
+    _homogenous_ksz = NULL
     _tsz = NULL
     if cib_clustering!=None:
       cib_clustering_proxy=nm.PyArray_ContiguousFromAny(cib_clustering,nm.NPY_DOUBLE,1,1)
       patchy_ksz_proxy=nm.PyArray_ContiguousFromAny(patchy_ksz,nm.NPY_DOUBLE,1,1)
-      homogeneous_ksz_proxy=nm.PyArray_ContiguousFromAny(homogeneous_ksz,nm.NPY_DOUBLE,1,1)
+      homogenous_ksz_proxy=nm.PyArray_ContiguousFromAny(homogenous_ksz,nm.NPY_DOUBLE,1,1)
       tsz_proxy=nm.PyArray_ContiguousFromAny(tsz,nm.NPY_DOUBLE,1,1)
       _cib_clustering = <double*> nm.PyArray_DATA(cib_clustering_proxy)
       _patchy_ksz = <double*> nm.PyArray_DATA(patchy_ksz_proxy)
-      _homogeneous_ksz = <double*> nm.PyArray_DATA(homogeneous_ksz_proxy)
+      _homogenous_ksz = <double*> nm.PyArray_DATA(homogenous_ksz_proxy)
       _tsz = <double*> nm.PyArray_DATA(tsz_proxy)
       
     _cib_decor_clust = NULL
@@ -93,7 +93,7 @@ cdef class egfs:
       assert cib_decor_poisson_proxy.shape[1]==len(freqs)
       _cib_decor_poisson = <double*> nm.PyArray_DATA(cib_decor_poisson_proxy)
       
-    self.celf = egfs_init(len(parnames),keyvars,len(mardef),keys,values,lmin,lmax,_cib_clustering,_patchy_ksz,_homogeneous_ksz,_tsz,_cib_decor_clust,_cib_decor_poisson,err)
+    self.celf = egfs_init(len(parnames),keyvars,len(mardef),keys,values,lmin,lmax,_cib_clustering,_patchy_ksz,_homogenous_ksz,_tsz,_cib_decor_clust,_cib_decor_poisson,err)
     
     er=doError(err)
     if er:

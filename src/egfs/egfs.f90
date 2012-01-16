@@ -196,13 +196,13 @@ contains
 		
 	end subroutine set_cib_decor_poisson
   
-  subroutine initialize_frommem(instance_id,keys,values,nkv,cib_clustering,patchy_ksz,homogeneous_ksz,tsz,error)
+  subroutine initialize_frommem(instance_id,keys,values,nkv,cib_clustering,patchy_ksz,homogenous_ksz,tsz,error)
     integer,intent(inout) :: instance_id, error
     integer,intent(in) :: nkv
     character(*), dimension(nkv),intent(in) :: keys
     character(*), dimension(nkv),intent(in) :: values
 		real(8),dimension(1:10000),intent(in)::cib_clustering,patchy_ksz
-		real(8),dimension(1:10000*6),intent(in)::homogeneous_ksz
+		real(8),dimension(1:10000*6),intent(in)::homogenous_ksz
 		real(8),dimension(1:10000*7),intent(in)::tsz
     integer :: l,i
     real :: dum
@@ -216,7 +216,7 @@ contains
 			this%clust_dg_templ(l) = cib_clustering(l)
 			this%ksz_patchy_templ(l) = patchy_ksz(l)
 			do i=1,6
-				this%ksz_ov_templ(l,i) = homogeneous_ksz((l-1)*6+i)
+				this%ksz_ov_templ(l,i) = homogenous_ksz((l-1)*6+i)
 			enddo
 			do i=1,7
 				this%tsz_templ(l,i) = tsz((l-1)*7+i)
