@@ -105,6 +105,7 @@ def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tp
   import egfs
   agrp = add_component(lkl_grp,"egfs",position)
   egfs.add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
+  agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
   return agrp
 
 def add_from_pars(lkl_grp,parfile):
