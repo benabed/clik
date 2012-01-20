@@ -241,3 +241,18 @@ try:
 except Exception:
   pass
     
+def build_decor_step(frqs,step):
+  ll = len(frqs)
+  import itertools as itt
+  chl = [ii+1 for ii,l1,l2 in zip(itt.count(),frqs,frqs[1:]) if l1!=l2]+[len(frqs)]
+  #make block
+  import numpy as nm
+  mat = nm.zeros((ll,ll))
+  for ipp0 in range(len(chl)-1):
+    p0,p1=chl[ipp0],chl[ipp0+1]
+    for ipp2 in range(len(chl)-1):
+      p2,p3=chl[ipp2],chl[ipp2+1]
+      away = ipp0-ipp2
+      mat[p0:p1,p2:p3] = step**away
+      mat[p2:p3,p0:p1] = step**away
+  return mat
