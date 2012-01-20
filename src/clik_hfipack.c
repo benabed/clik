@@ -479,8 +479,6 @@ SmicaComp * clik_smica_comp_cst_init(hid_t comp_id, char* cur_lkl,int nb, int m,
   double *rq_0;
   int tt;
   tt = -1;
-  _DEBUGHERE_("","");
-  _DEBUGHERE_("%d %d %d %d",m,nb,nell,tt);
   rq_0 =  hdf5_double_datarray(comp_id,cur_lkl,"Rq_0",&tt,err);
   forwardError(*err,__LINE__,NULL);    
   testErrorRetVA(tt != m*m*nb,-22345,"%s:cst component does not have the correct number of data (expected %d got %d)",*err,__LINE__,NULL,cur_lkl,m*m*nb,tt)
@@ -622,5 +620,47 @@ SmicaComp * clik_smica_comp_gcal_lin_init(hid_t comp_id, char* cur_lkl,int nb, i
   free(ngcal);
   free(gcaltpl);
 
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_amp_diag_init(hid_t comp_id, char* cur_lkl,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  int zz;
+  double *tmpl;
+  SmicaComp *SC;
+  char *bnames;
+  char **xnames;
+  herr_t hstat;
+  int im,ii;
+  
+  zz = m*nb;
+  tmpl =  hdf5_double_datarray(comp_id,cur_lkl,"diag",&zz,err); 
+  forwardError(*err,__LINE__,NULL);  
+
+  SC = amp_diag_init(nb, m, tmpl, err);
+
+  hstat = H5LTfind_attribute(comp_id, "names");
+  if (hstat==1) {
+    int dz;
+    dz =-1;
+    bnames = hdf5_char_attarray(comp_id,cur_lkl,"names",&dz, err);
+    forwardError(*err,__LINE__,NULL); 
+  } else {
+    bnames = malloc_err(sizeof(char)*256*m,err);
+    forwardError(*err,__LINE__,NULL); 
+    for(im=0;im<m;im++) {
+      sprintf(&(bnames[ii*256]),"adiag_%d",im);
+    }
+  }
+
+  xnames = malloc_err(sizeof(char*)*m,err);
+  for(im=0;im<m;im++) {
+    xnames[im] =&(bnames[im*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  free(xnames); 
+  free(bnames); 
+  free(tmpl);
   return SC;
 }

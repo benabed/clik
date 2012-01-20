@@ -244,7 +244,7 @@ except Exception:
 def build_decor_step(frqs,step):
   ll = len(frqs)
   import itertools as itt
-  chl = [ii+1 for ii,l1,l2 in zip(itt.count(),frqs,frqs[1:]) if l1!=l2]+[len(frqs)]
+  chl = [0]+[ii+1 for ii,l1,l2 in zip(itt.count(),frqs,frqs[1:]) if l1!=l2]+[len(frqs)]
   #make block
   import numpy as nm
   mat = nm.zeros((ll,ll))
