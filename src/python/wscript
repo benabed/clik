@@ -22,6 +22,15 @@ def build(ctx):
       cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
+    ctx(
+      features = "c cshlib pyext",
+      source = "clik/parametric.pyx",
+      target  = "parametric",
+      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+      use = "clik",
+      cflags = "-fopenmp",
+      install_path = "${PYTHONDIR}/clik"
+    )
     if (ctx.env.has_f90 and ctx.env.has_egfs):
       ctx(
         features = "c cshlib pyext",

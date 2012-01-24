@@ -182,6 +182,16 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
         Logs.pprint("PINK", "or install automatically using cmdline option --%s_install"%(opt_name))      
       raise e
 
+def getfromurl(fromurl,tofile):
+  import urllib2
+  luaf = urllib2.urlopen(fromurl)
+  #if luaf.code!=200 and luaf.code!=None:
+  #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
+  f=open(tofile,"w")
+  print >>f,luaf.read(),
+  luaf.close()
+  f.close()
+
 def installsmthg_pre(ctx,where,what,whereto="build/"):
 
   from waflib import Utils,Errors
@@ -198,13 +208,9 @@ def installsmthg_pre(ctx,where,what,whereto="build/"):
     Logs.pprint("PINK","%s already downloaded"%what)
   else:
     Logs.pprint("PINK","download from "+where)
-    luaf = urllib2.urlopen(where)
-    #if luaf.code!=200 and luaf.code!=None:
-    #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
-    f=open(osp.join(whereto,what),"w")
-    print >>f,luaf.read(),
-    luaf.close()
-    f.close()
+    getfromurl(where,)
+    urllib2.urlopen(where,osp.join(whereto,what))
+    
   tf = tarfile.open(osp.join(whereto,what))
   #Logs.pprint("RED","LALALALA")
   for ff in [ff.name for ff in tf.getmembers()]:
@@ -223,7 +229,7 @@ def installsmthg_post(ctx,where,what,extra_config=""):
   CCMACRO = "\"gcc %s\""%ctx.env.mopt
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"gcc -E\" CXXCPP=\"g++ -E\" "
-  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make;make install"%(where,ctx.env.mprefix,extra_config,CCMACRO, CPPMACRO)
+  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j ;make install"%(where,ctx.env.mprefix,extra_config,CCMACRO, CPPMACRO)
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%what)

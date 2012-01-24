@@ -44,6 +44,8 @@ def options(ctx):
   grp.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
+  grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download wmap likelihood for me")
+  
   ctx.add_option_group(grp)
   
   
@@ -133,9 +135,17 @@ def configure(ctx):
   # wmap
   if ctx.options.wmap_install or ctx.options.install_all_deps:
     atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
-    ctx.options.wmap_src = "likelihood_v4p1"
+    ctx.options.wmap_src = "likelihood_v4p1" 
   ctx.env.wmap_src =   ctx.options.wmap_src
-    
+  
+  #wmap dh
+  if ctx.options.wmap_dh_install or ctx.options.install_all_deps:
+    for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]:
+      tf = osp.join("src",ctx.env.wmap_src,"DH_"+f)
+      if not osp.exists(tf):
+        atl.getfromurl("http://background.uchicago.edu/wmap_fast/"+f,tf)
+  print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
+
   if not ctx.options.no_pytools:
     try:
       configure_numpy(ctx)

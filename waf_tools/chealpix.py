@@ -40,7 +40,7 @@ def install_cfitsio(ctx):
   CCMACRO = "\"gcc %s\""%ctx.env.mopt
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"gcc -E\" CXXCPP=\"g++ -E\" "
-  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make;make shared;make install"%("cfitsio",ctx.env.mprefix,"",CCMACRO, CPPMACRO)
+  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j ;make -j shared;make install"%("cfitsio",ctx.env.mprefix,"",CCMACRO, CPPMACRO)
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%"cfitsio")
@@ -113,7 +113,7 @@ def install_healpix(ctx):
   if re.findall("Something\s+went\s+wrong",rr[0]+rr[1]) :
     raise Errors.WafError("Healpix configure failed. Cannot build healpix")
   
-  cmdline = "cd build/%s; make"%hpdir
+  cmdline = "cd build/%s; make -j"%hpdir
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build healpix. Look in build/config.log to understand why")
     
