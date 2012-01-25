@@ -34,7 +34,7 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
 
   if (pf->nkey+nit>= pf->nmax) {
     // grow list;
-    _DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
+    //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 
     int nnmax =  (pf->nkey+nit)*2;
     pf->key=resize_err(pf->key, sizeof(pfchar)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
@@ -43,7 +43,7 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     forwardError(*err,__LINE__,);
     pf->nmax =  nnmax;
   }
-  _DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
+  //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
   for(i=0;i<nit;i++) {
     strcpy(pf->key[pf->nkey+i],key[i]);
     if (value[i] !=NULL) {
@@ -51,10 +51,10 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     } else {
       pf->value[pf->nkey+i][0] = '\0';
     }
-    _DEBUGHERE_("'%s' : '%s'",pf->key[pf->nkey+i],pf->value[pf->nkey+i]);
+    //_DEBUGHERE_("'%s' : '%s'",pf->key[pf->nkey+i],pf->value[pf->nkey+i]);
   }
   pf->nkey += nit;  
-  _DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
+  //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 
 }
 
@@ -154,37 +154,32 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   int i;
   char *nop;
 
-  _DEBUGHERE_("","");
+  //_DEBUGHERE_("","");
   epl = malloc_err(sizeof(parametric),err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("-> %p",epl);
+  //_DEBUGHERE_("-> %p",epl);
 
-  _DEBUGHERE_("","");
+  //_DEBUGHERE_("","");
   epl->pf = pflist_init(err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   pflist_add_item(epl->pf,ndef,defkey,defvalue,err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   nop = NULL;
   for(i=0;i<nvar;i++) {
     pflist_add_item(epl->pf,1,&(varkey[i]),&nop,err);
     forwardError(*err,__LINE__,NULL);
   }
 
-  _DEBUGHERE_("","");
   epl->nvar = nvar;
   epl->ndef = ndef;
 
-  _DEBUGHERE_("","");
   epl->ndet = ndet;
   get_freq(ndet, detlist, &(epl->nfreq), &(epl->freqlist), &(epl->det2freq),err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   epl->payload = NULL;
   epl->eg_compute = NULL;
   epl->eg_free = NULL;
@@ -192,46 +187,30 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   epl->lmin = lmin;
   epl->lmax = lmax;
 
-  _DEBUGHERE_("","");
   epl->sRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   epl->sdRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq*epl->nvar,err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   epl->varkey = &(epl->pf->key[epl->ndef]);
-
-  _DEBUGHERE_("%d %d %d",epl->nvar,epl->nfreq,epl->ndet);
   
-  _DEBUGHERE_("-> %p",epl);
-
   return epl;
 }
 
 void parametric_free(void** pegl) {
   parametric *egl;
 
-  _DEBUGHERE_("-> %p",*pegl);
-
   egl = *pegl;
   if(egl->eg_free!=NULL) {
-    _DEBUGHERE_("","");
     egl->eg_free(&(egl->payload));
   }
-  _DEBUGHERE_("","");
     
   free(egl->det2freq);
-  _DEBUGHERE_("","");
     free(egl->freqlist);
-  _DEBUGHERE_("","");
     free(egl->sdRq);
-  _DEBUGHERE_("","");
     free(egl->sRq);
-  _DEBUGHERE_("","");
     free(egl);
-  _DEBUGHERE_("","");
     *pegl = NULL;
 }
 
@@ -244,19 +223,14 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   double *sRq, *sdRq;
   double v;
 
-    _DEBUGHERE_("-> %p",egl);
-
+  
   testErrorRet(egl->eg_compute==NULL,-1234,"badly initialized",*err,__LINE__,);
-  _DEBUGHERE_("","");
   
   for(ivar=0;ivar<egl->nvar;ivar++) {
-  _DEBUGHERE_("%d %g",ivar,pars[ivar]);
     sprintf(egl->pf->value[egl->ndef+ivar],"%40g",pars[ivar]);
   }
-  _DEBUGHERE_("","");
-
+  
   if (egl->ndet!=egl->nfreq) {  
-  _DEBUGHERE_("","");
     sRq = NULL;
     if (Rq!=NULL) {
       sRq = egl->sRq;
@@ -265,12 +239,9 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
     if (dRq!=NULL) {
       sdRq = egl->sdRq;
     }
-  _DEBUGHERE_("","");
-  _DEBUGHERE_("%p",egl->eg_compute);
-  
     egl->eg_compute(egl,sRq, sdRq, err);
     forwardError(*err,__LINE__,);
-  _DEBUGHERE_("","");
+  
     m2 = egl->ndet;
     m2 = m2*m2;
     f2 = egl->nfreq;
@@ -286,7 +257,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           midet = egl->det2freq[idet];
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
-            _DEBUGHERE_("%d->%d %d->%d %d %d",idet,midet,jdet,mjdet,egl->ndet,egl->nfreq);
+            //_DEBUGHERE_("%d->%d %d->%d %d %d",idet,midet,jdet,mjdet,egl->ndet,egl->nfreq);
             v = sRq[fell + midet*egl->nfreq + mjdet];
             Rq[mell + idet*egl->ndet + jdet] = v;
             Rq[mell + jdet*egl->ndet + idet] = v;
@@ -303,24 +274,18 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
             for(dvar=0;dvar<egl->nvar;dvar++) {
-              v = sRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet];
-              Rq[dvar*mdvar + mell + idet*egl->ndet + jdet] = v;
-              Rq[dvar*mdvar + mell + jdet*egl->ndet + idet] = v;
+              v = sdRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet];
+              dRq[dvar*mdvar + mell + idet*egl->ndet + jdet] = v;
+              dRq[dvar*mdvar + mell + jdet*egl->ndet + idet] = v;
             }
           }
         }
       }      
     }
-  _DEBUGHERE_("","");
   } else {
-      _DEBUGHERE_("","");
-
     egl->eg_compute(egl, Rq, dRq, err);
     forwardError(*err,__LINE__,);
-  _DEBUGHERE_("","");
   }
-    _DEBUGHERE_("","");
-
 }
 
 
@@ -329,10 +294,8 @@ parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char 
 
   egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &powerlaw_compute;
-  _DEBUGHERE_("%p",powerlaw_compute);
   egl->eg_free = NULL;
-    _DEBUGHERE_("-> %p",egl);
-
+  
   return egl;
 }
 
@@ -340,30 +303,24 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
   int ell,m1,m2,mell,nfreq,iv,mv;
   double l_pivot,index,A,v;
-  _DEBUGHERE_("","");
-
+  
   egl = exg;
-  _DEBUGHERE_("","");
   l_pivot = 500;
   l_pivot = pflist_get_double_value(egl->pf,"l_pivot",&l_pivot,err);
   forwardError(*err,__LINE__,);
   
-  _DEBUGHERE_("","");
   index = 0;
   index = pflist_get_double_value(egl->pf,"index",&index,err);
   forwardError(*err,__LINE__,);
 
-  _DEBUGHERE_("","");
   A = 1;
   A = pflist_get_double_value(egl->pf,"A",&A,err);
   forwardError(*err,__LINE__,);
 
-  _DEBUGHERE_("index %g A %g",index,A);
-
+  
   nfreq = egl->nfreq;
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     v = A*pow((double) ell/l_pivot,(double) index);
-    _DEBUGHERE_("%d %g %g %g %g",ell,A,index,l_pivot,v)
     mell = (ell-egl->lmin)*nfreq*nfreq;
     for(m1=0;m1<nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
@@ -372,8 +329,7 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
       }  
     }
   }
-  _DEBUGHERE_("","");
-
+  
   if (dRq!=NULL) {
     for(iv=0;iv<egl->nvar;iv++) {
       mv = iv*(egl->lmax+1-egl->lmin)*nfreq*nfreq;
@@ -384,6 +340,7 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for(m1=0;m1<nfreq;m1++) {
             for(m2=m1;m2<nfreq;m2++) {
+              //_DEBUGHERE_("%d %d %g",mv+mell + m1*nfreq + m2,mv+mell + m1*nfreq + m2,v)
               dRq[mv+mell + m1*nfreq + m2] = v;
               dRq[mv+mell + m2*nfreq + m1] = v;
             }  
@@ -398,6 +355,7 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for(m1=0;m1<nfreq;m1++) {
             for(m2=m1;m2<nfreq;m2++) {
+              //_DEBUGHERE_("%d %d %g",mv+mell + m1*nfreq + m2,mv+mell + m1*nfreq + m2,v)
               dRq[mv+mell + m1*nfreq + m2] = v;
               dRq[mv+mell + m2*nfreq + m1] = v;
             }  
@@ -434,7 +392,7 @@ void powerlaw_free_emissivity_free(void **pp) {
   *pp=NULL;
 }
 
-void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error **err) {
+void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error **err) {
   parametric *egl;
   int ell,m1,m2,mell,nfreq,iv,mv;
   double l_pivot,index,v,lA;
@@ -455,7 +413,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
   nfreq = egl->nfreq;
   for(m1=0;m1<nfreq;m1++) {
     for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"A_%d_%d",m1,m2);
+      sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
       v = 1;
       v = pflist_get_double_value(egl->pf,name,&v,err);
       A[m1*nfreq+m2] = v;
@@ -487,6 +445,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
           for(m1=0;m1<nfreq;m1++) {
             for(m2=m1;m2<nfreq;m2++) {
               lA = A[m1*nfreq+m2];
+              //_DEBUGHERE_("%d %d %g %g %d %d",m1,m2,lA,v,mv+mell + m1*nfreq + m2,mv+mell + m2*nfreq + m1);
               dRq[mv+mell + m1*nfreq + m2] = lA*v;
               dRq[mv+mell + m2*nfreq + m1] = lA*v;
             }  
@@ -498,7 +457,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
       stop = 0;
       for(m1=0;m1<nfreq;m1++) {
         for(m2=m1;m2<nfreq;m2++) {
-          sprintf(name,"A_%d_%d",m1,m2);
+          sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
   
           if (strcmp(egl->varkey[iv],name)==0) {
             stop=1;
@@ -506,6 +465,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
             for(ell=egl->lmin;ell<=egl->lmax;ell++) {
               v = pow(ell/l_pivot,index);
               mell = (ell-egl->lmin)*nfreq*nfreq;
+              //_DEBUGHERE_("%d %d %g %g %d %d",m1,m2,lA,v,mv+mell + m1*nfreq + m2,mv+mell + m2*nfreq + m1);
               dRq[mv+mell + m1*nfreq + m2] = v;
               dRq[mv+mell + m2*nfreq + m1] = v;
             }
@@ -524,6 +484,5 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
       testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
     }
   }
-
   return;
 }

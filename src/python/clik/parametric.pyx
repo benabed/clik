@@ -82,8 +82,6 @@ cdef class parametric:
     cdef error *_err,**err
     cdef double *_drq,*_rq
       
-    print len(pars)
-    print self.celf.nvar
     
     if len(pars)!=self.celf.nvar:
       raise Exception("Bad shape (expecting (%d) got (%d))"%(self.celf.nvar,len(pars)))
@@ -92,13 +90,13 @@ cdef class parametric:
     if derivatives:
       drq = nm.zeros((self.celf.nvar,self.nell,self.celf.ndet,self.celf.ndet),dtype=nm.double)
       _drq = <double*> nm.PyArray_DATA(drq)
+      
     else:
       _drq = NULL
     pars_proxy=nm.PyArray_ContiguousFromAny(pars,nm.NPY_DOUBLE,1,1)
     _err = NULL
     err = &_err
     parametric_compute(self.celf,  <double*> nm.PyArray_DATA(pars_proxy), _rq,_drq, err)
-    print "vv"
     er=doError(err)
     if er:
       raise er
@@ -166,7 +164,7 @@ cdef class powerlaw_free_emissivity(parametric):
       i+=1
     
     nvar = len(vars)
-    for i in nvar:
+    for i in range(nvar):
       key[i] = vars[i]
 
     self.celf = powerlaw_free_emissivity_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
