@@ -31,6 +31,7 @@ void pflist_free(void **ppf) {
 
 void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
   int i;
+  int cur;
 
   if (pf->nkey+nit>= pf->nmax) {
     // grow list;
@@ -44,16 +45,26 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     pf->nmax =  nnmax;
   }
   //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
+  cur = pf->nkey;
   for(i=0;i<nit;i++) {
-    strcpy(pf->key[pf->nkey+i],key[i]);
-    if (value[i] !=NULL) {
-      strcpy(pf->value[pf->nkey+i],value[i]);  
-    } else {
-      pf->value[pf->nkey+i][0] = '\0';
+    int idx;
+    idx = pflist_key_index(pf,key[i],err);
+    forwardError(*err,__LINE__,);
+    //_DEBUGHERE_("cur %d idx %d",cur,idx)
+    if (idx==-1) {
+      idx = cur;
+      cur++;
     }
-    //_DEBUGHERE_("'%s' : '%s'",pf->key[pf->nkey+i],pf->value[pf->nkey+i]);
+    //_DEBUGHERE_("cur %d idx %d",cur,idx)
+    strcpy(pf->key[idx],key[i]);
+    if (value[i] !=NULL) {
+      strcpy(pf->value[idx],value[i]);  
+    } else {
+      pf->value[idx][0] = '\0';
+    }
+    //_DEBUGHERE_("added %d '%s' : '%s'",idx,pf->key[idx],pf->value[idx]);
   }
-  pf->nkey += nit;  
+  pf->nkey = cur;  
   //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 
 }
@@ -486,3 +497,4 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
   }
   return;
 }
+
