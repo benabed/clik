@@ -9,7 +9,7 @@ import numpy.linalg as la
 import clik.parobject as php
 import clik
 import re
-import h5py
+import clik.hpy as h5py
 import clik.smicahlp as smh
 
     

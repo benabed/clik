@@ -4,7 +4,7 @@ sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
 import clik
-import h5py 
+import clik.hpy as h5py
 
 
 def main(argv):

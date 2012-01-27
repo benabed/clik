@@ -11,7 +11,7 @@ import re
 import os.path as osp
 import os
 import shutil
-import h5py
+import clik.hpy as h5py
 
 def main(argv):
   pars = clik.miniparse(argv[1])
