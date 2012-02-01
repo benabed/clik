@@ -137,9 +137,16 @@ def default_models(defmodels=[],varmodels=[],varpars=[]):
   fpol_dg_po      = 0.01
   
   # radio poisson
-  alpha_rg        = -0.5
-  sigma_rg        = 0.1
-  norm_rg         = 133
+  # Updated default values for best match with Paoletti et al. (De
+  # Zotti et al.) model. Commented values are original Millea et
+  # al. values.
+
+  # alpha_rg        = -0.5
+  # sigma_rg        = 0.1
+  # norm_rg         = 133
+  alpha_rg        = -0.36
+  sigma_rg        = 0.64
+  norm_rg         = 78.5
   gamma_rg        = -0.8
   fpol_rg         = 0.05
   
