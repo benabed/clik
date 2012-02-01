@@ -37,9 +37,9 @@ def configure(ctx):
       
 def install_cfitsio(ctx):
   atl.installsmthg_pre(ctx,"ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz")
-  CCMACRO = "\"%s %s\""%(ctx.env.CC,ctx.env.mopt)
+  CCMACRO = "\"%s %s\""%(ctx.env.CC[0],ctx.env.mopt)
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
-  CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC)
+  CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC[0])
   cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j ;make -j shared;make install"%("cfitsio",ctx.env.mprefix,"",CCMACRO, CPPMACRO)
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
@@ -113,7 +113,7 @@ def install_healpix(ctx):
   if re.findall("Something\s+went\s+wrong",rr[0]+rr[1]) :
     raise Errors.WafError("Healpix configure failed. Cannot build healpix")
   
-  cmdline = "cd build/%s; make -j"%hpdir
+  cmdline = "cd build/%s; make "%hpdir
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build healpix. Look in build/config.log to understand why")
     
