@@ -21,7 +21,8 @@ def configure(ctx):
     conf.parse_flags(ctx.options.fortran_flagline,uselib="fc_runtime")
   if sys.platform.lower()=="darwin":
     ctx.env.fcshlib_PATTERN = 'lib%s.dylib'
-
+  
+  ctx.env.has_ifort = False
   if not Options.options.gfortran:
     try:
       ifort_conf(ctx)
@@ -78,6 +79,7 @@ def ifort_conf(ctx):
     ctx.env.append_value("LIB_fc_runtime",list(rl)+["pthread"])
     ctx.end_msg(True)
   show_linkline(ctx)
+  ctx.env.has_ifort = True
 
 def ifort_conf_(ctx):
   ctx.env.FC=[]

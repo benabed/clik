@@ -6,7 +6,7 @@ def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   if bins==None:
     nbins = 0
   else:
-    bins.shape=(-1,lmax+1-lmin)
+    bins.shape=(-1,(lmax+1-lmin)*nm.sum(hascl))
     nbins = bins.shape[0]
   lkl_grp = php.add_lkl_generic(root_grp,"smica",1,hascl,lmax,lmin,nbins = nbins,bins = bins.flat[:])
 

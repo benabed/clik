@@ -10,13 +10,14 @@ def options(ctx):
 def configure_iccfirst(ctx):
   import Options
   from waflib import Logs
-  
+  ctx.env.has_icc = False
   if not Options.options.gcc:
     try:
       ctx.check_tool('icc')
       ctx.check_cc(
         errmsg="failed",msg="Compile a test code with icc",
         mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
+      ctx.env.has_icc = True
       return
     except:
       if Options.options.icc:
@@ -34,6 +35,7 @@ def configure_gccfirst(ctx):
   from waflib import  Context
   from waflib import Errors
 
+  ctx.env.has_icc = False
   import re  
   if not Options.options.icc:
     try:
@@ -63,6 +65,6 @@ def configure_gccfirst(ctx):
   ctx.check_cc(
         errmsg="failed",msg='Compile a test code with icc',
         mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
-
+  ctx.env.has_icc = True
 
 configure = configure_gccfirst

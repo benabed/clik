@@ -31,6 +31,8 @@ def configure(ctx):
     lapack_extradefs += ["HAS_MKL"]
     lapack_includes = ["mkl_lapack.h","mkl_blas.h"]
     if ctx.options.lapack_mkl:
+      if ctx.env.has_ifort==False:
+        raise Exception("cannot use MKL without ifort")
       if "framework" in ctx.options.lapack_mkl.lower():
         # guess we are on macosx
         # get the path of the framework
@@ -56,9 +58,9 @@ def configure(ctx):
           ctx.options.lapack_link = "-lmkl_lapack -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
         if not ctx.options.m32 and osp.exists(ctx.options.lapack_mkl+"/lib/intel64"):
           libsuffix="/lib/intel64"
-          ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread" + libdep
+          ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
         ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
-        ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix
+        ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix+":".join([""]+ctx.env.LIBPATH_fc_runtime)
   iall = atl.shouldIinstall_all(ctx,"lapack")
   if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
     ctx.env.append_value("LIBPATH_lapack",ctx.env.LIBPATH_fc_runtime)

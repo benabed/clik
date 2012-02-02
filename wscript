@@ -144,7 +144,7 @@ def configure(ctx):
       tf = osp.join("src",ctx.env.wmap_src,"DH_"+f)
       if not osp.exists(tf):
         atl.getfromurl("http://background.uchicago.edu/wmap_fast/"+f,tf)
-  print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
+  #print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
 
   if not ctx.options.no_pytools:
     try:

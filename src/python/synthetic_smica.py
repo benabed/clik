@@ -232,6 +232,7 @@ def read_bins(pars,cl,lmin,lmax,ncl,hascl):
     oins = bins[:nq,:lmax+1-lmin]
   else:
     oins = None
+  print bins.shape,nbins
   return hb,nbins,bins,oins,cq,nq
  
 def read_somearray(somepath):

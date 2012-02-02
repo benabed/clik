@@ -69,15 +69,19 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
     if compress_bns==True:
       ish = bins.shape
       bins.shape=(nbins,-1)
-      b_ws,blmin,blmax = compress_bins(bins)
-      bins.shape=ish
-      if b_ws.size+2*blmin.size<bins.size:
-        print "compressing bins"
-        lkl_grp.create_dataset("bin_ws",data=b_ws.flat[:])
-        lkl_grp.create_dataset("bin_lmin",data=blmin.flat[:])
-        lkl_grp.create_dataset("bin_lmax",data=blmax.flat[:])
-      else:
-        compress_bns==False
+
+      try:
+        b_ws,blmin,blmax = compress_bins(bins)
+        bins.shape=ish
+        if b_ws.size+2*blmin.size<bins.size:
+          print "compressing bins"
+          lkl_grp.create_dataset("bin_ws",data=b_ws.flat[:])
+          lkl_grp.create_dataset("bin_lmin",data=blmin.flat[:])
+          lkl_grp.create_dataset("bin_lmax",data=blmax.flat[:])
+        else:
+          compress_bns=False
+      except Exception:
+        compress_bns=False 
     if compress_bns==False:
       lkl_grp.create_dataset("bins",data=bins.flat[:])
 
@@ -93,7 +97,10 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
   
 def compress_bins(bins):
   mins = bins!=0
+  print bins.shape
   l = nm.arange(bins.shape[-1])
+  # there is an issue with TEB stuff here.
+  #to be fixed later
   blmin,blmax = nm.array([(l[ins][0],l[ins][-1]) for ins in mins]).T
   b_ws = bins[mins]
   return b_ws,blmin,blmax
