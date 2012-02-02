@@ -97,7 +97,6 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
   
 def compress_bins(bins):
   mins = bins!=0
-  print bins.shape
   l = nm.arange(bins.shape[-1])
   # there is an issue with TEB stuff here.
   #to be fixed later
