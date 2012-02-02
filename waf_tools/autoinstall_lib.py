@@ -184,7 +184,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
 
 def getfromurl(fromurl,tofile):
   import urllib2
-  luaf = urllib2.urlopen(fromurl,tofile)
+  luaf = urllib2.urlopen(fromurl)
   #if luaf.code!=200 and luaf.code!=None:
   #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
   f=open(tofile,"w")
