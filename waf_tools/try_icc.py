@@ -3,7 +3,9 @@ from waflib import Logs
 from waflib import  Context
 from waflib import Errors
 import re  
-  
+import waflib
+import os
+
 def options(ctx):
   import optparse
   grp = ctx.parser.get_option_group("--gfortran")
@@ -13,6 +15,10 @@ def options(ctx):
   grp.add_option("--icc",action="store_true",default=False,help="Do not test for gcc and only use icc")
   ctx.add_option_group(grp)  
 
+def show_linkline(ctx):
+  ctx.start_msg("icc link line")
+  ctx.end_msg(" ".join(["-L%s"%vv for vv in ctx.env.LIBPATH_cc_runtime])+" "+" ".join(["-l%s"%vv for vv in ctx.env.LIB_cc_runtime]))
+
 def do_icc(ctx):
   ctx.env.CC=[]
   ctx.env.LINK_CC=[]
@@ -20,6 +26,33 @@ def do_icc(ctx):
   ctx.check_cc(
       errmsg="failed",msg="Compile a test code with icc",
       mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
+  ctx.start_msg("retrieve icc link line")
+  ctx.env["CCFLAGS_cc_omp"]=[]
+  ctx.env.append_value("CCFLAGS_cc_omp","-openmp")
+  try:
+    #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
+    llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.CC[0]," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
+    #print "RET",llgo,llge
+    L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
+    l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
+    rL = set()
+    rl = set()
+    for Li in L:
+      oli = os.listdir(Li)
+      for li in l:
+        if ctx.env.cshlib_PATTERN%li in oli:
+          rl.add(li)
+          rL.add(Li)
+  except:
+    ctx.end_msg(False)
+    raise
+  for pth in list(rL) + ["/lib","/lib64"]:
+    ctx.env.append_value("LIBPATH",pth)
+    ctx.env.append_value("RPATH",pth)
+  
+  ctx.env.append_value("LIB",list(rl)+["pthread"])
+  ctx.end_msg(True)
+  show_linkline(ctx)
   ctx.env.has_icc = True
 
 def do_gcc(ctx):
@@ -42,7 +75,9 @@ def do_gcc(ctx):
   ctx.check_cc(
     errmsg="failed",msg="Compile a test code with gcc",
     mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
-
+  ctx.env["CCFLAGS_cc_omp"]=[]
+  ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
+  
 
 def configure_iccfirst(ctx):
   import Options
