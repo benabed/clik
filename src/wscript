@@ -10,9 +10,10 @@ def build(bld):
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c mvdens.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['clik_egfs.c','clik_egfs_addon.c'] * bool(bld.env.has_f90 and bld.env.has_egfs)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
+  source_clik += ['fakedf/fakedf.c']
   source_clik = [src for src in source_clik if src]
   
-  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl' ).split() if ff]
+  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]
   uselib_bopix = []
   uselib_wmap = []
   use_clik = []
@@ -42,6 +43,15 @@ def build(bld):
     use = 'clik',
     includes = '.'+" minipmc/"*(not bld.env.has_pmc)
     )
+  
+  if 0:
+    bld(
+      features = 'c cprogram',
+      source = 'fakedf/test_fakedf.c',
+      target = 'fakedf_test',
+      use = 'clik',
+      includes = '.'+" minipmc/"*(not bld.env.has_pmc)
+      )
   
   if bld.env.has_f90:  
     

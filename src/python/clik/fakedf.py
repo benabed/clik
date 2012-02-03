@@ -75,10 +75,11 @@ class File(object):
       dct = self._parsemetadata(osp.split(name)[0])
       if osp.split(name)[1] in dct.keys():
         del dct[osp.split(name)[1]]
-        self._writemetadata(dct,osp.split(fkey)[1]) 
+        self._writemetadata(dct,osp.split(name)[0]) 
     
   def _create(self,name):
-    self.remove(name)
+    if osp.isdir(name):
+      shu.rmtree(name)
     os.mkdir(name)
     f=open(osp.join(name,_metadata),"w")
     f.write("")
@@ -105,13 +106,16 @@ class File(object):
     fkey = osp.join(self._name,key)
     if fkey[-1]=='/':
       fkey = fkey[:-1]
-    print type(value)
+    self.remove(fkey)
     if isinstance(value,File):
-      self.remove(fkey)
+      
       shu.copytree(value._name,fkey)
       return
     if type(value) in (list,tuple,nm.ndarray):    
       value = nm.array(value)
+      if value.dtype==nm.int:
+        value = value.astype(nm.long)
+
       pf.PrimaryHDU(value).writeto(fkey)
       return
     if type(value) == str and ("\n" in value or "\0" in value or len(value)>50):
