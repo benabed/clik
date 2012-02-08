@@ -43,6 +43,8 @@ cdef extern from "clik_parametric.h":
   c_parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
   c_parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+  c_parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+
 
 cdef class parametric:
   cdef c_parametric* celf
@@ -168,6 +170,38 @@ cdef class powerlaw_free_emissivity(parametric):
       key[i] = vars[i]
 
     self.celf = powerlaw_free_emissivity_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    er=doError(err)
+    if er:
+      raise er
+    self.nell = lmax+1-lmin
+
+cdef class radiogal(parametric):
+  
+  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+    cdef int p_detlist[200]
+    cdef char *defkey[200],*defvalue[200],*key[200]
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+    
+    ndef = len(defs)
+    ndet = len(detlist)
+    
+    for i in range(ndet):
+      p_detlist[i] = detlist[i]
+
+    i = 0
+    for k,v in defs.items():
+      defkey[i] = k
+      defvalue[i] = v
+      i+=1
+    
+    nvar = len(vars)
+    for i in range(nvar):
+      key[i] = vars[i]
+
+    self.celf = radiogal_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
     er=doError(err)
     if er:
       raise er
