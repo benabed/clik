@@ -55,4 +55,9 @@ parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char
 void powerlaw_free_emissivity_free(void **pp);
 void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error **err);
 
+parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+void radiogal_compute(void* exg, double *Rq, double* dRq, error **err);
+void radiogal_free(void **pp);
+
+
 #endif

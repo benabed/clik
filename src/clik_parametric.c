@@ -310,55 +310,6 @@ parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char 
   return egl;
 }
 
-parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
-  parametric *egl;
-  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
-  egl->eg_compute = &radiogal_compute;
-  egl->eg_free = &radiogal_free;
-  egl->payload = malloc_err(2*sizeof(double)*egl->nfreq*egl->nfreq,err);
-  forwardError(*err,__LINE__,NULL);
-
-  return egl;
-}
-
-void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
-  parametric *egl;
-  int ell,m1,m2,mell,nfreq,iv,mv;
-  double norm_rg, alpha_rg, sigma_rg;
-  double d3000, nu0;
-  double x, lnx, ln2x;
-
-  egl = exg;
-  d3000 = 3000.*3001./2./M_PI;
-  nu0 = 143;
-
-  norm_rg = 78.5;
-  norm_rg = pflist_get_double_value(egl->pf,"norm_rg",&norm_rg,err);
-  forward_error(*err,__LINE__,);
-
-  alpha_rg = -0.36;
-  alpha_rg = pflist_get_double_value(egl->pf,"alpha_rg",&alpha_rg,err);
-  forward_error(*err,__LINE__,);
-
-  sigma_rg = 0.64;
-  sigma_rg = pflist_get_double_value(egl->pf,"sigma_rg",&sigma_rg,err);
-  forward_error(*err,__LINE__,);
-
-  nfreq = egl->nfreq;
-  for (m1=0;m1<nfreq;m1++) {
-    for(m2=m1;m2<nfreq;m2++) {
-      x = (double)egl->freqlist[m1]*(double)egl->freqlist[m2]/(nu0*nu0);
-      lnx = log(x);
-      ln2x = lnx*lnx;
-      egl->payload[m1*nfreq+m2] = lnx;
-      egl->payload[m2*nfreq+m1] = lnx;
-      egl->payload[nfreq*nfreq + m1*nfreq+m2] = ln2x;
-      egl->payload[nfreq*nfreq + m2*nfreq+m1] = ln2x;
-    }
-  }
-
-  // TO BE CONTINUED !!!
-
 
 void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
@@ -548,3 +499,117 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
   return;
 }
 
+parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &radiogal_compute;
+  egl->eg_free = &radiogal_free;
+  egl->payload = malloc_err(2*sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
+  parametric *egl;
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double norm_rg, alpha_rg, sigma_rg;
+  double d3000, nu0;
+  double x, lnx, ln2x;
+
+  egl = exg;
+  d3000 = 3000.*3001./2./M_PI;
+  nu0 = 143;
+
+  norm_rg = 78.5;
+  norm_rg = pflist_get_double_value(egl->pf,"norm_rg",&norm_rg,err);
+  forward_error(*err,__LINE__,);
+
+  alpha_rg = -0.36;
+  alpha_rg = pflist_get_double_value(egl->pf,"alpha_rg",&alpha_rg,err);
+  forward_error(*err,__LINE__,);
+
+  sigma_rg = 0.64;
+  sigma_rg = pflist_get_double_value(egl->pf,"sigma_rg",&sigma_rg,err);
+  forward_error(*err,__LINE__,);
+
+  nfreq = egl->nfreq;
+  for (m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      x = (double)egl->freqlist[m1]*(double)egl->freqlist[m2]/(nu0*nu0);
+      lnx = log(x);
+      ln2x = lnx*lnx;
+      egl->payload[m1*nfreq+m2] = lnx;
+      egl->payload[m2*nfreq+m1] = lnx;
+      egl->payload[nfreq*nfreq + m1*nfreq+m2] = ln2x;
+      egl->payload[nfreq*nfreq + m2*nfreq+m1] = ln2x;
+    }
+  }
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell=(ell-egl->lmin)*nfreq*nfreq;
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+	Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
+	  exp(alpha_rg*egl->payload[m1*nfreq+m2] +
+	      sigma_rg*sigma_rg/2.0 * egl->payload[nfreq*nfreq + m1*nfreq+m2]);
+	Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+      }
+    }
+  }
+
+  if (dRq!=NULL) {
+    for (iv=0;iv<egl->nvar;iv++) {
+      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
+
+      if (strcmp(egl->varkey[iv],"norm_rg")==0) {
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/norm_rg;
+	      dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/norm_rg;
+	    }
+	  }
+	}
+      }
+      if (strcmp(egl->varkey[iv],"alpha_rg")==0) {
+	// dR/dalpha_rg = log(nu1*nu2/nu0^2) * R
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      dRq[mv+mell + m1*nfreq+m2] = egl->payload[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+	      dRq[mv+mell + m2*nfreq+m1] = egl->payload[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+	    }
+	  }
+	}
+	continue;
+      }
+      if (strcmp(egl->varkey[iv],"sigma_rg")==0) {
+	// dR/dsigma_rg = log(nu1*nu2/nu0^2)^2 * R
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      dRq[mv+mell + m1*nfreq+m2] = egl->payload[nfreq*nfreq + m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+	      dRq[mv+mell + m2*nfreq+m1] = egl->payload[nfreq*nfreq + m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+	    }
+	  }
+	}
+	continue;
+      }
+      // error return
+      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+    }
+  }
+  return;
+}
+
+void radiogal_free(void **pp) {
+  double *p;
+
+  p = *pp;
+  free(p);
+  *pp=NULL;
+}
