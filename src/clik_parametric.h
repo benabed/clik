@@ -57,6 +57,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
 
 parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void radiogal_compute(void* exg, double *Rq, double* dRq, error **err);
+double dBdT(double nu, double nu0);
 void radiogal_free(void **pp);
 
 

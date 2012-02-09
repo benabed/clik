@@ -504,7 +504,7 @@ parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &radiogal_compute;
   egl->eg_free = &radiogal_free;
-  egl->payload = malloc_err(2*sizeof(double)*egl->nfreq*egl->nfreq,err);
+  egl->payload = malloc_err(sizeof(double)*(2*egl->nfreq*egl->nfreq + egl->nfreq),err);
   forwardError(*err,__LINE__,NULL);
 
   return egl;
@@ -516,7 +516,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
   double norm_rg, alpha_rg, sigma_rg;
   double d3000, nu0;
   double x, lnx, ln2x;
-  double *A;
+  double *A,*B,*vec;
 
   egl = exg;
   A = egl->payload;
@@ -536,15 +536,18 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
   forwardError(*err,__LINE__,);
 
   nfreq = egl->nfreq;
+  B = A + nfreq*nfreq;
+  vec = B + nfreq*nfreq;
   for (m1=0;m1<nfreq;m1++) {
+    vec[m1] = dBdT((double)egl->freqlist[m1],nu0);
     for(m2=m1;m2<nfreq;m2++) {
       x = (double)egl->freqlist[m1]*(double)egl->freqlist[m2]/(nu0*nu0);
       lnx = log(x);
       ln2x = lnx*lnx;
       A[m1*nfreq+m2] = lnx;
       A[m2*nfreq+m1] = lnx;
-      A[nfreq*nfreq + m1*nfreq+m2] = ln2x;
-      A[nfreq*nfreq + m2*nfreq+m1] = ln2x;
+      B[m1*nfreq+m2] = ln2x;
+      B[m2*nfreq+m1] = ln2x;
     }
   }
 
@@ -554,7 +557,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
       for (m2=m1;m2<nfreq;m2++) {
 	Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
 	  exp(alpha_rg*A[m1*nfreq+m2] +
-	      sigma_rg*sigma_rg/2.0 * A[nfreq*nfreq + m1*nfreq+m2]);
+	      sigma_rg*sigma_rg/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
 	Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
@@ -574,6 +577,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
 	    }
 	  }
 	}
+	continue;
       }
       if (strcmp(egl->varkey[iv],"alpha_rg")==0) {
 	// dR/dalpha_rg = log(nu1*nu2/nu0^2) * R
@@ -594,8 +598,8 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
 	  mell = (ell-egl->lmin)*nfreq*nfreq;
 	  for (m1=0;m1<nfreq;m1++) {
 	    for (m2=m1;m2<nfreq;m2++) {
-	      dRq[mv+mell + m1*nfreq+m2] = A[nfreq*nfreq + m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
-	      dRq[mv+mell + m2*nfreq+m1] = A[nfreq*nfreq + m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+	      dRq[mv+mell + m1*nfreq+m2] = sigma_rg * B[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+	      dRq[mv+mell + m2*nfreq+m1] = sigma_rg * B[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
 	    }
 	  }
 	}
@@ -606,6 +610,19 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
     }
   }
   return;
+}
+
+double dBdT(double nu, double nu0) {
+
+  double x,x0,ex,ex0,res,res0;
+  x0 = nu0/56.78;
+  ex0 = exp(x0);
+  x = nu/56.78;
+  ex = exp(x);
+  res0 = pow(x0,4.0)*ex0/((ex0-1.)*(ex0-1.));
+  res = pow(x,4.0)*ex/((ex-1.)*(ex-1.));
+  return(res/res0);
+
 }
 
 void radiogal_free(void **pp) {
