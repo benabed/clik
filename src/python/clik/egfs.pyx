@@ -53,7 +53,7 @@ cdef class egfs:
     mardef = dict(pardef)
     frqstr = " ".join(["%s"%v for v in freqs])
     mardef.update(dict(zip(["eff_fr_"+v for v in models],[frqstr]*5)))
-    mardef.update(dict(zip(["norm_fr_"+v for v in models],["%s"%freqs[inorm]]*5)))
+    mardef.update(dict(zip(["norm_fr_"+v for v in models],["%s"%"143"]*5)))
     mardef.update({"nfr":"%d"%len(freqs)})
     mkeys = mardef.keys()
     for i from 0<=i<len(mardef):
