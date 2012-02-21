@@ -348,7 +348,10 @@ contains
 
 
     do l=lmin,lmax
-      normfac = (max(1500,l)/3000.)**tilt * this%clust_dg_templ(l) * frqdep
+      ! Make SURE things are properly normalized at l=3000, whether
+       ! template is previously normalized or not...
+      normfac = (max(1500,l)/3000.)**tilt * this%clust_dg_templ(l)&
+           &/(d3000*this%clust_dg_templ(3000)) * frqdep
       R(:,:,l) = norm * normfac 
 
       dR(:,:,l,this%alpha_dg_cl%i) = norm * normfac * logfac
