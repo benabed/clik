@@ -123,20 +123,20 @@ cdef class egfs:
     if self.celf!=NULL:
       egfs_free(<void**>&(self.celf))
     
-def default_models(defmodels=[],varmodels=[],varpars=[]):
+def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={}):
   prs = """
-  # cib clustering
+  #-> cib clustering
   alpha_dg_cl     = 3.8
   tilt_dg_cl      = 0.8
   norm_dg_cl      = 6
   
-  # cib poisson  
+  #-> cib poisson  
   alpha_dg_po     = 3.8
   sigma_dg_po     = 0.4
   norm_dg_po      = 9
   fpol_dg_po      = 0.01
   
-  # radio poisson
+  #-> radio poisson
   # Updated default values for best match with Paoletti et al. (De
   # Zotti et al.) model. Commented values are original Millea et
   # al. values.
@@ -150,22 +150,22 @@ def default_models(defmodels=[],varmodels=[],varpars=[]):
   gamma_rg        = -0.8
   fpol_rg         = 0.05
   
-  # tsz
+  #-> tsz
   tsz_pca1        = 0
   tsz_pca2        = 0
   tsz_mean_scale  = 1
   
-  # ksz
+  #-> ksz
   norm_ov         = 1
   norm_patchy     = 1
   shift_patchy    = 1
   """  
   lprs = prs.split("\n")
   
-  iii = [i for i,vv in enumerate(lprs) if vv.strip() and vv.strip()[0]=="#"]
+  iii = [i for i,vv in enumerate(lprs) if vv.strip() and vv.strip()[:3]=="#->"]
   pfs = {}
   for i,j in zip(iii,iii[1:]+[-1]):
-    nmod = lprs[i].replace("#","").strip()
+    nmod = lprs[i].replace("#->","").strip()
     pn = [vv.split("=")[0].strip() for vv in lprs[i:j] if vv.strip() and vv.strip()[0]!="#"]  
     pfs[nmod]=pn
 
@@ -185,18 +185,23 @@ def default_models(defmodels=[],varmodels=[],varpars=[]):
     for kk in pfs.keys():
       if vp in pfs[kk]:
         varmodels.add(kk)
-      
-  dmm = set(defmodels)
+    
+  dmm = set(defmodels)  
   dmm.update(varmodels)
-  
+  for vp in defvalues.keys():
+    for kk in pfs.keys():
+      if vp in pfs[kk]:
+        dmm.add(kk)
+    
   defs = {}
   for dm in dmm:
     for pn in pfs[dm]:
       if pn not in varpars:
         defs[pn] = str(aps[pn])
+  defs.update(defvalues)
   return defs,varpars,[aps[pn] for pn in varpars]
   
-def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
+def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[],defvalues={}):
   import os.path as osp
   
   defs = {}
@@ -208,7 +213,7 @@ def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[]):
   defs["rg_flux_cut"]="330"
   defs["norm_rg_flux_cut"]="330"
   
-  oefs,varpars,pv = default_models(defmodels,varmodels,varpars)
+  oefs,varpars,pv = default_models(defmodels,varmodels,varpars,defvalues)
   
   defs.update(oefs)
     
