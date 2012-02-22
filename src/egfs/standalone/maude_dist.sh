@@ -8,7 +8,10 @@ cp ../../minipmc/*.h egfs_maude
 cp ../*.f90 egfs_maude
 cp ../../clik_egfs.c egfs_maude
 cp ../../clik_egfs.h egfs_maude
+cp ../../clik_parametric.c egfs_maude
+cp ../../clik_parametric.h egfs_maude
 cp ../../python/clik/egfs.pyx egfs_maude
+cp ../../python/clik/parametric.pyx egfs_maude
 cp setup.py egfs_maude
 cp Makefile egfs_maude
 mkdir egfs_maude/data
