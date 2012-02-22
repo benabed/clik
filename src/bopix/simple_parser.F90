@@ -35,37 +35,37 @@ CONTAINS
 
     INTEGER :: iarg
 
-!    INTERFACE
-!       FUNCTION iargc()
-!         INTEGER iargc
-!       END FUNCTION iargc
+    INTERFACE
+       FUNCTION iargc()
+         INTEGER iargc
+       END FUNCTION iargc
 
-!       SUBROUTINE getarg (num, res)
-!         INTEGER, INTENT(in) :: num
-!         CHARACTER(len=*), INTENT(out) :: res
-!       END SUBROUTINE getarg
-!    END INTERFACE
+       SUBROUTINE getarg (num, res)
+         INTEGER, INTENT(in) :: num
+         CHARACTER(len=*), INTENT(out) :: res
+       END SUBROUTINE getarg
+    END INTERFACE
 
 
     lfound = .FALSE.
 
-    DO iarg=1,iargc()
-       CALL getarg(iarg,line)
-
-       eqpos = SCAN(line,"=")
-       name  = TRIM(ADJUSTL(line(:eqpos-1)))
-       value = TRIM(ADJUSTL(line(eqpos+1:)))
-
-       IF (TRIM(name) .EQ. "--parfile") THEN
-          IF (LEN_TRIM(value) .NE. 0) THEN
-             filename = TRIM(ADJUSTL(value))
-             lfound   = .TRUE.
-             EXIT
-          END IF
-       END IF
-
-    END DO
-
+    !DO iarg=1,iargc()
+    !   CALL getarg(iarg,line)
+!
+!    !   eqpos = SCAN(line,"=")
+!    !   name  = TRIM(ADJUSTL(line(:eqpos-1)))
+!    !   value = TRIM(ADJUSTL(line(eqpos+1:)))
+!
+!    !   IF (TRIM(name) .EQ. "--parfile") THEN
+!    !      IF (LEN_TRIM(value) .NE. 0) THEN
+!    !         filename = TRIM(ADJUSTL(value))
+!    !         lfound   = .TRUE.
+!    !         EXIT
+!    !      END IF
+!    !   END IF
+!
+!    !END DO
+!
     IF (.NOT. lfound) THEN
 
        IF (PRESENT(default)) THEN

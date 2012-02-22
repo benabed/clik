@@ -59,15 +59,15 @@ def main(argv):
   hf.close()
   
   cls = nm.loadtxt(osp.join(data_dir,re.findall("BOPIX_CL_FILENAME\s*=\s*(.+)",partxt)[0]))
-  mcl = nm.zeros((3,33))
-  llp1s2pi = nm.arange(2,33)*nm.arange(3,34)/2./nm.pi
-  mcl[0,2:] = cls[:31,1]/llp1s2pi
-  mcl[1,2:] = cls[:31,3]/llp1s2pi
-  mcl[2,2:] = cls[:31,2]/llp1s2pi
+  mcl = nm.zeros((3,lmax+1))
+  llp1s2pi = nm.arange(2,lmax+1)*nm.arange(3,lmax+2)/2./nm.pi
+  mcl[0,2:] = cls[:lmax-1,1]/llp1s2pi
+  mcl[1,2:] = cls[:lmax-1,3]/llp1s2pi
+  mcl[2,2:] = cls[:lmax-1,2]/llp1s2pi
   
-  print "TT wow",mcl[0,2:6]
-  print "EE wow",mcl[1,2:6]
-  print "TE wow",mcl[2,2:6]
+  #print "TT wow",mcl[0,2:6]
+  #print "EE wow",mcl[1,2:6]
+  #print "TE wow",mcl[2,2:6]
   
   if hasattr(clik,"clik"):
     res = php.add_selfcheck(pars.res_object,mcl.flat[:])

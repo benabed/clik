@@ -19,49 +19,69 @@ MODULE LIBRARY
       INTEGER(4)                    :: K, L, I, J, K_INDEX
       REAL(8)                       :: POL,POL1,POL2,CO1,CO2,CO3,CO4,CO5,CO6,DEN,COVA00,COVA11,COVA22,COVA12,COVA01,&
                                        COVA02, LD, COVA11_A, COVA22_A, COVA12_A, COVA00_1, COVA11_D, COVA22_D
-      REAL(8)                       :: CONST, VAL, CONST_1B_1C, POL_1, POL_2, SQRT24M1
+      REAL(8)                       :: CONST, VAL, CONST_1B_1C, POL_1, POL_2, SQRT24M1, temp, PIJ2_P, pij_t_2_tmp, VAL_DEN
+      INTEGER(8)                    :: I1
       INTEGER(4)                    :: VAL1, INDI, INDJ
       INTEGER (4),PARAMETER         :: LL = 2
       REAL(8),PARAMETER             :: BOPIX_PI=3.14159265358979323846264338328D0
       REAL(8),PARAMETER             :: PI4M1=1.D0/4.D0/BOPIX_PI, PIM1=1.D0/BOPIX_PI
+      REAL(8),PARAMETER             :: PIM1_125 = 1.25D0*PIM1, CO3_1 = 1.D0/120.D0, CO4_2 = 9.D0*PI4M1, CO3_2 = 12.D0/360.D0
+      REAL(8),PARAMETER             :: CO4_1 = 7.D0*PI4M1
       REAL(8),DIMENSION(BOPIX_LMIN:BOPIX_LMAX_COV) :: SQRT_DEN, COVA00_CONST, CONST1B_1, CONST1B_2, DEN_LD
-!      EXTERNAL PLGNDR_D1_0
+
+      REAL(8)                       :: LLM1, PMMP1, PMM, PLGNDR_0_T, PLGNDR_D1_0, PLGNDR_0_TP, PLGNDR_2_P, II
+
 !--------------------------------------------------------------------------------------------
 
-      SQRT24M1=1.D0/SQRT(24.D0)
+      SQRT24M1 = 1.D0/SQRT(24.D0)
 
-      CALL OMP_SET_NUM_THREADS(BOPIX_NTHREADS)
+!      CALL OMP_SET_NUM_THREADS(BOPIX_NTHREADS)
 !$OMP PARALLEL DEFAULT(SHARED)
 
-!$OMP SECTIONS
+       BOPIX_THREADS=OMP_GET_NUM_THREADS()
+
+!$OMP SECTIONS PRIVATE(LD, L)
 
 !$OMP SECTION
          COVA00_1 = 0.D0
-           DO L = BOPIX_LMIN,BOPIX_LMAX_COV
-             COVA00_1 = COVA00_1 + (2.D0*DBLE(L)+1.D0)*PI4M1*PLGNDR_D1_0_(L,0,1.D0)*CL_COV(0,L)
+
+         PMM=1.0D0
+         PMMP1=1.0D0
+           DO L = 2, BOPIX_LMAX_COV
+              LLM1 = 1.0D0/LL_VECTOR(L)
+              PLGNDR_D1_0= (2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM
+              PMM=PMMP1
+              PMMP1=PLGNDR_D1_0
+
+             COVA00_1 = COVA00_1 + (2.D0*LL_VECTOR(L)+1.D0)*PI4M1*PLGNDR_D1_0*CL_COV(0,L)
            ENDDO
-!$OMP SECTION           
+
+!$OMP SECTION
            DO L = BOPIX_LMIN,BOPIX_LMAX_COV
-             COVA00_CONST(L) = (2.D0*DBLE(L)+1.D0)*PI4M1*CL_COV(0,L)
+             COVA00_CONST(L) = (2.D0*LL_VECTOR(L)+1.D0)*PI4M1*CL_COV(0,L)
            ENDDO
+
 !$OMP SECTION
            DO L  = BOPIX_LMIN+1,BOPIX_LMAX_COV
-              LD = DBLE(L)    
+              LD = LL_VECTOR(L)    
               SQRT_DEN(L)  = 2.D0/SQRT((LD-1.D0)*LD*(LD+1.D0)*(LD+2.D0))
            END DO
+
 !$OMP SECTION
            DO L  = BOPIX_LMIN+1,BOPIX_LMAX_COV
-              LD = DBLE(L)
+              LD = LL_VECTOR(L)
               DEN_LD(L)    = (LD-1.D0)*LD*(LD+1.D0)*(LD+2.D0)
            END DO
+
 !$OMP SECTION
            DO L  = BOPIX_LMIN+1,BOPIX_LMAX_COV
-              LD = DBLE(L)
+              LD = LL_VECTOR(L)
               CONST1B_1(L) = (2.D0*LD+1.D0)*PI4M1
            END DO
+
 !$OMP SECTION
            DO L  = BOPIX_LMIN+1,BOPIX_LMAX_COV
-              LD = DBLE(L)
+              LD = LL_VECTOR(L)
               CONST1B_2(L) = (LD*(LD-1.D0)*0.5D0)
            END DO
 !$OMP SECTION
@@ -69,212 +89,216 @@ MODULE LIBRARY
            COVA12_A=0.D0 
            COVA22_A=0.D0
             DO L=BOPIX_LMIN,BOPIX_LMAX_COV
-             LD = DBLE(L)
-             CO3 =(2.D0*LD+1.D0)*PI4M1*((-1.D0)**L)
-             COVA11_A = COVA11_A + 0.5D0*CO3*(CL_COV(1,L)-CL_COV(2,L))
-             COVA22_A = COVA22_A + 0.5D0*CO3*(CL_COV(2,L)-CL_COV(1,L))
-             COVA12_A = COVA12_A + CO3*CL_COV(5,L)
+             LD = LL_VECTOR(L)
+             CO3 = 0.5D0*(2.D0*LD+1.D0)*PI4M1*((-1.D0)**L)
+             COVA11_A = COVA11_A + CO3*(CL_COV(1,L)-CL_COV(2,L))
+             COVA22_A = COVA22_A + CO3*(CL_COV(2,L)-CL_COV(1,L))
+             COVA12_A = COVA12_A + 2*CO3*CL_COV(5,L)
             ENDDO
+
 !$OMP SECTION
            COVA11_D = 0.D0
 !           COVA22_D = 0.D0
             DO L=BOPIX_LMIN,BOPIX_LMAX_COV
-             COVA11_D = COVA11_D + (2.D0*DBLE(L)+1.D0)*PI4M1*0.5D0*(CL_COV(1,L)+CL_COV(2,L))
-!             COVA22_D = COVA22_D + (2.D0*DBLE(L)+1.D0)/4.D0/BOPIX_PI*0.5D0*(CL_COV(2,L)+CL_COV(1,L))
+             COVA11_D = COVA11_D + (2.D0*LL_VECTOR(L)+1.D0)*PI4M1*0.5D0*(CL_COV(1,L)+CL_COV(2,L))
+!             COVA22_D = COVA22_D + (2.D0*LL_VECTOR(L)+1.D0)/4.D0/BOPIX_PI*0.5D0*(CL_COV(2,L)+CL_COV(1,L))
             ENDDO
 !$OMP END SECTIONS
 
 !======================================================
 
-!$OMP DO PRIVATE(J,INDI,INDJ,VAL,VAL1,L,COVA00) SCHEDULE(STATIC)
-     DO J=1,NMAT_T
-!      DO I=1,LDMAT_T
-      DO I=1,J
-       INDI = NPIXVECT_T(I)
-       INDJ = NPIXVECT_T(J)
-       IF (INDI .NE. INDJ) THEN    
-                     VAL = PIJ_T(I,J)
-                     VAL1 = INT(VAL -1.D0 -1.D-10)
-                       SELECT CASE (VAL1)
-                         CASE (-2)
-!1A
-                          COVA00=0.D0
-                          DO L=BOPIX_LMIN,BOPIX_LMAX_COV
-                            COVA00 = COVA00 + COVA00_CONST(L)*PLGNDR_0_T(L,I,J)
-                          ENDDO
-                          COVSIG(I,J) = COVA00    
-                       CASE DEFAULT
-!1A
-                          COVA00 = 2.5D0*PI4M1*(3.D0*VAL**2-1)*CL_COV(0,2)
-                            DO L=BOPIX_LMIN+1,BOPIX_LMAX_COV
-                               COVA00 = COVA00 + COVA00_CONST(L)*PLGNDR_0_T(L,I,J)
-                            ENDDO
-                          COVSIG(I,J) = COVA00
-		   END SELECT
-        ELSE
-         COVSIG(I,J) = COVA00_1
-      END IF
+!!$OMP DO PRIVATE(I,J,INDI,INDJ,VAL,VAL1,L,COVA00,LLM1,PMMP1,PMM,PLGNDR_0_T, TEMP) SCHEDULE(STATIC)
+
+!DIAG
+!$OMP DO SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_T0
+       COVSIG(I1,I1) = COVA00_1
      END DO
-    END DO
 !$OMP END DO
-
-!======================================================
-
-!$OMP DO PRIVATE(I,INDI,INDJ,VAL,VAL1,DEN,POL1,POL2,CONST_1B_1C,COVA01,COVA02,POL_1,L,LD,POL_2,CONST)&
-!$OMP SCHEDULE(STATIC)
-    DO J = 1,NMAT_TP
-     DO I = 1,LDMAT_TP
-       INDI = NPIXVECT_T(I)
-       INDJ = NPIXVECT_P(J)   
+!OPPOSITE
+!$OMP DO PRIVATE(VAL,VAL1,L,COVA00,LLM1,PMMP1,PMM,PLGNDR_0_T,PIJ_T_2_TMP) SCHEDULE(STATIC,64)
+    DO I1=1,SIZE_T2
+       PIJ_T_2_TMP = PIJ_T_2(I1)
+       PMM   = 1.0D0
+       PMMP1 = PIJ_T_2(I1)
+       COVA00=0.D0
+       DO L=BOPIX_LMIN,BOPIX_LMAX_COV
+        LLM1 = 1.0D0/LL_VECTOR(L)
+        PLGNDR_0_T  = (PIJ_T_2_TMP *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
+        PMM=PMMP1
+        PMMP1=PLGNDR_0_T
+        COVA00 = COVA00 + COVA00_CONST(L)*PLGNDR_0_T
+       ENDDO
+       COVSIG(INDEX_T2(I1,1),INDEX_T2(I1,2)) = COVA00    
        
-       IF (INDI .NE. INDJ) THEN
-        VAL = PIJ_TP(I,J)
-        VAL1 = INT(VAL -1.D0 -1.D-10)
-                       SELECT CASE (VAL1)
-                         CASE (-2)
-!1B 1C
-                          COVSIG(I,J+NMAT_T)         = 0.0D0
-                          COVSIG(I,J+NMAT_T+NMAT_TP) = 0.0D0
-                       CASE DEFAULT
-!1B-1C
-                         DEN = 1/PIJ2_TP(I,J)
-                         POL1 = VAL
-                         POL2 = PLGNDR_0_TP(2,I,J)
-                         CONST_1B_1C = - 1.25D0*PIM1*(2.D0*VAL*POL1*DEN-(2.D0*DEN+1.D0)*POL2)*2.D0*SQRT24M1
-                         COVA01 = CONST_1B_1C*CL_COV(3,2)
-                         COVA02 = CONST_1B_1C*CL_COV(4,2)
-                         POL_1 = 0.5D0*(3.D0*VAL**2-1)
-                          DO L=BOPIX_LMIN+1,BOPIX_LMAX_COV
-                            LD = DBLE(L)
-                            POL_2 = PLGNDR_0_TP(L,I,J)
-                            CONST = CONST1B_1(L)*(LD*VAL*POL_1*DEN-(LD*DEN+CONST1B_2(L))*POL_2)*SQRT_DEN(L)
-                            COVA01 = COVA01 - CONST*CL_COV(3,L)
-                            COVA02 = COVA02 - CONST*CL_COV(4,L)
-                            POL_1 = POL_2
-                          ENDDO
-                         COVSIG(I,J+NMAT_T)         = COVA01*COSGAMMA_TP(I,J)+COVA02*SINGAMMA_TP(I,J)
-                         COVSIG(I,J+NMAT_T+NMAT_TP) = COVA02*COSGAMMA_TP(I,J)-COVA01*SINGAMMA_TP(I,J)
-		   END SELECT
-	ELSE
-         COVSIG(I,J+NMAT_T)         = 0.0D0
-         COVSIG(I,J+NMAT_T+NMAT_TP) = 0.0D0
-    END IF	 
- 
-    END DO 
-  END DO
+     END DO
+!$OMP END DO
+
+!DEFAULT
+!$OMP DO PRIVATE(VAL,L,COVA00,LLM1,PMMP1,PMM,PLGNDR_0_T, TEMP) SCHEDULE(STATIC,64)          
+    DO I1=1,SIZE_T1
+     VAL = PIJ_T_1(I1)
+     COVA00 = 2.5D0*PI4M1*(3.D0*VAL**2-1)*CL_COV(0,2)
+     PMM   = 1.0D0
+     PMMP1 = PIJ_T_1(I1)
+     PLGNDR_0_T  = (1.5D0*PMMP1**2-0.5D0)
+     PMM=PMMP1
+     PMMP1=PLGNDR_0_T
+     TEMP = PIJ_T_1(I1)
+      DO L=BOPIX_LMIN+1,BOPIX_LMAX_COV
+        LLM1 = 1.0D0/LL_VECTOR(L)
+	PLGNDR_0_T  = (TEMP *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
+	PMM=PMMP1
+	PMMP1=PLGNDR_0_T
+        COVA00 = COVA00 + COVA00_CONST(L)*PLGNDR_0_T
+      ENDDO
+     COVSIG(INDEX_T1(I1,1),INDEX_T1(I1,2)) = COVA00
+   END DO
 !$OMP END DO
 
 !======================================================
 
-!$OMP DO PRIVATE(I,INDI,INDJ,VAL,VAL1,DEN,POL,POL1,POL2,CO1,CO2,CO3,CO4,CO5,CO6,COVA11,COVA22,COVA12,LD,L)&
-!$OMP SCHEDULE(STATIC)
-    DO J=1,NMAT_P
-     DO I=1,LDMAT_P
-       INDI = NPIXVECT_P(I)
-       INDJ = NPIXVECT_P(J)
-       IF (INDI .NE. INDJ) THEN
-          VAL  = PIJ_P(I,J)
-          VAL1 = INT(VAL -1.D0 -1.D-10)
-                       SELECT CASE (VAL1)
-                         CASE (-2)
-!2B 2C 3C
-   COVSIG(I+LDMAT_T,J+NMAT_T)                =  COVA12_A*(COSG_SINA_P(I,J)+SING_COSA_P(I,J))&
-                                                    +COVA11_A*COSG_COSA_P(I,J) + COVA22_A*SING_SINA_P(I,J)
-   COVSIG(I+LDMAT_T,J+NMAT_T+NMAT_P)         =  COVA12_A*(COSG_COSA_P(I,J)-SING_COSA_P(I,J))&
-                                                    +COVA22_A*COSG_SINA_P(I,J) - COVA11_A*SING_COSA_P(I,J)
-   COVSIG(I+LDMAT_T+LDMAT_P,J+NMAT_T+NMAT_P) = -COVA12_A*(COSG_SINA_P(I,J)+SING_COSA_P(I,J))&
-                                                    +COVA11_A*SING_SINA_P(I,J) + COVA22_A*COSG_COSA_P(I,J)
+!$OMP DO SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_TP0
+      COVSIG(INDEX_TP0(I1,1),INDEX_TP0(I1,2)+NMAT_T)         = 0.0D0
+      COVSIG(INDEX_TP0(I1,1),INDEX_TP0(I1,2)+NMAT_T+NMAT_TP) = 0.0D0
+     END DO
+!$OMP END DO
 
-                       CASE DEFAULT
-                         DEN = 1.D0/PIJ2_P(I,J)
-!2B 2C 3C
-                        POL = 3*PIJ2_P(I,J)
-                        CO5 = (((2.D0*DEN-1.D0)*POL)/12.D0)
-                        CO6 = -VAL*POL/6.D0*DEN
-                        COVA11 = 1.25D0*PIM1*(CO5*CL_COV(1,2)-CO6*CL_COV(2,2))
-                        COVA22 = 1.25D0*PIM1*(CO5*CL_COV(2,2)-CO6*CL_COV(1,2))
-                        COVA12 = (CO5+CO6)*CL_COV(5,2)
+!$OMP DO SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_TP2
+      COVSIG(INDEX_TP2(I1,1),INDEX_TP2(I1,2)+NMAT_T)         = 0.0D0
+      COVSIG(INDEX_TP2(I1,1),INDEX_TP2(I1,2)+NMAT_T+NMAT_TP) = 0.0D0
+     END DO
+!$OMP END DO
+
+!$OMP DO PRIVATE(I,VAL,VAL1,DEN,POL1,POL2,CONST_1B_1C,COVA01,COVA02,POL_1,L,LD,POL_2,CONST,PMM,PMMP1,LLM1,PLGNDR_0_TP)&
+!$OMP SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_TP1
+      VAL = PIJ_TP_1(I1)
+      DEN = 1.0D0/(1.0D0-VAL**2) 
+      POL1 = VAL
+      PMM   = 1.0D0
+      PMMP1 = VAL
+      LLM1 = 1.0D0/LL_VECTOR(2)
+      PLGNDR_0_TP  = (VAL *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
+      PMM  = PMMP1
+      PMMP1=PLGNDR_0_TP
+      POL2 = PLGNDR_0_TP
+      CONST_1B_1C = - PIM1_125*(2.D0*VAL*POL1*DEN-(2.D0*DEN+1.D0)*POL2)*2.D0*SQRT24M1
+      COVA01 = CONST_1B_1C*CL_COV(3,2)
+      COVA02 = CONST_1B_1C*CL_COV(4,2)
+      POL_1 = 0.5D0*(3.D0*VAL**2-1)
+       DO L=BOPIX_LMIN+1,BOPIX_LMAX_COV
+        LD = LL_VECTOR(L)
+        LLM1 = 1.0D0/LL_VECTOR(L)
+        PLGNDR_0_TP = (VAL *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
+        PMM  = PMMP1
+        PMMP1= PLGNDR_0_TP
+        POL_2 = PLGNDR_0_TP
+        CONST = CONST1B_1(L)*(LD*VAL*POL_1*DEN-(LD*DEN+CONST1B_2(L))*POL_2)*SQRT_DEN(L)
+        COVA01 = COVA01 - CONST*CL_COV(3,L)
+        COVA02 = COVA02 - CONST*CL_COV(4,L)
+        POL_1 = POL_2
+       ENDDO
+        COVSIG(INDEX_TP1(I1,1),INDEX_TP1(I1,2)+NMAT_T)         = COVA01*COSGAMMA_TP_1(I1)+COVA02*SINGAMMA_TP_1(I1)
+        COVSIG(INDEX_TP1(I1,1),INDEX_TP1(I1,2)+NMAT_T+NMAT_TP) = COVA02*COSGAMMA_TP_1(I1)-COVA01*SINGAMMA_TP_1(I1)
+     END DO
+!$OMP END DO
+
+!======================================================
+
+!$OMP DO SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_P0
+      COVSIG(INDEX_P0(I1,1)+LDMAT_T,INDEX_P0(I1,2)+NMAT_T)                = COVA11_D
+      COVSIG(INDEX_P0(I1,1)+LDMAT_T,INDEX_P0(I1,2)+NMAT_T+NMAT_P)         = 0.0D0	  
+      COVSIG(INDEX_P0(I1,1)+LDMAT_T+LDMAT_P,INDEX_P0(I1,2)+NMAT_T+NMAT_P) = COVA11_D
+     END DO
+!$OMP END DO
+
+!$OMP DO SCHEDULE(STATIC,64)
+     DO I1=1,SIZE_P2
+       COVSIG(INDEX_P2(I1,1)+LDMAT_T,INDEX_P2(I1,2)+NMAT_T) =  &
+             COVA12_A*(COSG_SINA_P_2(I1)+SING_COSA_P_2(I1)) + COVA11_A*COSG_COSA_P_2(I1) + COVA22_A*SING_SINA_P_2(I1)
+       COVSIG(INDEX_P2(I1,1)+LDMAT_T,INDEX_P2(I1,2)+NMAT_T+NMAT_P) =  &
+             COVA12_A*(COSG_COSA_P_2(I1)-SING_COSA_P_2(I1)) + COVA22_A*COSG_SINA_P_2(I1) - COVA11_A*SING_COSA_P_2(I1)
+       COVSIG(INDEX_P2(I1,1)+LDMAT_T+LDMAT_P,INDEX_P2(I1,2)+NMAT_T+NMAT_P) =  &
+            -COVA12_A*(COSG_SINA_P_2(I1)+SING_COSA_P_2(I1)) + COVA11_A*SING_SINA_P_2(I1) + COVA22_A*COSG_COSA_P_2(I1)
+     END DO
+!$OMP END DO
+
+!$OMP DO PRIVATE(I,VAL,VAL1,DEN,POL,POL1,POL2,CO1,CO2,CO3,CO4,CO5,CO6,COVA11,COVA22,COVA12,LD,L,PMM,PMMP1,II,PLGNDR_2_P,PIJ2_P)&
+!$OMP SCHEDULE(STATIC,64)
+     DO I1 = 1,SIZE_P1
+       VAL  = PIJ_P_1(I1)
+       PIJ2_P=1.0D0-VAL**2
+       DEN = 1.D0/PIJ2_P
+       POL = 3*PIJ2_P
+       CO5 = (((2.D0*DEN-1.D0)*POL)/12.D0)
+       CO6 = -VAL*POL/6.D0*DEN
+       COVA11 = 1.25D0*PIM1*(CO5*CL_COV(1,2)-CO6*CL_COV(2,2))
+       COVA22 = 1.25D0*PIM1*(CO5*CL_COV(2,2)-CO6*CL_COV(1,2))
+       COVA12 = (CO5+CO6)*CL_COV(5,2)
 !-----------------
-                         LD = 3.D0
-                         L  = 3
-                         POL1 = POL
-                         POL2 = VAL*5.D0*POL
-                         CO3 = 1.D0/120.D0
-                         CO4 = 7.D0*PI4M1
-                         CO1 = ((5.D0*VAL*POL1*DEN)-(-DEN+3.D0)*POL2)*2.D0*CO3
-                         CO2 = (5.D0*POL1-2.D0*VAL*POL2)*4.D0*CO3*DEN                      
-                           COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
-                           COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
-                           COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
+       LD = 3.D0
+       L  = 3
+       POL1 = POL
+       POL2 = VAL*5.D0*POL
+       CO3 = 1.D0/120.D0
+       CO4 = 7.D0*PI4M1
+       CO1 = ((5.D0*VAL*POL1*DEN)-(-DEN+3.D0)*POL2)*2.D0*CO3
+       CO2 = (5.D0*POL1-2.D0*VAL*POL2)*4.D0*CO3*DEN                      
+       COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
+       COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
+       COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
 !------------------
-                         LD = 4.D0
-                         L  = 4
-                         POL1 = POL2
-                         POL2 = PLGNDR_2_P(L,I,J)
-                         CO3 = 1.D0/360.D0
-                         CO4 = 9.D0*PI4M1
-                         CO1 = (VAL*POL1*DEN - POL2)*12.D0*CO3
-                         CO2 = (2.D0*POL1-VAL*POL2)*12.D0*CO3*DEN                      
-                           COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
-                           COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
-                           COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
+       LD = 4.D0
+       L  = 4
+       POL1 = POL2
+       PMM = 3*PIJ2_P
+       PMMP1 = PIJ_P_1(I1)*5.D0*PMM
+       II = LL_VECTOR(L)
+       PLGNDR_2_P = (PIJ_P_1(I1)*(2*II-1)*PMMP1-(II+1.D0)*PMM)/(II-2.D0)
+       PMM = PMMP1
+       PMMP1 = PLGNDR_2_P
+       POL2 = PLGNDR_2_P
+       CO3 = 1.D0/360.D0
+       CO4 = 9.D0*PI4M1
+       CO1 = (VAL*POL1*DEN - POL2)*12.D0*CO3
+       CO2 = (2.D0*POL1-VAL*POL2)*12.D0*CO3*DEN                      
+       COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
+       COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
+       COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
 !-------------------
-                       DO L=5,BOPIX_LMAX_COV
-                         LD = DBLE(L)
-                         POL1 = POL2
-                         POL2 = PLGNDR_2_P(L,I,J)
-                         CO3 = 1.D0/DEN_LD(L)
-                         CO4 = (2.D0*LD+1.D0)*PI4M1
-                         CO1 = (((LD+2.D0)*VAL*POL1*DEN)-((LD-4.D0)*DEN+CONST1B_2(L))*POL2)*2.D0*CO3
-                         CO2 = ((LD+2.D0)*POL1-(LD-1.D0)*VAL*POL2)*4.D0*CO3*DEN                      
-                           COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
-                           COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
-                           COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
-                       ENDDO
-                
-         COVSIG(I+LDMAT_T,J+NMAT_T)                =  COVA12*(SING_COSA_P(I,J)+COSG_SINA_P(I,J))&
-                                                     +COVA22*SING_SINA_P(I,J)+COVA11*COSG_COSA_P(I,J)
-         COVSIG(I+LDMAT_T,J+NMAT_T+NMAT_P)         =  COVA12*(COSG_COSA_P(I,J)-SING_SINA_P(I,J))&
-                                                     +COVA22*COSG_SINA_P(I,J)-COVA11*SING_COSA_P(I,J)
-         COVSIG(I+LDMAT_T+LDMAT_P,J+NMAT_T+NMAT_P) = -COVA12*(COSG_SINA_P(I,J)+SING_COSA_P(I,J))&
-                                                     +COVA22*COSG_COSA_P(I,J)+COVA11*SING_SINA_P(I,J)
+       DO L=5,BOPIX_LMAX_COV
+         LD = LL_VECTOR(L)
+         POL1 = POL2
+         II = LL_VECTOR(L)
+         PLGNDR_2_P=(PIJ_P_1(I1)*(2*II-1)*PMMP1-(II+1.D0)*PMM)/(II-2.D0)
+         PMM = PMMP1
+         PMMP1 = PLGNDR_2_P
+         POL2 = PLGNDR_2_P
+         CO3 = 1.D0/DEN_LD(L)
+         CO4 = (2.D0*LD+1.D0)*PI4M1
+         CO1 = (((LD+2.D0)*VAL*POL1*DEN)-((LD-4.D0)*DEN+CONST1B_2(L))*POL2)*2.D0*CO3
+         CO2 = ((LD+2.D0)*POL1-(LD-1.D0)*VAL*POL2)*4.D0*CO3*DEN                      
+         COVA11 = COVA11 + CO4*(CO1*CL_COV(1,L) - CO2*CL_COV(2,L))
+         COVA22 = COVA22 + CO4*(CO1*CL_COV(2,L) - CO2*CL_COV(1,L))
+         COVA12 = COVA12 + CO4*(CO1 + CO2)*CL_COV(5,L)
+       ENDDO
+         COVSIG(INDEX_P1(I1,1)+LDMAT_T,INDEX_P1(I1,2)+NMAT_T) = &
+           COVA12*(SING_COSA_P_1(I1)+COSG_SINA_P_1(I1))+COVA22*SING_SINA_P_1(I1)+COVA11*COSG_COSA_P_1(I1)
 
-          END SELECT
+         COVSIG(INDEX_P1(I1,1)+LDMAT_T,INDEX_P1(I1,2)+NMAT_T+NMAT_P) = &
+           COVA12*(COSG_COSA_P_1(I1)-SING_SINA_P_1(I1))+COVA22*COSG_SINA_P_1(I1)-COVA11*SING_COSA_P_1(I1)
 
-      ELSE
-         COVSIG(I+LDMAT_T,J+NMAT_T)                = COVA11_D
-         COVSIG(I+LDMAT_T,J+NMAT_T+NMAT_P)         = 0.0D0	  
-         COVSIG(I+LDMAT_T+LDMAT_P,J+NMAT_T+NMAT_P) = COVA11_D
-      END IF
-    END DO
-    END DO
+         COVSIG(INDEX_P1(I1,1)+LDMAT_T+LDMAT_P,INDEX_P1(I1,2)+NMAT_T+NMAT_P) = &
+          -COVA12*(COSG_SINA_P_1(I1)+SING_COSA_P_1(I1))+COVA22*COSG_COSA_P_1(I1)+COVA11*SING_SINA_P_1(I1)
+     END DO
 !$OMP END DO
 
 !$OMP END PARALLEL
-!--------------------    
+
     END SUBROUTINE COV   
-
-!================================================================================================================================
-    REAL*8 FUNCTION PLGNDR_D1_0_(L,M,X)
-        IMPLICIT NONE
-        INTEGER(4), INTENT(IN) :: L,M
-        REAL(8), INTENT(IN) :: X
-!        REAL(8),INTENT(OUT) :: PLGNDR_D1_0
-        INTEGER(4) :: LL
-        REAL(8) :: PLL,PMM,PMMP1,SOMX2,XX, XX1, LLM1
-
-        XX=X
-        PMM=1.0D0
-        PMMP1=X
-        DO LL=2,L
-         LLM1 = 1.0D0/DBLE(LL)
-         PLL=(XX*(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
-         PMM=PMMP1
-         PMMP1=PLL
-        END DO
-     PLGNDR_D1_0_=PLL
-
-   END FUNCTION PLGNDR_D1_0_
-!==================================================================================================================================
 
   END MODULE

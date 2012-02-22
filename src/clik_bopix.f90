@@ -49,13 +49,13 @@ SUBROUTINE BOPIX_EXTRA_LKL(LKL,CL)
 	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,1)=CL(cur+i)
 	END DO	
-	WRITE (*,*) "TT uu",CL(cur+2:cur+5)
+	!WRITE (*,*) "TT uu",CL(cur+2:cur+5)
 	!EE
 	cur = cur + CLIK_LMAX+1
 	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,3)=CL(cur+i)
 	END DO	
-	WRITE (*,*) "EE uu",CL(cur+2:cur+5)
+	!WRITE (*,*) "EE uu",CL(cur+2:cur+5)
 	!BB
 	!cur = cur + CLIK_LMAX+1
 	DO i = 1,CLIK_LMAX
@@ -67,12 +67,12 @@ SUBROUTINE BOPIX_EXTRA_LKL(LKL,CL)
 	DO i = 1,CLIK_LMAX
 		CLIK_CL(i,2)=CL(cur+i)
 	END DO	
-	WRITE (*,*) "TE uu",CL(cur+2:cur+5)
+	!WRITE (*,*) "TE uu",CL(cur+2:cur+5)
 	
-	WRITE (*,*) "TT aa",CLIK_CL(2:5,1)
-	WRITE (*,*) "EE aa",CLIK_CL(2:5,3)
-	WRITE (*,*) "BB aa",CLIK_CL(2:5,4)
-	WRITE (*,*) "TE aa",CLIK_CL(2:5,2)
+	!WRITE (*,*) "TT aa",CLIK_CL(2:5,1)
+	!WRITE (*,*) "EE aa",CLIK_CL(2:5,3)
+	!WRITE (*,*) "BB aa",CLIK_CL(2:5,4)
+	!WRITE (*,*) "TE aa",CLIK_CL(2:5,2)
 	
 	
 	CALL BOPIX_LIKELIHOOD(CLIK_CL,MENOLOGLIK_S)

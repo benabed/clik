@@ -11,19 +11,19 @@
 
     defs_file='input_file.txt'
 !=================================================================================================================================
-  key="NSIDEOUT"
-  CALL parse(defs_file,key,NSIDEOUT,found=found)
-  IF (.NOT. FOUND) THEN
-       WRITE(6,*)'NSIDEOUT NOT FOUND'
-       STOP
-   END IF
+!  key="NSIDEOUT"
+!  CALL parse(defs_file,key,NSIDEOUT,found=found)
+!  IF (.NOT. FOUND) THEN
+!       WRITE(6,*)'NSIDEOUT NOT FOUND'
+!       STOP
+!   END IF
 
-  key="BOPIX_LMAX_COV"
-  CALL parse(defs_file,key,BOPIX_LMAX_COV,found=found)
-  IF (.NOT. FOUND) THEN
-       WRITE(6,*)'BOPIX_LMAX_COV NOT FOUND'
-       STOP
-   END IF
+!  key="BOPIX_LMAX_COV"
+!  CALL parse(defs_file,key,BOPIX_LMAX_COV,found=found)
+!  IF (.NOT. FOUND) THEN
+!       WRITE(6,*)'BOPIX_LMAX_COV NOT FOUND'
+!       STOP
+!   END IF
 
   key="MENO_LOGLIK_FACTOR"
   CALL parse(defs_file,key, MENO_LOGLIK_FACTOR,found=found)
@@ -39,12 +39,12 @@
        STOP
    END IF
 
-  key="BOPIX_NTHREADS"
-  CALL parse(defs_file,key,BOPIX_NTHREADS,found=found)
-  IF (.NOT. FOUND) THEN
-       WRITE(6,*)'BOPIX_NTHREADS NOT FOUND'
-       STOP
-   END IF
+!  key="BOPIX_NTHREADS"
+!  CALL parse(defs_file,key,BOPIX_NTHREADS,found=found)
+!  IF (.NOT. FOUND) THEN
+!       WRITE(6,*)'BOPIX_NTHREADS NOT FOUND'
+!       STOP
+!   END IF
 
   key="BOPIX_DATA_DIR"
   CALL parse(defs_file,key,BOPIX_DATA_DIR,found=found)

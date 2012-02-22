@@ -173,6 +173,7 @@ int clik_getenviron_numthread(char* name, int sfg, error **err) {
   forwardError(*err,__LINE__,sfg);
   
   testErrorRetVA(np<0 && np!=sfg, -100,"%s env variable meaningless",*err,__LINE__,sfg,fullname);
+  //_DEBUGHERE_("%s = %d",fullname,np);
   return np;
 }
 

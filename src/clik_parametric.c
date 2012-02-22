@@ -555,10 +555,10 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-	Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
-	  exp(alpha_rg*A[m1*nfreq+m2] +
+        Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
+	      exp(alpha_rg*A[m1*nfreq+m2] +
 	      sigma_rg*sigma_rg/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
-	Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+	      Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
   }
@@ -632,3 +632,4 @@ void radiogal_free(void **pp) {
   free(p);
   *pp=NULL;
 }
+

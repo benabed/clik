@@ -7,7 +7,8 @@
       INTEGER(4)                     ::   IERR
       REAL(8), PARAMETER             ::   ZERO = 0.0D0, ONE = 1.0D0, MONE = -1.0D0
 
-      INTEGER(4)                     ::   NSIDEOUT, NPIX, BOPIX_LMAX_COV
+      INTEGER(4),PARAMETER           ::   NSIDEOUT=16, BOPIX_LMAX_COV=64
+      INTEGER(4)                     ::   NPIX
       INTEGER(4)                     ::   BOPIX_CL_FILE, BOPIX_CL_LMAX
       INTEGER(4), PARAMETER          ::   BOPIX_LMIN = 2, KMIN = 0 , KMAX = 5
 
@@ -15,7 +16,7 @@
                                    LDMAT_PT, NMAT_PT, LDNMAT_PT, LDMAT_P, NMAT_P, LDNMAT_P,&
                                    LDTREMAT, NTREMAT, LDNTREMAT, NPIX_T, NPIX_P, N
 
-      INTEGER (4)             ::   BOPIX_NTHREADS
+      INTEGER (4)             ::   BOPIX_NTHREADS, OMP_GET_NUM_THREADS, BOPIX_THREADS
 
       REAL(8)                 :: MENO_LOGLIK_FACTOR, TD_FACT, UNIT_FACT, UNIT_FACT_COV,TDFACT_COVNOISE
       REAL(8)                 :: FWHM_ARC, FWHM_DEG
@@ -24,12 +25,25 @@
       INTEGER(4),ALLOCATABLE,DIMENSION(:)      :: NPIXVECT_T, NPIXVECT_P, NPIXVECT_TOT
       REAL(8),ALLOCATABLE,DIMENSION(:,:)       :: MAPOUT  
       REAL(8),ALLOCATABLE,DIMENSION(:,:)       :: MASK
-      REAL(8),ALLOCATABLE,DIMENSION(:,:)       :: PIJ_T, PIJ_TP, PIJ2_TP, COSGAMMA_TP,SINGAMMA_TP,&
-                                                         PIJ_P,  PIJ2_P,  COSGAMMA_P, SINGAMMA_P,&
-                                                  COSG_SINA_P,COSG_COSA_P,SING_SINA_P,SING_COSA_P,&
-                                                  COVSIG,COVNOISE
-      REAL(8),ALLOCATABLE,DIMENSION(:,:,:)     :: PLGNDR_0_T,PLGNDR_0_TP,PLGNDR_2_P
-      REAL(8),ALLOCATABLE,DIMENSION(:)         :: MAPOUT_T, MAPOUT_Q, MAPOUT_U, MAPOUT_ALL, CONTR_RES                                            
+      REAL(8),ALLOCATABLE,DIMENSION(:,:)       :: COVSIG,COVNOISE
+      INTEGER(4),ALLOCATABLE,DIMENSION(:,:)    :: PIXEL_INDEX_T, PIXEL_INDEX_TP, PIXEL_INDEX_P
+      REAL(8),ALLOCATABLE,DIMENSION(:)         :: MAPOUT_T, MAPOUT_Q, MAPOUT_U, MAPOUT_ALL, CONTR_RES
+      REAL(8),ALLOCATABLE,DIMENSION(:)         :: LL_VECTOR
+
+      INTEGER(8)              :: SIZE_T0, SIZE_T1, SIZE_T2
+      INTEGER(8)              :: SIZE_TP0, SIZE_TP1, SIZE_TP2
+      INTEGER(8)              :: SIZE_P0, SIZE_P1, SIZE_P2
+
+      INTEGER(8),ALLOCATABLE,DIMENSION(:,:) :: INDEX_T0, INDEX_T1, INDEX_T2
+      INTEGER(8),ALLOCATABLE,DIMENSION(:,:) :: INDEX_TP0, INDEX_TP1, INDEX_TP2
+      INTEGER(8),ALLOCATABLE,DIMENSION(:,:) :: INDEX_P0, INDEX_P1, INDEX_P2
+
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: PIJ_T_0, PIJ_T_1, PIJ_T_2
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: PIJ_TP_0, PIJ_TP_1, PIJ_TP_2
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: PIJ_P_0, PIJ_P_1, PIJ_P_2
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: COSGAMMA_TP_1,SINGAMMA_TP_1
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: COSG_SINA_P_1,COSG_COSA_P_1,SING_SINA_P_1,SING_COSA_P_1
+      REAL(8),ALLOCATABLE,DIMENSION(:) :: COSG_SINA_P_2,COSG_COSA_P_2,SING_SINA_P_2,SING_COSA_P_2
 
       INTEGER(4)              :: INFO
       INTEGER(4)              :: ORDERING_COV_SIGNAL, CONVERT_ORD_MAP, CONVERT_ORD_MASK,&
@@ -38,7 +52,7 @@
 
 
       INTEGER (4)             :: F_HAND, N_REC
-      REAL(4)   :: ETIME_
+      !REAL(4)   :: ETIME
       REAL(4)   :: TOT_WALL_TIME
       REAL(4),DIMENSION(2) :: ELAPSED
 
@@ -49,13 +63,16 @@
       CHARACTER (LEN=160) :: DEFS_FILE, BOPIX_DATA_DIR
 
 
-      EXTERNAL OMP_SET_NUM_THREADS, ETIME_
+
+!      EXTERNAL OMP_SET_NUM_THREADS, ETIME, OMP_GET_NUM_THREADS
+      EXTERNAL OMP_SET_NUM_THREADS, OMP_GET_NUM_THREADS
+
 
    CONTAINS
 
 !==================================================================================================================================
 
-   SUBROUTINE BOPIX_PARAMETER_INIT()
+   SUBROUTINE BOPIX_PARAMETER_INIT
 
       USE HEALPIX_TYPES
       USE PIX_TOOLS
@@ -68,14 +85,22 @@
      IMPLICIT NONE
      
      INTEGER(4) :: INDEX1, INDEX2, I, L, J, IPIX, JPIX, K
-     INTEGER(4) :: THIS_RECL
+     INTEGER(8) :: THIS_RECL
      REAL(8),PARAMETER             :: BOPIX_PI=3.14159265358979323846264338328D0
+!     CHARACTER(LEN=120),OPTIONAL,INTENT(IN) :: BOPIX_INPUT_FILENAME
 
-      WRITE(6,*)'INIZIALIZZAZIONE AMBIENTE BOPIX'
-      !TOT_WALL_TIME = ETIME_(ELAPSED)      
-      !WRITE(6,*)'TEMPO TRASCORSO',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2)
+      BOPIX_THREADS=OMP_GET_NUM_THREADS()
 
+      WRITE(6,*)'BOPIX INITIALIZATION...', BOPIX_THREADS, '  THREADS'
+      TOT_WALL_TIME = ETIME(ELAPSED)      
+      WRITE(6,*)'CPU TIME',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2),'ELAPSED TIME ', TOT_WALL_TIME/BOPIX_THREADS
+
+
+!     IF (PRESENT(BOPIX_INPUT_FILENAME)) THEN
+!      CALL READ_PARAMETER(BOPIX_INPUT_FILENAME)
+!     ELSE
       CALL READ_PARAMETER
+!     END IF
       
       NPIX = 12*NSIDEOUT**2 
       ALLOCATE(MASK(0:NPIX-1,1:3))
@@ -123,6 +148,8 @@
    END DO
      N = NPIX_T + 2*NPIX_P
 
+!  write(6,*) 'nmatrix sizes... ', N, npix_t, npix_p
+
       LDMAT_T  = NPIX_T
       NMAT_T   = NPIX_T
       LDNMAT_T = LDMAT_T*NMAT_T
@@ -143,26 +170,57 @@
       NTREMAT   = N
       LDNTREMAT = LDTREMAT*NTREMAT
 
-   ALLOCATE(PIJ_T(LDMAT_T,NMAT_T),STAT=INFO)
-   ALLOCATE(PIJ_TP(LDMAT_TP,NMAT_TP),STAT=INFO)
-   ALLOCATE(PIJ2_TP(LDMAT_TP,NMAT_TP),STAT=INFO)
-   ALLOCATE(COSGAMMA_TP(LDMAT_TP,NMAT_TP),STAT=INFO)
-   ALLOCATE(SINGAMMA_TP(LDMAT_TP,NMAT_TP),STAT=INFO)
-   ALLOCATE(PIJ_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(PIJ2_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(COSGAMMA_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(SINGAMMA_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(COSG_SINA_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(COSG_COSA_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(SING_SINA_P(LDMAT_P,NMAT_P),STAT=INFO)
-   ALLOCATE(SING_COSA_P(LDMAT_P,NMAT_P),STAT=INFO)
-
-   ALLOCATE(PLGNDR_0_T(1:BOPIX_LMAX_COV,1:LDMAT_T,1:NMAT_T),   STAT=INFO)
-   ALLOCATE(PLGNDR_0_TP(1:BOPIX_LMAX_COV,1:LDMAT_T,1:NMAT_P), STAT=INFO)
-   ALLOCATE(PLGNDR_2_P(1:BOPIX_LMAX_COV,1:LDMAT_P,1:NMAT_P),   STAT=INFO)
-
+   ALLOCATE(LL_VECTOR(1:BOPIX_LMAX_COV), STAT=INFO)
    ALLOCATE(COVSIG(N,N),STAT=INFO)
    ALLOCATE(COVNOISE(N,N),STAT=INFO)
+
+
+   SIZE_T0 = 0 
+   SIZE_T1 = 0  
+   SIZE_T2 = 0
+   SIZE_TP0 = 0 
+   SIZE_TP1 = 0  
+   SIZE_TP2 = 0
+   SIZE_P0 = 0 
+   SIZE_P1 = 0  
+   SIZE_P2 = 0
+
+   CALL CALC_SIZE
+
+   write(6,*) SIZE_T0, SIZE_T1, SIZE_T2, (SIZE_T0 + SIZE_T1 + SIZE_T2 + SIZE_T1 + SIZE_T2), npix_t**2
+   write(6,*) SIZE_TP0, SIZE_TP1, SIZE_TP2, (SIZE_TP0 + SIZE_TP1 + SIZE_TP2), npix_t*npix_p
+   write(6,*) SIZE_P0, SIZE_P1, SIZE_P2, (SIZE_P0 + SIZE_P1 + SIZE_P2), npix_p**2
+
+   ALLOCATE(INDEX_T0(1:SIZE_T0,1:2),STAT=INFO)
+   ALLOCATE(INDEX_T1(1:SIZE_T1,1:2),STAT=INFO)
+   ALLOCATE(INDEX_T2(1:SIZE_T2,1:2),STAT=INFO)
+
+   ALLOCATE(INDEX_TP0(1:SIZE_TP0,1:2),STAT=INFO)
+   ALLOCATE(INDEX_TP1(1:SIZE_TP1,1:2),STAT=INFO)
+   ALLOCATE(INDEX_TP2(1:SIZE_TP2,1:2),STAT=INFO)
+
+   ALLOCATE(INDEX_P0(1:SIZE_P0,1:2),STAT=INFO)
+   ALLOCATE(INDEX_P1(1:SIZE_P1,1:2),STAT=INFO)
+   ALLOCATE(INDEX_P2(1:SIZE_P2,1:2),STAT=INFO)
+
+   ALLOCATE(PIJ_T_1(1:SIZE_T1),STAT=INFO)
+   ALLOCATE(PIJ_T_2(1:SIZE_T2),STAT=INFO)
+   ALLOCATE(PIJ_TP_1(1:SIZE_TP1),STAT=INFO)
+   ALLOCATE(PIJ_P_1(1:SIZE_P1),STAT=INFO)
+   ALLOCATE(PIJ_P_2(1:SIZE_P2),STAT=INFO)
+
+   ALLOCATE(COSGAMMA_TP_1(1:SIZE_TP1),STAT=INFO)
+   ALLOCATE(SINGAMMA_TP_1(1:SIZE_TP1),STAT=INFO)
+
+   ALLOCATE(COSG_SINA_P_1(1:SIZE_P1),STAT=INFO)
+   ALLOCATE(COSG_COSA_P_1(1:SIZE_P1),STAT=INFO)
+   ALLOCATE(SING_SINA_P_1(1:SIZE_P1),STAT=INFO)
+   ALLOCATE(SING_COSA_P_1(1:SIZE_P1),STAT=INFO)
+
+   ALLOCATE(COSG_SINA_P_2(1:SIZE_P2),STAT=INFO)
+   ALLOCATE(COSG_COSA_P_2(1:SIZE_P2),STAT=INFO)
+   ALLOCATE(SING_SINA_P_2(1:SIZE_P2),STAT=INFO)
+   ALLOCATE(SING_COSA_P_2(1:SIZE_P2),STAT=INFO)
 
    ALLOCATE(MAPOUT_ALL(1:NPIX_T+2*NPIX_P),STAT=INFO)
    ALLOCATE(CONTR_RES(1:NPIX_T+2*NPIX_P),STAT=INFO)
@@ -179,7 +237,7 @@
       SBEAM = 0.D0
 
       CALL GAUSSBEAM(FWHM_ARC,BOPIX_LMAX_COV,SBEAM)
-      WRITE(6,*) 'BEAM ',SUM(SBEAM)
+
       BEAMWQ(:,:)=0.D0
 
       DO L=BOPIX_LMIN,BOPIX_LMAX_COV
@@ -194,10 +252,13 @@
    DEALLOCATE(SBEAM)
    DEALLOCATE(BEAMW)
 
-      CALL CONST_CALC
-      
-      CALL PLGNDR_CALC
+      DO L=1,BOPIX_LMAX_COV
+       LL_VECTOR(L)=DBLE(L)
+      END DO
 
+
+      CALL CONST_CALC
+     
  ALLOCATE(NPIXVECT_TOT(1:NPIX_T+2*NPIX_P), STAT=INFO)
     NPIXVECT_TOT(1:NPIX_T)=NPIXVECT_T(1:NPIX_T)
     NPIXVECT_TOT(NPIX_T+1:NPIX_T+NPIX_P)=NPIX+NPIXVECT_P(1:NPIX_P)
@@ -223,10 +284,10 @@
             END DO
            END DO
           CLOSE(3)
-          INQUIRE(iolength=this_recl) COVNOISE
-          OPEN(UNIT=3 , FILE='masked_noise.bin', FORM='unformatted', access='direct', recl=this_recl)
-           WRITE(3,rec=1)COVNOISE
-          CLOSE(3)
+!          INQUIRE(iolength=this_recl) COVNOISE
+!          OPEN(UNIT=3 , FILE='masked_noise.bin', FORM='unformatted', access='direct', recl=this_recl)
+!           WRITE(3,rec=1)COVNOISE
+!          CLOSE(3)
     END SELECT
             COVNOISE = UNIT_FACT_COV*UNIT_FACT_COV*TDFACT_COVNOISE*TDFACT_COVNOISE*COVNOISE
    DEALLOCATE(NPIXVECT_TOT)         
@@ -239,25 +300,22 @@
 !       BOPIX_CL_FILENAME=BOPIX_DATA_DIR//BOPIX_CL_FILENAME
        OPEN(UNIT=11,FILE=BOPIX_CL_FILENAME,STATUS='OLD',FORM='FORMATTED',ACTION='READ')
         DO L=2,200
-          READ(11,*) K, BOPIX_CL(0,L), BOPIX_CL(1,L), BOPIX_CL(2,L), BOPIX_CL(3,L)
-!          READ(11,*) K, BOPIX_CL(0,L), BOPIX_CL(1,L), BOPIX_CL(2,L)
-!WARNING: CTP3 (cl_t1) has: TT,EE,BB,TE
-!          READ(11,*) BOPIX_CL(0,L), BOPIX_CL(2,L), BOPIX_CL(3,L), BOPIX_CL(1,L)
+!       IF BOPIX_CL_FILE HAS ALSO COLUMN FOR MULTIPOLES DECOMMENT BELOW
+!          READ(11,*) K, BOPIX_CL(0,L), BOPIX_CL(2,L), BOPIX_CL(3,L), BOPIX_CL(1,L)
+          READ(11,*) BOPIX_CL(0,L), BOPIX_CL(2,L), BOPIX_CL(3,L), BOPIX_CL(1,L)
+!       IF BOPIX_CL_FILE HAS BANDPOWERS DECOMMENT BELOW 
 !          WRITE (6,*) 'TT l=2,35', BOPIX_CL(0,2), BOPIX_CL(0,35)
-!IF THE FILE BOPIX_CL HAS BANDPOWERS OTHERWISE COMMENT         
-          BOPIX_CL(0,L)=BOPIX_CL(0,L)*2.D0*BOPIX_PI/L/(L+1)
-          BOPIX_CL(1,L)=BOPIX_CL(1,L)*2.D0*BOPIX_PI/L/(L+1)
-          BOPIX_CL(2,L)=BOPIX_CL(2,L)*2.D0*BOPIX_PI/L/(L+1)
-          BOPIX_CL(3,L)=BOPIX_CL(3,L)*2.D0*BOPIX_PI/L/(L+1)
-!          WRITE (6,*) 'TT l=2,35', BOPIX_CL(0,2), BOPIX_CL(0,35)
+!          BOPIX_CL(0,L)=BOPIX_CL(0,L)*2.D0*BOPIX_PI/L/(L+1)
+!          BOPIX_CL(1,L)=BOPIX_CL(1,L)*2.D0*BOPIX_PI/L/(L+1)
+!          BOPIX_CL(2,L)=BOPIX_CL(2,L)*2.D0*BOPIX_PI/L/(L+1)
+!        BOPIX_CL(3,L)=BOPIX_CL(3,L)*2.D0*BOPIX_PI/L/(L+1) 
         END DO
-!       WRITE (6,*) 'TT l=2,35', BOPIX_CL(0,2), BOPIX_CL(0,35)
        CLOSE(11)
    END SELECT
 
-
-      !TOT_WALL_TIME = ETIME_(ELAPSED)          
-      !WRITE(6,*)'INIZIALIZZAZIONE BOPIX ',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2)
+      WRITE(6,*)'BOPIX INITIALIZED..'
+      TOT_WALL_TIME = ETIME(ELAPSED)          
+      WRITE(6,*)'CPU TIME',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2),'ELAPSED TIME ', TOT_WALL_TIME/BOPIX_THREADS
 
 
    END SUBROUTINE BOPIX_PARAMETER_INIT
@@ -271,22 +329,31 @@
       USE FITSTOOLS, ONLY: INPUT_MAP
 
      IMPLICIT NONE
-     INTEGER(4)    :: I, K, IPIX
+     INTEGER(4)    :: I, K, IPIX, MAP_ORDERING
      INTEGER(4)    :: THIS_RECL
-     REAL(8),DIMENSION(:),ALLOCATABLE :: MAPOUT_TMP
+     REAL(8),DIMENSION(:),ALLOCATABLE :: MAPOUT_TMP, MAPT
 
-     CALL OMP_SET_NUM_THREADS(1)
+        
+     REAL(8),dimension(0:NPIX-1) :: MASKT
+     
+     REAL(8),DIMENSION(1:2)     :: ZBOUNDS
+     REAL(8),DIMENSION(0:3)     :: MULTIPOLES
+     
+
+
+!     CALL OMP_SET_NUM_THREADS(1)
                 
                SELECT CASE (MAP_TYPE)
                  CASE (1)
                        ALLOCATE(MAPOUT(0:NPIX-1,1:3),STAT=INFO)
+                         write(6,*)'info ',info
                        ALLOCATE(MAPOUT_T(1:NPIX_T),STAT=INFO)
                        ALLOCATE(MAPOUT_Q(1:NPIX_P),STAT=INFO)
                        ALLOCATE(MAPOUT_U(1:NPIX_P),STAT=INFO)
        
                         WRITE(6,*)'LETTURA MAPPA FULL SKY DA FILE FITS TQU'
 			CALL INPUT_MAP(MAP_FILE,MAPOUT(0:NPIX-1,1:3),NPIX,3)
-
+                        write(6,*)'ciao'
 			IF (CONVERT_ORD_MAP .EQ. 1) THEN
 			 WRITE(6,*)'CONVERSIONE NEST-RING'
 				CALL CONVERT_NEST2RING(NSIDEOUT,MAPOUT(0:NPIX-1,1:3))
@@ -314,6 +381,25 @@
 
    SELECT CASE (MAP_TYPE)
     CASE (1)       
+
+!RIMOZIONE MONOPOLO DIPOLO
+                                
+             ALLOCATE(MAPT(0:NPIX-1))
+            MAPT(0:NPIX-1) = MAPOUT(0:NPIX-1,1)
+            MASKT=MASK(:,1)
+            ZBOUNDS(1)=-1.D0
+            ZBOUNDS(2)= 1.D0
+          !ordering 1 RING; 2 NEST
+            MAP_ORDERING = 2
+            call remove_dipole(NSIDEOUT,MAPT,MAP_ORDERING,2,multipoles,zbounds,-1.6375d30,MASKT)
+               PRINT*,'monopole removed =',multipoles(0)
+               PRINT*,'dipole removed =',multipoles(1),multipoles(2),multipoles(3)
+            MAPOUT(0:NPIX-1,1)=MAPT(0:NPIX-1)
+                   
+             DEALLOCATE(MAPT)
+                      
+
+
          DO IPIX=1,NPIX_T
           I = NPIXVECT_T(IPIX)
           MAPOUT_T(IPIX)=TD_FACT*UNIT_FACT*MAPOUT(I-1,1)
@@ -327,16 +413,18 @@
           MAPOUT_ALL(1:NPIX_T)=MAPOUT_T
           MAPOUT_ALL(NPIX_T+1:NPIX_T+NPIX_P)=MAPOUT_Q
           MAPOUT_ALL(NPIX_T+NPIX_P+1:NPIX_T+2*NPIX_P)=MAPOUT_U
-         DEALLOCATE(MAPOUT_T)
-         DEALLOCATE(MAPOUT_Q)
-         DEALLOCATE(MAPOUT_U)
-         DEALLOCATE(MAPOUT)
+!         DEALLOCATE(MAPOUT_U)
+!         DEALLOCATE(MAPOUT_Q)
+!         DEALLOCATE(MAPOUT_T)
+!         DEALLOCATE(MAPOUT)
     CASE (3)
          DO IPIX=1,NPIX_T+2*NPIX_P
           MAPOUT_ALL = UNIT_FACT*TD_FACT*MAPOUT_TMP
          END DO
          DEALLOCATE(MAPOUT_TMP)
    END SELECT
+
+   write(6,*)'maps read...'
 
   END SUBROUTINE MAP_INPUT
 !==================================================================================================================================
@@ -345,6 +433,8 @@
 
     USE HEALPIX_TYPES
     USE PIX_TOOLS
+
+    IMPLICIT NONE
 
     INTEGER(4) :: NSIDEOUT,IPIX,JPIX,COUNT
     REAL(8),DIMENSION(1:3) :: VECI,VECJ,RIJ,RISTAR,VECN 
@@ -391,133 +481,27 @@
   END SUBROUTINE ANGLE
 !=================================================================================================================================
 
-       SUBROUTINE PLGNDR_CALC()
+   SUBROUTINE CONST_CALC
 
-        IMPLICIT NONE
+     USE HEALPIX_TYPES
+     USE PIX_TOOLS
 
-	     REAL(8)                :: PLL,PMM,PMMP1,SOMX2,XX, XX1, LLM1, II
-  	     INTEGER(4)             :: I,J,K,INDI,INDJ
+     IMPLICIT NONE
 
-   CALL OMP_SET_NUM_THREADS(BOPIX_NTHREADS)
-!$OMP PARALLEL DEFAULT(SHARED)  
-
-!T
-!$OMP DO PRIVATE(I,PMM,PMMP1,K,LLM1,PLL) SCHEDULE(STATIC)
-          DO J=1,NMAT_T
-           DO I=1,LDMAT_T
-            PMM   = 1.0D0
-            PMMP1 = PIJ_T(I,J)
-            PLGNDR_0_T(1,I,J) = PIJ_T(I,J)
-           DO K=2,BOPIX_LMAX_COV
-              LLM1 = 1.0D0/DBLE(K)
-	      PLL  = (PIJ_T(I,J) *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
-	      PMM=PMMP1
-	      PMMP1=PLL
-              PLGNDR_0_T(K,I,J) = PLL
-           END DO
-          END DO
-         END DO
-!$OMP END DO
-
-!TP
-!$OMP DO PRIVATE(I,PMM,PMMP1,K,LLM1,PLL) SCHEDULE(STATIC)
-          DO J=1,NMAT_TP
-           DO I=1,LDMAT_TP
-            PMM   = 1.0D0
-            PMMP1 = PIJ_TP(I,J)
-            PLGNDR_0_TP(1,I,J) = PIJ_TP(I,J)
-            DO K=2,BOPIX_LMAX_COV
-              LLM1 = 1.0D0/DBLE(K)
-	          PLL  = (PIJ_TP(I,J) *(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
-	          PMM  = PMMP1
-	          PMMP1=PLL
-              PLGNDR_0_TP(K,I,J) = PLL
-            END DO
-           END DO
-          END DO
-!$OMP END DO
-
-!P
-!$OMP DO PRIVATE(I,PMM,PMMP1,K,II,PLL) SCHEDULE(STATIC)
-          DO J=1,NMAT_P
-           DO I=1,LDMAT_P
-            PMM=3*PIJ2_P(I,J)
-            PLGNDR_2_P(1,I,J) = 0.D0
-            PLGNDR_2_P(2,I,J) = PMM
-            PLGNDR_2_P(3,I,J) = PIJ_P(I,J)*5.D0*PMM
-            PMMP1           = PLGNDR_2_P(3,I,J)
-            DO K=4,BOPIX_LMAX_COV
-             II = DBLE(K)
-             PLL=(PIJ_P(I,J)*(2*II-1)*PMMP1-(II+1.D0)*PMM)/(II-2.D0)
-	         PMM=PMMP1
-             PMMP1=PLL
-             PLGNDR_2_P(K,I,J) = PLL
-            END DO
-           END DO
-          END DO
-!$OMP END DO
-
-!$OMP END PARALLEL
-       END SUBROUTINE PLGNDR_CALC
-!================================================================================================================================
-
-	FUNCTION PLGNDR_D1(L,M,X)
-	IMPLICIT NONE
-	INTEGER(4), INTENT(IN) :: L,M
-	REAL(8), INTENT(IN) :: X
-	REAL(8) :: PLGNDR_D1
-	INTEGER(4) :: LL
-	REAL(8) :: PLL,PMM,PMMP1,SOMX2,XX, XX1, LLM1
- 
-         XX=X
-	    PMM=1.0D0
-        PMMP1=X
-			DO LL=2,L
-			   LLM1 = 1.0D0/DBLE(LL)
-			   PLL=(XX*(2.D0-LLM1)*PMMP1-(1.D0-LLM1)*PMM)
-			   PMM=PMMP1
-			   PMMP1=PLL
-            END DO
-        PLGNDR_D1=PLL
-    END FUNCTION PLGNDR_D1
-!==================================================================================================================================
-
-	FUNCTION PLGNDR_D2(L,M,X)
-	IMPLICIT NONE
-	INTEGER(4), INTENT(IN) :: L,M
-	REAL(8), INTENT(IN) :: X
-	REAL(8) :: PLGNDR_D2
-	INTEGER(4) :: LL
-	REAL(8) :: PLL,PMM,PMMP1,SOMX2,XX, XX1, LLM1
- 
-         XX=X
-         PMM=3*(1.0D0-XX**2)
-         PMMP1=XX*5.D0*PMM
-         DO LL=4,L
-	       PLL=(XX*(2*LL-1)*PMMP1-(LL+1.D0)*PMM)/(LL-2.D0)
-	       PMM=PMMP1
-           PMMP1=PLL
-	     END DO
-     PLGNDR_D2=PLL
-   END FUNCTION PLGNDR_D2
-!=================================================================================================================================
-
-   SUBROUTINE CONST_CALC()
-
-      USE HEALPIX_TYPES
-      USE PIX_TOOLS
-
-     REAL(8)                     :: BOPIX_GAMMA, BOPIX_ALFA
+     REAL(8)                     :: BOPIX_GAMMA, BOPIX_ALFA, TMP1
      REAL(8),DIMENSION(1:3)      :: VECI,VECJ
-     INTEGER(4)                  :: INDI,INDJ,KINDEX, I, J
+     INTEGER(4)                  :: INDI,INDJ,KINDEX
+     INTEGER(8)                  :: I0,I1,I2, I, J, TMP
 
-   CALL OMP_SET_NUM_THREADS(1)
-!!$OMP PARALLEL DEFAULT(SHARED)
+
+     I0=1
+     I1=1
+     I2=1
 
 !!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ) SCHEDULE(STATIC)
    DO J = 1, NMAT_T
-!    DO I = 1, J
-    DO I = 1, LDMAT_T
+    DO I = 1, J
+!    DO I = 1, LDMAT_T
       INDI = NPIXVECT_T(I)
       INDJ = NPIXVECT_T(J)
        SELECT CASE (ORDERING_COV_SIGNAL)
@@ -528,10 +512,34 @@
            CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
            CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
          END SELECT
-        PIJ_T(I,J) = DOT_PRODUCT(VECI,VECJ)
+       TMP1 = DOT_PRODUCT(VECI,VECJ)
+
+        IF ( INDI .EQ. INDJ) THEN
+             INDEX_T0(I0,1)=I
+             INDEX_T0(I0,2)=J
+             I0 = I0 + 1
+        ELSE
+         TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+             PIJ_T_2(I2) = TMP1
+             INDEX_T2(I2,1)=I
+             INDEX_T2(I2,2)=J
+             I2 = I2 + 1
+           ELSE
+             PIJ_T_1(I1) = TMP1
+             INDEX_T1(I1,1)=I
+             INDEX_T1(I1,2)=J
+             I1 = I1 + 1
+           END IF
+        END IF
+
     END DO
    END DO
 !!$OMP END DO
+
+     I0=1
+     I1=1
+     I2=1
 
 !!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ,BOPIX_GAMMA) SCHEDULE(STATIC)
    DO J = 1, NMAT_TP
@@ -546,17 +554,35 @@
            CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
            CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
          END SELECT
-        PIJ_TP(I,J) = DOT_PRODUCT(VECI,VECJ)
-        PIJ2_TP(I,J) = 1.D0-PIJ_TP(I,J)**2
+        TMP1 = DOT_PRODUCT(VECI,VECJ)
 
-       CALL ANGLE(NSIDEOUT,INDJ-1,INDI-1,BOPIX_GAMMA)
-
-       COSGAMMA_TP(I,J) = COS(2.D0*BOPIX_GAMMA)
-       SINGAMMA_TP(I,J) = SIN(2.D0*BOPIX_GAMMA)
-
+        IF ( INDI .EQ. INDJ) THEN
+             INDEX_TP0(I0,1)=I
+             INDEX_TP0(I0,2)=J
+             I0=I0+1  
+        ELSE
+          TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+             INDEX_TP2(I2,1)=I
+             INDEX_TP2(I2,2)=J
+             I2=I2+1  
+           ELSE
+             PIJ_TP_1(I1) = TMP1
+             INDEX_TP1(I1,1)=I
+             INDEX_TP1(I1,2)=J
+               CALL ANGLE(NSIDEOUT,INDJ-1,INDI-1,BOPIX_GAMMA)
+               COSGAMMA_TP_1(I1) = COS(2.D0*BOPIX_GAMMA)
+               SINGAMMA_TP_1(I1) = SIN(2.D0*BOPIX_GAMMA)
+             I1 = I1 + 1
+            END IF
+        END IF
    END DO
   END DO
 !!$OMP END DO
+
+     I0=1
+     I1=1
+     I2=1
 
 !!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ,BOPIX_ALFA,BOPIX_GAMMA) SCHEDULE(STATIC)
     DO J = 1, NMAT_P
@@ -571,18 +597,39 @@
            CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
            CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
          END SELECT
-        PIJ_P(I,J) = DOT_PRODUCT(VECI,VECJ)        
-        PIJ2_P(I,J) = 1.D0-PIJ_P(I,J)**2
+        TMP1 = DOT_PRODUCT(VECI,VECJ)        
         
-       CALL ANGLE(NSIDEOUT,INDI-1,INDJ-1,BOPIX_ALFA)
-       CALL ANGLE(NSIDEOUT,INDJ-1,INDI-1,BOPIX_GAMMA)
+        IF ( INDI .EQ. INDJ) THEN
+             INDEX_P0(I0,1)=I
+             INDEX_P0(I0,2)=J
+             I0=I0+1  
+        ELSE
+         TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+             PIJ_P_2(I2) = TMP1
+             INDEX_P2(I2,1)=I
+             INDEX_P2(I2,2)=J
+             CALL ANGLE(NSIDEOUT,INDI-1,INDJ-1,BOPIX_ALFA)
+             CALL ANGLE(NSIDEOUT,INDJ-1,INDI-1,BOPIX_GAMMA)
+             COSG_SINA_P_2(I2)= COS(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)
+             COSG_COSA_P_2(I2)= COS(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
+             SING_SINA_P_2(I2)= SIN(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)       
+             SING_COSA_P_2(I2)= SIN(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
+             I2 = I2 + 1
+           ELSE
+             PIJ_P_1(I1) = TMP1
+             INDEX_P1(I1,1)=I
+             INDEX_P1(I1,2)=J
+             CALL ANGLE(NSIDEOUT,INDI-1,INDJ-1,BOPIX_ALFA)
+             CALL ANGLE(NSIDEOUT,INDJ-1,INDI-1,BOPIX_GAMMA)
+             COSG_SINA_P_1(I1)= COS(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)
+             COSG_COSA_P_1(I1)= COS(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
+             SING_SINA_P_1(I1)= SIN(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)       
+             SING_COSA_P_1(I1)= SIN(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
+             I1 = I1 + 1
+           END IF
+        END IF
 
-       COSGAMMA_P(I,J)=  COS(2.D0*BOPIX_GAMMA)
-       SINGAMMA_P(I,J)=  SIN(2.D0*BOPIX_GAMMA)
-       COSG_SINA_P(I,J)= COS(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)
-       COSG_COSA_P(I,J)= COS(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
-       SING_SINA_P(I,J)= SIN(2.D0*BOPIX_GAMMA)*SIN(2.D0*BOPIX_ALFA)       
-       SING_COSA_P(I,J)= SIN(2.D0*BOPIX_GAMMA)*COS(2.D0*BOPIX_ALFA)       
     END DO
    END DO
 !!$OMP END DO
@@ -590,6 +637,109 @@
 !!$OMP END PARALLEL
    END SUBROUTINE CONST_CALC
 !=================================================================================================================================
+
+   SUBROUTINE CALC_SIZE()
+
+     USE HEALPIX_TYPES
+     USE PIX_TOOLS
+
+     IMPLICIT NONE
+
+     REAL(8),DIMENSION(1:3)      :: VECI,VECJ
+     REAL(8)                     :: TMP1
+     INTEGER(8)                  :: I0,I1,I2
+     INTEGER(4)                  :: INDI,INDJ,KINDEX, I, J, TMP
+
+!!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ,TMP,TMP1) REDUCTION(+:SIZE_T0,SIZE_T1,SIZE_T2) SCHEDULE(STATIC)
+   DO J = 1, NMAT_T
+    DO I = 1, J
+      INDI = NPIXVECT_T(I)
+      INDJ = NPIXVECT_T(J)
+       SELECT CASE (ORDERING_COV_SIGNAL)
+         CASE (1)
+           CALL PIX2VEC_RING(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_RING(NSIDEOUT,INDJ-1,VECJ)
+         CASE(0)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
+         END SELECT
+        TMP1 = DOT_PRODUCT(VECI,VECJ)
+
+        IF ( INDI .EQ. INDJ) THEN
+          SIZE_T0 = SIZE_T0 + 1
+        ELSE
+         TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+          SIZE_T2 = SIZE_T2 + 1
+           ELSE
+          SIZE_T1 = SIZE_T1 + 1
+           END IF
+        END IF
+
+    END DO
+   END DO
+!!$OMP END DO
+
+!!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ,TMP, TMP1) REDUCTION(+:SIZE_TP0,SIZE_TP1,SIZE_TP2) SCHEDULE(STATIC)
+   DO J = 1, NMAT_TP
+    DO I = 1, LDMAT_TP
+      INDI = NPIXVECT_T(I)
+      INDJ = NPIXVECT_P(J)
+       SELECT CASE (ORDERING_COV_SIGNAL)
+         CASE (1)
+           CALL PIX2VEC_RING(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_RING(NSIDEOUT,INDJ-1,VECJ)
+         CASE(0)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
+         END SELECT
+        TMP1 = DOT_PRODUCT(VECI,VECJ)
+        IF ( INDI .EQ. INDJ) THEN
+          SIZE_TP0 = SIZE_TP0 + 1
+        ELSE
+         TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+          SIZE_TP2 = SIZE_TP2 + 1
+           ELSE
+          SIZE_TP1 = SIZE_TP1 + 1
+           END IF
+        END IF
+
+   END DO
+  END DO
+!!$OMP END DO
+
+!!$OMP DO PRIVATE(I,INDI,INDJ,VECI,VECJ,BOPIX_ALFA,BOPIX_GAMMA) REDUCTION(+:SIZE_P0,SIZE_P1,SIZE_P2) SCHEDULE(STATIC)
+    DO J = 1, NMAT_P
+     DO I = 1, LDMAT_P
+       INDI = NPIXVECT_P(I)
+       INDJ = NPIXVECT_P(J)
+       SELECT CASE (ORDERING_COV_SIGNAL)
+         CASE (1)
+           CALL PIX2VEC_RING(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_RING(NSIDEOUT,INDJ-1,VECJ)
+         CASE(0)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDI-1,VECI)
+           CALL PIX2VEC_NEST(NSIDEOUT,INDJ-1,VECJ)
+         END SELECT
+        TMP1 = DOT_PRODUCT(VECI,VECJ)        
+        
+        IF ( INDI .EQ. INDJ) THEN
+           SIZE_P0 = SIZE_P0 + 1
+        ELSE
+         TMP = INT(TMP1 -1.D0 -1.D-10)
+           IF ( TMP .EQ. -2) THEN
+            SIZE_P2 = SIZE_P2 + 1
+           ELSE
+            SIZE_P1 = SIZE_P1 + 1
+           END IF
+        END IF
+    END DO
+   END DO
+!!$OMP END DO
+
+!!$OMP END PARALLEL
+   END SUBROUTINE CALC_SIZE
 
    END MODULE 
    

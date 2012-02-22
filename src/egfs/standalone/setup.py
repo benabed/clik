@@ -33,5 +33,9 @@ setup(
     			   Extension("parametric", ["parametric.pyx","clik_parametric.c","io.c","errorlist.c"],
                              include_dirs = [nm.get_include()],
                              library_dirs=['.',Lfruntime]
+                             ),
+    			   Extension("parametric", ["parametric.pyx","clik_parametric.c","io.c","errorlist.c"],
+                             include_dirs = [nm.get_include()],
+                             library_dirs=['.',Lfruntime]
                              )],
 )
