@@ -77,7 +77,7 @@ egfs *egfs_init(int nvar, char **keyvars, int ndefaults, char** keys, char** val
     int ione,lid;
     int imod,j;
     ione = 1;
-    clik_egfs_order_(&ione,&(self->keys[i]),lid);
+    clik_egfs_order_(&ione,&(self->keys[i]),&lid);
     //_DEBUGHERE_("%s %d",self->keys[ndefaults+i],self->cid[i]);
     //testErrorRet(lid==0,-1010101001,"problem in egfs init",*err,__LINE__,NULL);
     imod = ((int) lid/10) + 1;
