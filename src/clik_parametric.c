@@ -34,7 +34,7 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
   int cur;
 
   if (pf->nkey+nit>= pf->nmax) {
-    // grow list;
+     //grow list;
     //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 
     int nnmax =  (pf->nkey+nit)*2;
@@ -56,6 +56,8 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
       cur++;
     }
     //_DEBUGHERE_("cur %d idx %d",cur,idx)
+    //_DEBUGHERE_("%p",value);
+    //_DEBUGHERE_("%p",value[0]);
     strcpy(pf->key[idx],key[i]);
     if (value[i] !=NULL) {
       strcpy(pf->value[idx],value[i]);  
@@ -106,7 +108,7 @@ long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err) {
 }
 
 double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **err) {
-    char *res;
+  char *res;
 
   res = pflist_get_value(pf,key,(char*)safeguard,err);
   forwardError(*err,__LINE__,0);
@@ -165,14 +167,13 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   int i;
   char *nop;
 
-  //_DEBUGHERE_("","");
   epl = malloc_err(sizeof(parametric),err);
   forwardError(*err,__LINE__,NULL);
   
-  //_DEBUGHERE_("-> %p",epl);
-
-  //_DEBUGHERE_("","");
   epl->pf = pflist_init(err);
+  forwardError(*err,__LINE__,NULL);
+  
+  epl->default_settings = pflist_init(err);
   forwardError(*err,__LINE__,NULL);
   
   pflist_add_item(epl->pf,ndef,defkey,defvalue,err);
@@ -201,12 +202,23 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   epl->sRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
   
-  epl->sdRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq*epl->nvar,err);
-  forwardError(*err,__LINE__,NULL);
+  if (epl->nvar>0) {
+    epl->sdRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq*epl->nvar,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+      epl->sdRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq*1,err);
+      forwardError(*err,__LINE__,NULL);
+  }
   
   epl->varkey = &(epl->pf->key[epl->ndef]);
   
+  epl->dnofail=0;
+
   return epl;
+}
+
+void parametric_dnofail(parametric* egl, int vl) {
+  egl->dnofail = vl;
 }
 
 void parametric_free(void** pegl) {
@@ -218,11 +230,13 @@ void parametric_free(void** pegl) {
   }
     
   free(egl->det2freq);
-    free(egl->freqlist);
-    free(egl->sdRq);
-    free(egl->sRq);
-    free(egl);
-    *pegl = NULL;
+  free(egl->freqlist);
+  free(egl->sdRq);
+  free(egl->sRq);
+  pflist_free(&(egl->pf));
+  pflist_free(&(egl->default_settings));
+  free(egl);
+  *pegl = NULL;
 }
 
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err) {
@@ -299,7 +313,57 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   }
 }
 
+void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, error **err) {
+  testErrorRetVA(egl->dnofail!=1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,varkey);
+  memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*egl->nfreq*egl->nfreq);
+}
+
 // ASTRO PART //
+
+double parametric_get_default(parametric* egl,char *key, error **err) {
+  char *res;
+  double vres;
+  res = pflist_get_value(egl->default_settings,key,NULL,err);
+  forwardError(*err,__LINE__,0);
+  testErrorRetVA(res==NULL,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
+  //_DEBUGHERE_("'%s' -> '%s'",key,res);
+  vres = atof(res);
+  //_DEBUGHERE_("%g",vres);
+  return vres;
+}
+
+void parametric_set_default(parametric* egl,char *key, double value,error **err) {
+  char calue[200];
+  char *nalue;
+
+  sprintf(calue,"%30g",value);
+  //_DEBUGHERE_("%p",egl->default_settings);
+  //_DEBUGHERE_("%s",calue);
+  nalue = calue;
+  //_DEBUGHERE_("%p %p",&(nalue),calue);
+  
+  pflist_add_item(egl->default_settings,1, &key, (char**)&(nalue),err);
+  forwardError(*err,__LINE__,);
+  
+  
+}
+
+double parametric_get_value(parametric *egl, char *key, error **err) {
+  int ps;
+  double res;
+
+  ps=pflist_key_index(egl->pf,key,err);
+  forwardError(*err,__LINE__,0);
+  if (ps==-1) { // not in the default/var try in the default_settings
+    res = parametric_get_default(egl,key,err);
+    forwardError(*err,__LINE__,0);
+    return res;
+  }
+  res = 0;
+  res = pflist_get_double_value(egl->pf,key,&res,err);
+  forwardError(*err,__LINE__,);
+  return res;
+}
 
 // To get from intensity to \delta_T (CMB)
 
@@ -325,6 +389,16 @@ parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char 
   egl->eg_compute = &powerlaw_compute;
   egl->eg_free = NULL;
   
+  // set default settings (those will be overide by defkey/value and varkey/value)
+  parametric_set_default(egl,"l_pivot",500,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  parametric_set_default(egl,"index",0,err);
+  forwardError(*err,__LINE__,NULL);
+   
+  parametric_set_default(egl,"A",1,err);
+  forwardError(*err,__LINE__,NULL);
+  
   return egl;
 }
 
@@ -334,22 +408,21 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
   double l_pivot,index,A,v;
   
   egl = exg;
-  l_pivot = 500;
-  l_pivot = pflist_get_double_value(egl->pf,"l_pivot",&l_pivot,err);
+  l_pivot = parametric_get_value(egl,"l_pivot",err);
   forwardError(*err,__LINE__,);
   
-  index = 0;
-  index = pflist_get_double_value(egl->pf,"index",&index,err);
+  index = parametric_get_value(egl,"index",err);
   forwardError(*err,__LINE__,);
 
-  A = 1;
-  A = pflist_get_double_value(egl->pf,"A",&A,err);
+  A = parametric_get_value(egl,"A",err);  
   forwardError(*err,__LINE__,);
 
   
   nfreq = egl->nfreq;
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    //_DEBUGHERE_("%g %g %g %g",A,ell,l_pivot,index);
     v = A*pow((double) ell/l_pivot,(double) index);
+    //_DEBUGHERE_("%g ",v);
     mell = (ell-egl->lmin)*nfreq*nfreq;
     for(m1=0;m1<nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
@@ -394,7 +467,8 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
       }
 
       // error return
-      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
     }
   }
 
@@ -406,12 +480,28 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
 
 parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
+  int m1,m2;
+  pfchar name;
 
   egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &powerlaw_free_emissivity_compute;
   egl->eg_free = &powerlaw_free_emissivity_free;
   egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"l_pivot",500,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"index",0,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+      parametric_set_default(egl,name,1,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
 
   return egl;
 }
@@ -433,12 +523,10 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
   int stop;
 
   egl = exg;
-  l_pivot = 500;
-  l_pivot = pflist_get_double_value(egl->pf,"l_pivot",&l_pivot,err);
+  l_pivot = parametric_get_value(egl,"l_pivot",err);
   forwardError(*err,__LINE__,);
   
-  index = 0;
-  index = pflist_get_double_value(egl->pf,"index",&index,err);
+  index = parametric_get_value(egl,"index",err);
   forwardError(*err,__LINE__,);
 
   A = egl->payload;
@@ -447,7 +535,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
     for(m2=m1;m2<nfreq;m2++) {
       sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
       v = 1;
-      v = pflist_get_double_value(egl->pf,name,&v,err);
+      v = parametric_get_value(egl,name,err);
       A[m1*nfreq+m2] = v;
       A[m2*nfreq+m1] = v;
     }
@@ -513,7 +601,8 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
       }
       
       // error return
-      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
     }
   }
   return;
@@ -527,6 +616,15 @@ parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char 
   egl->eg_compute = &radiogal_compute;
   egl->eg_free = &radiogal_free;
   egl->payload = malloc_err(sizeof(double)*(2*egl->nfreq*egl->nfreq + egl->nfreq),err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"norm_rg",78.5,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"alpha_rg",-0.36,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"sigma_rg",0.64,err);
   forwardError(*err,__LINE__,NULL);
 
   return egl;
@@ -545,16 +643,13 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
   d3000 = 3000.*3001./2./M_PI;
   nu0 = 143;
 
-  norm_rg = 78.5;
-  norm_rg = pflist_get_double_value(egl->pf,"norm_rg",&norm_rg,err);
+  norm_rg = parametric_get_value(egl,"norm_rg",err);
   forwardError(*err,__LINE__,);
 
-  alpha_rg = -0.36;
-  alpha_rg = pflist_get_double_value(egl->pf,"alpha_rg",&alpha_rg,err);
+  alpha_rg = parametric_get_value(egl,"alpha_rg",err);
   forwardError(*err,__LINE__,);
 
-  sigma_rg = 0.64;
-  sigma_rg = pflist_get_double_value(egl->pf,"sigma_rg",&sigma_rg,err);
+  sigma_rg = parametric_get_value(egl,"sigma_rg",err);
   forwardError(*err,__LINE__,);
 
   nfreq = egl->nfreq;
@@ -577,10 +672,10 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-	Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
-	  exp(alpha_rg*A[m1*nfreq+m2] +
-	      sigma_rg*sigma_rg/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
-	Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+        Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
+          exp(alpha_rg*A[m1*nfreq+m2] +
+              sigma_rg*sigma_rg/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
+        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
   }
@@ -590,45 +685,46 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
       mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
 
       if (strcmp(egl->varkey[iv],"norm_rg")==0) {
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/norm_rg;
-	      dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/norm_rg;
-	    }
-	  }
-	}
-	continue;
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/norm_rg;
+              dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/norm_rg;
+            }
+          }
+        }
+        continue;
       }
       if (strcmp(egl->varkey[iv],"alpha_rg")==0) {
-	// dR/dalpha_rg = log(nu1*nu2/nu0^2) * R
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      dRq[mv+mell + m1*nfreq+m2] = A[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
-	      dRq[mv+mell + m2*nfreq+m1] = A[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
-	    }
-	  }
-	}
-	continue;
+        // dR/dalpha_rg = log(nu1*nu2/nu0^2) * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = A[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = A[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
       }
       if (strcmp(egl->varkey[iv],"sigma_rg")==0) {
-	// dR/dsigma_rg = log(nu1*nu2/nu0^2)^2 * R
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      dRq[mv+mell + m1*nfreq+m2] = sigma_rg * B[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
-	      dRq[mv+mell + m2*nfreq+m1] = sigma_rg * B[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
-	    }
-	  }
-	}
-	continue;
+        // dR/dsigma_rg = log(nu1*nu2/nu0^2)^2 * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = sigma_rg * B[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = sigma_rg * B[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
       }
       // error return
-      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
     }
   }
   return;
@@ -669,12 +765,46 @@ double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
 
 parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
+  pfchar type;
+  char* pt;
+  int isdust;
 
   egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &galactic_component_compute;
   egl->eg_free = &galactic_component_free;
   egl->payload = malloc_err(sizeof(double)*2*egl->nfreq*(egl->nfreq+1),err);
   forwardError(*err,__LINE__,NULL);
+  
+  // uK^2 at l=500, nu=143 GHz;
+  parametric_set_default(egl,"gal_norm",1,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gal_l_pivot",500,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gal_index",0,err);
+  forwardError(*err,__LINE__,NULL);
+
+  sprintf(type,"dust");
+  isdust = 1;
+  pt = (char*)type;
+  pt = pflist_get_value(egl->pf,"gal_type",pt,err);
+  forwardError(*err,__LINE__,);
+
+  if (strcmp(type,"dust")==0) {
+    parametric_set_default(egl,"gal_beta_dust",1.8,err);
+    forwardError(*err,__LINE__,NULL);
+
+    parametric_set_default(egl,"gal_T_dust",1.8,err);
+    forwardError(*err,__LINE__,NULL);
+  } else if (strcmp(type,"non_thermal")==0) {
+    //Intensity, = -3.0 in RJ
+    parametric_set_default(egl,"gal_alpha_non_thermal",-1,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+    testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,,type);
+    // return ?
+  }
 
   return egl;
 }
@@ -694,16 +824,13 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
 
   // dust or non_thermal
 
-  norm = 1; // uK^2 at l=500, nu=143 GHz;
-  norm = pflist_get_double_value(egl->pf,"gal_norm",&norm,err);
+  norm = parametric_get_value(egl,"gal_norm",err);
   forwardError(*err,__LINE__,);
 
-  l_pivot = 500;
-  l_pivot = pflist_get_double_value(egl->pf,"gal_l_pivot",&l_pivot,err);
+  l_pivot = parametric_get_value(egl,"gal_l_pivot",err);
   forwardError(*err,__LINE__,);
   
-  index = 0;
-  index = pflist_get_double_value(egl->pf,"gal_index",&index,err);
+  index = parametric_get_value(egl,"gal_index",err);
   forwardError(*err,__LINE__,);
 
   sprintf(type,"dust");
@@ -714,19 +841,16 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
 
   if (strcmp(type,"dust")==0) {
     
-    beta_dust = 1.8;
-    beta_dust = pflist_get_double_value(egl->pf,"gal_beta_dust",&beta_dust,err);
+    beta_dust = parametric_get_value(egl,"gal_beta_dust",err);
     forwardError(*err,__LINE__,);
 
-    T_dust = 18.0;
-    T_dust = pflist_get_double_value(egl->pf,"gal_T_dust",&T_dust,err);
+    T_dust = parametric_get_value(egl,"gal_T_dust",err);
     forwardError(*err,__LINE__,);
 
   } else if (strcmp(type,"non_thermal")==0) {
 
     isdust = 0;
-    alpha_non_thermal = -1.0; //Intensity, = -3.0 in RJ
-    alpha_non_thermal = pflist_get_double_value(egl->pf,"gal_alpha_non_thermal",&alpha_non_thermal,err);
+    alpha_non_thermal = parametric_get_value(egl,"gal_alpha_non_thermal",err);
     forwardError(*err,__LINE__,);
 
   } else {
@@ -778,110 +902,111 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
       mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
 
       if (strcmp(egl->varkey[iv],"gal_norm")==0) {
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  v = pow(ell/l_pivot,index);
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      lA = A[m1*nfreq+m2];
-	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
-	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
-	    }
-	  }
-	}
-	continue;
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          v = pow(ell/l_pivot,index);
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              lA = A[m1*nfreq+m2];
+              dRq[mv+mell + m1*nfreq+m2] = lA*v;
+              dRq[mv+mell + m2*nfreq+m1] = lA*v;
+            }
+          }
+        }
+        continue;
       }
 
       if (strcmp(egl->varkey[iv],"gal_index")==0) {
-	// dR/dindex
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  v = index*pow(ell/l_pivot,index-1.0) * norm;
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      lA = A[m1*nfreq+m2];
-	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
-	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
-	    }
-	  }
-	}
-	continue;
+        // dR/dindex
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          v = index*pow(ell/l_pivot,index-1.0) * norm;
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              lA = A[m1*nfreq+m2];
+              dRq[mv+mell + m1*nfreq+m2] = lA*v;
+              dRq[mv+mell + m2*nfreq+m1] = lA*v;
+            }
+          }
+        }
+        continue;
       }
 
       if (strcmp(egl->varkey[iv],"gal_beta_dust")==0 && isdust) {
-	// dR/dbeta_dust
-	// Get vector emissivity derivative
-	for (m1=0;m1<nfreq;m1++) {
-	  b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
-	  for (m2=m1;m2<nfreq;m2++) {
-	    B[m1*nfreq+m2] = b[m1]*b[m2];
-	    B[m2*nfreq+m1] = b[m1]*b[m2];
-	  }
-	}
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  v = power(ell/l_pivot,index) * norm;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      lA = B[m1*nfreq+m2];
-	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
-	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
-	    }
-	  }
-	}
-	continue;
+        // dR/dbeta_dust
+        // Get vector emissivity derivative
+        for (m1=0;m1<nfreq;m1++) {
+          b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
+          for (m2=m1;m2<nfreq;m2++) {
+            B[m1*nfreq+m2] = b[m1]*b[m2];
+            B[m2*nfreq+m1] = b[m1]*b[m2];
+          }
+        }
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          v = power(ell/l_pivot,index) * norm;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              lA = B[m1*nfreq+m2];
+              dRq[mv+mell + m1*nfreq+m2] = lA*v;
+              dRq[mv+mell + m2*nfreq+m1] = lA*v;
+            }
+          }
+        }
+        continue;
       }
 
       if (strcmp(egl->varkey[iv],"gal_T_dust")==0 && isdust) {
-	// dR/dT_dust
-	// Get vector emissivity derivative
-	for (m1=0;m1<nfreq;m1++) {
-	  b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
-	  for (m2=m1;m2<nfreq;m2++) {
-	    B[m1*nfreq+m2] = b[m1]*b[m2];
-	    B[m2*nfreq+m1] = b[m1]*b[m2];
-	  }
-	}
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  v = power(ell/l_pivot,index) * norm;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      lA = B[m1*nfreq+m2];
-	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
-	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
-	    }
-	  }
-	}
-	continue;
+        // dR/dT_dust
+        // Get vector emissivity derivative
+        for (m1=0;m1<nfreq;m1++) {
+          b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
+          for (m2=m1;m2<nfreq;m2++) {
+            B[m1*nfreq+m2] = b[m1]*b[m2];
+            B[m2*nfreq+m1] = b[m1]*b[m2];
+          }
+        }
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          v = power(ell/l_pivot,index) * norm;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              lA = B[m1*nfreq+m2];
+              dRq[mv+mell + m1*nfreq+m2] = lA*v;
+              dRq[mv+mell + m2*nfreq+m1] = lA*v;
+            }
+          }
+        }
+        continue;
       }
 
       if (strcmp(egl->varkey[iv],"gal_alpha_non_thermal")==0 && (isdust==0)) {
-	// dR/dalpha_non_thermal
-	// Get vector emissivity derivative
-	for (m1=0;m1<nfreq;m1++) {
-	  b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,nu0);
-	  for (m2=m1;m2<nfreq;m2++) {
-	    B[m1*nfreq+m2] = b[m1]*b[m2];
-	    B[m2*nfreq+m1] = b[m1]*b[m2];
-	  }
-	}
-	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-	  mell = (ell-egl->lmin)*nfreq*nfreq;
-	  v = power(ell/l_pivot,index) * norm;
-	  for (m1=0;m1<nfreq;m1++) {
-	    for (m2=m1;m2<nfreq;m2++) {
-	      lA = B[m1*nfreq+m2];
-	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
-	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
-	    }
-	  }
-	}
-	continue;
+        // dR/dalpha_non_thermal
+        // Get vector emissivity derivative
+        for (m1=0;m1<nfreq;m1++) {
+          b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,nu0);
+          for (m2=m1;m2<nfreq;m2++) {
+            B[m1*nfreq+m2] = b[m1]*b[m2];
+            B[m2*nfreq+m1] = b[m1]*b[m2];
+          }
+        }
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          v = power(ell/l_pivot,index) * norm;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              lA = B[m1*nfreq+m2];
+              dRq[mv+mell + m1*nfreq+m2] = lA*v;
+              dRq[mv+mell + m2*nfreq+m1] = lA*v;
+            }
+          }
+        }
+        continue;
       }
 
       // error return
-      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
     }
   }
   

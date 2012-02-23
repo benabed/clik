@@ -43,11 +43,17 @@ typedef struct {
   int ndef;
   int lmin,lmax;
   pfchar *varkey;
+  pflist *default_settings;
+  int dnofail;
 } parametric;
 
 parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void parametric_free(void** pegl);
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err);
+double parametric_get_default(parametric* egl,char *key, error **err);
+double parametric_get_value(parametric *egl, char *key, error **err);
+void parametric_dnofail(parametric* egl, int vl);
+
 
 parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void powerlaw_compute(void* exg, double *Rq, double*dRq, error **err);

@@ -664,3 +664,4 @@ SmicaComp * clik_smica_comp_amp_diag_init(hid_t comp_id, char* cur_lkl,int nb, i
   free(tmpl);
   return SC;
 }
+
