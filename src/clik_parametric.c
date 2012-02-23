@@ -438,7 +438,7 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
       
       if (strcmp(egl->varkey[iv],"index")==0) {
         for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = index*A*pow((double) ell/l_pivot,(double) index-1);
+          v = A * log((double)ell/l_pivot) * pow((double) ell/l_pivot,(double) index);
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for(m1=0;m1<nfreq;m1++) {
             for(m2=m1;m2<nfreq;m2++) {
@@ -560,7 +560,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
       
       if (strcmp(egl->varkey[iv],"index")==0) {
         for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = index*pow(ell/l_pivot,index-1);
+          v = log(ell/l_pivot) * pow(ell/l_pivot,index);
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for(m1=0;m1<nfreq;m1++) {
             for(m2=m1;m2<nfreq;m2++) {
@@ -618,13 +618,13 @@ parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char 
   egl->payload = malloc_err(sizeof(double)*(2*egl->nfreq*egl->nfreq + egl->nfreq),err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"norm_rg",78.5,err);
+  parametric_set_default(egl,"radiogal_norm",78.5,err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"alpha_rg",-0.36,err);
+  parametric_set_default(egl,"radiogal_alpha",-0.36,err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"sigma_rg",0.64,err);
+  parametric_set_default(egl,"radiogal_sigma",0.64,err);
   forwardError(*err,__LINE__,NULL);
 
   return egl;
@@ -643,13 +643,13 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
   d3000 = 3000.*3001./2./M_PI;
   nu0 = 143;
 
-  norm_rg = parametric_get_value(egl,"norm_rg",err);
+  norm_rg = parametric_get_value(egl,"radiogal_norm",err);
   forwardError(*err,__LINE__,);
 
-  alpha_rg = parametric_get_value(egl,"alpha_rg",err);
+  alpha_rg = parametric_get_value(egl,"radiogal_alpha",err);
   forwardError(*err,__LINE__,);
 
-  sigma_rg = parametric_get_value(egl,"sigma_rg",err);
+  sigma_rg = parametric_get_value(egl,"radiogal_sigma",err);
   forwardError(*err,__LINE__,);
 
   nfreq = egl->nfreq;
@@ -684,7 +684,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
     for (iv=0;iv<egl->nvar;iv++) {
       mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
 
-      if (strcmp(egl->varkey[iv],"norm_rg")==0) {
+      if (strcmp(egl->varkey[iv],"radiogal_norm")==0) {
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for (m1=0;m1<nfreq;m1++) {
@@ -696,7 +696,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
         }
         continue;
       }
-      if (strcmp(egl->varkey[iv],"alpha_rg")==0) {
+      if (strcmp(egl->varkey[iv],"radiogal_alpha")==0) {
         // dR/dalpha_rg = log(nu1*nu2/nu0^2) * R
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
@@ -709,7 +709,7 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
         }
         continue;
       }
-      if (strcmp(egl->varkey[iv],"sigma_rg")==0) {
+      if (strcmp(egl->varkey[iv],"radiogal_sigma")==0) {
         // dR/dsigma_rg = log(nu1*nu2/nu0^2)^2 * R
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
@@ -744,6 +744,7 @@ void radiogal_free(void **pp) {
 double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0) {
 
   double h_over_kT, x, x0, ex, ex0, res, res0;
+
   h_over_kT = 1./(T_dust * 20.836); // Assumes frequencies in GHz
   x0 = nu0 * h_over_kT;
   ex0 = exp(x0);
@@ -751,8 +752,33 @@ double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0) {
   x = nu * h_over_kT;
   ex = exp(x);
   res = pow(nu,3.0+beta_dust)/(ex - 1.);
+
   // Return dust emissivity normalized to one at nu0, in dT (CMB)
   return (res/res0/dBdT(nu,nu0));
+}
+
+// Derivative of dust_spectrum with respect to T_dust
+double d_dust_spectrum_d_T_dust(double nu, double T_dust, double beta_dust, double nu0) {
+
+  double h_over_kT, x, x0, ex, ex0, res;
+
+  h_over_kT = 1./(T_dust * 20.836); // Assumes frequencies in GHz
+  x0 = nu0 * h_over_kT;
+  ex0 = exp(x0);
+  x = nu * h_over_kT;
+  ex = exp(x);
+  res = 1./T_dust * pow(nu/nu0,3.0+beta_dust) * (ex0-1.) * x/((ex - 1.)*(ex - 1.));
+  res /= dBdT(nu,nu0);
+
+  return(res);
+  
+} 
+
+// Derivative of dust_spectrum with respect to beta_dust
+double d_dust_spectrum_d_beta_dust(double nu, double T_dust, double beta_dust, double nu0) {
+  
+  return (log(nu/nu0)*dust_spectrum(nu,T_dust,beta_dust,nu0));
+
 }
 
 // Non-thermal emissivity normalized to 1 at nu0 (e.g. synchrotron, free-free, etc.)
@@ -761,6 +787,12 @@ double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0) {
 double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
 
   return (pow(nu/nu0,alpha_non_thermal)/dBdT(nu,nu0));
+}
+
+// Derivative of non_thermal_spectrum with respect to alpha
+double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_thermal, double no) {
+
+  return (log(nu/nu0)*non_thermal_spectrum(nu,alpha_non_thermal,nu0));
 }
 
 parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
@@ -855,7 +887,6 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
 
   } else {
     testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,,type);
-    // return ?
   }
     
 
@@ -919,7 +950,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
       if (strcmp(egl->varkey[iv],"gal_index")==0) {
         // dR/dindex
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = index*pow(ell/l_pivot,index-1.0) * norm;
+          v = log(ell/l_pivot)*pow(ell/l_pivot,index) * norm;
           mell = (ell-egl->lmin)*nfreq*nfreq;
           for (m1=0;m1<nfreq;m1++) {
             for (m2=m1;m2<nfreq;m2++) {
