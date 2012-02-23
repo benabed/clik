@@ -59,6 +59,10 @@ parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char 
 void radiogal_compute(void* exg, double *Rq, double* dRq, error **err);
 double dBdT(double nu, double nu0);
 void radiogal_free(void **pp);
-
+double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0);
+double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0);
+parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err);
+void galactic_component_free(void **pp);
 
 #endif

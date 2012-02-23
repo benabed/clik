@@ -299,6 +299,24 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   }
 }
 
+// ASTRO PART //
+
+// To get from intensity to \delta_T (CMB)
+
+double dBdT(double nu, double nu0) {
+
+  double x,x0,ex,ex0,res,res0;
+  x0 = nu0/56.78;
+  ex0 = exp(x0);
+  x = nu/56.78;
+  ex = exp(x);
+  res0 = pow(x0,4.0)*ex0/((ex0-1.)*(ex0-1.));
+  res = pow(x,4.0)*ex/((ex-1.)*(ex-1.));
+  return(res/res0);
+
+}
+
+// Simple power low in ell, constant emissivity
 
 parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
@@ -309,7 +327,6 @@ parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char 
   
   return egl;
 }
-
 
 void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
@@ -383,6 +400,9 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
 
   return;
 }
+
+// Simple power law in ell, arbitrary emissivity (including arbitrary cross-correlations, i.e. NOT rank=1 a priori)
+// This could be used e.g for CIB Poisson
 
 parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
@@ -499,6 +519,8 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
   return;
 }
 
+// Millea et al. radio galaxies Poisson contribution. Based on a single population with given mean spectral index, as well as dispersion
+
 parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
@@ -555,10 +577,10 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-        Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
-	      exp(alpha_rg*A[m1*nfreq+m2] +
+	Rq[mell + m1*nfreq+m2] = norm_rg/d3000 * 
+	  exp(alpha_rg*A[m1*nfreq+m2] +
 	      sigma_rg*sigma_rg/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
-	      Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+	Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
   }
@@ -612,20 +634,260 @@ void radiogal_compute(void* exg, double *Rq, double* dRq, error **err) {
   return;
 }
 
-double dBdT(double nu, double nu0) {
+void radiogal_free(void **pp) {
+  double *p;
 
-  double x,x0,ex,ex0,res,res0;
-  x0 = nu0/56.78;
-  ex0 = exp(x0);
-  x = nu/56.78;
-  ex = exp(x);
-  res0 = pow(x0,4.0)*ex0/((ex0-1.)*(ex0-1.));
-  res = pow(x,4.0)*ex/((ex-1.)*(ex-1.));
-  return(res/res0);
-
+  p = *pp;
+  free(p);
+  *pp=NULL;
 }
 
-void radiogal_free(void **pp) {
+// Galactic model
+
+// Dust emissivity normalized to 1 at nu0
+double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0) {
+
+  double h_over_kT, x, x0, ex, ex0, res, res0;
+  h_over_kT = 1./(T_dust * 20.836); // Assumes frequencies in GHz
+  x0 = nu0 * h_over_kT;
+  ex0 = exp(x0);
+  res0 = pow(nu0,3.0+beta_dust)/(ex0 - 1.); // Overall normalization will go away
+  x = nu * h_over_kT;
+  ex = exp(x);
+  res = pow(nu,3.0+beta_dust)/(ex - 1.);
+  // Return dust emissivity normalized to one at nu0, in dT (CMB)
+  return (res/res0/dBdT(nu,nu0));
+}
+
+// Non-thermal emissivity normalized to 1 at nu0 (e.g. synchrotron, free-free, etc.)
+// The spectral index is called alpha here, to distinguish from the gray body case
+// Expressed in dT (CMB)
+double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
+
+  return (pow(nu/nu0,alpha_non_thermal)/dBdT(nu,nu0));
+}
+
+parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &galactic_component_compute;
+  egl->eg_free = &galactic_component_free;
+  egl->payload = malloc_err(sizeof(double)*2*egl->nfreq*(egl->nfreq+1),err);
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err) {
+  parametric *egl;
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double norm,l_pivot,index,alpha_non_thermal,beta_dust,T_dust;
+  double v,lA,nu0;
+  double *A, *a, *B, *b;
+  pfchar type;
+  char* pt;
+  int isdust;
+
+  nu0 = 143;
+  egl = exg;
+
+  // dust or non_thermal
+
+  norm = 1; // uK^2 at l=500, nu=143 GHz;
+  norm = pflist_get_double_value(egl->pf,"gal_norm",&norm,err);
+  forwardError(*err,__LINE__,);
+
+  l_pivot = 500;
+  l_pivot = pflist_get_double_value(egl->pf,"gal_l_pivot",&l_pivot,err);
+  forwardError(*err,__LINE__,);
+  
+  index = 0;
+  index = pflist_get_double_value(egl->pf,"gal_index",&index,err);
+  forwardError(*err,__LINE__,);
+
+  sprintf(type,"dust");
+  isdust = 1;
+  pt = (char*)type;
+  pt = pflist_get_value(egl->pf,"gal_type",pt,err);
+  forwardError(*err,__LINE__,);
+
+  if (strcmp(type,"dust")==0) {
+    
+    beta_dust = 1.8;
+    beta_dust = pflist_get_double_value(egl->pf,"gal_beta_dust",&beta_dust,err);
+    forwardError(*err,__LINE__,);
+
+    T_dust = 18.0;
+    T_dust = pflist_get_double_value(egl->pf,"gal_T_dust",&T_dust,err);
+    forwardError(*err,__LINE__,);
+
+  } else if (strcmp(type,"non_thermal")==0) {
+
+    isdust = 0;
+    alpha_non_thermal = -1.0; //Intensity, = -3.0 in RJ
+    alpha_non_thermal = pflist_get_double_value(egl->pf,"gal_alpha_non_thermal",&alpha_non_thermal,err);
+    forwardError(*err,__LINE__,);
+
+  } else {
+    testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,,type);
+    // return ?
+  }
+    
+
+  A = egl->payload;            // Rank-one, tensorial emissivity
+  nfreq = egl->nfreq;
+  a = &(A[nfreq*nfreq]);       // Emissivity vector
+
+  B = &(A[nfreq*(nfreq+1)]);   // Used for derivatives
+  b = &(A[nfreq*(2*nfreq+1)]); // Idem
+
+  for (m1=0;m1<nfreq;m1++) {
+    if (isdust) {
+      a[m1] = dust_spectrum((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
+    } else {
+      a[m1] = non_thermal_spectrum((double)egl->freqlist[m1],alpha_non_thermal,nu0);
+    }
+  }
+
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      v = a[m1]*a[m2];
+      A[m1*nfreq+m2] = v;
+      A[m2*nfreq+m1] = v;
+    }
+  }
+
+  // R_q
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow(ell/l_pivot,index) * norm;
+    mell = (ell-egl->lmin)*nfreq*nfreq;
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        lA = A[m1*nfreq+m2];
+        Rq[mell + m1*nfreq + m2] = lA*v;
+        Rq[mell + m2*nfreq + m1] = lA*v;
+      }  
+    }
+  }
+
+  // dR_q
+  if (dRq!=NULL) {
+    for (iv=0;iv<egl->nvar;iv++) {
+      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
+
+      if (strcmp(egl->varkey[iv],"gal_norm")==0) {
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  v = pow(ell/l_pivot,index);
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      lA = A[m1*nfreq+m2];
+	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
+	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (strcmp(egl->varkey[iv],"gal_index")==0) {
+	// dR/dindex
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  v = index*pow(ell/l_pivot,index-1.0) * norm;
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      lA = A[m1*nfreq+m2];
+	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
+	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (strcmp(egl->varkey[iv],"gal_beta_dust")==0 && isdust) {
+	// dR/dbeta_dust
+	// Get vector emissivity derivative
+	for (m1=0;m1<nfreq;m1++) {
+	  b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
+	  for (m2=m1;m2<nfreq;m2++) {
+	    B[m1*nfreq+m2] = b[m1]*b[m2];
+	    B[m2*nfreq+m1] = b[m1]*b[m2];
+	  }
+	}
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  v = power(ell/l_pivot,index) * norm;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      lA = B[m1*nfreq+m2];
+	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
+	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (strcmp(egl->varkey[iv],"gal_T_dust")==0 && isdust) {
+	// dR/dT_dust
+	// Get vector emissivity derivative
+	for (m1=0;m1<nfreq;m1++) {
+	  b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,nu0);
+	  for (m2=m1;m2<nfreq;m2++) {
+	    B[m1*nfreq+m2] = b[m1]*b[m2];
+	    B[m2*nfreq+m1] = b[m1]*b[m2];
+	  }
+	}
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  v = power(ell/l_pivot,index) * norm;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      lA = B[m1*nfreq+m2];
+	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
+	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      if (strcmp(egl->varkey[iv],"gal_alpha_non_thermal")==0 && (isdust==0)) {
+	// dR/dalpha_non_thermal
+	// Get vector emissivity derivative
+	for (m1=0;m1<nfreq;m1++) {
+	  b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,nu0);
+	  for (m2=m1;m2<nfreq;m2++) {
+	    B[m1*nfreq+m2] = b[m1]*b[m2];
+	    B[m2*nfreq+m1] = b[m1]*b[m2];
+	  }
+	}
+	for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+	  mell = (ell-egl->lmin)*nfreq*nfreq;
+	  v = power(ell/l_pivot,index) * norm;
+	  for (m1=0;m1<nfreq;m1++) {
+	    for (m2=m1;m2<nfreq;m2++) {
+	      lA = B[m1*nfreq+m2];
+	      dRq[mv+mell + m1*nfreq+m2] = lA*v;
+	      dRq[mv+mell + m2*nfreq+m1] = lA*v;
+	    }
+	  }
+	}
+	continue;
+      }
+
+      // error return
+      testErrorRetVA(1==1,-1234,"Cannot derive on parameter '%s'",*err,__LINE__,,egl->varkey[iv]);
+    }
+  }
+  
+}
+
+void galactic_component_free(void **pp) {
   double *p;
 
   p = *pp;
