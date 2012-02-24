@@ -39,9 +39,12 @@ cdef extern from "clik_parametric.h":
   c_parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   void parametric_free(void** pegl)
   void parametric_compute(c_parametric *egl, double *pars, double* Rq, double *dRq, error **err)
+  double parametric_get_default(c_parametric* egl,char *key, error **err)
+  double parametric_get_value(c_parametric *egl, char *key, error **err)
+  void parametric_dnofail(c_parametric* egl, int vl)
+
 
   c_parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-
   c_parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   c_parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   c_parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -56,7 +59,7 @@ cdef class parametric:
   cdef c_parametric* celf
   cdef int nell
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -84,7 +87,29 @@ cdef class parametric:
     er=doError(err)
     if er:
       raise er
+    
+    parametric_dnofail(self.celf,int(dnofail))
+
     self.nell = lmax+1-lmin
+
+  def get_default_value(self,key):
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+    
+    res = parametric_get_default(self.celf,key, err)
+    er=doError(err)
+    if er:
+      raise er
+    return res
+
+  def has_parameter(self,key):
+    try:
+      self.get_default_value(key)
+      return True
+    except Exception,e:
+      return False
 
   def __call__(self,pars,derivatives=False):
     cdef error *_err,**err
@@ -118,7 +143,7 @@ cdef class parametric:
 
 cdef class powerlaw(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -148,10 +173,11 @@ cdef class powerlaw(parametric):
     if er:
       raise er
     self.nell = lmax+1-lmin
+    parametric_dnofail(self.celf,int(dnofail))
 
 cdef class powerlaw_free_emissivity(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -180,10 +206,12 @@ cdef class powerlaw_free_emissivity(parametric):
     if er:
       raise er
     self.nell = lmax+1-lmin
+    parametric_dnofail(self.celf,int(dnofail))
+
 
 cdef class radiogal(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -213,9 +241,10 @@ cdef class radiogal(parametric):
       raise er
     self.nell = lmax+1-lmin
 
-cdef class galactic_component(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={}):
+    parametric_dnofail(self.celf,int(dnofail))
+
+cdef class galametric(parametric):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -245,27 +274,23 @@ cdef class galactic_component(parametric):
       raise er
     self.nell = lmax+1-lmin
 
+    parametric_dnofail(self.celf,int(dnofail))
+
+
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
-  
   return c_dust_spectrum(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
 
 def d_dust_spectrum_d_T_dust(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
-  
   return c_d_dust_spectrum_d_T_dust(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
 
-def d_dust_spectrum_d_beta_dust(nu,T_d=18.0,beta_d=1.8,nu0=143.0):
-  
+def d_dust_spectrum_d_beta_dust(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
   return c_d_dust_spectrum_d_beta_dust(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
 
 def non_thermal_spectrum(nu,alpha_non_thermal=-1.0,nu0=143.0):
-  
   return c_non_thermal_spectrum(<double>nu,<double>alpha_non_thermal,<double>nu0)
 
 def d_non_thermal_spectrum_d_alpha_non_thermal(nu,alpha_non_thermal=-1.0,nu0=143.0):
-  
   return c_d_non_thermal_spectrum_d_alpha_non_thermal(<double>nu,<double>alpha_non_thermal,<double>nu0)
 
 def dBdT(nu,nu0=143.0):
-  
   return c_dBdT(<double>nu,<double>nu0)
-

@@ -43,7 +43,7 @@ cdef extern from "clik_egfs.h":
 cdef class egfs:
   cdef c_egfs* celf
   cdef int ndim,nfr,nell
-  def __init__(self,parnames,pardef,lmin,lmax,freqs,inorm,cib_clustering=None,patchy_ksz=None,homogenous_ksz=None,tsz=None,cib_decor_clust=None,cib_decor_poisson=None):
+  def __init__(self,parnames,pardef,lmin,lmax,freqs,inorm,cib_clustering=None,patchy_ksz=None,homogenous_ksz=None,tsz=None,cib_decor_clust=None,cib_decor_poisson=None,flter=None):
     cdef error *_err,**err
     cdef char *keys[100], *values[100], *keyvars[50]
     cdef double *_cib_clustering,*_patchy_ksz,*_homogenous_ksz,*_tsz,*_cib_decor_poisson,*_cib_decor_clust
@@ -59,8 +59,6 @@ cdef class egfs:
     for i from 0<=i<len(mardef):
       keys[i] = mkeys[i]
       values[i] = mardef[mkeys[i]]
-    for i from 0<=i<len(parnames):
-      keyvars[i] = parnames[i]
       
     self.celf=NULL
     _err = NULL
@@ -93,7 +91,17 @@ cdef class egfs:
       assert cib_decor_poisson_proxy.shape[1]==len(freqs)
       _cib_decor_poisson = <double*> nm.PyArray_DATA(cib_decor_poisson_proxy)
       
-    self.celf = egfs_init(len(parnames),keyvars,len(mardef),keys,values,lmin,lmax,_cib_clustering,_patchy_ksz,_homogenous_ksz,_tsz,_cib_decor_clust,_cib_decor_poisson,err)
+    if flter:
+      farnames = [p for p,v in zip(parnames,flter) if v!=None]
+      self.ids = [i for i,v in enumerate(flter) if v!=None]
+    else:
+      farnames = parnames
+      self.ids = None
+
+    for i from 0<=i<len(farnames):
+      keyvars[i] = farnames[i]
+    
+    self.celf = egfs_init(len(farnames),keyvars,len(mardef),keys,values,lmin,lmax,_cib_clustering,_patchy_ksz,_homogenous_ksz,_tsz,_cib_decor_clust,_cib_decor_poisson,err)
     
     er=doError(err)
     if er:
@@ -109,21 +117,29 @@ cdef class egfs:
     if len(pars)!=self.ndim:
       raise Exception("Bad shape (expecting (%d) got (%d))"%(self.ndim,len(pars)))
     rq = nm.zeros((self.nfr,self.nfr,self.nell),dtype=nm.double)
-    drq = nm.zeros((self.nfr,self.nfr,self.nell,self.ndim),dtype=nm.double)
-    pars_proxy=nm.PyArray_ContiguousFromAny(pars,nm.NPY_DOUBLE,1,1)
+    sars = pars
+    drqa = nm.zeros((self.nfr,self.nfr,self.nell,self.ndim),dtype=nm.double)
+    drq = drqa
+    if self.ids!=None:
+      drqb = nm.zeros((self.nfr,self.nfr,self.nell,len(self.ids)),dtype=nm.double)
+      drq = drqb
+      sars  =nm.array([pars[i] for i in self.ids])
+    pars_proxy=nm.PyArray_ContiguousFromAny(sars,nm.NPY_DOUBLE,1,1)
     _err = NULL
     err = &_err
     egfs_compute(self.celf,  <double*> nm.PyArray_DATA(pars_proxy), <double*> nm.PyArray_DATA(rq),<double*> nm.PyArray_DATA(drq), err);
     er=doError(err)
     if er:
       raise er
-    return rq,drq
+    if self.ids!=None:
+      drqa[:,:,:,self.ids] = drqb
+    return rq,drqa
     
   def __dealloc__(self):
     if self.celf!=NULL:
       egfs_free(<void**>&(self.celf))
     
-def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={}):
+def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={},dnofail=True):
   prs = """
   #-> cib clustering
   alpha_dg_cl     = 3.8
@@ -199,7 +215,11 @@ def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={}):
       if pn not in varpars:
         defs[pn] = str(aps[pn])
   defs.update(defvalues)
-  return defs,varpars,[aps[pn] for pn in varpars]
+  if dnofail:
+    rv = [aps.get(pn,None) for pn in varpars]
+  else:
+    rv = [aps[pn] for pn in varpars]
+  return defs,varpars,rv
   
 def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[],defvalues={}):
   import os.path as osp

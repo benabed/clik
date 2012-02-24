@@ -114,4 +114,30 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
+  import parametric
+
+  # initialize parameters
+  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults)
+  #filter them out
+  npars = [vp for vp in vpars if pm.has_parameter(vp)]
+  agrp = add_component(lkl_grp,name)
+  agrp.attrs["ndim"] = len(vpars)
+  agrp.attrs["keys"] = php.pack256(*npars)
+  
+  agrp.attrs["ndef"] = len(defaults)
+  defkey = defaults.keys()
+  defval = [defaults[k] for k in defkeys]
+  agrp.attrs["defaults"] = php.pack256(*defkey)
+  agrp.attrs["values"] = php.pack256(*defval)
+
+  agrp.attrs["lmin"] = lmin
+  agrp.attrs["lmax"] = lmax
+
+  agrp.attrs["freq"] = [int(d) for d in dets]
+  agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
+  return agrp
+
+  
+
 
