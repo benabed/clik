@@ -58,6 +58,7 @@ cdef extern from "clik_parametric.h":
 cdef class parametric:
   cdef c_parametric* celf
   cdef int nell
+  cdef readonly object varpar
 
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
     cdef int p_detlist[200]
@@ -88,13 +89,30 @@ cdef class parametric:
     if er:
       raise er
     
-    parametric_dnofail(self.celf,int(dnofail))
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
-    self.nell = lmax+1-lmin
+  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail):
+    parametric_dnofail(self.celf,int(dnofail))
+    prs = vars
+    if not dnofail:
+      prs = [p for p in vars if self.has_parameter(p)]
+      if len(prs)!= len(vars):
+        parametric_free(<void**>&(self.celf))
+        self.__init__(detlist,prs,lmin,lmax,defs,False)
+
+    
+    dv = []
+    for p in prs:
+      if self.has_parameter(p):
+        dv += [self.get_default_value(p)]
+      else:
+        dv +=[0]
+
+    self.varpar = dict(zip(prs,dv))
+    self.nell = lmax+1-lmin    
 
   def get_default_value(self,key):
     cdef error *_err,**err
-    
     _err = NULL
     err = &_err
     
@@ -103,6 +121,7 @@ cdef class parametric:
     if er:
       raise er
     return res
+
 
   def has_parameter(self,key):
     try:
@@ -172,8 +191,8 @@ cdef class powerlaw(parametric):
     er=doError(err)
     if er:
       raise er
-    self.nell = lmax+1-lmin
-    parametric_dnofail(self.celf,int(dnofail))
+
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
 cdef class powerlaw_free_emissivity(parametric):
   
@@ -205,8 +224,8 @@ cdef class powerlaw_free_emissivity(parametric):
     er=doError(err)
     if er:
       raise er
-    self.nell = lmax+1-lmin
-    parametric_dnofail(self.celf,int(dnofail))
+
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
 
 cdef class radiogal(parametric):
@@ -239,9 +258,8 @@ cdef class radiogal(parametric):
     er=doError(err)
     if er:
       raise er
-    self.nell = lmax+1-lmin
 
-    parametric_dnofail(self.celf,int(dnofail))
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
 cdef class galametric(parametric):
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
@@ -272,9 +290,8 @@ cdef class galametric(parametric):
     er=doError(err)
     if er:
       raise er
-    self.nell = lmax+1-lmin
 
-    parametric_dnofail(self.celf,int(dnofail))
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
