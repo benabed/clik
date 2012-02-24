@@ -318,8 +318,6 @@ void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, e
   memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*egl->nfreq*egl->nfreq);
 }
 
-// ASTRO PART //
-
 double parametric_get_default(parametric* egl,char *key, error **err) {
   char *res;
   double vres;
@@ -364,6 +362,18 @@ double parametric_get_value(parametric *egl, char *key, error **err) {
   forwardError(*err,__LINE__,);
   return res;
 }
+
+void parametric_declare_mandatory(parametric *egl, char* key, error **err) {
+  int ps;
+
+  ps = pflist_key_index(egl->pf,key,err);
+  forwardError(*err,__LINE__,);
+
+  testErrorRetVA(ps==-1,-1234332,"Mandatory parameter '%s' is absent from the list of variable or default parameters",*err,__LINE__,,key);
+  return;
+}
+
+// ASTRO PART //
 
 // To get from intensity to \delta_T (CMB)
 
@@ -810,11 +820,15 @@ parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** def
   // uK^2 at l=500, nu=143 GHz;
   parametric_set_default(egl,"gal_norm",1,err);
   forwardError(*err,__LINE__,NULL);
+  parametric_declare_mandatory(egl,"gal_norm",err);
+  forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gal_l_pivot",500,err);
   forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gal_index",0,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_declare_mandatory(egl,"gal_index",err);
   forwardError(*err,__LINE__,NULL);
 
   sprintf(type,"dust");
