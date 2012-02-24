@@ -790,7 +790,7 @@ double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
 }
 
 // Derivative of non_thermal_spectrum with respect to alpha
-double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_thermal, double no) {
+double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_thermal, double nu0) {
 
   return (log(nu/nu0)*non_thermal_spectrum(nu,alpha_non_thermal,nu0));
 }

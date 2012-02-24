@@ -1,7 +1,6 @@
    MODULE PARAMETER_MODULE
-    
+      USE IFPORT 
       IMPLICIT NONE
-
       PUBLIC
 
       INTEGER(4)                     ::   IERR
