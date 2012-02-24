@@ -767,7 +767,7 @@ double d_dust_spectrum_d_T_dust(double nu, double T_dust, double beta_dust, doub
   ex0 = exp(x0);
   x = nu * h_over_kT;
   ex = exp(x);
-  res = 1./T_dust * pow(nu/nu0,3.0+beta_dust) * (ex0-1.) * x/((ex - 1.)*(ex - 1.));
+  res = 1./T_dust * pow(nu/nu0,3.0+beta_dust) * (x*ex*(ex0-1.)-x0*ex0*(ex-1.)) / ((ex-1.)*(ex-1));
   res /= dBdT(nu,nu0);
 
   return(res);
