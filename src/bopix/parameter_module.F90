@@ -1,5 +1,7 @@
    MODULE PARAMETER_MODULE
-      USE IFPORT 
+#ifndef GFORTRAN
+      USE IFPORT
+#endif 
       IMPLICIT NONE
       PUBLIC
 
