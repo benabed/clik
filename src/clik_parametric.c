@@ -975,7 +975,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
         }
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
-          v = power(ell/l_pivot,index) * norm;
+          v = pow(ell/l_pivot,index) * norm;
           for (m1=0;m1<nfreq;m1++) {
             for (m2=m1;m2<nfreq;m2++) {
               lA = B[m1*nfreq+m2];
@@ -999,7 +999,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
         }
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
-          v = power(ell/l_pivot,index) * norm;
+          v = pow(ell/l_pivot,index) * norm;
           for (m1=0;m1<nfreq;m1++) {
             for (m2=m1;m2<nfreq;m2++) {
               lA = B[m1*nfreq+m2];
@@ -1023,7 +1023,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
         }
         for (ell=egl->lmin;ell<=egl->lmax;ell++) {
           mell = (ell-egl->lmin)*nfreq*nfreq;
-          v = power(ell/l_pivot,index) * norm;
+          v = pow(ell/l_pivot,index) * norm;
           for (m1=0;m1<nfreq;m1++) {
             for (m2=m1;m2<nfreq;m2++) {
               lA = B[m1*nfreq+m2];
