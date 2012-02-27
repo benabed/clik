@@ -1,6 +1,6 @@
 # prepare a file for calling the wmap full likelihood through clik
 
 res_object = bopix_test.clik
-bopix_data = /Users/benabed/Boulot/En_cours_2/trunk/test_bopix
+bopix_data = /Users/benabed/Desktop/bopix_last
 cl_save = bopix_test.cltest
 external = 1

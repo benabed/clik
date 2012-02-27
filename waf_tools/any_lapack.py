@@ -81,14 +81,14 @@ def installlapack(ctx):
   f=open("build/%s/make.inc"%version,"w")
   print >>f,make_inc_blas%dii
   f.close()
-  cmdline = "cd build/%s; make -j blaslib"%version
+  cmdline = "cd build/%s; make blaslib"%version
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%version)
   Logs.pprint("PINK","build lapack")
   f=open("build/%s/make.inc"%version,"w")
   print >>f,make_inc_lapack%dii
   f.close()
-  cmdline = "cd build/%s; make -j lapacklib"%version
+  cmdline = "cd build/%s; make lapacklib"%version
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%version)
   
