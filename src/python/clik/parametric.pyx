@@ -60,7 +60,7 @@ cdef class parametric:
   cdef int nell
   cdef readonly object varpar,parvalues
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
