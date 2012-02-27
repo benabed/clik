@@ -141,7 +141,7 @@ cdef class egfs:
     if self.celf!=NULL:
       egfs_free(<void**>&(self.celf))
     
-def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={},dnofail=True):
+def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={},dnofail=True,reduce=False):
   prs = """
   #-> cib clustering
   alpha_dg_cl     = 3.8
@@ -217,13 +217,17 @@ def default_models(defmodels=[],varmodels=[],varpars=[],defvalues={},dnofail=Tru
       if pn not in varpars:
         defs[pn] = str(aps[pn])
   defs.update(defvalues)
-  if dnofail:
+  if dnofail or reduce:
     rv = [aps.get(pn,None) for pn in varpars]
   else:
     rv = [aps[pn] for pn in varpars]
+  if reduce:
+    varpars = [pn for pn,pv in zip(varpars,rv) if pv!=None]
+    rv = [pv for pv in rv if pv!=None]
+
   return defs,varpars,rv
   
-def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[],defvalues={}):
+def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[],defvalues={},dnofail=False,reduce=True):
   import os.path as osp
   
   defs = {}
@@ -235,7 +239,7 @@ def init_defaults(datapath,defmodels=[],varmodels=[],varpars=[],defvalues={}):
   defs["rg_flux_cut"]="330"
   defs["norm_rg_flux_cut"]="330"
   
-  oefs,varpars,pv = default_models(defmodels,varmodels,varpars,defvalues)
+  oefs,varpars,pv = default_models(defmodels,varmodels,varpars,defvalues,dnofail,reduce)
   
   defs.update(oefs)
     
