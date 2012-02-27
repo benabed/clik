@@ -43,6 +43,7 @@ cdef extern from "clik_egfs.h":
 cdef class egfs:
   cdef c_egfs* celf
   cdef int ndim,nfr,nell
+  cdef object ids
   def __init__(self,parnames,pardef,lmin,lmax,freqs,inorm,cib_clustering=None,patchy_ksz=None,homogenous_ksz=None,tsz=None,cib_decor_clust=None,cib_decor_poisson=None,flter=None):
     cdef error *_err,**err
     cdef char *keys[100], *values[100], *keyvars[50]
