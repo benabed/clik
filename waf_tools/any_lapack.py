@@ -2,6 +2,10 @@
 import autoinstall_lib as atl
 from waflib import Logs
 import os.path as osp
+from waflib import Logs
+from waflib import  Context
+from waflib import Errors
+import sys
 
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
@@ -11,56 +15,105 @@ def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
   grp = ctx.parser.get_option_group("--lapack_install")
   grp.add_option("--lapack_mkl",action="store",default="",help="if lapack is mkl, location of the mkl install")
+  grp.add_option("--lapack_mkl_version",action="store",default="",help="version of the mkl lib (should be 10.3, 10.2, 10.1 or 10.0)")
+  grp.add_option("--lapack_apple",action="store_true",default=False,help="use apple version of blas/lapack")
+
+def do_include(ctx,ptrn="%s_"):
+  f=open(osp.join(ctx.env.PREFIX,"include/lapack_clik.h"),"w")
+  for fnc in lapack_funcs.split():
+    print >>f,("#define %s "+ptrn)%(fnc,fnc)
+  print >>f,extra_inc
+  f.close()
 
 def configure(ctx):
-  # no veclib !
-  if "vecLib" in ctx.options.lapack_lib or "veclib" in ctx.options.lapack_include:
-    #must be darwin !
-    if ctx.env.has_lapack:
-      raise Exception("Accelerate framework is not supported at this time")
-    else:
-      Logs.pprint("RED","Apple vecLib not supported")
-      return
+  #always assume that I need a dedicated include file.
   
-  lapack_extradefs = ["HAS_LAPACK"]
-  lapack_libs = ["BLAS","LAPACK"]
-  lapack_includes = ["lapack.h","blas.h"]
+  if ctx.options.lapack_apple:
+    ctx.start_msg("Check apple lapack")
+    if sys.platform.lower()!="darwin":
+      ctx.end_msg("not on darwin ! Got '%s'"%sys.platform,color="YELLOW")
+      raise Errors.WafError("cannot find apple lapack")
+    ctx.end_msg("ok")
+    lapack_extradefs = ["HAS_LAPACK"]
+    lapack_libs = ["BLAS","LAPACK"]
+    lapack_includes = ["lapack_clik.h"]
+    lapack_extradefs += ["LAPACK_CLIK"]
+    ctx.options.lapack_include = osp.join(ctx.env.PREFIX,"include")
+    ctx.options.lapack_lib = "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Versions/Current"
+    do_include(ctx,"%s_")
 
-  if "mkl" in ctx.options.lapack_lib.lower() or "mkl" in ctx.options.lapack_include.lower() or "mkl" in ctx.options.lapack_link or ctx.options.lapack_mkl:
-    ctx.env.mkl = True
+  elif ctx.options.lapack_mkl:
+    # parse version
+    ctx.start_msg("Check mkl version")
+    if ctx.options.lapack_mkl_version.strip()[:4] not in ("10.0","10.1","10.2","10.3"):
+      ctx.end_msg(ctx.options.lapack_mkl_version.strip(),color="YELLOW")
+      raise Errors.WafError("Cannot understand mkl version '%s'"%ctx.options.lapack_mkl_version.strip())
+    version = int(ctx.options.lapack_mkl_version.strip()[:4].split(".")[1])
+    ctx.end_msg("10.%d"%version)
+    lapack_extradefs = ["HAS_LAPACK"]
     lapack_extradefs += ["HAS_MKL"]
     lapack_includes = ["mkl_lapack.h","mkl_blas.h"]
-    if ctx.options.lapack_mkl:
-      if ctx.env.has_ifort==False:
-        raise Exception("cannot use MKL without ifort")
-      if "framework" in ctx.options.lapack_mkl.lower():
-        # guess we are on macosx
-        # get the path of the framework
-        if ctx.options.lapack_mkl[-1] == "/":
-          fpath,fname = osp.split(ctx.options.lapack_mkl[:-1])
-        else:
-          fpath,fname = osp.split(ctx.options.lapack_mkl)
-        fname = fname.split(".")[0]
-        ctx.options.lapack_include =  ctx.options.lapack_mkl+"/Headers"
-        ctx.options.lapack_lib =  ctx.options.lapack_mkl+"/Libraries/universal"
-        if ctx.options.lapack_link=="":
-          ctx.options.lapack_link = "-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core"
-      else:
-        # assume it's 10 on linux
-        # check whether it's 10.3
-        if ctx.options.m32:
-          libsuffix="/lib/32"
-          libdep = "-lmkl_intel"
-        else:
-          libsuffix="/lib/em64t"
-          libdep = "-lmkl_intel_lp64"
-        if ctx.options.lapack_link=="":
-          ctx.options.lapack_link = "-lmkl_lapack -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
-        if not ctx.options.m32 and osp.exists(ctx.options.lapack_mkl+"/lib/intel64"):
-          libsuffix="/lib/intel64"
-          ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
-        ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
-        ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix+":".join([""]+ctx.env.LIBPATH_fc_runtime)
+    lapack_libs = []
+    tag = sys.platform.lower()
+    if tag=="darwin":
+      pass
+    elif "linux" in tag:
+      tag="linux"
+    else:
+      raise Errors.WafError("unknown platform '%s'"%tag)
+    tag+="_10.%d"%version
+    mopt = ctx.env.mopt
+    if "64" in mopt:
+      tag+="_64"
+    else:
+      tag +="_32"
+    ctx.options.lapack_link = mkl_options[tag][1]
+    ctx.options.lapack_lib = mkl_options[tag][0]%(ctx.options.lapack_mkl)+":".join([""]+ctx.env.LIBPATH_fc_runtime)
+    if "framework" in ctx.options.lapack_mkl.lower():
+      ctx.options.lapack_include =  ctx.options.lapack_mkl+"/Headers"
+    else:
+      ctx.options.lapack_include =  ctx.options.lapack_mkl+"/include"
+
+
+  #lapack_extradefs = ["HAS_LAPACK"]
+  #lapack_libs = ["BLAS","LAPACK"]
+  #lapack_includes = ["lapack.h","blas.h"]
+
+  #if "mkl" in ctx.options.lapack_lib.lower() or "mkl" in ctx.options.lapack_include.lower() or "mkl" in ctx.options.lapack_link or ctx.options.lapack_mkl:
+  #  ctx.env.mkl = True
+  #  lapack_extradefs += ["HAS_MKL"]
+  #  lapack_includes = ["mkl_lapack.h","mkl_blas.h"]
+  #  if ctx.options.lapack_mkl:
+  #    if ctx.env.has_ifort==False:
+  #      raise Exception("cannot use MKL without ifort")
+  #    if "framework" in ctx.options.lapack_mkl.lower():
+  #      # guess we are on macosx
+  #      # get the path of the framework
+  #      if ctx.options.lapack_mkl[-1] == "/":
+  #        fpath,fname = osp.split(ctx.options.lapack_mkl[:-1])
+  #      else:
+  #        fpath,fname = osp.split(ctx.options.lapack_mkl)
+  #      fname = fname.split(".")[0]
+  #      ctx.options.lapack_include =  ctx.options.lapack_mkl+"/Headers"
+  #      ctx.options.lapack_lib =  ctx.options.lapack_mkl+"/Libraries/universal"
+  #      if ctx.options.lapack_link=="":
+  #        ctx.options.lapack_link = "-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core"
+  #    else:
+  #      # assume it's 10 on linux
+  #      # check whether it's 10.3
+  #      if ctx.options.m32:
+  #        libsuffix="/lib/32"
+  #        libdep = "-lmkl_intel"
+  #      else:
+  #        libsuffix="/lib/em64t"
+  #        libdep = "-lmkl_intel_lp64"
+  #      if ctx.options.lapack_link=="":
+  #        ctx.options.lapack_link = "-lmkl_lapack -lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
+  #      if not ctx.options.m32 and osp.exists(ctx.options.lapack_mkl+"/lib/intel64"):
+  #        libsuffix="/lib/intel64"
+  #        ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
+  #      ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
+  #      ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix+":".join([""]+ctx.env.LIBPATH_fc_runtime)
   iall = atl.shouldIinstall_all(ctx,"lapack")
   if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
     ctx.env.append_value("LIBPATH_lapack",ctx.env.LIBPATH_fc_runtime)
@@ -96,11 +149,7 @@ def installlapack(ctx):
   shutil.copyfile("build/%s/liblapack_clik.%s"%(version,ctx.env.shsuffix), osp.join(ctx.env.LIBDIR,"liblapack_clik.%s"%ctx.env.shsuffix))
   shutil.copyfile("build/%s/libblas_clik.%s"%(version,ctx.env.shsuffix), osp.join(ctx.env.LIBDIR,"libblas_clik.%s"%ctx.env.shsuffix))
 
-  f=open(osp.join(ctx.env.PREFIX,"include/lapack_clik.h"),"w")
-  for fnc in lapack_funcs.split():
-    print >>f,"#define %s %s_"%(fnc,fnc)
-  print >>f,extra_inc
-  f.close()
+  do_include(ctx)
   
 make_inc_lapack="""
 SHELL = /bin/sh
@@ -176,3 +225,18 @@ double ddot(int* N,double *DX, int* INCX,double *DY,int* INCY);
            
          
 """
+
+mkl_options = {
+  "darwin_10.3_64":("%s/lib","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "darwin_10.2_64":("%s/lib/em64t","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm"),
+  "darwin_10.1_64":("%s/lib/em64t","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "darwin_10.0_64":("%s/lib/em64t","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.0_64" :("%s/lib/em64t","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.1_64" :("%s/lib/em64t","-lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.0_32" :("%s/lib/32","-lmkl_intel -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.1_32" :("%s/lib/32","-lmkl_intel -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.2_32" :("%s/lib/32","-lmkl_intel -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.2_64" :("%s/lib/em64t"," -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.3_64" :("%s/lib/intel64"," -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+  "linux_10.3_32" :("%s/lib/ia32"," -lmkl_intel -lmkl_intel_thread -lmkl_core  -liomp5 -lpthread -lm"),
+}
