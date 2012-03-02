@@ -115,6 +115,13 @@ def shouldIinstall_all(ctx,name):
     if vv[1]:
       return False
   return True
+def upgrade(ctx,name):
+  rr = [(vv,getattr(ctx.options,vv,"")) for vv in dir(ctx.options) if name in vv and vv not in (name+"_forceinstall",name+"_install") ]
+  for vv in rr:
+    if vv[1]:
+      return False
+  return getattr(ctx.options,name+"_install",False) or ctx.options.upgrade_all_deps
+
 
 def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[],frameworkpath=[],framework=[],install=False,msg="",uselib=[],flagline="",opt_name="",add_lib_code="c",forceinstall=False):
   if not opt_name:
@@ -123,7 +130,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   #print install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False))
   #print install ,(getattr(ctx.options,opt_name+"_install",False) ,getattr(ctx.options,opt_name+"_forceinstall",False))
   iall =shouldIinstall_all(ctx,name)
-  if install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False) or iall):
+  if install and (upgrade(ctx,name) or getattr(ctx.options,opt_name+"_forceinstall",False) or iall):
     #print "LALALA"
     # first try without install !
     setattr(ctx.env,"has_"+name,True)
@@ -142,6 +149,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
         Logs.pprint("RED","%s not found, try to install it"%name)
       install(ctx)
   # compute paths
+  #print "ici"
   prefix,include,lib,link = opt_to_libpaths(ctx,opt_name)
   
   # libs to test for
@@ -210,7 +218,12 @@ def installsmthg_pre(ctx,where,what,whereto="build/"):
     Logs.pprint("PINK","download from "+where)
     getfromurl(where,osp.join(whereto,what))
     
-  tf = tarfile.open(osp.join(whereto,what))
+  try:
+    tf = tarfile.open(osp.join(whereto,what))
+  except tarfile.ReadError:
+    os.remove(osp.join(whereto,what))
+    installsmthg_pre(ctx,where,what,whereto)
+    return
   #Logs.pprint("RED","LALALALA")
   for ff in [ff.name for ff in tf.getmembers()]:
     if osp.exists(osp.join(whereto,ff)):
@@ -275,7 +288,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
     assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and iall==False
     check_python_module(ctx,name,extracmd)
   except Exception,e: 
-    if getattr(ctx.options,name+"_install",False) or getattr(ctx.options,name+"_forceinstall",False) or iall:
+    if upgrade(ctx,name) or getattr(ctx.options,name+"_forceinstall",False) or iall:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
       atl.installsmthg_pre(ctx,url,packtgz)
       if not osp.exists(ctx.env.PYTHONDIR):

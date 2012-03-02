@@ -6,10 +6,11 @@ from waflib import Logs
 from waflib import  Context
 from waflib import Errors
 import sys
+import waflib
 
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
-lapack_funcs = "dtrsv dpotrf dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot"     
+lapack_funcs = "dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot"     
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
@@ -67,13 +68,39 @@ def configure(ctx):
       tag+="_64"
     else:
       tag +="_32"
-    ctx.options.lapack_link = mkl_options[tag][1]
-    ctx.options.lapack_lib = mkl_options[tag][0]%(ctx.options.lapack_mkl)+":".join([""]+ctx.env.LIBPATH_fc_runtime)
-    if "framework" in ctx.options.lapack_mkl.lower():
-      ctx.options.lapack_include =  ctx.options.lapack_mkl+"/Headers"
-    else:
+
+    if sys.platform.lower()!='darwin':
+      #I need to create my own lapack ! 
+      cmdline = """gcc -shared -Bdynamic  %(func_list)s  -Wl,--start-group %(ars)s  -Wl,--end-group %(Lomp)s %(omp)s -o "%(res)s" """
+      cmdlist = {}
+      cmdlist["func_list"] = " ".join(["-u %s_"%v for v in lapack_funcs.split()])
+      cmdlist["ars"] = " ".join([osp.join(mkl_options[tag][0]%(ctx.options.lapack_mkl),"lib%s.a"%v.strip()) for v in mkl_options[tag][1].split("-l") if v.strip() and v.strip()[:3]=="mkl"])
+      cmdlist["Lomp"] = " ".join("-L%s"%v.strip() for v in ctx.env.LIBPATH_fc_runtime if v.strip())
+      cmdlist["omp"] = " ".join([v.strip() for v in mkl_options[tag][1].split() if v.strip() and "mkl" not in v])
+      cmdlist["res"] = osp.join(ctx.env.LIBDIR,ctx.env.cshlib_PATTERN%"mymkl")
+      cmdline = cmdline%cmdlist
+      #print cmdline
+      ctx.start_msg("create specific mkl lib")
+      llgo,llge = ctx.cmd_and_log(cmdline, output=waflib.Context.BOTH)
+      #print llgo
+      #print llge
+      ctx.end_msg(cmdlist["res"])
+      ctx.options.lapack_link = "-lmymkl "+cmdlist["omp"]
+      ctx.options.lapack_lib = ctx.env.LIBDIR+":".join([""]+ctx.env.LIBPATH_fc_runtime)
       ctx.options.lapack_include =  ctx.options.lapack_mkl+"/include"
 
+    else:
+      ctx.options.lapack_link = mkl_options[tag][1]
+      ctx.options.lapack_lib = mkl_options[tag][0]%(ctx.options.lapack_mkl)+":".join([""]+ctx.env.LIBPATH_fc_runtime)
+      if "framework" in ctx.options.lapack_mkl.lower():
+        ctx.options.lapack_include =  ctx.options.lapack_mkl+"/Headers"
+      else:
+        ctx.options.lapack_include =  ctx.options.lapack_mkl+"/include"
+
+    #try:
+    #  atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)
+    #except Exception,e:
+    #  pass
 
   #lapack_extradefs = ["HAS_LAPACK"]
   #lapack_libs = ["BLAS","LAPACK"]
@@ -115,7 +142,7 @@ def configure(ctx):
   #      ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
   #      ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix+":".join([""]+ctx.env.LIBPATH_fc_runtime)
   iall = atl.shouldIinstall_all(ctx,"lapack")
-  if ctx.options.lapack_install or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
+  if atl.upgrade(ctx,"lapack") or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
     ctx.env.append_value("LIBPATH_lapack",ctx.env.LIBPATH_fc_runtime)
     ctx.env.append_value("RPATH_lapack",ctx.env.RPATH_fc_runtime)
     ctx.env.append_value("LIB_lapack",ctx.env.LIB_fc_runtime)

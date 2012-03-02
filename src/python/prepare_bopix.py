@@ -61,10 +61,12 @@ def main(argv):
   cls = nm.loadtxt(osp.join(data_dir,re.findall("BOPIX_CL_FILENAME\s*=\s*(.+)",partxt)[0]))
   mcl = nm.zeros((3,lmax+1))
   llp1s2pi = nm.arange(2,lmax+1)*nm.arange(3,lmax+2)/2./nm.pi
+  #mcl[0,2:] = cls[:lmax-1,1]/llp1s2pi
+  #mcl[1,2:] = cls[:lmax-1,3]/llp1s2pi
+  #mcl[2,2:] = cls[:lmax-1,2]/llp1s2pi
   mcl[0,2:] = cls[:lmax-1,1]/llp1s2pi
-  mcl[1,2:] = cls[:lmax-1,3]/llp1s2pi
-  mcl[2,2:] = cls[:lmax-1,2]/llp1s2pi
-  
+  mcl[1,2:] = cls[:lmax-1,2]/llp1s2pi
+  mcl[2,2:] = cls[:lmax-1,4]/llp1s2pi
   #print "TT wow",mcl[0,2:6]
   #print "EE wow",mcl[1,2:6]
   #print "TE wow",mcl[2,2:6]

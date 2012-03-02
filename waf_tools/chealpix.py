@@ -8,7 +8,14 @@ import os.path as osp
 def options(ctx):
   atl.add_lib_option("healpix",ctx,install=True)
   
+twice = False
 def configure(ctx):
+  atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="healpix",uselib=["cshlib"],install=install_cfitsio)
+  ctx.env.th = False
+  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cshlib"],install=install_healpix)
+  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fcshlib"],install=install_healpix)
+
+def configure_old(ctx):
   iall = atl.shouldIinstall_all(ctx,"healpix")
   if ctx.options.healpix_install or ctx.options.healpix_forceinstall or iall:
     #print "do install"
@@ -46,28 +53,31 @@ def install_cfitsio(ctx):
     raise Errors.WafError("Cannot build %s"%"cfitsio")
     
 def install_healpix(ctx):
+  if ctx.env.th:
+    return 
   import os
   hpdir = "Healpix_2.20a"
   atl.installsmthg_pre(ctx,"http://sourceforge.net/projects/healpix/files/Healpix_2.20a/Healpix_2.20a_2011Feb09.tar.gz/download","Healpix_2.20a_2011Feb09.tar.gz")
   fpic_c = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
   fpic_f90 = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
   
-  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC,"FFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp+fpic_f90)}
+  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC+" "+" ".join(ctx.env.FCFLAGS+fpic_f90),"FFLAGS":" "}
   # if I am here, I found cfitsio
   # could it be somewhere else ?
-  #cfitsiopath=""
-  #for pth in [ctx.env.LIBDIR,"/usr/local/lib","/usr/lib","/lib"]:
-  #  print pth    
-  #  print osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")
-  #  if osp.exists(osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")):
-  #    cfitsiopath = pth
-  #    break
-  #if not bool(cfitsiopath):
-  #  raise Exception("cannot find cfitsio !")
-  #dii["CFITSIOPATH"]=cfitsiopath
-  #dii["CFITSIOPATHINC"]=osp.realpath(cfitsiopath+"/../include")
-  dii["CFITSIOPATH"]=ctx.env.LIBPATH_cfitsio[0]
-  dii["CFITSIOPATHINC"]=ctx.env.INCLUDES_cfitsio[0]
+  cfitsiopath=""
+
+  for pth in ctx.env.LIBPATH_cfitsio+["/usr/local/lib","/usr/lib","/lib"]+os.environ.get("LD_LIBRARY_PATH","").split(":")+os.environ.get("DYLD_LIBRARY_PATH","").split(":"):
+    #print pth    
+    #print osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")
+    if osp.exists(osp.join(pth,ctx.env.cshlib_PATTERN%"cfitsio")):
+      cfitsiopath = pth
+      break
+  if not bool(cfitsiopath):
+    raise Exception("cannot find cfitsio !")
+  dii["CFITSIOPATH"]=cfitsiopath
+  dii["CFITSIOPATHINC"]=osp.realpath(cfitsiopath+"/../include")
+  #dii["CFITSIOPATH"]=ctx.env.LIBPATH_cfitsio[0]
+  #dii["CFITSIOPATHINC"]=ctx.env.INCLUDES_cfitsio[0]
   #print dii
 
   f=open(osp.join("build",hpdir,"conf_1.cmd"),"w")
@@ -113,7 +123,7 @@ def install_healpix(ctx):
   if re.findall("Something\s+went\s+wrong",rr[0]+rr[1]) :
     raise Errors.WafError("Healpix configure failed. Cannot build healpix")
   
-  cmdline = "cd build/%s; make "%hpdir
+  cmdline = "cd build/%s; make c-all f90-modules "%hpdir
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build healpix. Look in build/config.log to understand why")
     
@@ -124,7 +134,8 @@ def install_healpix(ctx):
   for fi in os.listdir(osp.join("build",hpdir,"include")):
     #print "copy",osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi)
     shutil.copyfile(osp.join("build",hpdir,"include",fi),osp.join(ctx.env.PREFIX,"include",fi))
-    
+  
+  ctx.env.th=True    
 cnf_tmpl_1="""6
 n
 0
@@ -142,7 +153,7 @@ y
 %(FC)s
 
 
--I$(F90_INCDIR) %(FFLAGS)s
+
 
 %(CC)s
 -O %(CFLAGS)s
@@ -150,6 +161,6 @@ y
 
 %(CFITSIOPATH)s
 
-
+0
 0
 """

@@ -37,10 +37,10 @@
       CL1=DBLE(CL)
    CASE (1)
 
-      !WRITE (6,*) 'TT l=2,32,33', BOPIX_CL(0,2), BOPIX_CL(0,32), BOPIX_CL(0,33)
-      !WRITE (6,*) 'EE l=2,32,33', BOPIX_CL(2,2), BOPIX_CL(2,32), BOPIX_CL(2,33)
-      !WRITE (6,*) 'BB l=2,32,33', BOPIX_CL(3,2), BOPIX_CL(3,32), BOPIX_CL(3,33)
-      !WRITE (6,*) 'TE l=2,32,33', BOPIX_CL(1,2), BOPIX_CL(1,32), BOPIX_CL(1,33)
+      WRITE (6,*) 'TT l=2,32,33', BOPIX_CL(0,2), BOPIX_CL(0,32), BOPIX_CL(0,33)
+      WRITE (6,*) 'EE l=2,32,33', BOPIX_CL(2,2), BOPIX_CL(2,32), BOPIX_CL(2,33)
+      WRITE (6,*) 'BB l=2,32,33', BOPIX_CL(3,2), BOPIX_CL(3,32), BOPIX_CL(3,33)
+      WRITE (6,*) 'TE l=2,32,33', BOPIX_CL(1,2), BOPIX_CL(1,32), BOPIX_CL(1,33)
 
       CL1(0:5,0)                   = 0.D0
       CL1(0:5,1)                   = 0.D0
@@ -48,24 +48,20 @@
       CL1(4,:)                     = 0.D0
       CL1(3,2:BOPIX_CL_LMAX)       = DBLE(CL(2:BOPIX_CL_LMAX,2))
       CL1(3,BOPIX_CL_LMAX+1:200)   = DBLE(BOPIX_CL(1,BOPIX_CL_LMAX+1:200))
-!      CL1(3,2:23)                   = DBLE(CL(2:23,2))
-!      CL1(3,24:200)   = DBLE(BOPIX_CL(2,24:200))
 !     BB
-      CL1(2,2:BOPIX_CL_LMAX)       = DBLE(CL(2:BOPIX_CL_LMAX,4))
-      CL1(2,BOPIX_CL_LMAX+1:200)   = DBLE(BOPIX_CL(3,BOPIX_CL_LMAX+1:200))
+!      CL1(2,2:BOPIX_CL_LMAX)       = DBLE(CL(2:BOPIX_CL_LMAX,4))
+!      CL1(2,BOPIX_CL_LMAX+1:200)   = DBLE(BOPIX_CL(3,BOPIX_CL_LMAX+1:200))
 !    no BB 
-!      CL1(2,:)                   = 0.D0
+      CL1(2,:)                   = 0.D0
       CL1(1,2:BOPIX_CL_LMAX)       = DBLE(CL(2:BOPIX_CL_LMAX,3))
       CL1(1,BOPIX_CL_LMAX+1:200)   = DBLE(BOPIX_CL(2,BOPIX_CL_LMAX+1:200))
-!      CL1(1,2:23)                  = DBLE(CL(2:23,3))
-!      CL1(1,24:200)                = DBLE(BOPIX_CL(1,24:200))
       CL1(0,2:BOPIX_CL_LMAX)       = DBLE(CL(2:BOPIX_CL_LMAX,1))
       CL1(0,BOPIX_CL_LMAX+1:200)   = DBLE(BOPIX_CL(0,BOPIX_CL_LMAX+1:200))
 
-      !WRITE (6,*) 'TT l=2,32,33', CL1(0,2), CL1(0,32), CL1(0,33)
-      !WRITE (6,*) 'EE l=2,32,33', CL1(1,2), CL1(1,32), CL1(1,33)
-      !WRITE (6,*) 'BB l=2,32,33', CL1(2,2), CL1(2,32), CL1(2,33)
-      !WRITE (6,*) 'TE l=2,32,33', CL1(3,2), CL1(3,32), CL1(3,33)
+      WRITE (6,*) 'TT l=2,32,33', CL1(0,2), CL1(0,32), CL1(0,33)
+      WRITE (6,*) 'EE l=2,32,33', CL1(1,2), CL1(1,32), CL1(1,33)
+      WRITE (6,*) 'BB l=2,32,33', CL1(2,2), CL1(2,32), CL1(2,33)
+      WRITE (6,*) 'TE l=2,32,33', CL1(3,2), CL1(3,32), CL1(3,33)
 
 
    CASE DEFAULT

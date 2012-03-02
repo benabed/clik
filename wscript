@@ -8,8 +8,9 @@ sys.path+=["waf_tools"]
 import autoinstall_lib as atl
 
 def options(ctx):
-  ctx.add_option('--install_all_deps',action='store_true',default=False,help='Install all dependencies')
-
+  ctx.add_option('--forceinstall_all_deps',action='store_true',default=False,help='Install all dependencies',dest="install_all_deps")
+  ctx.add_option('--install_all_deps',action='store_true',default=False,help='Install all dependencies (if they have not already been installed)',dest="upgrade_all_deps")
+  
   ctx.load("local_install","waf_tools")
   ctx.load("try_icc","waf_tools")
   ctx.load("try_ifort","waf_tools")
@@ -41,10 +42,11 @@ def options(ctx):
   options_cython(ctx)
   
   grp=optparse.OptionGroup(ctx.parser,"Plugins options")
-  grp.add_option("--no_bopix",action="store_true",default=False,help="do not build the python tools")
+  grp.add_option("--no_bopix",action="store_true",default=False,help="do not build bopix")
+  grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
-  grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download wmap likelihood for me")
+  #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
   
   ctx.add_option_group(grp)
   
@@ -126,6 +128,9 @@ def configure(ctx):
   #bopix
   ctx.env.has_bopix = not (ctx.options.no_bopix or not osp.exists("src/bopix"))
 
+  #lowlike
+  ctx.env.has_lowlike =   not (ctx.options.no_lowlike or not osp.exists("src/lowlike"))
+
   #camspec
   ctx.env.has_camspec = osp.exists("src/CAMspec")
 
@@ -133,18 +138,18 @@ def configure(ctx):
   ctx.env.has_egfs = osp.exists("src/egfs")
 
   # wmap
-  if ctx.options.wmap_install or ctx.options.install_all_deps:
+  if ctx.options.wmap_install or ctx.options.install_all_deps or ctx.options.upgrade_all_deps or not ctx.options.wmap_src:
     atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
     ctx.options.wmap_src = "likelihood_v4p1" 
   ctx.env.wmap_src =   ctx.options.wmap_src
   
-  #wmap dh
-  if ctx.options.wmap_dh_install or ctx.options.install_all_deps:
-    for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]:
-      tf = osp.join("src",ctx.env.wmap_src,"DH_"+f)
-      if not osp.exists(tf):
-        atl.getfromurl("http://background.uchicago.edu/wmap_fast/"+f,tf)
-  #print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
+  ##wmap dh
+  #if ctx.options.wmap_dh_install or ctx.options.install_all_deps:
+  #  for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]:
+  #    tf = osp.join("src",ctx.env.wmap_src,"DH_"+f)
+  #    if not osp.exists(tf):
+  #      atl.getfromurl("http://background.uchicago.edu/wmap_fast/"+f,tf)
+  ##print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
 
   if not ctx.options.no_pytools:
     try:
@@ -229,7 +234,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/* src/CAMspec/* src/minipmc/* src/bopix/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat clik.pdf" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/* src/CAMspec/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat clik.pdf" )
   
 import waflib
 class Dist_public(waflib.Scripting.Dist):

@@ -6,6 +6,8 @@ def build(bld):
   source_clik = 'aplowly.c erfinv.c fowly.c clik.c lklbs.c lowly.c lowly_common.c lowly_pol.c smica.c clik_helper.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c'.split()
   source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
+  source_clik += ['clik_lowlike.c']*(bool(bld.env.has_lowlike))
+  
   #source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c mvdens.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['clik_egfs.c','clik_egfs_addon.c'] * bool(bld.env.has_f90 and bld.env.has_egfs)
@@ -16,8 +18,10 @@ def build(bld):
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]
   uselib_bopix = []
   uselib_wmap = []
+  uselib_lowlike = []
   use_clik = []
   use_clik += ["mybopix"]* bool(bld.env.has_bopix)
+  use_clik += ["mylowlike"]* bool(bld.env.has_lowlike)
   use_clik += ["mywmap"]*bool(bld.env.wmap_src)
   use_clik += ["myegfs"]*bool(bld.env.has_f90 and bld.env.has_egfs)
   use_clik += ["CAMspec"]*bool(bld.env.has_camspec)
@@ -56,11 +60,13 @@ def build(bld):
   if bld.env.has_f90:  
     
     if bld.env.has_egfs:
-      bld(
-        features = 'fc cshlib fcshlib',
+      bld.objects(
+        features = 'fc',
         source = ["egfs/"+vv for vv in ['clik_egfs.f90','egfs.f90','keysvalues.f90']], 
         target = 'myegfs',
         uselib = 'fc_runtime',
+        fcflags = bld.env.FCFLAGS_fcshlib,
+        cflags = bld.env.CFLAGS_cshlib,
         )
     if bld.env.has_camspec:
       bld(
@@ -76,27 +82,53 @@ def build(bld):
         target = 'mybopix',
         uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
         )
-      uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join('bopix','sest.f90'),
-        use = 'mybopix',
-        target = 'test_bopix')
       
+      
+      
+      uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+    
+    if bld.env.has_lowlike or bld.env.wmap_src:
+      if bld.env.wmap_scr:
+        oo_source = [osp.join(bld.env.wmap_src,vv) for vv in "read_archive_map.f90 read_fits.f90  br_mod_dist.f90".split()]
+      else:
+        oo_source = [osp.join("lowlike",vv) for vv in 'read_archive_map.f90 read_fits.f90  br_mod_dist.f90'.split()]
+      bld.objects(
+        features = 'fc',
+        fcflags = '-fPIC',
+        source = oo_source,
+        target = 'wmap_c_obj')
+
+    if bld.env.has_lowlike:
+      lowlike_source  = ['clik_lowlike.f90'] + [osp.join("lowlike",vv) for vv in 'Planck_options.F90  Planck_gibbs.F90  Planck_teeebb_pixlike.F90  Planck_likelihood.F90'.split()]
+      bld(
+        features = 'fc cshlib fcshlib',
+        source = lowlike_source,
+        target = 'mylowlike',
+        use = 'wmap_c_obj',
+        uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        )
+      uselib_lowlike = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join("lowlike",'test.F90'),
+      #  use = 'mylowlike',
+      #  target = 'test_lowlike')
+
     if bld.env.wmap_src:
-      wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'read_archive_map.f90 read_fits.f90 br_mod_dist.f90 WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
+      wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
       bld(
          features = 'fc cshlib fcshlib',
          source = wmap_src,
+         use = 'wmap_c_obj ',
          target = 'mywmap',
-         uselib = 'healpix_f90 lapack fc_omp fc_runtime',
+         uselib = 'lapack healpix_f90  fc_omp fc_runtime',
          )
       uselib_wmap = [ff for ff in ('healpix_f90 lapack fc_omp fc_runtime').split() if ff]
-      #bld(
-      #  features = 'fc fcprogram',
-      #  source = osp.join(bld.env.wmap_src,'test.F90'),
-      #  use = 'mywmap',
-      #  target = 'test_wmap')
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join(bld.env.wmap_src,'test.F90'),
+        use = 'mywmap',
+        target = 'test_wmap')
 
   
     bld(

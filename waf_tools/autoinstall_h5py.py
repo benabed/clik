@@ -10,7 +10,7 @@ def configure(ctx):
   import sys
   sys.path+=[ctx.env.PYTHONDIR]
   
-  if ctx.options.h5py_install:
+  if ctx.options.h5py_install or ctx.options.upgrade_all_deps or ctx.options.install_all_deps:
     try:
       import h5py
       raise Exception()
