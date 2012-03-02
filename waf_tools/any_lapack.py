@@ -77,7 +77,7 @@ def configure(ctx):
       cmdlist["ars"] = " ".join([osp.join(mkl_options[tag][0]%(ctx.options.lapack_mkl),"lib%s.a"%v.strip()) for v in mkl_options[tag][1].split("-l") if v.strip() and v.strip()[:3]=="mkl"])
       cmdlist["Lomp"] = " ".join("-L%s"%v.strip() for v in ctx.env.LIBPATH_fc_runtime if v.strip())
       cmdlist["omp"] = " ".join([v.strip() for v in mkl_options[tag][1].split() if v.strip() and "mkl" not in v])
-      cmdlist["res"] = osp.join(ctx.env.LIBDIR,ctx.env.cshlib_PATTERN%"mymkl")
+      cmdlist["res"] = osp.join(ctx.env.LIBDIR,ctx.env.cshlib_PATTERN%"clik_mkl")
       cmdline = cmdline%cmdlist
       #print cmdline
       ctx.start_msg("create specific mkl lib")
@@ -85,7 +85,7 @@ def configure(ctx):
       #print llgo
       #print llge
       ctx.end_msg(cmdlist["res"])
-      ctx.options.lapack_link = "-lmymkl "+cmdlist["omp"]
+      ctx.options.lapack_link = "-lclik_mkl "+cmdlist["omp"]
       ctx.options.lapack_lib = ctx.env.LIBDIR+":".join([""]+ctx.env.LIBPATH_fc_runtime)
       ctx.options.lapack_include =  ctx.options.lapack_mkl+"/include"
 

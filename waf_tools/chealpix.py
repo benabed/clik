@@ -61,7 +61,7 @@ def install_healpix(ctx):
   fpic_c = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
   fpic_f90 = [vv for vv in ctx.env.CFLAGS_cshlib if "-fpic" in vv.lower()]
   
-  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC+" "+" ".join(ctx.env.FCFLAGS+fpic_f90),"FFLAGS":" "}
+  dii={"CC":ctx.env.CC[0],"CFLAGS":" ".join(ctx.env.CCFLAGS+fpic_c+[" -DDONT_USE_PSHT"]),"LIBDIR":ctx.env.LIBDIR,"INCDIR":ctx.env.PREFIX+"/include","FC":ctx.env.FC+" "+" ".join(ctx.env.FCFLAGS+fpic_f90+[" -DDONT_USE_PSHT"]),"FFLAGS":" "}
   # if I am here, I found cfitsio
   # could it be somewhere else ?
   cfitsiopath=""

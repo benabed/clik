@@ -1,6 +1,7 @@
 import waflib.TaskGen
 import waflib.Task as Task
 from waflib import Utils
+import waflib
 
 @waflib.TaskGen.feature("*")
 @waflib.TaskGen.before_method('process_source')
@@ -61,9 +62,26 @@ print "%s"
 """
 def createconfig(*confline):
   def doconf(task):
+    print task
+    print type(task)
+    print task.env
+    print task.use
     tgt = task.outputs[0].abspath() 
+    res = " ".join(confline)
+    ev = waflib.ConfigSet.ConfigSet()
+    task.parse_flag(res,ev)
     f=open(tgt,"w")
     print >>f,conftemplate%" ".join(confline),
     f.close()  
   return doconf
 
+@waflib.TaskGen.feature("build_pkgconfig")
+def build_pkgconfig(self):
+  from waflib.Tools.ccroot import USELIB_VARS
+  USELIB_VARS['build_pkgconfig'] = USELIB_VARS['cprogram'].copy()
+  USELIB_VARS['build_pkgconfig'].update(USELIB_VARS['c'])
+  #USELIB_VARS['cprogram']
+  self.process_use()
+  self.propagate_uselib_vars()
+  print dict([(v,list(set(self.env[v]))) for v in USELIB_VARS['build_pkgconfig']])
+  print self.target
