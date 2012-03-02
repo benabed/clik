@@ -97,6 +97,7 @@ def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",l
   #conf.check_fortran(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
   for fnc in funcname:
     #self.check_cc(fragment=FC_FRAGMENT,compile_filename='test.f',features='fc fcprogram',msg='Compiling a simple fortran app')
+    #print " ".join([libname]+uselib)
     conf.check_cc(
       errmsg="failed (check whether lib is compiled in 32 or 64bits)",msg='checking for module %s'%fnc,
       uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework, fragment = "program test\n  use %s\n end program test\n"%fnc,compile_filename='test.f90',features='fc fcprogram')
@@ -294,7 +295,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
       if not osp.exists(ctx.env.PYTHONDIR):
         os.makedirs(ctx.env.PYTHONDIR)
       if cmdline==None:
-        cmdline =  "cd build/%s; PYTHONPATH=%s %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
+        cmdline =  "cd build/%s; PYTHONPATH=%s %s setup.py build_ext -L=%s ;PYTHONPATH=%s %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
       waflib.Logs.pprint("PINK",cmdline)
       ret = ctx.exec_command(cmdline)
       if ret!=0:

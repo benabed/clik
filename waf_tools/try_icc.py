@@ -77,7 +77,6 @@ def do_gcc(ctx):
     mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
   ctx.env["CCFLAGS_cc_omp"]=[]
   ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
-  
 
 def configure_iccfirst(ctx):
   import Options
@@ -112,5 +111,10 @@ def configure_gccfirst(ctx):
       Logs.pprint("PINK", "gcc not found, defaulting to icc (cause : %s)"%e)
 
   do_icc(ctx)
+
+def configure(ctx):
+  configure_gccfirst(ctx)
+  ctx.env.append_value("CFLAGS_cshlib",ctx.env.LINKFLAGS_cshlib)  
+  ctx.env["CFLAGS_cpic"]=[]
+  ctx.env.append_value("CFLAGS_cpic",[flg for flg in ctx.env.CFLAGS_cshlib if "-fpic" in flg.lower()])
   
-configure = configure_gccfirst

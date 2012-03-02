@@ -16,11 +16,12 @@ def options(ctx):
   grp.add_option("--fortran_flagline",action="store",default="",help="flagline to link fortran object to c using ld")
   ctx.add_option_group(grp)  
   
-def configure(ctx):
+def configure_(ctx):
   if ctx.options.fortran_flagline:
     conf.parse_flags(ctx.options.fortran_flagline,uselib="fc_runtime")
   if sys.platform.lower()=="darwin":
     ctx.env.fcshlib_PATTERN = 'lib%s.dylib'
+  
   
   ctx.env.has_ifort = False
   if not Options.options.gfortran:
@@ -32,8 +33,13 @@ def configure(ctx):
         raise
       Logs.pprint("PINK", "ifort not found, defaulting to gfortran (cause: '%s')"%e)
   gfortran_conf(ctx)
-  
 
+def configure(ctx): 
+  configure_(ctx) 
+  ctx.env.append_value("FCFLAGS_fcshlib",ctx.env.LINKFLAGS_fcshlib)  
+  ctx.env["FCFLAGS_fpic"]=[]
+  ctx.env.append_value("FCFLAGS_fpic",[flg for flg in ctx.env.FCFLAGS_fcshlib if "-fpic" in flg.lower()])
+  
 def show_linkline(ctx):
   ctx.start_msg("fortran link line")
   ctx.end_msg(" ".join(["-L%s"%vv for vv in ctx.env.LIBPATH_fc_runtime])+" "+" ".join(["-l%s"%vv for vv in ctx.env.LIB_fc_runtime]))

@@ -65,22 +65,26 @@ def build(bld):
         source = ["egfs/"+vv for vv in ['clik_egfs.f90','egfs.f90','keysvalues.f90']], 
         target = 'myegfs',
         uselib = 'fc_runtime',
-        fcflags = bld.env.FCFLAGS_fcshlib,
-        cflags = bld.env.CFLAGS_cshlib,
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
         )
     if bld.env.has_camspec:
-      bld(
-        features = 'fc cshlib fcshlib',
+      bld.objects(
+        features = 'fc',
         source = ["CAMspec/"+vv for vv in ['CAMspec.f90','clik_CAMspec.f90']], 
         target = 'CAMspec',
         uselib = 'fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
         )
     if bld.env.has_bopix:
-      bld(
-        features = 'fc cshlib fcshlib',
+      bld.objects(
+        features = 'fc',
         source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
         target = 'mybopix',
         uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
         )
       
       
@@ -94,18 +98,21 @@ def build(bld):
         oo_source = [osp.join("lowlike",vv) for vv in 'read_archive_map.f90 read_fits.f90  br_mod_dist.f90'.split()]
       bld.objects(
         features = 'fc',
-        fcflags = '-fPIC',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
         source = oo_source,
         target = 'wmap_c_obj')
 
     if bld.env.has_lowlike:
       lowlike_source  = ['clik_lowlike.f90'] + [osp.join("lowlike",vv) for vv in 'Planck_options.F90  Planck_gibbs.F90  Planck_teeebb_pixlike.F90  Planck_likelihood.F90'.split()]
-      bld(
-        features = 'fc cshlib fcshlib',
+      bld.objects(
+        features = 'fc',
         source = lowlike_source,
         target = 'mylowlike',
         use = 'wmap_c_obj',
         uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
         )
       uselib_lowlike = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
       #bld(
@@ -116,19 +123,21 @@ def build(bld):
 
     if bld.env.wmap_src:
       wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
-      bld(
-         features = 'fc cshlib fcshlib',
+      bld.objects(
+         features = 'fc',
          source = wmap_src,
          use = 'wmap_c_obj ',
          target = 'mywmap',
          uselib = 'lapack healpix_f90  fc_omp fc_runtime',
+          fcflags = bld.env.FCFLAGS_fpic,
+          cflags = bld.env.CFLAGS_cpic,
          )
       uselib_wmap = [ff for ff in ('healpix_f90 lapack fc_omp fc_runtime').split() if ff]
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join(bld.env.wmap_src,'test.F90'),
-        use = 'mywmap',
-        target = 'test_wmap')
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join(bld.env.wmap_src,'test.F90'),
+      #  use = 'mywmap',
+      #  target = 'test_wmap')
 
   
     bld(
