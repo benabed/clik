@@ -27,7 +27,7 @@ def configure(ctx):
       mopt = "-m32"
       
   ctx.env.mopt=mopt
-  ctx.env.append_value('CCFLAGS',mopt.split())
-  ctx.env.append_value('LINKFLAGS',mopt.split())
+  ctx.env.append_value('CCFLAGS',mopt)
+  ctx.env.append_value('LINKFLAGS',mopt)
   ctx.start_msg("Setting architecture flag to") 
   ctx.end_msg(mopt)

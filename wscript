@@ -87,13 +87,16 @@ def configure(ctx):
       _remove_arch(ctx,"CFLAGS_PYEXT")
       _remove_arch(ctx,"LINKFLAGS_PYEXT")
       from distutils.sysconfig import get_config_var
-      
+      for v in ctx.env["DEFINES"]:
+        if "PYTHON" in v:
+          ctx.undefine(v)
     except Exception,e:
       #ctx.options.no_pytools = True
       Logs.pprint("BLUE","No suitable python distribution found")
       Logs.pprint("BLUE","Cause : '%s'"%e)
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
       allgood = False
+
   # dl
   ctx.check_cc(lib="dl",mandatory=1,uselib_store="dl")
   ctx.check_cc(lib="dl",mandatory=0,defines=["HAS_RTLD_DEFAULT"],fragment="#include <dlfcn.h> \nint main() {void* tt = RTLD_DEFAULT;}",msg="checking for RTLD_DEFAULT in dl",uselib_store="dl")

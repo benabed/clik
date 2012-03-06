@@ -67,6 +67,7 @@ def add_lib(conf,prefix,include,libpath,libname, funcname="",headername="",libs 
     conf.check_cc(
       errmsg="failed (check whether lib is compiled in 32 or 64bits)",
       function_name=fnc,header_name=headername,uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework)
+    conf.undefine("HAVE_"+fnc.upper())
 
 def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",libs = [], uselib=[],defines=[],frameworkpath=[],framework=[],flagline=""):
   #print conf,prefix,include,libpath,libname, funcname,headername,libs , uselib,defines
@@ -101,6 +102,8 @@ def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",l
     conf.check_cc(
       errmsg="failed (check whether lib is compiled in 32 or 64bits)",msg='checking for module %s'%fnc,
       uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework, fragment = "program test\n  use %s\n end program test\n"%fnc,compile_filename='test.f90',features='fc fcprogram')
+    conf.undefine("HAVE_"+fnc.upper())
+
 
 
 

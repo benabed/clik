@@ -1,4 +1,3 @@
-#! $PYTHONEXE
 import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
@@ -15,6 +14,7 @@ def exists(partxt,data_dir,ENTRY,nofail=False):
   rr = re.findall(ENTRY+"\s*=\s*(.+)",partxt)
   if rr:
     ent = rr[0]
+    #print rr
     return osp.exists(osp.join(data_dir,ent))
   assert bool(rr) or nofail
   
@@ -22,10 +22,14 @@ def main(argv):
   pars = clik.miniparse(argv[1])
 
   bopix_dir = osp.realpath(pars.bopix_data)
-  partxt=open(osp.join(bopix_dir,"input_file.txt")).read()
-
+  fpartxt=open(osp.join(bopix_dir,"input_file.txt"))
+  partxt = "\n".join([l.split("#")[0].strip() for l in fpartxt if l.split("#")[0
+].strip()])
+  #print partxt
+  
   # get data directory
-  data_dir = osp.join(bopix_dir,re.findall("BOPIX_DATA_DIR\s*=\s*(.+)",partxt)[0])
+  data_dir = osp.join(bopix_dir,re.findall("BOPIX_DATA_DIR\s*=\s*(.+)",partxt)[0
+])
   assert osp.exists(data_dir)
   
   for fi in ["BOPIX_CL_FILENAME","COV_FILE","WINDOW_FILE"]:
