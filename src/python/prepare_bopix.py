@@ -1,3 +1,4 @@
+#! $PYTHONEXE
 import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
