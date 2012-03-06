@@ -1,14 +1,14 @@
 Playing around with likelihood files
 ====================================
 
-Here is a list of utils to manipulate the likelihood files.
+Here is a list of utilities to manipulate the likelihood files.
 
 Printing info about a file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. program:: clik_print
 
-the tool  :program:`clik_print` displays some information on the content of a likelihood files. The range of modes for each power spectrum, the list of extra parameters, and for each component of the full likelihood, the same info.
+The tool  :program:`clik_print` displays some information on the content of a likelihood files. The range of modes for each power spectrum, the list of extra parameters, and for each component of the full likelihood, the same info.
 
 *Usage:*
 

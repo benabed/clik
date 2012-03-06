@@ -49,9 +49,9 @@
             
   <div class="section" id="installing">
 <h1>Installing<a class="headerlink" href="#installing" title="Permalink to this headline">¶</a></h1>
-<p>The library has a lot of external dependencies.</p>
+<p>The library has many external dependencies. We are striving at reducing the number of dependency, but many of them will remain given the current set of likelihood codes we are including.</p>
 <p>Only a few packages or tools must be installed before installing clik. All the other can be downloaded and installed automatically by the clik installer.</p>
-<p>Furthermore some of the dependency can be absent, and will only reduce the number of extra functionnalities provided by clik (like merging likelihood, or simulating them).</p>
+<p>Furthermore some of the dependency can be absent, and will only reduce the number of extra functionalities provided by clik (like merging likelihood, or simulating them).</p>
 <div class="section" id="requisites">
 <h2>Requisites<a class="headerlink" href="#requisites" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="mandatory-requisites-that-cannot-be-installed-automatically">
@@ -82,22 +82,22 @@ Having a full python installation (i.e. including the library and header, often 
 <p>This will test for the presence of all the required dependencies (as described above). Command line options are available to help the configuration by setting the location of some of those dependency, and or chose between different compiler options. An option can also be used to cause waf to try to download, compile and install for the user the required dependencies that are not found by the automatic discovery system. For a complete list of options do:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --help</pre>
 </div>
-<p>After this (possibly lenghty) configuration step, clik per-se can be compiled and installed with:</p>
+<p>After this (possibly lengthy) configuration step, clik per-se can be compiled and installed with:</p>
 <div class="highlight-python"><pre>$&gt; ./waf install</pre>
 </div>
 <div class="section" id="simplest-case">
 <h3>Simplest case<a class="headerlink" href="#simplest-case" title="Permalink to this headline">¶</a></h3>
-<p>In the simpliest case, we will assume that ou want all the depencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be:</p>
+<p>In the simplest case, we will assume that you want all the dependencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps</pre>
 </div>
 <p>followed by:</p>
 <div class="highlight-python"><pre>$&gt; ./waf install</pre>
 </div>
-<p>Note that the option <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> is more powerfull than simply installing all the dependency, this will be described in a latter section.</p>
+<p>Note that the option <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> is more powerful than simply installing all the dependency, this will be described in a latter section.</p>
 </div>
 <div class="section" id="simplest-case-with-mkl">
 <h3>Simplest case with mkl<a class="headerlink" href="#simplest-case-with-mkl" title="Permalink to this headline">¶</a></h3>
-<p>Using the automatically installed lapack library result in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into:</p>
+<p>Using the automatically installed lapack library results in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps \
       --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION</pre>
 </div>
@@ -168,12 +168,12 @@ To bypass the fortran compiler detection, set the <tt class="docutils literal"><
 </div>
 <div class="section" id="more-on-the-automatic-installation-of-dependencies">
 <h3>More on the automatic installation of dependencies<a class="headerlink" href="#more-on-the-automatic-installation-of-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>There are three level of automatic installation. If one want to ALWAYS install the dependencies, one can use the <tt class="docutils literal"><span class="pre">--force_install_all_deps</span></tt>:</p>
+<p>There are three levels of automatic installation. If one wants to <em>always</em> install the dependencies, one can use the <tt class="docutils literal"><span class="pre">--force_install_all_deps</span></tt>:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --forceinstall_all_deps</pre>
 </div>
-<p>If one want to install only the dependency that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.</p>
-<p>Finally, each dependency can be installed on a dependency by dependency basis, using the <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> or <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> options where <tt class="docutils literal"><span class="pre">XXX</span></tt> is the name of the dependency. The former install all the time the dependency, the latter install it only if it is bot found in the usual locations. In that sence, <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> works as if all possible <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> options has been set, and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> as if all <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> has been set.</p>
-<p>One should also note that <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> are also unactivated on a dependency by dependency basis if any of the <tt class="docutils literal"><span class="pre">--XXX_prefix</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_lib</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_include</span></tt>, or other dependeny specific options are present. In that case, the the <tt class="docutils literal"><span class="pre">XXX</span></tt> dependency, the configuration script will lok in the locations described by those option and if the package is not found will report an error.</p>
+<p>If one wants to install only the dependencies that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.</p>
+<p>Finally, each dependency can be installed on a dependency by dependency basis, using the <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> or <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> options where <tt class="docutils literal"><span class="pre">XXX</span></tt> is the name of the dependency. The former install all the time the dependency, the latter install it only if it is not found in the usual locations. In that sense, <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> works as if all possible <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> options has been set, and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> as if all <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> options have been set.</p>
+<p>One should also note that <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> are also unactivated on a dependency by dependency basis if any of the <tt class="docutils literal"><span class="pre">--XXX_prefix</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_lib</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_include</span></tt>, or other dependency specific options are present. In that case, the the <tt class="docutils literal"><span class="pre">XXX</span></tt> dependency, the configuration script will look in the locations described by those option and if the package is not found will report an error.</p>
 </div>
 <div class="section" id="setting-the-location-of-a-library">
 <h3>Setting the location of a library<a class="headerlink" href="#setting-the-location-of-a-library" title="Permalink to this headline">¶</a></h3>
@@ -201,7 +201,7 @@ Setting this option will cancel the <tt class="docutils literal"><span class="pr
 </div>
 <div class="section" id="special-case-healpix">
 <h3>Special case: Healpix<a class="headerlink" href="#special-case-healpix" title="Permalink to this headline">¶</a></h3>
-<p>Clik requires a specialy build healpix library. Namely, it insist on using a repositionnable (or better shared) version of the healpix library.
+<p>Clik requires a specialy build healpix library. Namely, it insists on using a repositionnable (or better shared) version of the healpix library.
 This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
 of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system,
 using the option <tt class="docutils literal"><span class="pre">--healpix_install</span></tt> is very strongly recommanded.</p>

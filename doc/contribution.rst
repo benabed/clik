@@ -10,7 +10,7 @@ Here follow a list of authors to the different pieces of code included in clik.
 
 **Smica/plik likelihood**
 	
-	\K. Benabed, J.F. Cardoso, E. Hivon, M. Lejeune, S. Prunet
+	\K. Benabed, F. Bouchet, J.F. Cardoso, E. Hivon, M. Lejeune, , F. Orieux, S. Prunet, F.F. Sygnet
 
 
 **BOPIX likelihood**

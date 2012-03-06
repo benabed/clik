@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="clik v2.0 documentation" href="index.html" />
     <link rel="next" title="Installing" href="installing.html" />
-    <link rel="prev" title="clik documentation!" href="index.html" /> 
+    <link rel="prev" title="Authors" href="contribution.html" /> 
   </head>
   <body>
     <div class="related">
@@ -36,7 +36,7 @@
           <a href="installing.html" title="Installing"
              accesskey="N">next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="clik documentation!"
+          <a href="contribution.html" title="Authors"
              accesskey="P">previous</a> |</li>
         <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
       </ul>
@@ -53,18 +53,20 @@
 <p>That being said, here are a few key ideas on the library.</p>
 <div class="section" id="a-likelihood-is-entirely-defined-by-a-likelihood-file">
 <h2>A likelihood is entirely defined by a likelihood file.<a class="headerlink" href="#a-likelihood-is-entirely-defined-by-a-likelihood-file" title="Permalink to this headline">¶</a></h2>
-<p>Aong with the code, likelihood files will be distributed. They contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood (maps, cl, whatnot),but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood.</p>
-<p>As an exception to this rule, are the WMAP and BOPIX likelihood that rely on external data. This data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory. The latter case improve the efficiency of the initialization of clik when using this knd of likelihood files.</p>
+<p>Along with the code, likelihood files will be distributed. They contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood (maps, cl, whatnot),but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood.</p>
+<p>This means that a likelihood file containing the some of different likelihood approximation will have to contain the data for each of those approximation. This will translate into possibly huge file. And variations of those likelihoods will contains yet more copy of this huge data.
+To solve partially this problem, it is possible for the likelihoods that need a lot of data to optionally refer to external files. This will be the case in particular for the WMAP7, PLow and lowlike likelihoods.
+In those cases, the data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory. The latter case improve the efficiency of the initialization of clik when using this kind of likelihood files.</p>
 <p>In order to use the library, the first step is thus to initialize it with such a file. Functions or subroutine to perform this initialization are available in each language. Another function is provided to cleanup the memory at the end of the use of a given likelihood. Several likelihoods can be initialized within the same session, allowing to perform comparison between different likelihood approximation whithin the same run.</p>
 </div>
 <div class="section" id="the-library-computes-an-approximation-of-the-log-likelihood">
 <h2>The library computes an approximation of the log likelihood<a class="headerlink" href="#the-library-computes-an-approximation-of-the-log-likelihood" title="Permalink to this headline">¶</a></h2>
 <p>Nothing to add here. The library does not compute minus the log likelihood or a chi2 like thingy. Just the log likelihood.
-A function is provided in each language to compute the log likelihood, give a set of parameters.</p>
+A function is provided in each language to compute the log likelihood, given a set of parameters.</p>
 </div>
 <div class="section" id="the-input-of-the-compute-function-are-multipoles-of-the-power-spectra-and-nuisance-parameters">
 <span id="querying"></span><h2>The input of the compute function are multipoles of the power spectra and nuisance parameters.<a class="headerlink" href="#the-input-of-the-compute-function-are-multipoles-of-the-power-spectra-and-nuisance-parameters" title="Permalink to this headline">¶</a></h2>
-<p>The compute function expect one single vector of double. This vector must contains power spectra one after the other, starting al l=0, in microK^2, and then the nuisance parameters.
+<p>The <tt class="docutils literal"><span class="pre">compute</span></tt> function expect one single vector of double. This vector must contains power spectra one after the other, starting al l=0, in microK^2, and then the nuisance parameters.
 Since the likelihood is defined by the likelihood file the exact range of power spectra needed by this function can vary from likelihood approximation to likelihood approximations. The same holds for the nuisance parameters.
 Functions are provided to query a likelihood file and obtain this info. More precisely, three such function are available.</p>
 <blockquote>
@@ -81,7 +83,7 @@ Functions are provided to query a likelihood file and obtain this info. More pre
 <p>Did I said that the function computes the log likelihood ?</p>
 <p>You correctly read that the Cls must be given in that order TT, EE, BB, TE, TB, EB. And, yes, the library expects C0 and C1 for each power spectra. Put them to zero if you want, but provide something.</p>
 <p>Definitly, the library expect power spectra and not l(l+1)Cl/2pi or other combination.</p>
-<p>The library really wants power spectra in microK^2</p>
+<p>The library really wants power spectra in microK^2.</p>
 </div>
 </div>
 
@@ -103,8 +105,8 @@ Functions are provided to query a likelihood file and obtain this info. More pre
 </ul>
 
   <h4>Previous topic</h4>
-  <p class="topless"><a href="index.html"
-                        title="previous chapter">clik documentation!</a></p>
+  <p class="topless"><a href="contribution.html"
+                        title="previous chapter">Authors</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="installing.html"
                         title="next chapter">Installing</a></p>
@@ -140,7 +142,7 @@ Functions are provided to query a likelihood file and obtain this info. More pre
           <a href="installing.html" title="Installing"
              >next</a> |</li>
         <li class="right" >
-          <a href="index.html" title="clik documentation!"
+          <a href="contribution.html" title="Authors"
              >previous</a> |</li>
         <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
       </ul>

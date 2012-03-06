@@ -36,7 +36,7 @@ Querying the likelihood object
 
 .. c:function:: void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **err);
 
-  This function fills the array ``has_cl`` with flags describing which power spectra are needed by the likelihood compute function (see :ref:`querying`). The first argument of the function must be the return value from a previous call to :c:func:`clik_init`. The last argument allow to track errors. It can be left to ``NULL``, in which case no error tracking is perfomred and the program exit with an explaining message in case of an error.
+  This function fills the array ``has_cl`` with flags describing which power spectra are needed by the likelihood compute function (see :ref:`querying`). The first argument of the function must be the return value from a previous call to :c:func:`clik_init`. The last argument allows error tracking. It can be left to ``NULL``, in which case no error tracking is performed and the program exit with an explaining message in case of an error.
 
 
 .. c:function:: void clik_get_lmax(clik_object *clikid, int lmax[6],error **err);

@@ -10,7 +10,9 @@ New low l likelihood lowlike.
 
 Better support of lapack mkl. It will now work on more infrastructure. Add of Apple lapack support. 
 
-Simplified (again) configuration procedure. Better (more streamlined) config lines.
+Simplified (again) configuration procedure. Clik is now easier to upgrade.
+
+Better (more streamlined) config lines.
 
 
 Release 1.6

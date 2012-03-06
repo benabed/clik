@@ -1,11 +1,11 @@
 Installing
 ==========
 
-The library has a lot of external dependencies. 
+The library has many external dependencies. We are striving at reducing the number of dependency, but many of them will remain given the current set of likelihood codes we are including.
 
 Only a few packages or tools must be installed before installing clik. All the other can be downloaded and installed automatically by the clik installer.
 
-Furthermore some of the dependency can be absent, and will only reduce the number of extra functionnalities provided by clik (like merging likelihood, or simulating them).
+Furthermore some of the dependency can be absent, and will only reduce the number of extra functionalities provided by clik (like merging likelihood, or simulating them).
 
 Requisites
 ----------
@@ -47,14 +47,14 @@ This will test for the presence of all the required dependencies (as described a
     $> ./waf configure --help
 
 
-After this (possibly lenghty) configuration step, clik per-se can be compiled and installed with::
+After this (possibly lengthy) configuration step, clik per-se can be compiled and installed with::
 
     $> ./waf install
 
 Simplest case
 ^^^^^^^^^^^^^
 
-In the simpliest case, we will assume that ou want all the depencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be::
+In the simplest case, we will assume that you want all the dependencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be::
 
     $> ./waf configure --install_all_deps
 
@@ -62,12 +62,12 @@ followed by::
 
     $> ./waf install
 
-Note that the option ``--install_all_deps`` is more powerfull than simply installing all the dependency, this will be described in a latter section.
+Note that the option ``--install_all_deps`` is more powerful than simply installing all the dependency, this will be described in a latter section.
 
 Simplest case with mkl
 ^^^^^^^^^^^^^^^^^^^^^^
 
-Using the automatically installed lapack library result in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into::
+Using the automatically installed lapack library results in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into::
 
     $> ./waf configure --install_all_deps \
           --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION
@@ -154,15 +154,15 @@ The installation path can be set using the ``--prefix=SOMEPATH`` option. Default
 More on the automatic installation of dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There are three level of automatic installation. If one want to ALWAYS install the dependencies, one can use the ``--force_install_all_deps``::
+There are three levels of automatic installation. If one wants to *always* install the dependencies, one can use the ``--force_install_all_deps``::
 
     $> ./waf configure --forceinstall_all_deps
 
-If one want to install only the dependency that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the ``--install_all_deps`` option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.
+If one wants to install only the dependencies that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the ``--install_all_deps`` option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.
 
-Finally, each dependency can be installed on a dependency by dependency basis, using the ``--XXX_install`` or ``--XXX_installifneeded`` options where ``XXX`` is the name of the dependency. The former install all the time the dependency, the latter install it only if it is bot found in the usual locations. In that sence, ``--forceinstall_all_deps`` works as if all possible ``--XXX_install`` options has been set, and ``--install_all_deps`` as if all ``--XXX_installifneeded`` has been set.
+Finally, each dependency can be installed on a dependency by dependency basis, using the ``--XXX_install`` or ``--XXX_installifneeded`` options where ``XXX`` is the name of the dependency. The former install all the time the dependency, the latter install it only if it is not found in the usual locations. In that sense, ``--forceinstall_all_deps`` works as if all possible ``--XXX_install`` options has been set, and ``--install_all_deps`` as if all ``--XXX_installifneeded`` options have been set.
 
-One should also note that ``--forceinstall_all_deps`` and ``--install_all_deps`` are also unactivated on a dependency by dependency basis if any of the ``--XXX_prefix``, ``--XXX_lib``, ``--XXX_include``, or other dependeny specific options are present. In that case, the the ``XXX`` dependency, the configuration script will lok in the locations described by those option and if the package is not found will report an error.
+One should also note that ``--forceinstall_all_deps`` and ``--install_all_deps`` are also unactivated on a dependency by dependency basis if any of the ``--XXX_prefix``, ``--XXX_lib``, ``--XXX_include``, or other dependency specific options are present. In that case, the the ``XXX`` dependency, the configuration script will look in the locations described by those option and if the package is not found will report an error.
 
 
 Setting the location of a library
@@ -203,7 +203,7 @@ Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sou
 Special case: Healpix
 ^^^^^^^^^^^^^^^^^^^^^
 
-Clik requires a specialy build healpix library. Namely, it insist on using a repositionnable (or better shared) version of the healpix library. 
+Clik requires a specialy build healpix library. Namely, it insists on using a repositionnable (or better shared) version of the healpix library. 
 This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
 of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system, 
 using the option ``--healpix_install`` is very strongly recommanded.
