@@ -1,7 +1,7 @@
 Creating synthetic likelihoods
 ==============================
 
-The tool :program:`synthetic_smica` allows to create synthetic likelihood files based on input power spectra and a description of the instrument. The likelihood approximation used is teh so-called SMICA likelihood (an offset inverse wishart shape). The program expects a single command line argument, the path to a parameter file. The directory ``examples`` in the clik package contains a few example parameter files.
+The tool :program:`synthetic_smica` allows to create synthetic likelihood files based on input power spectra and a description of the instrument. The likelihood approximation used is the so-called SMICA likelihood (an offset inverse wishart shape). The program expects a single command line argument, the path to a parameter file. The directory ``examples`` in the clik package contains a few example parameter files.
 
 Here is an example with some explanation of the meaning of the different options.
 

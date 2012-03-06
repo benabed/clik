@@ -14,7 +14,8 @@ double CAMspec_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-void camspec_extra_init_(int*,int*,int*,int*,int*,int*,int*,int*,int*,int*,double*,double*,int*,double*);
+void camspec_extra_init_(int*, int*,int*,int*,int*,int*,int*, double*,double*,double*,double*)
+//CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
 
 cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   hsize_t ndum;
@@ -24,16 +25,31 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   char likefile[2048],szfile[2048];
   int xcase;
   double xdim;
-  char *xnames_1[] = {"A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
-                      "r_ps", "r_cib", "cal1", "cal2"};
+  char *xnames_1[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
+                      "r_ps", "r_cib","cal0", "cal1", "cal2"};
   char *xnames_0[] = {"A_ps_143", "A_cib_143", "A_sz",  
                       "cal1", "cal2"};
-  int lmin_143x143,lmax_143x143,lmin_217x217,lmax_217x217,lmin_143x217,lmax_143x217,np_143x143,np_217x217,np_143x217,nX,X_sz,c_inv_sz,sz_temp_sz,lmax_sz;
-  double *X,*c_inv,*sz_temp;
+  int Nspec, nX, lmax_sz;
+  int *lmaxX, *lminX, *np, *npt;
+  double *X,*c_inv,*sz_143,*sz_217;
 
   camspec_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"CAMspec already initialized",*err,__LINE__,NULL);
   
+  hstat = H5LTget_attribute_int( group_id, ".", "Nspec",  &Nspec);
+  testErrorRetVA(hstat<0,hdf5_base,"cannot read Nspec in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  
+  lminX = hdf5_int_attarray(group_id,cur_lkl,"lminX",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+  lmaxX = hdf5_int_attarray(group_id,cur_lkl,"lmaxX",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+
+  np = hdf5_int_attarray(group_id,cur_lkl,"np",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+  npt = hdf5_int_attarray(group_id,cur_lkl,"npt",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+
+
   hstat = H5LTget_attribute_int( group_id, ".", "lmin_143x143",  &lmin_143x143);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read lmin_143x143 in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
   hstat = H5LTget_attribute_int( group_id, ".", "lmax_143x143",  &lmax_143x143);
