@@ -13,7 +13,8 @@ Requisites
 Mandatory requisites that cannot be installed automatically
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-`Python <http://python.org>`_ (>2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
+`Python <http://python.org>`_ (>=2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
+Gcc version must be >= 4.2 and gfortran version must be >=4.3.
 Having a full python installation (i.e. including the library and header, often called *python-devel* or *python-dev* in package managers) is very strongly advised.
 
 Mandatory requisites that will be installed automatically if absent
@@ -41,31 +42,77 @@ The installer must first be configured using::
 
     $> ./waf configure
 
-then the codes can be compiled and installed with::
+This will test for the presence of all the required dependencies (as described above). Command line options are available to help the configuration by setting the location of some of those dependency, and or chose between different compiler options. An option can also be used to cause waf to try to download, compile and install for the user the required dependencies that are not found by the automatic discovery system. For a complete list of options do::
+
+    $> ./waf configure --help
+
+
+After this (possibly lenghty) configuration step, clik per-se can be compiled and installed with::
 
     $> ./waf install
 
-The command line options given during the `configure` step allow to pass to the installer the locations of the different dependencies. For a complete list of options, do::
+Simplest case
+^^^^^^^^^^^^^
 
-	$> ./waf configure --help
+In the simpliest case, we will assume that ou want all the depencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be::
 
-Only the most important ones will be described here.
+    $> ./waf configure --install_all_deps
 
-Simplest install
-^^^^^^^^^^^^^^^^
+followed by::
 
-Setting the option ``--install_all_deps`` will install all the dependencies for you. This is the recommanded base option. Installing clik can be as simple as::
+    $> ./waf install
 
-	$> ./waf configure --install_all_deps
+Note that the option ``--install_all_deps`` is more powerfull than simply installing all the dependency, this will be described in a latter section.
 
-Beware, this is slow and use a lot of disk space.
+Simplest case with mkl
+^^^^^^^^^^^^^^^^^^^^^^
 
-It can be desirable not to install all the dependencies if some are known to be available. Using any of the ``--XXX_prefix``, ``--XXX_islocal``, ``--XXX_installifneeded``, ``--XXX_include``, ``--XXX_lib``, ``XXX-link`` described below will cancel the installing option for the dependency ``XXX``.
+Using the automatically installed lapack library result in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into::
 
-The special dependency pmclib is not affected by this option.
+    $> ./waf configure --install_all_deps \
+          --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION
 
-Advanced install options
-------------------------
+The ``/PATH/TO/YOUR/MKL/`` can be replaced by ``${MKLROOT}`` for most recent mkl installs. Otherwise, it has to be a directory containing a ``lib`` and an ``include`` subdirectories. The ``MKL.VERSION`` can be any of 10.0, 10.1, 10.2, 10.3.
+
+Simplest case with apple lapack
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+MacOS X has a standard parallelized lapack distribution. One can use it to accelerate clik.
+To do so the configuration line has to be changed into::
+
+    $> ./waf configure --install_all_deps --lapack_apple
+
+I am installing on magique3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use this::
+
+    $> /softs/python/2.7.2/bin/python waf configure \
+          --install_all_deps --gsl_prefix=/softs/gsl/1.15/ \
+          --lapack_mkl=/softs/intel/mkl/10.2.6.038 --lapack_mkl_version=10.2 
+
+and then::
+
+    $> ./waf install
+
+See below for the other otions used here.
+
+I am installing on ccin2p3
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use this::
+
+    $> ./waf configure --install_all_deps \
+             --lapack_mkl=/usr/local/intel/mkl/10.3.8/ --lapack_mkl_version=10.3
+
+and then::
+
+    $> ./waf install
+
+
+
+Advanced configuration options
+------------------------------
 
 Installing with a particular Python executable
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -104,20 +151,23 @@ Setting installation path
 The installation path can be set using the ``--prefix=SOMEPATH`` option. Default is to install in the current directory.
 
 
-Telling clik to install the dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+More on the automatic installation of dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Setting the option ``--XXX_install`` will tell the clik install system to attempt at installing the dependency. It will first download it from the net, and then try to compile and install it. Installation will be perfomed at the same location as where clik itself will install. The download and install will only be done if needed. 
-This is only possible for the following dependencies : gsl, hdf5, healpix, blas/lapack, numpy, cython, h5py. This option will install the code even if it is already available.
-Using the option ``--XXX_install`` is recommanded.
+There are three level of automatic installation. If one want to ALWAYS install the dependencies, one can use the ``--force_install_all_deps``::
 
-To install only if a package is unavailable, use the option ``--XXX_installifneeded``. This last option is only recommanded to advanced users 
+    $> ./waf configure --forceinstall_all_deps
+
+If one want to install only the dependency that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the ``--install_all_deps`` option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.
+
+Finally, each dependency can be installed on a dependency by dependency basis, using the ``--XXX_install`` or ``--XXX_installifneeded`` options where ``XXX`` is the name of the dependency. The former install all the time the dependency, the latter install it only if it is bot found in the usual locations. In that sence, ``--forceinstall_all_deps`` works as if all possible ``--XXX_install`` options has been set, and ``--install_all_deps`` as if all ``--XXX_installifneeded`` has been set.
+
+One should also note that ``--forceinstall_all_deps`` and ``--install_all_deps`` are also unactivated on a dependency by dependency basis if any of the ``--XXX_prefix``, ``--XXX_lib``, ``--XXX_include``, or other dependeny specific options are present. In that case, the the ``XXX`` dependency, the configuration script will lok in the locations described by those option and if the package is not found will report an error.
 
 
 Setting the location of a library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Those options are only for advanced users.
 The location of the library dependencies (gsl, hdf5, healpix, blas/lapack) must be known to the installer. By default, it will look for them in the classical system 
 locations:  ``/usr/lib``, ``/usr/lib64``, ``/usr/local/lib``, ``/usr/local/lib64`` for the library, ``/usr/include`` and ``/usr/local/include`` for the include files. One can 
 change the lookup path on a library by library basis. If a given dependency, ``XXX``, is installed on the system such that its lib are in ``SOMEPREFIXPATH/lib`` and its 
@@ -137,20 +187,24 @@ Special case: the mkl library
 
 This option is only for advanced users.
 The blas/lapack distribution installed automatically is a very inefficient one. To improve the performance of clik (especially the low-l pixel based likelihood), one is advised to use the MKL library, which is fully supported and allow the use of shared memory computer architectures.
-A special option is present to simplify the install using the intel MKL library: setting the option ``--lapack_mkl=PATH_OF_THE_MKL_INSTALL`` will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).
+
+A special option is present to simplify the install using the intel MKL library: setting the option ``--lapack_mkl=PATH_OF_THE_MKL_INSTALL`` together with ``--lapack_mkl_version=SOMEVERSION`` will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.0, 10.1, 10.2 and 10.3 only).
 Setting this option will cancel the ``--install_all_deps`` option for the lapack dependency only.
+
+On a MacOS X computer, one can use Apple provided lapack by setting ``--lapack_apple``.
+
 
 Special case: WMAP likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`.
+Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`. The ``--install_all_deps`` and ``--forceinstall_all_deps`` options will automatically download the sources, as if ``-wmap_install`` was set.
 
 
 Special case: Healpix
 ^^^^^^^^^^^^^^^^^^^^^
 
 Clik requires a specialy build healpix library. Namely, it insist on using a repositionnable (or better shared) version of the healpix library. 
-This option is currently not available for the fortran version of the lib (as of version 2.20a). The clik installer know how to produce this special version
+This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
 of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system, 
 using the option ``--healpix_install`` is very strongly recommanded.
 
@@ -159,19 +213,16 @@ Putting it all together
 
 The following command::
 
-    $> ./waf configure --gsl_install --hdf5_install --lapack_install \
-       --healpix_install --h5py_install --cython_install --numpy_install --wmap_install
-
-will tell the clik install system to install all the possible external dependency in the current directory. All will be compiled in 64bit mode. Clik will be compiled in 64bit as well and installed in the same directory. This is the same as::
-
     $> ./waf configure --install_all_deps
+
+will tell the clik install system to install all the possible external dependency in the current directory. 
 
 The following command::
 
-    $> ./waf configure --lapack_mkl=/opt/intel/mkl \
-       --healpix_install --hdf5_install --h5py_install 
+    $> ./waf configure --lapack_mkl=/opt/intel/mkl \ --lapack_mkl_version=10.2
+       --healpix_install --hdf5_install --h5py_install --gsl_prefix=/usr/local/gsl
 
-will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library 
+will tell the clik install system to install healpix, hdf5 and h5py. The gsl library will be looked for in the unusual dir ``/usr/loca/gsl``. /All the other dependency will be looked up in the classical locations. The blas/lapack library 
 will be the one from an mkl install located at --lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.
 
  
@@ -180,10 +231,11 @@ Best advanced choice
 
 Use a mkl lapack install and let the other dependencies on auto install::
 
-    $> ./waf configure --lapack_mkl=/opt/intel/mkl \
-        --healpix_install --hdf5_install --h5py_install \
-        --cython_install --numpy_install --wmap_install --gst_install
+    $> ./waf configure --install_all_deps  \
+          --lapack_mkl=/opt/intel/mkl --lapack_mkl_version=10.2 
 
+This will use your mkl libraries from ``/opt/intel/mkl``, test if numpy, cython and gsl are installed on your computer (often the case) if not install them, 
+and finally install all the other requirements (helpaix, hdf5 and its python wrapper).
 
 Environment variables
 ---------------------

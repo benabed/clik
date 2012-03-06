@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-clik documentation!
+clik documentation
 =================================
 
 clik is a C library containing codes to compute different approximations for the Planck likelihood.
@@ -13,6 +13,7 @@ Wrappers are provided so that the functions can also be called from python and f
 .. toctree::
    :maxdepth: 2
    
+   contribution
    designchoices
    installing
    interfacingc

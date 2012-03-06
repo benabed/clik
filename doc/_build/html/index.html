@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>clik documentation! &mdash; clik v1.6 documentation</title>
+    <title>clik documentation &mdash; clik v2.0 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6',
+        VERSION:     '2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,8 +21,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.6 documentation" href="#" />
-    <link rel="next" title="Design choices" href="designchoices.html" /> 
+    <link rel="top" title="clik v2.0 documentation" href="#" />
+    <link rel="next" title="Authors" href="contribution.html" /> 
   </head>
   <body>
     <div class="related">
@@ -32,9 +32,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="designchoices.html" title="Design choices"
+          <a href="contribution.html" title="Authors"
              accesskey="N">next</a> |</li>
-        <li><a href="#">clik v1.6 documentation</a> &raquo;</li> 
+        <li><a href="#">clik v2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -44,11 +44,20 @@
           <div class="body">
             
   <div class="section" id="clik-documentation">
-<h1>clik documentation!<a class="headerlink" href="#clik-documentation" title="Permalink to this headline">¶</a></h1>
+<h1>clik documentation<a class="headerlink" href="#clik-documentation" title="Permalink to this headline">¶</a></h1>
 <p>clik is a C library containing codes to compute different approximations for the Planck likelihood.
 Wrappers are provided so that the functions can also be called from python and f90.</p>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="contribution.html">Authors</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#overall-design-and-wrappers">Overall design and wrappers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#smica-plik-likelihood">Smica/plik likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#bopix-likelihood">BOPIX likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#camspec-likelihood">CAMspec likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#lowlike-likelihood">lowlike likelihood</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contribution.html#egfs-extra-galactic-component">egfs extra galactic component</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="designchoices.html">Design choices</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="designchoices.html#a-likelihood-is-entirely-defined-by-a-likelihood-file">A likelihood is entirely defined by a likelihood file.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="designchoices.html#the-library-computes-an-approximation-of-the-log-likelihood">The library computes an approximation of the log likelihood</a></li>
@@ -59,7 +68,7 @@ Wrappers are provided so that the functions can also be called from python and f
 <li class="toctree-l1"><a class="reference internal" href="installing.html">Installing</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installing.html#requisites">Requisites</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installing.html#install-tool">Install tool</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installing.html#advanced-install-options">Advanced install options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installing.html#advanced-configuration-options">Advanced configuration options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installing.html#environment-variables">Environment variables</a></li>
 </ul>
 </li>
@@ -83,6 +92,7 @@ Wrappers are provided so that the functions can also be called from python and f
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changes.html">Changes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="changes.html#release-2-0">Release 2.0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#release-1-6">Release 1.6</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#release-1-5">Release 1.5</a></li>
 <li class="toctree-l2"><a class="reference internal" href="changes.html#release-1-0">Release 1.0</a></li>
@@ -108,15 +118,15 @@ Wrappers are provided so that the functions can also be called from python and f
         <div class="sphinxsidebarwrapper">
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">clik documentation!</a><ul>
+<li><a class="reference internal" href="#">clik documentation</a><ul>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
 
   <h4>Next topic</h4>
-  <p class="topless"><a href="designchoices.html"
-                        title="next chapter">Design choices</a></p>
+  <p class="topless"><a href="contribution.html"
+                        title="next chapter">Authors</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/index.txt"
@@ -146,9 +156,9 @@ Wrappers are provided so that the functions can also be called from python and f
           <a href="genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="designchoices.html" title="Design choices"
+          <a href="contribution.html" title="Authors"
              >next</a> |</li>
-        <li><a href="#">clik v1.6 documentation</a> &raquo;</li> 
+        <li><a href="#">clik v2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

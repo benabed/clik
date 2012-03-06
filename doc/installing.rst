@@ -58,7 +58,7 @@ In the simpliest case, we will assume that ou want all the depencies absent from
 
     $> ./waf configure --install_all_deps
 
-followed by
+followed by::
 
     $> ./waf install
 
@@ -69,7 +69,8 @@ Simplest case with mkl
 
 Using the automatically installed lapack library result in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into::
 
-    $> ./waf configure --install_all_deps --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION
+    $> ./waf configure --install_all_deps \
+          --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION
 
 The ``/PATH/TO/YOUR/MKL/`` can be replaced by ``${MKLROOT}`` for most recent mkl installs. Otherwise, it has to be a directory containing a ``lib`` and an ``include`` subdirectories. The ``MKL.VERSION`` can be any of 10.0, 10.1, 10.2, 10.3.
 
@@ -80,6 +81,35 @@ MacOS X has a standard parallelized lapack distribution. One can use it to accel
 To do so the configuration line has to be changed into::
 
     $> ./waf configure --install_all_deps --lapack_apple
+
+I am installing on magique3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use this::
+
+    $> /softs/python/2.7.2/bin/python waf configure \
+          --install_all_deps --gsl_prefix=/softs/gsl/1.15/ \
+          --lapack_mkl=/softs/intel/mkl/10.2.6.038 --lapack_mkl_version=10.2 
+
+and then::
+
+    $> ./waf install
+
+See below for the other otions used here.
+
+I am installing on ccin2p3
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Use this::
+
+    $> ./waf configure --install_all_deps \
+             --lapack_mkl=/usr/local/intel/mkl/10.3.8/ --lapack_mkl_version=10.3
+
+and then::
+
+    $> ./waf install
+
+
 
 Advanced configuration options
 ------------------------------
@@ -190,9 +220,9 @@ will tell the clik install system to install all the possible external dependenc
 The following command::
 
     $> ./waf configure --lapack_mkl=/opt/intel/mkl \ --lapack_mkl_version=10.2
-       --healpix_install --hdf5_install --h5py_install 
+       --healpix_install --hdf5_install --h5py_install --gsl_prefix=/usr/local/gsl
 
-will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library 
+will tell the clik install system to install healpix, hdf5 and h5py. The gsl library will be looked for in the unusual dir ``/usr/loca/gsl``. /All the other dependency will be looked up in the classical locations. The blas/lapack library 
 will be the one from an mkl install located at --lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.
 
  
@@ -201,7 +231,8 @@ Best advanced choice
 
 Use a mkl lapack install and let the other dependencies on auto install::
 
-    $> ./waf configure --lapack_mkl=/opt/intel/mkl --lapack_mkl_version=10.2 --install_all_deps 
+    $> ./waf configure --install_all_deps  \
+          --lapack_mkl=/opt/intel/mkl --lapack_mkl_version=10.2 
 
 This will use your mkl libraries from ``/opt/intel/mkl``, test if numpy, cython and gsl are installed on your computer (often the case) if not install them, 
 and finally install all the other requirements (helpaix, hdf5 and its python wrapper).

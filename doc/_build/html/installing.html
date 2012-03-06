@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Installing &mdash; clik v1.6 documentation</title>
+    <title>Installing &mdash; clik v2.0 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '1.6',
+        VERSION:     '2.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v1.6 documentation" href="index.html" />
+    <link rel="top" title="clik v2.0 documentation" href="index.html" />
     <link rel="next" title="Interfacing the library with a c executable" href="interfacingc.html" />
     <link rel="prev" title="Design choices" href="designchoices.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="designchoices.html" title="Design choices"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -56,7 +56,8 @@
 <h2>Requisites<a class="headerlink" href="#requisites" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="mandatory-requisites-that-cannot-be-installed-automatically">
 <h3>Mandatory requisites that cannot be installed automatically<a class="headerlink" href="#mandatory-requisites-that-cannot-be-installed-automatically" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference external" href="http://python.org">Python</a> (&gt;2.5) to run the installer (waf), <strong>modern c and fortran compilers</strong> (icc, gcc, ifort anf gfortran are ok) are absolute requisites.
+<p><a class="reference external" href="http://python.org">Python</a> (&gt;=2.5) to run the installer (waf), <strong>modern c and fortran compilers</strong> (icc, gcc, ifort anf gfortran are ok) are absolute requisites.
+Gcc version must be &gt;= 4.2 and gfortran version must be &gt;=4.3.
 Having a full python installation (i.e. including the library and header, often called <em>python-devel</em> or <em>python-dev</em> in package managers) is very strongly advised.</p>
 </div>
 <div class="section" id="mandatory-requisites-that-will-be-installed-automatically-if-absent">
@@ -78,25 +79,62 @@ Having a full python installation (i.e. including the library and header, often 
 <p>The installer must first be configured using:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure</pre>
 </div>
-<p>then the codes can be compiled and installed with:</p>
-<div class="highlight-python"><pre>$&gt; ./waf install</pre>
-</div>
-<p>The command line options given during the <cite>configure</cite> step allow to pass to the installer the locations of the different dependencies. For a complete list of options, do:</p>
+<p>This will test for the presence of all the required dependencies (as described above). Command line options are available to help the configuration by setting the location of some of those dependency, and or chose between different compiler options. An option can also be used to cause waf to try to download, compile and install for the user the required dependencies that are not found by the automatic discovery system. For a complete list of options do:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --help</pre>
 </div>
-<p>Only the most important ones will be described here.</p>
-<div class="section" id="simplest-install">
-<h3>Simplest install<a class="headerlink" href="#simplest-install" title="Permalink to this headline">¶</a></h3>
-<p>Setting the option <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> will install all the dependencies for you. This is the recommanded base option. Installing clik can be as simple as:</p>
+<p>After this (possibly lenghty) configuration step, clik per-se can be compiled and installed with:</p>
+<div class="highlight-python"><pre>$&gt; ./waf install</pre>
+</div>
+<div class="section" id="simplest-case">
+<h3>Simplest case<a class="headerlink" href="#simplest-case" title="Permalink to this headline">¶</a></h3>
+<p>In the simpliest case, we will assume that ou want all the depencies absent from the usual locations to be installed automatically. Note that this translate into a rather slow clik library, since the lapack library will probably be compiled from a simple, non-parallel, version of the lib. That being said , the simplest configuration (if slow) line would be:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps</pre>
 </div>
-<p>Beware, this is slow and use a lot of disk space.</p>
-<p>It can be desirable not to install all the dependencies if some are known to be available. Using any of the <tt class="docutils literal"><span class="pre">--XXX_prefix</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_islocal</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_include</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_lib</span></tt>, <tt class="docutils literal"><span class="pre">XXX-link</span></tt> described below will cancel the installing option for the dependency <tt class="docutils literal"><span class="pre">XXX</span></tt>.</p>
-<p>The special dependency pmclib is not affected by this option.</p>
+<p>followed by:</p>
+<div class="highlight-python"><pre>$&gt; ./waf install</pre>
+</div>
+<p>Note that the option <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> is more powerfull than simply installing all the dependency, this will be described in a latter section.</p>
+</div>
+<div class="section" id="simplest-case-with-mkl">
+<h3>Simplest case with mkl<a class="headerlink" href="#simplest-case-with-mkl" title="Permalink to this headline">¶</a></h3>
+<p>Using the automatically installed lapack library result in a slow clik library. One can solve easily this problem by letting the configuration know about an existing mkl library. To do so the configuration line has to be changed into:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps \
+      --lapack_mkl=/PATH/TO/YOUR/MKL/ --lapack_mkl_version=MKL.VERSION</pre>
+</div>
+<p>The <tt class="docutils literal"><span class="pre">/PATH/TO/YOUR/MKL/</span></tt> can be replaced by <tt class="docutils literal"><span class="pre">${MKLROOT}</span></tt> for most recent mkl installs. Otherwise, it has to be a directory containing a <tt class="docutils literal"><span class="pre">lib</span></tt> and an <tt class="docutils literal"><span class="pre">include</span></tt> subdirectories. The <tt class="docutils literal"><span class="pre">MKL.VERSION</span></tt> can be any of 10.0, 10.1, 10.2, 10.3.</p>
+</div>
+<div class="section" id="simplest-case-with-apple-lapack">
+<h3>Simplest case with apple lapack<a class="headerlink" href="#simplest-case-with-apple-lapack" title="Permalink to this headline">¶</a></h3>
+<p>MacOS X has a standard parallelized lapack distribution. One can use it to accelerate clik.
+To do so the configuration line has to be changed into:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps --lapack_apple</pre>
 </div>
 </div>
-<div class="section" id="advanced-install-options">
-<h2>Advanced install options<a class="headerlink" href="#advanced-install-options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="i-am-installing-on-magique3">
+<h3>I am installing on magique3<a class="headerlink" href="#i-am-installing-on-magique3" title="Permalink to this headline">¶</a></h3>
+<p>Use this:</p>
+<div class="highlight-python"><pre>$&gt; /softs/python/2.7.2/bin/python waf configure \
+      --install_all_deps --gsl_prefix=/softs/gsl/1.15/ \
+      --lapack_mkl=/softs/intel/mkl/10.2.6.038 --lapack_mkl_version=10.2</pre>
+</div>
+<p>and then:</p>
+<div class="highlight-python"><pre>$&gt; ./waf install</pre>
+</div>
+<p>See below for the other otions used here.</p>
+</div>
+<div class="section" id="i-am-installing-on-ccin2p3">
+<h3>I am installing on ccin2p3<a class="headerlink" href="#i-am-installing-on-ccin2p3" title="Permalink to this headline">¶</a></h3>
+<p>Use this:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps \
+         --lapack_mkl=/usr/local/intel/mkl/10.3.8/ --lapack_mkl_version=10.3</pre>
+</div>
+<p>and then:</p>
+<div class="highlight-python"><pre>$&gt; ./waf install</pre>
+</div>
+</div>
+</div>
+<div class="section" id="advanced-configuration-options">
+<h2>Advanced configuration options<a class="headerlink" href="#advanced-configuration-options" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="installing-with-a-particular-python-executable">
 <h3>Installing with a particular Python executable<a class="headerlink" href="#installing-with-a-particular-python-executable" title="Permalink to this headline">¶</a></h3>
 <p>It is possible to install clik with a python install different from the default one. For example if the default python installation does not contains the required header and libraries. To do so, call waf this way:</p>
@@ -128,17 +166,18 @@ To bypass the fortran compiler detection, set the <tt class="docutils literal"><
 <h3>Setting installation path<a class="headerlink" href="#setting-installation-path" title="Permalink to this headline">¶</a></h3>
 <p>The installation path can be set using the <tt class="docutils literal"><span class="pre">--prefix=SOMEPATH</span></tt> option. Default is to install in the current directory.</p>
 </div>
-<div class="section" id="telling-clik-to-install-the-dependencies">
-<h3>Telling clik to install the dependencies<a class="headerlink" href="#telling-clik-to-install-the-dependencies" title="Permalink to this headline">¶</a></h3>
-<p>Setting the option <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> will tell the clik install system to attempt at installing the dependency. It will first download it from the net, and then try to compile and install it. Installation will be perfomed at the same location as where clik itself will install. The download and install will only be done if needed.
-This is only possible for the following dependencies : gsl, hdf5, healpix, blas/lapack, numpy, cython, h5py. This option will install the code even if it is already available.
-Using the option <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> is recommanded.</p>
-<p>To install only if a package is unavailable, use the option <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt>. This last option is only recommanded to advanced users</p>
+<div class="section" id="more-on-the-automatic-installation-of-dependencies">
+<h3>More on the automatic installation of dependencies<a class="headerlink" href="#more-on-the-automatic-installation-of-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>There are three level of automatic installation. If one want to ALWAYS install the dependencies, one can use the <tt class="docutils literal"><span class="pre">--force_install_all_deps</span></tt>:</p>
+<div class="highlight-python"><pre>$&gt; ./waf configure --forceinstall_all_deps</pre>
+</div>
+<p>If one want to install only the dependency that are not present in the usual location (or that are present, but not compiled in a way suitable for clik), one can use the <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> option, already described above. Since this option first tests for the presence of each library, it can be used to upgrade a clik install, avoiding to reinstall everything.</p>
+<p>Finally, each dependency can be installed on a dependency by dependency basis, using the <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> or <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> options where <tt class="docutils literal"><span class="pre">XXX</span></tt> is the name of the dependency. The former install all the time the dependency, the latter install it only if it is bot found in the usual locations. In that sence, <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> works as if all possible <tt class="docutils literal"><span class="pre">--XXX_install</span></tt> options has been set, and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> as if all <tt class="docutils literal"><span class="pre">--XXX_installifneeded</span></tt> has been set.</p>
+<p>One should also note that <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> and <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> are also unactivated on a dependency by dependency basis if any of the <tt class="docutils literal"><span class="pre">--XXX_prefix</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_lib</span></tt>, <tt class="docutils literal"><span class="pre">--XXX_include</span></tt>, or other dependeny specific options are present. In that case, the the <tt class="docutils literal"><span class="pre">XXX</span></tt> dependency, the configuration script will lok in the locations described by those option and if the package is not found will report an error.</p>
 </div>
 <div class="section" id="setting-the-location-of-a-library">
 <h3>Setting the location of a library<a class="headerlink" href="#setting-the-location-of-a-library" title="Permalink to this headline">¶</a></h3>
-<p>Those options are only for advanced users.
-The location of the library dependencies (gsl, hdf5, healpix, blas/lapack) must be known to the installer. By default, it will look for them in the classical system
+<p>The location of the library dependencies (gsl, hdf5, healpix, blas/lapack) must be known to the installer. By default, it will look for them in the classical system
 locations:  <tt class="docutils literal"><span class="pre">/usr/lib</span></tt>, <tt class="docutils literal"><span class="pre">/usr/lib64</span></tt>, <tt class="docutils literal"><span class="pre">/usr/local/lib</span></tt>, <tt class="docutils literal"><span class="pre">/usr/local/lib64</span></tt> for the library, <tt class="docutils literal"><span class="pre">/usr/include</span></tt> and <tt class="docutils literal"><span class="pre">/usr/local/include</span></tt> for the include files. One can
 change the lookup path on a library by library basis. If a given dependency, <tt class="docutils literal"><span class="pre">XXX</span></tt>, is installed on the system such that its lib are in <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH/lib</span></tt> and its
 include files in <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH/include</span></tt>, setting the command line option <tt class="docutils literal"><span class="pre">--XXX_prefix=SOMEPREFIXPATH</span></tt>  will allow the clik install system. If <tt class="docutils literal"><span class="pre">SOMEPREFIXPATH</span></tt> is identical to the the install path of clik, this option can be replaced by <tt class="docutils literal"><span class="pre">-XXX_islocal</span></tt>.</p>
@@ -151,44 +190,43 @@ install system to find them.</p>
 <div class="section" id="special-case-the-mkl-library">
 <h3>Special case: the mkl library<a class="headerlink" href="#special-case-the-mkl-library" title="Permalink to this headline">¶</a></h3>
 <p>This option is only for advanced users.
-The blas/lapack distribution installed automatically is a very inefficient one. To improve the performance of clik (especially the low-l pixel based likelihood), one is advised to use the MKL library, which is fully supported and allow the use of shared memory computer architectures.
-A special option is present to simplify the install using the intel MKL library: setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.1, 10.2 and 10.3 tested).
+The blas/lapack distribution installed automatically is a very inefficient one. To improve the performance of clik (especially the low-l pixel based likelihood), one is advised to use the MKL library, which is fully supported and allow the use of shared memory computer architectures.</p>
+<p>A special option is present to simplify the install using the intel MKL library: setting the option <tt class="docutils literal"><span class="pre">--lapack_mkl=PATH_OF_THE_MKL_INSTALL</span></tt> together with <tt class="docutils literal"><span class="pre">--lapack_mkl_version=SOMEVERSION</span></tt> will allow clik to pick the correct set of libraries for the particular version of the mkl package (version 10.0, 10.1, 10.2 and 10.3 only).
 Setting this option will cancel the <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> option for the lapack dependency only.</p>
+<p>On a MacOS X computer, one can use Apple provided lapack by setting <tt class="docutils literal"><span class="pre">--lapack_apple</span></tt>.</p>
 </div>
 <div class="section" id="special-case-wmap-likelihood">
 <h3>Special case: WMAP likelihood<a class="headerlink" href="#special-case-wmap-likelihood" title="Permalink to this headline">¶</a></h3>
-<p>Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option <tt class="docutils literal"><span class="pre">--wmap_src=WMAP7SRCPATH</span></tt> or let the install system download it for you by setting the option <tt class="docutils literal"><span class="pre">--wmap_install</span></tt>. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at <a class="reference internal" href="usingwmap.html#wmap"><em>Using WMAP7 likelihood</em></a>.</p>
+<p>Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option <tt class="docutils literal"><span class="pre">--wmap_src=WMAP7SRCPATH</span></tt> or let the install system download it for you by setting the option <tt class="docutils literal"><span class="pre">--wmap_install</span></tt>. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at <a class="reference internal" href="usingwmap.html#wmap"><em>Using WMAP7 likelihood</em></a>. The <tt class="docutils literal"><span class="pre">--install_all_deps</span></tt> and <tt class="docutils literal"><span class="pre">--forceinstall_all_deps</span></tt> options will automatically download the sources, as if <tt class="docutils literal"><span class="pre">-wmap_install</span></tt> was set.</p>
 </div>
 <div class="section" id="special-case-healpix">
 <h3>Special case: Healpix<a class="headerlink" href="#special-case-healpix" title="Permalink to this headline">¶</a></h3>
 <p>Clik requires a specialy build healpix library. Namely, it insist on using a repositionnable (or better shared) version of the healpix library.
-This option is currently not available for the fortran version of the lib (as of version 2.20a). The clik installer know how to produce this special version
+This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
 of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system,
 using the option <tt class="docutils literal"><span class="pre">--healpix_install</span></tt> is very strongly recommanded.</p>
 </div>
 <div class="section" id="putting-it-all-together">
 <h3>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h3>
 <p>The following command:</p>
-<div class="highlight-python"><pre>$&gt; ./waf configure --gsl_install --hdf5_install --lapack_install \
-   --healpix_install --h5py_install --cython_install --numpy_install --wmap_install</pre>
-</div>
-<p>will tell the clik install system to install all the possible external dependency in the current directory. All will be compiled in 64bit mode. Clik will be compiled in 64bit as well and installed in the same directory. This is the same as:</p>
 <div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps</pre>
 </div>
+<p>will tell the clik install system to install all the possible external dependency in the current directory.</p>
 <p>The following command:</p>
-<div class="highlight-python"><pre>$&gt; ./waf configure --lapack_mkl=/opt/intel/mkl \
-   --healpix_install --hdf5_install --h5py_install</pre>
+<div class="highlight-python"><pre>$&gt; ./waf configure --lapack_mkl=/opt/intel/mkl \ --lapack_mkl_version=10.2
+   --healpix_install --hdf5_install --h5py_install --gsl_prefix=/usr/local/gsl</pre>
 </div>
-<p>will tell the clik install system to install healpix, hdf5 and h5py. All the other dependency will be looked up in the classical locations. The blas/lapack library
+<p>will tell the clik install system to install healpix, hdf5 and h5py. The gsl library will be looked for in the unusual dir <tt class="docutils literal"><span class="pre">/usr/loca/gsl</span></tt>. /All the other dependency will be looked up in the classical locations. The blas/lapack library
 will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.</p>
 </div>
 <div class="section" id="best-advanced-choice">
 <h3>Best advanced choice<a class="headerlink" href="#best-advanced-choice" title="Permalink to this headline">¶</a></h3>
 <p>Use a mkl lapack install and let the other dependencies on auto install:</p>
-<div class="highlight-python"><pre>$&gt; ./waf configure --lapack_mkl=/opt/intel/mkl \
-    --healpix_install --hdf5_install --h5py_install \
-    --cython_install --numpy_install --wmap_install --gst_install</pre>
+<div class="highlight-python"><pre>$&gt; ./waf configure --install_all_deps  \
+      --lapack_mkl=/opt/intel/mkl --lapack_mkl_version=10.2</pre>
 </div>
+<p>This will use your mkl libraries from <tt class="docutils literal"><span class="pre">/opt/intel/mkl</span></tt>, test if numpy, cython and gsl are installed on your computer (often the case) if not install them,
+and finally install all the other requirements (helpaix, hdf5 and its python wrapper).</p>
 </div>
 </div>
 <div class="section" id="environment-variables">
@@ -214,15 +252,19 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
 </ul>
 </li>
 <li><a class="reference internal" href="#install-tool">Install tool</a><ul>
-<li><a class="reference internal" href="#simplest-install">Simplest install</a></li>
+<li><a class="reference internal" href="#simplest-case">Simplest case</a></li>
+<li><a class="reference internal" href="#simplest-case-with-mkl">Simplest case with mkl</a></li>
+<li><a class="reference internal" href="#simplest-case-with-apple-lapack">Simplest case with apple lapack</a></li>
+<li><a class="reference internal" href="#i-am-installing-on-magique3">I am installing on magique3</a></li>
+<li><a class="reference internal" href="#i-am-installing-on-ccin2p3">I am installing on ccin2p3</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#advanced-install-options">Advanced install options</a><ul>
+<li><a class="reference internal" href="#advanced-configuration-options">Advanced configuration options</a><ul>
 <li><a class="reference internal" href="#installing-with-a-particular-python-executable">Installing with a particular Python executable</a></li>
 <li><a class="reference internal" href="#bypassing-the-default-compilers">Bypassing the default compilers</a></li>
 <li><a class="reference internal" href="#setting-the-architecture">Setting the architecture</a></li>
 <li><a class="reference internal" href="#setting-installation-path">Setting installation path</a></li>
-<li><a class="reference internal" href="#telling-clik-to-install-the-dependencies">Telling clik to install the dependencies</a></li>
+<li><a class="reference internal" href="#more-on-the-automatic-installation-of-dependencies">More on the automatic installation of dependencies</a></li>
 <li><a class="reference internal" href="#setting-the-location-of-a-library">Setting the location of a library</a></li>
 <li><a class="reference internal" href="#special-case-the-mkl-library">Special case: the mkl library</a></li>
 <li><a class="reference internal" href="#special-case-wmap-likelihood">Special case: WMAP likelihood</a></li>
@@ -276,7 +318,7 @@ will be the one from an mkl install located at &#8211;lapack_mkl=/opt/intel/mkl.
         <li class="right" >
           <a href="designchoices.html" title="Design choices"
              >previous</a> |</li>
-        <li><a href="index.html">clik v1.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
