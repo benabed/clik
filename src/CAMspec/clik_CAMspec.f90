@@ -23,20 +23,20 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
+SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
     USE CAMSPEC_EXTRA
     USE temp_like
     implicit none
     integer, intent(in):: iNspec, iNx,ilmax_sz
-    integer,dimension(:),intent(in)::ilmaxX, ilminX,inp,inpt
-    real(8),dimension(0:),intent(in)::sz_100,sz_143
-    real(8),dimension(:),intent(in)::mX
-    real(8),dimension(:,:),intent(in)::mc_inv
+    integer,dimension(1:iNspec),intent(in)::ilmaxX, ilminX,inp,inpt
+    real(8),dimension(0:ilmax_sz),intent(in)::sz_100,sz_143
+    real(8),dimension(1:iNx),intent(in)::mX
+    real(8),dimension(1:iNx,1:iNx),intent(in)::mc_inv
 
     integer::i
     
-    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
-
+    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
+    
     lmax = ilmaxX(1)
     DO i=2,iNspec
         IF (lmax<ilmaxX(i)) lmax = ilmaxX(i)
@@ -45,13 +45,13 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,,inp,inpt,ilmax_sz, sz_1
     DO i=2,iNspec
         IF (lmin>ilminX(i)) lmin = ilminX(i)
     ENDDO
-
+    
     xcase = 1
     !IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
     npar = lmax+1-lmin+11
-            
+    
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
 SUBROUTINE CAMSPEC_EXTRA_GETCASE(xc)

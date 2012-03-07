@@ -148,7 +148,7 @@ def configure(ctx):
     ctx.env.append_value("LIB_lapack",ctx.env.LIB_fc_runtime)
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
-    lapack_extradefs += ["LAPACK_CLIK"]
+    lapack_extradefs = ["LAPACK_CLIK"]
     
   atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)
 
@@ -249,6 +249,7 @@ void dsymm(const char *side, const char *uplo, const int *m, const int *n,
            const double *alpha, const double *a, const int *lda, const double *b, const int *ldb,
            const double *beta, double *c, const int *ldc);
 double ddot(int* N,double *DX, int* INCX,double *DY,int* INCY);
+void dpotrs(char* UPLO,int * N,int * NRHS,double* A,int* LDA,double* B,int* LDB,double* INFO );
            
          
 """

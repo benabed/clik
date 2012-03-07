@@ -60,17 +60,36 @@ class forfile:
 def main(argv):
   pars = clik.miniparse(argv[1])
   fcs = forfile(pars.input_likefile)
-  lmin_143x143,lmax_143x143,lmin_217x217,lmax_217x217,lmin_143x217,lmax_143x217,np_143x143,np_217x217,np_143x217,nX = fcs.read(" i32"*10)
+
+  Nspec,nX = fcs.read("i32 i32")
+
+  lminX = []
+  lmaxX = []
+  np = []
+  npt = []
+  for i in range(Nspec):
+    r = fcs.read("i32 "*4)
+    lminX += [r[0]]
+    lmaxX += [r[1]]
+    np += [r[2]]
+    npt += [r[3]]
+
   X = fcs.read("%df64"%nX)
   fcs.read()
   c_inv = fcs.read("%df64"%(nX)**2)
   
-  fsz = forfile(pars.input_szfile)
+  fsz = forfile(pars.input_szfile_100)
   lmax_sz = fsz.read('i32')
-  sz_temp = fsz.read("%df64"%(lmax_sz+1))
+  sz_100 = fsz.read("%df64"%(lmax_sz+1))
 
-  lmin = nm.min([lmin_143x143,lmin_143x217,lmin_217x217])
-  lmax = nm.max([lmax_143x143,lmax_143x217,lmax_217x217])
+  fsz = forfile(pars.input_szfile_143)
+  lmax_sz_143 = fsz.read('i32')
+  sz_143 = fsz.read("%df64"%(lmax_sz+1))
+
+  assert lmax_sz==lmax_sz_143
+
+  lmin = nm.min(lminX)
+  lmax = nm.max(lmaxX)
 
   hascl = [0]*6
   hascl[0] = 1
@@ -79,22 +98,21 @@ def main(argv):
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   lkl_grp = php.add_lkl_generic(root_grp,"CAMspec",1,hascl,lmax,lmin)
 
-  lkl_grp.attrs["lmin_143x143"] = lmin_143x143
-  lkl_grp.attrs["lmin_143x217"] = lmin_143x217
-  lkl_grp.attrs["lmin_217x217"] = lmin_217x217
-  lkl_grp.attrs["lmax_143x143"] = lmax_143x143
-  lkl_grp.attrs["lmax_143x217"] = lmax_143x217
-  lkl_grp.attrs["lmax_217x217"] = lmax_217x217
-  lkl_grp.attrs["np_143x143"]   = np_143x143
-  lkl_grp.attrs["np_143x217"]   = np_143x217
-  lkl_grp.attrs["np_217x217"]   = np_217x217
+  lkl_grp.attrs["Nspec"] = Nspec
+  
+  lkl_grp.attrs["lminX"] = lminX
+  lkl_grp.attrs["lmaxX"] = lmaxX
+  
+  lkl_grp.attrs["np"] = np
+  lkl_grp.attrs["npt"] = npt
 
   lkl_grp.attrs["nX"]          = nX
   
   lkl_grp.attrs["lmax_sz"]     = lmax_sz
 
   lkl_grp.create_dataset('X', data=X)
-  lkl_grp.create_dataset('sz_temp', data=sz_temp)
+  lkl_grp.create_dataset('sz_100', data=sz_100)
+  lkl_grp.create_dataset('sz_143', data=sz_143)
   lkl_grp.create_dataset('c_inv', data=c_inv)
   hf.close()
   

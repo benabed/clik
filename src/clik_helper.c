@@ -403,7 +403,7 @@ void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_l
     testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
     data = malloc_err(sizeof(char)*ndum,err);
     forwardError(*err,__LINE__,);
-    hstat = H5LTread_dataset_char(group_id,"external_data",data);
+    hstat = H5LTread_dataset(group_id,"external_data",H5T_NATIVE_UINT8,data);
     testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
 
     // save to file !

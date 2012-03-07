@@ -16,10 +16,10 @@ contains
 
   subroutine like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
     integer, intent(in):: iNspec, iNx,ilmax_sz
-    integer,dimension(:),intent(in)::ilmaxX, ilminX,inp,inpt
-    real(8),dimension(0:),intent(in)::sz_100,sz_143
-    real(8),dimension(:),intent(in)::mX
-    real(8),dimension(:,:),intent(in)::mc_inv
+    integer,dimension(1:iNspec),intent(in)::ilmaxX, ilminX,inp,inpt
+    real(8),dimension(0:ilmax_sz),intent(in)::sz_100,sz_143
+    real(8),dimension(1:iNx),intent(in)::mX
+    real(8),dimension(1:iNx,1:iNx),intent(in)::mc_inv
 
     Nspec = iNspec
     nX = inX
@@ -30,15 +30,16 @@ contains
     allocate(npt(Nspec))
     allocate(X(nX))
     allocate(c_inv(nX,nX))
-
+    
     lminX = ilminX(:Nspec)
     lmaxX = ilmaxX(:Nspec)
     np = inp(:Nspec)
     npt = inpt(:Nspec)
-
+    
     X(:nX) = mX(:nX)
     c_inv(:nX,:nX) = mc_inv(:nX,:nX)
-
+    
+    lmax_sz = ilmax_sz
     if(lmax_sz>5000) then
       print*, ' you need to increase the sizes of sz_temp', lmax_sz
       stop
@@ -46,7 +47,7 @@ contains
 
     sz_100_temp(0:lmax_sz) = sz_100(0:lmax_sz)
     sz_143_temp(0:lmax_sz) = sz_143(0:lmax_sz)
-
+    
     needinit=.false.
 
   end subroutine like_init_frommem  
@@ -58,7 +59,7 @@ contains
     character*100 like_file, sz100_file, sz143_file
     integer:: iNspec, iNx,ilmax_sz
     integer,dimension(:),allocatable::ilmaxX, ilminX,inp,inpt
-    real(8),dimension(0:),allocatable::sz_100,sz_143
+    real(8),dimension(0:5000)::sz_100,sz_143
     real(8),dimension(:),allocatable::mX
     real(8),dimension(:,:),allocatable::mc_inv
     
@@ -94,14 +95,14 @@ contains
     read(48) (sz_143(l), l = 0, ilmax_sz)
     close(48)
 
-    like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
+    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
     
-    deallocate(lminX(Nspec))
-    deallocate(lmaxX(Nspec))
-    deallocate(np(Nspec))
-    deallocate(npt(Nspec))
-    deallocate(X(nX))
-    deallocate(c_inv(nX,nX))
+    deallocate(ilminX)
+    deallocate(ilmaxX)
+    deallocate(inp)
+    deallocate(inpt)
+    deallocate(mX)
+    deallocate(mc_inv)
 
 
     return
