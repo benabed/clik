@@ -34,59 +34,46 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   double *X,*c_inv,*sz_143,*sz_100;
   int X_sz,c_inv_sz,sz_temp_sz;
 
-  _DEBUGHERE_("","");
   camspec_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"CAMspec already initialized",*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   hstat = H5LTget_attribute_int( group_id, ".", "Nspec",  &Nspec);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read Nspec in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
   
-  _DEBUGHERE_("","");
   lminX = hdf5_int_attarray(group_id,cur_lkl,"lminX",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
   lmaxX = hdf5_int_attarray(group_id,cur_lkl,"lmaxX",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
 
-  _DEBUGHERE_("","");
   np = hdf5_int_attarray(group_id,cur_lkl,"np",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
   npt = hdf5_int_attarray(group_id,cur_lkl,"npt",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
 
-  _DEBUGHERE_("","");
   hstat = H5LTget_attribute_int( group_id, ".", "nX",  &nX);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read nX in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
-  _DEBUGHERE_("","");
   hstat = H5LTget_attribute_int( group_id, ".", "lmax_sz",  &lmax_sz);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read lmax_sz in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
-  _DEBUGHERE_("","");
   X_sz = -1;
   X = hdf5_double_datarray(group_id,cur_lkl,"X",&X_sz, err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   c_inv_sz = -1;
   c_inv = hdf5_double_datarray(group_id,cur_lkl,"c_inv",&c_inv_sz, err);
   forwardError(*err,__LINE__,NULL);
 
-  _DEBUGHERE_("","");
   sz_temp_sz = -1;
   sz_143 = hdf5_double_datarray(group_id,cur_lkl,"sz_143",&sz_temp_sz, err);
   forwardError(*err,__LINE__,NULL);
   
-  _DEBUGHERE_("","");
   sz_temp_sz = -1;
   sz_100 = hdf5_double_datarray(group_id,cur_lkl,"sz_100",&sz_temp_sz, err);
   forwardError(*err,__LINE__,NULL);
 
-  _DEBUGHERE_("","");
-  _DEBUGHERE_("%d %d %d %d",lminX[0],lminX[1],lminX[2],lminX[3])
   camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,&lmax_sz, sz_100,sz_143,c_inv,X);    
   
-  _DEBUGHERE_("","");
   
   //camspec_extra_getcase_(&xcase);
   xdim = 11;
@@ -99,16 +86,13 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
     cmblkl_set_names(cing, xnames_0,err);
   forwardError(*err,__LINE__,NULL);  
   } else {*/
-  _DEBUGHERE_("","");
   cmblkl_set_names(cing, xnames_1,err);
   forwardError(*err,__LINE__,NULL);
   //}
-  _DEBUGHERE_("","");
   
   free(X);
   free(c_inv);
   free(sz_143);
   free(sz_100);
-  _DEBUGHERE_("","");
   return cing;
 }
