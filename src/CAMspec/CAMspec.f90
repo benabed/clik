@@ -210,7 +210,7 @@ contains
     end do
 
     zlike=zlike+((cal2/cal1-1.0056d0)/0.00105d0)**2 &
-               +((cal0/cal1-1.0152d0)/0.0005d0)**2
+               +((cal0/cal1-1.0127d0)/0.0005d0)**2
 
 
     deallocate(X_theory)
