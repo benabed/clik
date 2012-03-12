@@ -6,13 +6,13 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Interfacing the library with a c executable &mdash; clik v2.0 documentation</title>
+    <title>Interfacing the library with a c executable &mdash; clik v3.0 documentation</title>
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '2.0',
+        VERSION:     '3.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -21,7 +21,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="clik v2.0 documentation" href="index.html" />
+    <link rel="top" title="clik v3.0 documentation" href="index.html" />
     <link rel="next" title="Interfacing the library with a f90 executable" href="interfacingf90.html" />
     <link rel="prev" title="Installing" href="installing.html" /> 
   </head>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="installing.html" title="Installing"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -83,7 +83,7 @@
 <dl class="function">
 <dt>
 <tt class="descname">void clik_get_lmax(clik_object *clikid, int lmax[6],error **err);</tt></dt>
-<dd><p>This function fills the array <tt class="docutils literal"><span class="pre">lmax</span></tt> with the lmax value for each power spectra needed by the likelihood compute function (see <a class="reference internal" href="designchoices.html#querying"><em>The input of the compute function are multipoles of the power spectra and nuisance parameters.</em></a>). The first argument of the function must be the return value from a previous call to <a class="reference internal" href="interfacingf90.html#clik_init" title="clik_init"><tt class="xref c c-func docutils literal"><span class="pre">clik_init()</span></tt></a>. The last argument allow to track errors. It can be left to <tt class="docutils literal"><span class="pre">NULL</span></tt>, in which case no error tracking is perfomred and the program exit with an explaining message in case of an error.</p>
+<dd><p>This function fills the array <tt class="docutils literal"><span class="pre">lmax</span></tt> with the lmax value for each power spectra needed by the likelihood compute function (see <a class="reference internal" href="designchoices.html#querying"><em>The input of the compute function are multipoles of the power spectra and nuisance parameters.</em></a>). The first argument of the function must be the return value from a previous call to <a class="reference internal" href="interfacingf90.html#clik_init" title="clik_init"><tt class="xref c c-func docutils literal"><span class="pre">clik_init()</span></tt></a>. The last argument allow to track errors. It can be left to <tt class="docutils literal"><span class="pre">NULL</span></tt>, in which case no error tracking is performed and the program exit with an explaining message in case of an error.</p>
 </dd></dl>
 
 <dl class="function">
@@ -178,7 +178,7 @@
         <li class="right" >
           <a href="installing.html" title="Installing"
              >previous</a> |</li>
-        <li><a href="index.html">clik v2.0 documentation</a> &raquo;</li> 
+        <li><a href="index.html">clik v3.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

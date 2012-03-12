@@ -203,7 +203,7 @@ Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sou
 Special case: Healpix
 ^^^^^^^^^^^^^^^^^^^^^
 
-Clik requires a specialy build healpix library. Namely, it insists on using a repositionnable (or better shared) version of the healpix library. 
+Clik requires a specialy build healpix library. Namely, it must link with a repositionable (or better shared) version of the healpix library. 
 This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
 of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system, 
 using the option ``--healpix_install`` is very strongly recommanded.
