@@ -164,7 +164,7 @@ cdef class parametric:
 
 cdef class powerlaw(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -198,7 +198,7 @@ cdef class powerlaw(parametric):
 
 cdef class powerlaw_free_emissivity(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -232,7 +232,7 @@ cdef class powerlaw_free_emissivity(parametric):
 
 cdef class radiogal(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
@@ -264,7 +264,7 @@ cdef class radiogal(parametric):
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
 cdef class galametric(parametric):
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=True):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef error *_err,**err
