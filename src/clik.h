@@ -11,6 +11,10 @@
 #ifndef _CLIK_
 #define _CLIK_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define _pn_size 256
 typedef char parname[_pn_size];
 
@@ -56,5 +60,8 @@ void clik_cleanup(clik_object** pclikid);
 //internal
 void* _clik_dig(clik_object* clikid, error **err);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
