@@ -64,7 +64,7 @@ contains
     real(8),dimension(:,:),allocatable::mc_inv
     
 
-    if(needinit==.false.) then
+    if(needinit.eqv..false.) then
        return
     endif 
 

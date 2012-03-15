@@ -332,6 +332,9 @@ void comp_egfs_update(void* data,double* locpars, double* rq, error **err) {
 
     for(im1=0;im1<egfs_pay->m;im1++) {
       for(im2=0;im2<egfs_pay->m;im2++) {
+        /*if (im1==0)
+          _DEBUGHERE_("%d %d %d %d %g %g %g %g %g %g",il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell,il,im1,im2,egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] * *wl * egfs_pay->unit * egfs_pay->A[im1]*egfs_pay->A[im2],egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] , *wl , egfs_pay->unit , egfs_pay->A[im1],egfs_pay->A[im2]);
+        */
         egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] = egfs_pay->rq[il+im1*egfs_pay->m*egfs_pay->nell+im2*egfs_pay->nell] * *wl * egfs_pay->unit * egfs_pay->A[im1]*egfs_pay->A[im2];  
       }
     }

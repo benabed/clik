@@ -157,6 +157,9 @@ subroutine clik_get_egfs_component(instance_id,cmp,c_keys,c_values,nkv,R,dR,nfr,
 	call fill_kv_from_c(c_keys,c_values,tkv,keys,values)
 	call get_egfs_component(instance_id,cmp,keys,values,tkv,R,dR,nfr,lmin,lmax,np,errid)
 	!do ff=1,nfr
+	!	write(*,*) 1001,1,ff,R(1,ff,1001)
+	!enddo
+	!do ff=1,nfr
 	!	do ll=lmin,lmax
 	!		write(*,*) ff,ll,R(ff,ff,ll),dR(ff,ff,ll,1)
 	!	enddo

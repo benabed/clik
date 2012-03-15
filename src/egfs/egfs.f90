@@ -413,7 +413,7 @@ contains
   !
   subroutine get_radio_poisson(instance_id,keys,values,nkv,R,dR,nfr,lmin,lmax,np,error)
     integer :: instance_id, error
-    integer :: nkv, nfr, lmin, lmax, np
+    integer :: nkv, nfr, lmin, lmax, np,ff
     character(*), dimension(nkv) :: keys
     character(*), dimension(nkv) :: values
     real(8), dimension(nfr,nfr,lmin:lmax) :: R
@@ -438,11 +438,16 @@ contains
 
     do i=1,this%nfr
       do j=1,this%nfr
-        frqdep(i,j) = (fr(i)*fr(j)/fr0**2)**(alpha + sigma**2*log(fr(i)*fr(j)/fr0**2)/2)/dBdT(fr(i),fr0)/dBdT(fr(j),fr0)
+        frqdep(i,j) = (fr(i)*fr(j)/fr0**2) ** (alpha + sigma**2 * log(fr(i)*fr(j)/fr0**2)/2 )/dBdT(fr(i),fr0)/dBdT(fr(j),fr0)
+        !write(*,*) i,j,frqdep(i,j),fr(i),fr(j),dBdT(fr(i),fr0),dBdT(fr(j),fr0)
         logfac(i,j) = log(fr(i)*fr(j)/fr0**2)
       end do
     end do
 
+    !do ff=1,nfr
+    !  write(*,*) "in1",1001,1,ff,R(1,ff,1001)
+    !  write(*,*) frqdep(1,ff),frqdep(ff,1),fr(ff)
+    !enddo
     do l=lmin,lmax
       normfac = 1./d3000 * (this%rg_flux_cut/this%norm_rg_flux_cut)**(gam+2) * frqdep
       R(:,:,l) = norm * normfac
@@ -451,6 +456,9 @@ contains
       dR(:,:,l,this%sigma_rg%i) = norm * normfac * sigma * logfac**2
       dR(:,:,l,this%gamma_rg%i) = norm * normfac * log(this%rg_flux_cut/this%norm_rg_flux_cut) * (this%rg_flux_cut/this%norm_rg_flux_cut)**2
     end do
+    !do ff=1,nfr
+    !  write(*,*) "in",1001,1,ff,R(1,ff,1001)
+    !enddo
   end subroutine
 
 

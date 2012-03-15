@@ -52,7 +52,9 @@
 
 
       INTEGER (4)             :: F_HAND, N_REC
+#ifndef GFORTRAN
       REAL(4)   :: ETIME
+#endif
       REAL(4)   :: TOT_WALL_TIME
       REAL(4),DIMENSION(2) :: ELAPSED
 
@@ -63,8 +65,10 @@
       CHARACTER (LEN=160) :: DEFS_FILE, BOPIX_DATA_DIR
 
 
-
-      EXTERNAL OMP_SET_NUM_THREADS, ETIME, OMP_GET_NUM_THREADS
+#ifndef DFORTRAN
+      EXTERNAL ETIME
+#endif
+      EXTERNAL OMP_SET_NUM_THREADS, OMP_GET_NUM_THREADS
 
 
    CONTAINS
@@ -90,10 +94,11 @@
 
       BOPIX_THREADS=OMP_GET_NUM_THREADS()
 
+#ifndef GFORTRAN
       WRITE(6,*)'BOPIX INITIALIZATION...', BOPIX_THREADS, '  THREADS'
       TOT_WALL_TIME = ETIME(ELAPSED)      
       WRITE(6,*)'CPU TIME',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2),'ELAPSED TIME ', TOT_WALL_TIME/BOPIX_THREADS
-
+#endif
 
 !     IF (PRESENT(BOPIX_INPUT_FILENAME)) THEN
 !      CALL READ_PARAMETER(BOPIX_INPUT_FILENAME)
@@ -312,10 +317,11 @@
        CLOSE(11)
    END SELECT
 
+#ifndef GFORTRAN
       WRITE(6,*)'BOPIX INITIALIZED..'
       TOT_WALL_TIME = ETIME(ELAPSED)          
       WRITE(6,*)'CPU TIME',TOT_WALL_TIME, 'USER ', ELAPSED(1), 'SYSTEM ', ELAPSED(2),'ELAPSED TIME ', TOT_WALL_TIME/BOPIX_THREADS
-
+#endif
 
    END SUBROUTINE BOPIX_PARAMETER_INIT
 !=================================================================================================================================

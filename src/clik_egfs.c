@@ -125,6 +125,8 @@ void egfs_compute(egfs *self, double *pars, double *rq, double *drq, error **err
         for(fr2=0;fr2<self->nfr;fr2++) {
           for(q=0;q<self->nell;q++) {
             rq[fr1*self->nfr*self->nell+fr2*self->nell+q] += self->brq[fr1+fr2*self->nfr+q*self->nfr*self->nfr];
+            /*if (fr1==0 && q==1000)
+              _DEBUGHERE_("%d %d %d %d %g %g",fr1*self->nfr*self->nell+fr2*self->nell+q,q,fr1,fr2,rq[fr1*self->nfr*self->nell+fr2*self->nell+q],self->brq[fr1+fr2*self->nfr+q*self->nfr*self->nfr]);*/
           }
         }
       }
