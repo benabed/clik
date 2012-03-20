@@ -245,7 +245,7 @@ def installsmthg_post(ctx,where,what,extra_config=""):
   CCMACRO = "\"%s %s\""%(ctx.env.CC[0],ctx.env.mopt)
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC[0])
-  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j ;make install"%(where,ctx.env.mprefix,extra_config,CCMACRO, CPPMACRO)
+  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j %d ;make install"%(where,ctx.env.mprefix,extra_config,CCMACRO, CPPMACRO,ctx.options.jobs)
   Logs.pprint("PINK",cmdline)
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%what)
