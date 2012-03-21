@@ -127,7 +127,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
   
   agrp.attrs["ndef"] = len(defaults)
   defkey = defaults.keys()
-  defval = [defaults[k] for k in defkeys]
+  defval = [defaults[k] for k in defkey]
   agrp.attrs["defaults"] = php.pack256(*defkey)
   agrp.attrs["values"] = php.pack256(*defval)
 

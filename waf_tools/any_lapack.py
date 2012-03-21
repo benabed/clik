@@ -141,15 +141,18 @@ def configure(ctx):
   #        ctx.options.lapack_link = "-lmkl_intel_thread -lmkl_core -liomp5 -lm -lpthread -lmkl_def" + libdep
   #      ctx.options.lapack_include=ctx.options.lapack_mkl+"/include"
   #      ctx.options.lapack_lib=ctx.options.lapack_mkl+libsuffix+":".join([""]+ctx.env.LIBPATH_fc_runtime)
-  iall = atl.shouldIinstall_all(ctx,"lapack")
-  if atl.upgrade(ctx,"lapack") or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or iall:
+  elif atl.upgrade(ctx,"lapack") or ctx.options.lapack_islocal or ctx.options.lapack_forceinstall or atl.shouldIinstall_all(ctx,"lapack"):
     ctx.env.append_value("LIBPATH_lapack",ctx.env.LIBPATH_fc_runtime)
     ctx.env.append_value("RPATH_lapack",ctx.env.RPATH_fc_runtime)
     ctx.env.append_value("LIB_lapack",ctx.env.LIB_fc_runtime)
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
     lapack_extradefs = ["LAPACK_CLIK"]
-    
+  else:
+    lapack_includes = ["lapack_clik.h"]
+    lapack_extradefs = ["LAPACK_CLIK"]
+    do_include(ctx)
+
   atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)
 
 def installlapack(ctx):

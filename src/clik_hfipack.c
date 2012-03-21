@@ -300,6 +300,7 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     forwardError(*err,__LINE__,NULL);  
   }
   
+
   // how many components ?
   hstat = H5LTget_attribute_int( group_id, ".", "n_component",  &nc);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read n_component in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
@@ -387,6 +388,13 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   smic = Smica_init(nb, wq, m, rq_hat, rq_0, nc, SCs,err);
   forwardError(*err,__LINE__,NULL);
   
+  // deal with criterion
+  hstat = H5LTfind_attribute(comp_id, "criterion");
+  if (hstat == 1) {
+    
+
+  }
+
   free(rq_hat);
   
   if (rq_0!=NULL) {
