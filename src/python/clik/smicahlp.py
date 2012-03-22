@@ -146,10 +146,19 @@ def set_criterion(lkl_grp,typ,**extra):
   if typ.lower()=="eig":
     lkl_grp.attrs["criterion"]="eig"
     if "eig_norm" in extra:
-      lkl_grp.attrs["criterion_eig_norm"]=extra["eig_nrm"]
+      lkl_grp["criterion_eig_norm"]=extra["eig_nrm"]
+    else:
+      import numpy.linalg as la
+      import numpy as nm
+      rqh = lkl_grp["Rq_hat"][:]
+      nq = len(lkl_grp["wq"][:])
+      m = lkl_grp.attrs["m_channel_T"] + lkl_grp.attrs["m_channel_P"] 
+      rqh.shape=(nq,m,m)
+      nrm = nm.array([.5*(nm.log(nm.abs(la.det(rqh[i])))+m) for i in range(nq)])
+      lkl_grp["criterion_eig_norm"] = nrm
     return
   if typ.lower()=="quadratic":
     lkl_grp.attrs["criterion"]="quadratic"
     lkl_grp.create_dataset("criterion_quadratic_mat",data=extra["quadratic_mat"])
     return
-  
+
