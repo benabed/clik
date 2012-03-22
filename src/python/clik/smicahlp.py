@@ -139,5 +139,17 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
   return agrp
 
   
-
-
+def set_criterion(lkl_grp,typ,**extra):
+  if typ.lower()=="classic":
+    lkl_grp.attrs["criterion"]="classic"
+    return
+  if typ.lower()=="eig":
+    lkl_grp.attrs["criterion"]="eig"
+    if "eig_norm" in extra:
+      lkl_grp.attrs["criterion_eig_norm"]=extra["eig_nrm"]
+    return
+  if typ.lower()=="quadratic":
+    lkl_grp.attrs["criterion"]="quadratic"
+    lkl_grp.create_dataset("criterion_quadratic_mat",data=extra["quadratic_mat"])
+    return
+  
