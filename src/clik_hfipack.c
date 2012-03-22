@@ -389,10 +389,43 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   forwardError(*err,__LINE__,NULL);
   
   // deal with criterion
-  hstat = H5LTfind_attribute(comp_id, "criterion");
+  hstat = H5LTfind_attribute(group_id, "criterion");
   if (hstat == 1) {
+    char crit_name[_pn_size];
     
+    _DEBUGHERE_("","");
+    memset(crit_name,0,_pn_size*sizeof(char));
+    hstat = H5LTget_attribute_string(group_id, ".", "criterion",  crit_name);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read criterion in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
+    if(strcmp(crit_name,"classic")==0) {
+      //nothing to do here, we are fine
+      _DEBUGHERE_("","");
+    } else if(strcmp(crit_name,"quadratic")==0) {
+      double *quad_crit;
+      int nqu;
+
+      nqu = (nb*m*(m+1))/2;
+      quad_crit = hdf5_double_datarray(group_id, cur_lkl,"criterion_quadratic_mat",&nqu,err);
+      forwardError(*err,__LINE__,NULL);
+      smica_set_crit_gauss(smic, quad_crit,err);
+      forwardError(*err,__LINE__,NULL);
+      free(quad_crit);
+    } else if(strcmp(crit_name,"eig")==0) {
+      double nrm;
+      _DEBUGHERE_("","");
+
+      nrm = 0;
+      hstat = H5LTfind_attribute(group_id, "criterion_eig_norm");
+      if (hstat == 1) { 
+        hstat = H5LTget_attribute_double( group_id, ".", "criterion_eig_norm",  &nrm);
+        testErrorRetVA(hstat<0,hdf5_base,"cannot read criterion_eig_norm in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+      }
+      smica_set_crit_eig(smic, nrm, err);
+      forwardError(*err,__LINE__,NULL);
+    } else {
+      testErrorRetVA(1==1,hdf5_base,"does not understand criterion '%s' in %s",*err,__LINE__,NULL,crit_name,cur_lkl);
+    }
   }
 
   free(rq_hat);
