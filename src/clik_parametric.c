@@ -2,19 +2,19 @@
 
 
 pflist* pflist_init(error **err) {
- pflist *pf;
+  pflist *pf;
  
- pf = malloc_err(sizeof(pflist),err);
- forwardError(*err,__LINE__,NULL);
+  pf = malloc_err(sizeof(pflist),err);
+  forwardError(*err,__LINE__,NULL);
  
- pf->nmax = 20;
- pf->nkey = 0;
- pf->key = malloc_err(sizeof(pfchar)*pf->nmax,err);
- forwardError(*err,__LINE__,NULL);
- pf->value = malloc_err(sizeof(pfchar)*pf->nmax,err);
- forwardError(*err,__LINE__,NULL);
+  pf->nmax = 20;
+  pf->nkey = 0;
+  pf->key = malloc_err(sizeof(pfchar)*pf->nmax,err);
+  forwardError(*err,__LINE__,NULL);
+  pf->value = malloc_err(sizeof(pfchar)*pf->nmax,err);
+  forwardError(*err,__LINE__,NULL);
     
-return pf;
+  return pf;
 }
 
 void pflist_free(void **ppf) {
@@ -748,7 +748,281 @@ void radiogal_free(void **pp) {
   *pp=NULL;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// CIB model. Millea et al. for now
+////////////////////////////////////////////////////////////////////////////////////////////
+
+parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &ir_poisson_compute;
+  egl->eg_free = &ir_poisson_free;
+  egl->payload = malloc_err(sizeof(double)*(2*egl->nfreq*egl->nfreq + egl->nfreq),err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_poisson_norm",5.9,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_poisson_alpha",3.8,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_poisson_sigma",0.4,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void ir_poisson_compute(void* exg, double *Rq, double* dRq, error **err) {
+  parametric *egl;
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double ir_poisson_norm, ir_poisson_alpha, ir_poisson_sigma;
+  double d3000, nu0;
+  double x, lnx, ln2x;
+  double *A,*B,*vec;
+
+  egl = exg;
+  A = egl->payload;
+  d3000 = 3000.*3001./2./M_PI;
+  nu0 = 143;
+
+  ir_poisson_norm = parametric_get_value(egl,"ir_poisson_norm",err);
+  forwardError(*err,__LINE__,);
+
+  ir_poisson_alpha = parametric_get_value(egl,"ir_poisson_alpha",err);
+  forwardError(*err,__LINE__,);
+
+  ir_poisson_sigma = parametric_get_value(egl,"ir_poisson_sigma",err);
+  forwardError(*err,__LINE__,);
+
+  nfreq = egl->nfreq;
+  B = A + nfreq*nfreq;
+  vec = B + nfreq*nfreq;
+  for (m1=0;m1<nfreq;m1++) {
+    vec[m1] = dBdT((double)egl->freqlist[m1],nu0);
+    for(m2=m1;m2<nfreq;m2++) {
+      x = (double)egl->freqlist[m1]*(double)egl->freqlist[m2]/(nu0*nu0);
+      lnx = log(x);
+      ln2x = lnx*lnx;
+      A[m1*nfreq+m2] = lnx;
+      A[m2*nfreq+m1] = lnx;
+      B[m1*nfreq+m2] = ln2x;
+      B[m2*nfreq+m1] = ln2x;
+    }
+  }
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell=(ell-egl->lmin)*nfreq*nfreq;
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+        Rq[mell + m1*nfreq+m2] = ir_poisson_norm/d3000 * 
+          exp(ir_poisson_alpha*A[m1*nfreq+m2] +
+              ir_poisson_sigma*ir_poisson_sigma/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
+        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+      }
+    }
+  }
+
+  if (dRq!=NULL) {
+    for (iv=0;iv<egl->nvar;iv++) {
+      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
+
+      if (strcmp(egl->varkey[iv],"ir_poisson_norm")==0) {
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/ir_poisson_norm;
+              dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/ir_poisson_norm;
+            }
+          }
+        }
+        continue;
+      }
+      if (strcmp(egl->varkey[iv],"ir_poisson_alpha")==0) {
+        // dR/alpha = log(nu1*nu2/nu0^2) * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = A[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = A[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
+      }
+      if (strcmp(egl->varkey[iv],"ir_poisson_sigma")==0) {
+        // dR/dsigma = log(nu1*nu2/nu0^2)^2 * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = ir_poisson_sigma * B[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = ir_poisson_sigma * B[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
+      }
+      // error return
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
+    }
+  }
+  return;
+}
+
+void ir_poisson_free(void **pp) {
+  double *p;
+
+  p = *pp;
+  free(p);
+  *pp=NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// CIB clustered part. Millea et al. for now.
+////////////////////////////////////////////////////////////////////////////////////////
+
+
+parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &ir_clustered_compute;
+  egl->eg_free = &ir_clustered_free;
+  egl->payload = malloc_err(sizeof(double)*(egl->nfreq*egl->nfreq + egl->nfreq + (lmax-lmin+1)),err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_clustered_norm",3.9,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_clustered_alpha",3.8,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ir_clustered_index",-1.25,err); // Karim's favorite
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
+  parametric *egl;
+  int ell,m1,m2,mell,m3000,nfreq,iv,mv;
+  double ir_clustered_norm, ir_clustered_alpha;
+  double d3000, nu0;
+  double x, lnx, ln2x;
+  double *A,*vec,*template;
+
+  egl = exg;
+  A = egl->payload; // Will store log(nu/nu0)
+  d3000 = 3000.*3001./2./M_PI;
+  nu0 = 143;
+
+  ir_clustered_norm = parametric_get_value(egl,"ir_clustered_norm",err);
+  forwardError(*err,__LINE__,);
+
+  ir_clustered_alpha = parametric_get_value(egl,"ir_clustered_alpha",err);
+  forwardError(*err,__LINE__,);
+
+  ir_clustered_index = parametric_get_value(egl,"ir_clustered_index",err);
+  forwardError(*err,__LINE__,);
+
+  nfreq = egl->nfreq;
+  vec = A + nfreq*nfreq; // Will store dB/dT(nu,nu0)
+  template = vec + nfreq; // Will store Cl spectrum (unnormalized)
+
+  for (m1=0;m1<nfreq;m1++) {
+    vec[m1] = dBdT((double)egl->freqlist[m1],nu0);
+    for(m2=m1;m2<nfreq;m2++) {
+      x = (double)egl->freqlist[m1]*(double)egl->freqlist[m2]/(nu0*nu0);
+      lnx = log(x);
+      A[m1*nfreq+m2] = lnx;
+      A[m2*nfreq+m1] = lnx;
+    }
+  }
+
+  // Create Cl template
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell=ell-egl->lmin;
+    template[mell] = pow((double)ell,ir_clustered_index);
+  }
+  m3000 = 3000-egl->lmin;
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell=(ell-egl->lmin)*nfreq*nfreq;
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+        Rq[mell + m1*nfreq+m2] = ir_clustered_norm * 
+	  template[mell]/(d3000*template[m3000]) * 
+          exp(ir_poisson_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]);
+        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+      }
+    }
+  }
+
+  if (dRq!=NULL) {
+    for (iv=0;iv<egl->nvar;iv++) {
+      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
+
+      if (strcmp(egl->varkey[iv],"ir_clustered_norm")==0) {
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/ir_clustered_norm;
+              dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/ir_clustered_norm;
+            }
+          }
+        }
+        continue;
+      }
+      if (strcmp(egl->varkey[iv],"ir_clustered_alpha")==0) {
+        // dR/alpha = log(nu1*nu2/nu0^2) * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = A[m1*nfreq+m2] * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = A[m2*nfreq+m1] * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
+      }
+      if (strcmp(egl->varkey[iv],"ir_clustered_index")==0) {
+        // dR/dsigma = log(ell/3000) * R
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            for (m2=m1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = log(ell/3000.0) * Rq[mell+m1*nfreq+m2];
+              dRq[mv+mell + m2*nfreq+m1] = log(ell/3000.0) * Rq[mell+m2*nfreq+m1];
+            }
+          }
+        }
+        continue;
+      }
+      // error return
+      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+      forwardError(*err,__LINE__,);
+    }
+  }
+  return;
+}
+
+void ir_clustered_free(void **pp) {
+  double *p;
+
+  p = *pp;
+  free(p);
+  *pp=NULL;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////
 // Galactic model
+////////////////////////////////////////////////////////////////////////////////////////
 
 // Dust emissivity normalized to 1 at nu0
 double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0) {

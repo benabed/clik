@@ -73,5 +73,11 @@ double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_th
 parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err);
 void galactic_component_free(void **pp);
+parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+void ir_poisson_compute(void* exg, double *Rq, double *dRq, error **err);
+void ir_poisson_free(void **pp);
+parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+void ir_clustered_compute(void* exg, double *Rq, double *dRq, error **err);
+void ir_clustered_free(void **pp);
 
 #endif
