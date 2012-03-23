@@ -122,7 +122,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
   agrp = add_component(lkl_grp,name)
-  agrp.attrs["ndim"] = len(vpars)
+  agrp.attrs["ndim"] = len(npars)
   agrp.attrs["keys"] = php.pack256(*npars)
   
   agrp.attrs["ndef"] = len(defaults)
