@@ -147,10 +147,13 @@ def configure(ctx):
     ctx.env.append_value("LIB_lapack",ctx.env.LIB_fc_runtime)
     lapack_libs = ["lapack_clik","blas_clik"]
     lapack_includes = ["lapack_clik.h"]
-    lapack_extradefs = ["LAPACK_CLIK"]
+    lapack_extradefs = ["HAS_LAPACK"]
+    lapack_extradefs += ["LAPACK_CLIK"]
   else:
+    lapack_libs = []
     lapack_includes = ["lapack_clik.h"]
-    lapack_extradefs = ["LAPACK_CLIK"]
+    lapack_extradefs = ["HAS_LAPACK"]
+    lapack_extradefs += ["LAPACK_CLIK"]
     do_include(ctx)
 
   atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)

@@ -909,7 +909,7 @@ parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, c
 void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
   int ell,m1,m2,mell,m3000,nfreq,iv,mv;
-  double ir_clustered_norm, ir_clustered_alpha;
+  double ir_clustered_norm, ir_clustered_alpha,ir_clustered_index;
   double d3000, nu0;
   double x, lnx, ln2x;
   double *A,*vec,*template;
@@ -954,8 +954,8 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
         Rq[mell + m1*nfreq+m2] = ir_clustered_norm * 
-	  template[mell]/(d3000*template[m3000]) * 
-          exp(ir_poisson_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]);
+      	  template[mell]/(d3000*template[m3000]) * 
+          exp(ir_clustered_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]);
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
