@@ -47,7 +47,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
 
     for(im1=0;im1<p_pay->m;im1++) {
       for(im2=0;im2<p_pay->m;im2++) {
-        p_pay->rq[il+im1*p_pay->m*p_pay->nell+im2*p_pay->nell] = p_pay->rq[il+im1*p_pay->m*p_pay->nell+im2*p_pay->nell] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
+        p_pay->rq[il*p_pay->m*p_pay->m+im1*p_pay->m+im2] = p_pay->rq[il*p_pay->m*p_pay->m+im1*p_pay->m+im2] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
       }
     }
     wl+=inc;
@@ -91,7 +91,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         for(iq=0;iq<nbns;iq++) {
           for(if1=0;if1<p_pay->m;if1++) {
             for(if2=0;if2<p_pay->m;if2++) {
-              rq[iq*ndim+if1*p_pay->m+if2] += p_pay->bins[iq*nell+il] * p_pay->rq[il+if1*p_pay->m*p_pay->nell+if2*p_pay->nell];
+              rq[iq*ndim+if1*p_pay->m+if2] += p_pay->bins[iq*nell+il] * p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
               /*if (iq==10)
                 r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
             }  
@@ -115,7 +115,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
     for(il=0;il<p_pay->nell;il++) {
       for(if1=0;if1<p_pay->m;if1++) {
         for(if2=0;if2<p_pay->m;if2++) {
-          rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2] += p_pay->rq[il+if1*p_pay->m*p_pay->nell+if2*p_pay->nell];
+          rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2] += p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
         }
       }
     }
