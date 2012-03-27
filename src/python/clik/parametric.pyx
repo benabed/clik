@@ -54,6 +54,8 @@ cdef extern from "clik_parametric.h":
   double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, double alpha_non_thermal, double nu0)
   double c_d_non_thermal_spectrum_d_alpha_non_thermal "d_non_thermal_spectrum_d_alpha_non_thermal" (double nu, double alpha_non_thermal, double nu0)
   double c_dBdT "dBdT" (double nu, double nu0)
+  c_parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+  c_parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
 cdef class parametric:
   cdef c_parametric* celf
@@ -314,18 +316,68 @@ def d_non_thermal_spectrum_d_alpha_non_thermal(nu,alpha_non_thermal=-1.0,nu0=143
 def dBdT(nu,nu0=143.0):
   return c_dBdT(<double>nu,<double>nu0)
 
-## {{{ http://code.activestate.com/recipes/576693/ (r9)
-# Backport of OrderedDict() class that runs on Python 2.4, 2.5, 2.6, 2.7 and pypy.
-# Passes Python2.7's test suite and incorporates all the latest updates.
+cdef class ir_poisson(parametric):
+  
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
+    cdef int p_detlist[200]
+    cdef char *defkey[200],*defvalue[200],*key[200]
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+    
+    ndef = len(defs)
+    ndet = len(detlist)
+    
+    for i in range(ndet):
+      p_detlist[i] = detlist[i]
 
-try:
-    from thread import get_ident as _get_ident
-except ImportError:
-    from dummy_thread import get_ident as _get_ident
+    i = 0
+    for k,v in defs.items():
+      defkey[i] = k
+      defvalue[i] = v
+      i+=1
+    
+    nvar = len(vars)
+    for i in range(nvar):
+      key[i] = vars[i]
 
-try:
-    from _abcoll import KeysView, ValuesView, ItemsView
-except ImportError:
-    pass
+    self.celf = ir_poisson_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    er=doError(err)
+    if er:
+      raise er
 
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
+cdef class ir_clustered(parametric):
+  
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
+    cdef int p_detlist[200]
+    cdef char *defkey[200],*defvalue[200],*key[200]
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+    
+    ndef = len(defs)
+    ndet = len(detlist)
+    
+    for i in range(ndet):
+      p_detlist[i] = detlist[i]
+
+    i = 0
+    for k,v in defs.items():
+      defkey[i] = k
+      defvalue[i] = v
+      i+=1
+    
+    nvar = len(vars)
+    for i in range(nvar):
+      key[i] = vars[i]
+
+    self.celf = ir_clustered_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    er=doError(err)
+    if er:
+      raise er
+
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
