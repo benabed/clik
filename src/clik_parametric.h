@@ -54,6 +54,7 @@ double parametric_get_default(parametric* egl,char *key, error **err);
 double parametric_get_value(parametric *egl, char *key, error **err);
 void parametric_dnofail(parametric* egl, int vl);
 
+double dBdT(double nu, double nu0);
 
 parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void powerlaw_compute(void* exg, double *Rq, double*dRq, error **err);
@@ -63,19 +64,21 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error *
 
 parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void radiogal_compute(void* exg, double *Rq, double* dRq, error **err);
-double dBdT(double nu, double nu0);
 void radiogal_free(void **pp);
+
+parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err);
+void galactic_component_free(void **pp);
 double dust_spectrum(double nu, double T_dust, double beta_dust, double nu0);
 double d_dust_spectrum_d_beta_dust(double nu, double T_dust, double beta_dust, double nu0);
 double d_dust_spectrum_d_T_dust(double nu, double T_dust, double beta_dust, double nu0);
 double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0);
 double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_thermal, double nu0);
-parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
-void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err);
-void galactic_component_free(void **pp);
+
 parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void ir_poisson_compute(void* exg, double *Rq, double *dRq, error **err);
 void ir_poisson_free(void **pp);
+
 parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void ir_clustered_compute(void* exg, double *Rq, double *dRq, error **err);
 void ir_clustered_free(void **pp);

@@ -775,7 +775,7 @@ parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, cha
 
 void ir_poisson_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
-  int ell,m1,m2,mell,nfreq,iv,mv;
+  int ell,m1,m2,mell,nfreq,iv,mv,lell;
   double ir_poisson_norm, ir_poisson_alpha, ir_poisson_sigma;
   double d3000, nu0;
   double x, lnx, ln2x;
@@ -813,12 +813,13 @@ void ir_poisson_compute(void* exg, double *Rq, double* dRq, error **err) {
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
+    lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
         Rq[mell + m1*nfreq+m2] = ir_poisson_norm/d3000 * 
           exp(ir_poisson_alpha*A[m1*nfreq+m2] +
               ir_poisson_sigma*ir_poisson_sigma/2.0 * B[m1*nfreq+m2])/(vec[m1]*vec[m2]);
-        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+        Rq[lell + m2*nfreq+m1] = Rq[lell + m1*nfreq+m2];
       }
     }
   }
@@ -888,10 +889,17 @@ void ir_poisson_free(void **pp) {
 
 parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
+  pfchar type;
+  char *pt;
+
+
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  forwardError(*err,__LINE__,NULL);
+  
   egl->eg_compute = &ir_clustered_compute;
   egl->eg_free = &ir_clustered_free;
-  egl->payload = malloc_err(sizeof(double)*(egl->nfreq*egl->nfreq + egl->nfreq + (lmax-lmin+1)),err);
+
+  egl->payload = malloc_err(sizeof(double)*(2*egl->nfreq*egl->nfreq + egl->nfreq + (lmax-lmin+1)),err);
   forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"ir_clustered_norm",3.9,err); // Millea et al. ref value
@@ -903,17 +911,45 @@ parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, c
   parametric_set_default(egl,"ir_clustered_index",-1.25,err); // Karim's favorite
   forwardError(*err,__LINE__,NULL);
 
+  sprintf(type,"step");
+  pt = (char*)type;
+  pt = pflist_get_value(egl->pf,"ir_clustered_correlation",pt,err);
+  forwardError(*err,__LINE__,);
+
+  //_DEBUGHERE_("%s",pt);
+  
+  if (strcmp(pt,"step")==0) {
+    parametric_set_default(egl,"ir_clustered_correlation_step",0.5,err);
+    forwardError(*err,__LINE__,NULL);
+  } else if (strcmp(pt,"matrix")==0) {
+    int m1,m2;
+    double vl;
+    pfchar name;
+    for(m1=0;m1<egl->nfreq;m1++) {
+      for(m2=m1;m2<egl->nfreq;m2++) {
+        sprintf(name,"ir_clustered_correlation_M_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+        parametric_set_default(egl,name,1,err);
+        forwardError(*err,__LINE__,NULL);
+      }
+    }  
+  } else {
+    testErrorRetVA(1==1,-1234,"Unknown ir_clustered_correlation type '%s'",*err,__LINE__,,type);
+    // return ?
+  }
+
   return egl;
 }
 
 void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
-  int ell,m1,m2,mell,m3000,nfreq,iv,mv;
+  int ell,m1,m2,mell,nfreq,iv,mv,lell;
   double ir_clustered_norm, ir_clustered_alpha,ir_clustered_index;
-  double d3000, nu0;
+  double d3000, nu0,t3000;
   double x, lnx, ln2x;
-  double *A,*vec,*template;
-
+  double *A,*vec,*template,*dcm;
+  pfchar type;
+  char *pt;
+  
   egl = exg;
   A = egl->payload; // Will store log(nu/nu0)
   d3000 = 3000.*3001./2./M_PI;
@@ -947,15 +983,50 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
     mell=ell-egl->lmin;
     template[mell] = pow((double)ell,ir_clustered_index);
   }
-  m3000 = 3000-egl->lmin;
+  t3000 = pow(3000.,ir_clustered_index);
+
+  //create correlation matrix
+  dcm = template + egl->lmax-egl->lmin+1;
+
+  sprintf(type,"step");
+  pt = (char*)type;
+  pt = pflist_get_value(egl->pf,"ir_clustered_correlation",pt,err);
+  forwardError(*err,__LINE__,);
+  //_DEBUGHERE_("%s",pt);
+
+  if (strcmp(pt,"step")==0) {  
+    double step;
+
+    step = parametric_get_value(egl,"ir_clustered_correlation_step",err);
+    for(m1=0;m1<egl->nfreq;m1++) {
+      dcm[m1*egl->nfreq+m1] = 1.;
+      for(m2=0;m2<m1;m2++) {
+        dcm[m1*egl->nfreq+m2] = pow(step,fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33);
+        dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
+        //_DEBUGHERE_("%d %d %g %g",m1,m2,dcm[m1*egl->nfreq+m2],fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33)
+      }
+    }
+  } else {
+    for(m1=0;m1<egl->nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        pfchar name;
+        sprintf(name,"ir_clustered_correlation_M_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+        dcm[m1*egl->nfreq+m2] = parametric_get_value(egl,name,err);
+        forwardError(*err,__LINE__,);
+        dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
+        //_DEBUGHERE_("%d %d %g",m1,m2,dcm[m1*egl->nfreq+m2]);
+      }
+    }
+  }
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
+    lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
         Rq[mell + m1*nfreq+m2] = ir_clustered_norm * 
-      	  template[mell]/(d3000*template[m3000]) * 
-          exp(ir_clustered_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]);
+      	  template[lell]/(d3000*t3000) * 
+          exp(ir_clustered_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]) * dcm[m1*egl->nfreq+m2];
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
@@ -1111,13 +1182,13 @@ parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** def
   pt = pflist_get_value(egl->pf,"gal_type",pt,err);
   forwardError(*err,__LINE__,);
 
-  if (strcmp(type,"dust")==0) {
+  if (strcmp(pt,"dust")==0) {
     parametric_set_default(egl,"gal_beta_dust",1.8,err);
     forwardError(*err,__LINE__,NULL);
 
     parametric_set_default(egl,"gal_T_dust",1.8,err);
     forwardError(*err,__LINE__,NULL);
-  } else if (strcmp(type,"non_thermal")==0) {
+  } else if (strcmp(pt,"non_thermal")==0) {
     //Intensity, = -3.0 in RJ
     parametric_set_default(egl,"gal_alpha_non_thermal",-1,err);
     forwardError(*err,__LINE__,NULL);
@@ -1159,7 +1230,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
   pt = pflist_get_value(egl->pf,"gal_type",pt,err);
   forwardError(*err,__LINE__,);
 
-  if (strcmp(type,"dust")==0) {
+  if (strcmp(pt,"dust")==0) {
     
     beta_dust = parametric_get_value(egl,"gal_beta_dust",err);
     forwardError(*err,__LINE__,);
@@ -1167,7 +1238,7 @@ void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err)
     T_dust = parametric_get_value(egl,"gal_T_dust",err);
     forwardError(*err,__LINE__,);
 
-  } else if (strcmp(type,"non_thermal")==0) {
+  } else if (strcmp(pt,"non_thermal")==0) {
 
     isdust = 0;
     alpha_non_thermal = parametric_get_value(egl,"gal_alpha_non_thermal",err);
