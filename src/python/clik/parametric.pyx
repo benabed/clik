@@ -381,3 +381,5 @@ cdef class ir_clustered(parametric):
       raise er
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
+
+simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","galametric"]
