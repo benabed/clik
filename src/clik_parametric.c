@@ -940,6 +940,10 @@ parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, c
   return egl;
 }
 
+double ir_clustered_step_index(parametric* egl, int m1,int m2) {
+  return fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33;
+}
+
 void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
   int ell,m1,m2,mell,nfreq,iv,mv,lell;
@@ -949,7 +953,9 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
   double *A,*vec,*template,*dcm;
   pfchar type;
   char *pt;
-  
+  double step;
+  int isstep;
+
   egl = exg;
   A = egl->payload; // Will store log(nu/nu0)
   d3000 = 3000.*3001./2./M_PI;
@@ -994,14 +1000,15 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
   forwardError(*err,__LINE__,);
   //_DEBUGHERE_("%s",pt);
 
+  isstep=0;
   if (strcmp(pt,"step")==0) {  
-    double step;
+    isstep=1;
 
     step = parametric_get_value(egl,"ir_clustered_correlation_step",err);
     for(m1=0;m1<egl->nfreq;m1++) {
       dcm[m1*egl->nfreq+m1] = 1.;
       for(m2=0;m2<m1;m2++) {
-        dcm[m1*egl->nfreq+m2] = pow(step,fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33);
+        dcm[m1*egl->nfreq+m2] = pow(step,ir_clustered_step_index(egl,m1,m2));
         dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
         //_DEBUGHERE_("%d %d %g %g",m1,m2,dcm[m1*egl->nfreq+m2],fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33)
       }
@@ -1074,6 +1081,20 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
         }
         continue;
       }
+      if (strcmp(egl->varkey[iv],"ir_clustered_correlation_step")==0 && isstep==1) {
+        // dR/dstep = xx  R/step avec xx / M = step**xx
+        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+          mell = (ell-egl->lmin)*nfreq*nfreq;
+          for (m1=0;m1<nfreq;m1++) {
+            dRq[mv+mell + m1*nfreq+m1] = 0; //diagonal unchanged
+            for (m2=m1+1;m2<nfreq;m2++) {
+              dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/step * ir_clustered_step_index(egl,m1,m2);
+              dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m1*nfreq+m2]/step * ir_clustered_step_index(egl,m1,m2);
+            }
+          }
+        }
+        continue;
+      }      
       // error return
       parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
       forwardError(*err,__LINE__,);
