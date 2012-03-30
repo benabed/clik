@@ -299,7 +299,7 @@ def main(argv):
 
   #save all !
   root_grp,hf = php.baseCreateParobject(pars.res_object)
-  if (h0):
+  if (not h0):
     rq0 = None
 
   lkl_grp = smh.base_smica(root_grp,hascl,lmin,lmax,pars.int.nT,pars.int.nP,wq,rqhat,Acmb,rq0,bins)
