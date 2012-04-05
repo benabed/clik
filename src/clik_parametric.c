@@ -1141,7 +1141,7 @@ parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defke
 
 void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
   parametric *egl;
-  int ell,m1,m2,mell,nfreq,iv,mv,lell;
+  int ell,m1,m2,mell,nfreq,iv,mv,lell,mell_in;
   double ir_clustered_pep_norm;
   double *A;
   int hfi_freqlist[6] = {100,143,217,353,545,857};
@@ -1153,7 +1153,7 @@ void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
   egl = exg;
   A = egl->payload; // Stores input C_l(nu,nu') for all HFI frequencies and ell in [0,3000]
   nfreq = egl->nfreq;
-  ind_freq = malloc_err(sizeof(int)*nfreq);
+  ind_freq = malloc_err(sizeof(int)*nfreq,err);
   forwardError(*err,__LINE__,NULL);
 
   ir_clustered_pep_norm = parametric_get_value(egl,"ir_clustered_pep_norm",err);
@@ -1176,7 +1176,7 @@ void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
       for (m2=m1;m2<nfreq;m2++) {
 	ind1 = hfi_freqlist[ind_freq[m1]];
 	ind2 = hfi_freqlist[ind_freq[m2]];
-        Rq[mell + m1*nfreq+m2] = rq_clustered_in[mell_in + ind1*nfreqs_hfi + ind2];
+        Rq[mell + m1*nfreq+m2] = A[mell_in + ind1*nfreqs_hfi + ind2];
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
