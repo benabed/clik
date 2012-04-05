@@ -83,4 +83,8 @@ parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, c
 void ir_clustered_compute(void* exg, double *Rq, double *dRq, error **err);
 void ir_clustered_free(void **pp);
 
+parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err);
+void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err);
+void ir_clustered_pep_free(void **pp);
+
 #endif
