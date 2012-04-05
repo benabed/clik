@@ -1226,7 +1226,7 @@ parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey,
   egl->eg_compute = &ir_poisson_pep_compute;
   egl->eg_free = &ir_poisson_pep_free;
 
-  egl->payload = malloc_err(sizeof(double)*(nfreqs_hfi*nfreqs_hfi,err); //6 frequencies (HFI)
+  egl->payload = malloc_err(sizeof(double)*nfreqs_hfi*nfreqs_hfi,err); //6 frequencies (HFI)
   forwardError(*err,__LINE__,NULL);
   memcpy(egl->payload,rq_poisson_in,nfreqs_hfi*nfreqs_hfi*sizeof(double));
 
