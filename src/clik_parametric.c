@@ -1174,9 +1174,9 @@ void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
     lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-        ind1 = hfi_freqlist[ind_freq[m1]];
-        ind2 = hfi_freqlist[ind_freq[m2]];
-        Rq[mell + m1*nfreq+m2] = A[mell_in + ind1*nfreqs_hfi + ind2];
+        ind1 = ind_freq[m1];
+        ind2 = ind_freq[m2];
+        Rq[mell + m1*nfreq+m2] = ir_clustered_pep_norm * A[mell_in + ind1*nfreqs_hfi + ind2];
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
@@ -1229,7 +1229,7 @@ parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey,
   egl->payload = malloc_err(sizeof(double)*nfreqs_hfi*nfreqs_hfi,err); //6 frequencies (HFI)
   forwardError(*err,__LINE__,NULL);
   memcpy(egl->payload,rq_poisson_in,nfreqs_hfi*nfreqs_hfi*sizeof(double));
-
+  
   parametric_set_default(egl,"ir_poisson_pep_norm",1.0,err);
   forwardError(*err,__LINE__,NULL);
 
@@ -1264,14 +1264,15 @@ void ir_poisson_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
     }
   }
 
+
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
     mell=(ell-egl->lmin)*nfreq*nfreq;
     lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-        ind1 = hfi_freqlist[ind_freq[m1]];
-        ind2 = hfi_freqlist[ind_freq[m2]];
-        Rq[mell + m1*nfreq+m2] = A[ind1*nfreqs_hfi + ind2];
+        ind1 = ind_freq[m1];
+        ind2 = ind_freq[m2];
+        Rq[mell + m1*nfreq+m2] = ir_poisson_pep_norm * A[ind1*nfreqs_hfi + ind2];
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
