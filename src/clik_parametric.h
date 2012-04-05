@@ -87,4 +87,8 @@ parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defke
 void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err);
 void ir_clustered_pep_free(void **pp);
 
+parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err);
+void ir_poisson_pep_compute(void* exg, double *Rq, double* dRq, error **err);
+void ir_poisson_pep_free(void **pp);
+
 #endif
