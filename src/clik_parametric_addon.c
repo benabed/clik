@@ -122,7 +122,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   }
     
 }
-void free_comp_paramteric(void** data) {
+void free_comp_parametric(void** data) {
   SmicaComp *SC;
   parametric_smica *p_pay;
   
@@ -254,7 +254,7 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   p_pay->rq = malloc_err(sizeof(double)*(lmax+1-lmin)*m*m,err);
   forwardError(*err,__LINE__,NULL);
   
-  SC = alloc_SC(p_model->nvar,nb,m,p_pay,&comp_parametric_update,&free_comp_paramteric,err);
+  SC = alloc_SC(p_model->nvar,nb,m,p_pay,&comp_parametric_update,&free_comp_parametric,err);
   forwardError(*err,__LINE__,NULL);
   
   if (p_model->nvar!=0) {
@@ -407,6 +407,92 @@ SmicaComp * clik_smica_comp_galametric_init(hid_t comp_id, char* cur_lkl,int nb,
   forwardError(*err,__LINE__,NULL);
   
   p_model = galactic_component_init(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  free(detlist);
+  if (defkeys[0]!=NULL) {
+    free(defkeys[0]);
+    free(defvalues[0]);
+  }
+  free(defkeys);
+  free(defvalues);
+
+  if (varkeys[0]!=NULL) {
+    free(varkeys[0]);
+  }
+  free(varkeys);
+
+  SC = finalize_parametric_hdf5_init(p_model,comp_id,cur_lkl,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_ir_poisson_pep_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  parametric* p_model;
+  SmicaComp *SC;
+  int lmin,lmax;
+  int *detlist;
+  int ndef,nvar;
+  char **defkeys,**defvalues,**varkeys;
+  herr_t hstat;
+  double *template;
+  int dz;
+
+  lmin = ell[0];
+  lmax = ell[nell-1];
+  testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);
+
+  base_parametric_hdf5_init(comp_id,cur_lkl,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  dz = -1;
+  template = hdf5_double_datarray(comp_id,cur_lkl,"template",&dz, err);
+  forwardError(*err,__LINE__,);
+  p_model = ir_poisson_pep_init(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  free(detlist);
+  if (defkeys[0]!=NULL) {
+    free(defkeys[0]);
+    free(defvalues[0]);
+  }
+  free(defkeys);
+  free(defvalues);
+
+  if (varkeys[0]!=NULL) {
+    free(varkeys[0]);
+  }
+  free(varkeys);
+
+  SC = finalize_parametric_hdf5_init(p_model,comp_id,cur_lkl,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_ir_clustered_pep_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  parametric* p_model;
+  SmicaComp *SC;
+  int lmin,lmax;
+  int *detlist;
+  int ndef,nvar;
+  char **defkeys,**defvalues,**varkeys;
+  herr_t hstat;
+  double *template;
+  int dz;
+
+  lmin = ell[0];
+  lmax = ell[nell-1];
+  testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);
+
+  base_parametric_hdf5_init(comp_id,cur_lkl,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  dz = -1;
+  template = hdf5_double_datarray(comp_id,cur_lkl,"template",&dz, err);
+  forwardError(*err,__LINE__,);
+  p_model = ir_clustered_pep_init(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err);
   forwardError(*err,__LINE__,NULL);
   
   free(detlist);

@@ -178,6 +178,13 @@ def build(ctx):
   if not ctx.options.no_pytools:
     ctx.recurse("src/python")
   
+  # install data
+  if ctx.env.has_egfs:
+    ctx.install_files('${PREFIX}/share/clik/egfs', 
+                    'src/egfs/egfs_data/clustered_150.dat src/egfs/egfs_data/clustered_flat.dat src/egfs/egfs_data/ksz_ov.dat src/egfs/egfs_data/ksz_patchy.dat src/egfs/egfs_data/tsz.dat src/egfs/egfs_data/clustered_1108.4614.dat')
+
+  ctx.install_files('${PREFIX}/share/clik/pep_cib','data/pep_cib/ir_clustered_pep.dat  data/pep_cib/ir_poisson_pep.dat')
+
   ctx.add_post_fun(post)
 
 def _remove_arch(ctx,evn):
@@ -237,7 +244,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/* src/CAMspec/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat clik.pdf" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/* src/CAMspec/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat data/* clik.pdf" )
   
 import waflib
 class Dist_public(waflib.Scripting.Dist):

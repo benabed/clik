@@ -116,6 +116,7 @@ def add_from_pars(lkl_grp,parfile):
 
 def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
   import parametric
+  import os.path as osp
 
   # initialize parameters
   pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults)
@@ -136,9 +137,13 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
 
   agrp.attrs["freq"] = [int(d) for d in dets]
   agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
+
+  if name in ('ir_clustered_pep','ir_poisson_pep'):
+    pth = osp.join(parametric.get_pep_cib_data_path(),name+".dat")
+    template = nm.loadtxt(pth)
+    agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
   return agrp
 
-  
 def set_criterion(lkl_grp,typ,**extra):
   if typ.lower()=="classic":
     lkl_grp.attrs["criterion"]="classic"

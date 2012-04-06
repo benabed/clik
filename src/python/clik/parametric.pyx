@@ -3,6 +3,7 @@ import numpy as nm
 nm.import_array()
 cimport stdlib as stdlib
 cimport stdio as stdio
+import os.path as osp
 
 cdef extern from "errorlist.h":
   ctypedef struct error:
@@ -384,9 +385,18 @@ cdef class ir_clustered(parametric):
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
+def get_data_path():
+  import os
+  if "CLIK_DATA" in os.environ:
+    return os.environ["CLIK_DATA"]
+  return ""
+
+def get_pep_cib_data_path():
+  return osp.join(get_data_path(),"pep_cib")
+
 cdef class ir_poisson_pep(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,input_filename,defs={},dnofail=False):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef double *rq_poisson_in
@@ -411,7 +421,11 @@ cdef class ir_poisson_pep(parametric):
     for i in range(nvar):
       key[i] = vars[i]
 
-    tmp = nm.loadtxt(input_filename)
+
+    if input_filename:
+      tmp = nm.loadtxt(input_filename)
+    else:
+      tmp = nm.loadtxt(osp.join(get_pep_cib_data_path(),"ir_poisson_pep.dat"))
     rq_poisson_in = <double*> nm.PyArray_DATA(tmp)
         
     self.celf = ir_poisson_pep_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_poisson_in,err)
@@ -423,7 +437,7 @@ cdef class ir_poisson_pep(parametric):
 
 cdef class ir_clustered_pep(parametric):
   
-  def __init__(self,detlist,vars,lmin,lmax,input_filename,defs={},dnofail=False):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
     cdef double *rq_clustered_in
@@ -448,6 +462,10 @@ cdef class ir_clustered_pep(parametric):
     for i in range(nvar):
       key[i] = vars[i]
 
+    if input_filename:
+      tmp = nm.loadtxt(input_filename)
+    else:
+      tmp = nm.loadtxt(osp.join(get_pep_cib_data_path(),"ir_clustered_pep.dat"))
     tmp = nm.loadtxt(input_filename)
     rq_clustered_in = <double*> nm.PyArray_DATA(tmp)
         
@@ -458,4 +476,4 @@ cdef class ir_clustered_pep(parametric):
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
-simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","galametric"]
+simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","ir_clustered_pep","ir_poisson_pep","galametric"]

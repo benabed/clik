@@ -1120,12 +1120,28 @@ parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defke
   parametric *egl;
   pfchar type;
   char *pt;
-  int nfreqs_hfi=6;
   int lmax_in=3000;
+  int hfi_freqlist[6] = {100,143,217,353,545,857};
+  int nfreqs_hfi = 6;
+  int m1,m2;
+
+  testErrorRetVA(lmax>lmax_in,-1111,"lmax too big (got %d should be < %d",*err,__LINE__,NULL,lmax,lmax_in);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
   
+  for(m1=0;m1<egl->nfreq;m1++) {
+    int ok;
+    ok = 0;
+    for(m2=0;m2<nfreqs_hfi;m2++) {
+      if (egl->freqlist[m1]==hfi_freqlist[m2]) {
+        ok=1;
+        break;
+      }
+    }
+    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,NULL,egl->freqlist[m1]);
+  }
+
   egl->eg_compute = &ir_clustered_pep_compute;
   egl->eg_free = &ir_clustered_pep_free;
 
@@ -1154,7 +1170,7 @@ void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
   A = egl->payload; // Stores input C_l(nu,nu') for all HFI frequencies and ell in [0,3000]
   nfreq = egl->nfreq;
   ind_freq = malloc_err(sizeof(int)*nfreq,err);
-  forwardError(*err,__LINE__,NULL);
+  forwardError(*err,__LINE__,);
 
   ir_clustered_pep_norm = parametric_get_value(egl,"ir_clustered_pep_norm",err);
   forwardError(*err,__LINE__,);
@@ -1218,11 +1234,25 @@ void ir_clustered_pep_free(void **pp) {
 
 parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_poisson_in, error **err) {
   parametric *egl;
-  int nfreqs_hfi=6;
+  int hfi_freqlist[6] = {100,143,217,353,545,857};
+  int nfreqs_hfi = 6;
+  int m1,m2;
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
   
+  for(m1=0;m1<egl->nfreq;m1++) {
+    int ok;
+    ok = 0;
+    for(m2=0;m2<nfreqs_hfi;m2++) {
+      if (egl->freqlist[m1]==hfi_freqlist[m2]) {
+        ok=1;
+        break;
+      }
+    }
+    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,NULL,egl->freqlist[m1]);
+  }
+
   egl->eg_compute = &ir_poisson_pep_compute;
   egl->eg_free = &ir_poisson_pep_free;
 
@@ -1250,7 +1280,7 @@ void ir_poisson_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
   A = egl->payload; // Stores input C_l(nu,nu') for all HFI frequencies
   nfreq = egl->nfreq;
   ind_freq = malloc_err(sizeof(int)*nfreq,err);
-  forwardError(*err,__LINE__,NULL);
+  forwardError(*err,__LINE__,);
 
   ir_poisson_pep_norm = parametric_get_value(egl,"ir_poisson_pep_norm",err);
   forwardError(*err,__LINE__,);
