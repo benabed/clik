@@ -466,7 +466,6 @@ cdef class ir_clustered_pep(parametric):
       tmp = nm.loadtxt(input_filename)
     else:
       tmp = nm.loadtxt(osp.join(get_pep_cib_data_path(),"ir_clustered_pep.dat"))
-    tmp = nm.loadtxt(input_filename)
     rq_clustered_in = <double*> nm.PyArray_DATA(tmp)
         
     self.celf = ir_clustered_pep_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_clustered_in,err)
