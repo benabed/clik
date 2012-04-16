@@ -13,6 +13,7 @@ def build(bld):
   source_clik += ['clik_egfs.c','clik_egfs_addon.c'] * bool(bld.env.has_f90 and bld.env.has_egfs)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
   source_clik += ['fakedf/fakedf.c']
+  source_clik += ['component_plugin/psm_cib/clik_psm_cib.c']
   source_clik = [src for src in source_clik if src]
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]

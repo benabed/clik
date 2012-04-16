@@ -184,6 +184,7 @@ def build(ctx):
                     'src/egfs/egfs_data/clustered_150.dat src/egfs/egfs_data/clustered_flat.dat src/egfs/egfs_data/ksz_ov.dat src/egfs/egfs_data/ksz_patchy.dat src/egfs/egfs_data/tsz.dat src/egfs/egfs_data/clustered_1108.4614.dat')
 
   ctx.install_files('${PREFIX}/share/clik/pep_cib','data/pep_cib/ir_clustered_pep.dat  data/pep_cib/ir_poisson_pep.dat')
+  ctx.install_files('${PREFIX}/share/clik/psm_cib','src/component_plugin/psm_cib/psm_cib.dat')
 
   ctx.add_post_fun(post)
 

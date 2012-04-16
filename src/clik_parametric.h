@@ -91,4 +91,11 @@ parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey,
 void ir_poisson_pep_compute(void* exg, double *Rq, double* dRq, error **err);
 void ir_poisson_pep_free(void **pp);
 
+#include "clik_helper.h"
+
+void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, int** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
+SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
+
+parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_clustered_in, error **err);
+
 #endif

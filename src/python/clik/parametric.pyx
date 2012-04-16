@@ -59,6 +59,7 @@ cdef extern from "clik_parametric.h":
   c_parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   c_parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_poisson_in, error **err)  
   c_parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_clustered_in, error **err)
+  c_parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_clustered_in, error **err)
 
 cdef class parametric:
   cdef c_parametric* celf
@@ -475,4 +476,47 @@ cdef class ir_clustered_pep(parametric):
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
-simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","ir_clustered_pep","ir_poisson_pep","galametric"]
+def get_psm_cib_data_path():
+  return osp.join(get_data_path(),"psm_cib")
+
+cdef class psm_cib(parametric):
+  
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
+    cdef int p_detlist[200]
+    cdef char *defkey[200],*defvalue[200],*key[200]
+    cdef double *rq_clustered_in
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+
+    ndef = len(defs)
+    ndet = len(detlist)
+    
+    for i in range(ndet):
+      p_detlist[i] = detlist[i]
+
+    i = 0
+    for k,v in defs.items():
+      defkey[i] = k
+      defvalue[i] = v
+      i+=1
+    
+    nvar = len(vars)
+    for i in range(nvar):
+      key[i] = vars[i]
+
+    if input_filename:
+      tmp = nm.loadtxt(input_filename)
+    else:
+      tmp = nm.loadtxt(osp.join(get_psm_cib_data_path(),"psm_cib.dat"))
+    rq_clustered_in = <double*> nm.PyArray_DATA(tmp)
+    
+    self.celf = psm_cib_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_clustered_in,err)
+    er=doError(err)
+    if er:
+      raise er
+
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
+
+simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","ir_clustered_pep","ir_poisson_pep","galametric","psm_cib"]

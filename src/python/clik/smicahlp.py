@@ -142,6 +142,10 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
     pth = osp.join(parametric.get_pep_cib_data_path(),name+".dat")
     template = nm.loadtxt(pth)
     agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
+  if name == "psm_cib":
+    pth = osp.join(parametric.get_psm_cib_data_path(),name+".dat")
+    template = nm.loadtxt(pth)
+    agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
   return agrp
 
 def set_criterion(lkl_grp,typ,**extra):
