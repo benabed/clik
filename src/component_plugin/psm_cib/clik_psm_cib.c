@@ -41,7 +41,7 @@ void psm_cib_compute(void* exg, double *Rq, double* dRq, error **err) {
       for (m2=m1;m2<nfreq;m2++) {
         ind1 = ind_freq[m1];
         ind2 = ind_freq[m2];
-        Rq[mell + m1*nfreq+m2] = psm_cib_norm * A[mell_in + ind1*nfreqs_hfi + ind2];
+        Rq[mell + m1*nfreq+m2] = psm_cib_norm *1e12* A[mell_in + ind1*nfreqs_hfi + ind2];
         Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
       }
     }
