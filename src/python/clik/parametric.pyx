@@ -32,7 +32,6 @@ cdef doError(error **err):
     return er
   return None
 
-
 cdef extern from "clik_parametric.h":
   ctypedef struct c_parametric "parametric":
     int lmin,lmax,ndet,nfreq,nvar
@@ -47,24 +46,12 @@ cdef extern from "clik_parametric.h":
 
   c_parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   c_parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  c_parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  c_parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  double c_dust_spectrum "dust_spectrum" (double nu, double T_dust, double beta_dust, double nu0)
-  double c_d_dust_spectrum_d_beta_dust "d_dust_spectrum_d_beta_dust" (double nu, double T_dust, double beta_dust, double nu0)
-  double c_d_dust_spectrum_d_T_dust "d_dust_spectrum_d_T_dust" (double nu, double T_dust, double beta_dust, double nu0)
-  double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, double alpha_non_thermal, double nu0)
-  double c_d_non_thermal_spectrum_d_alpha_non_thermal "d_non_thermal_spectrum_d_alpha_non_thermal" (double nu, double alpha_non_thermal, double nu0)
-  double c_dBdT "dBdT" (double nu, double nu0)
-  c_parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  c_parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  c_parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_poisson_in, error **err)  
-  c_parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_clustered_in, error **err)
-  c_parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double *rq_clustered_in, error **err)
+
 
 cdef class parametric:
-  cdef c_parametric* celf
-  cdef int nell
-  cdef readonly object varpar,parvalues
+  
+  def __cinit__(self):
+    self.initfunc=NULL
 
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
     cdef int p_detlist[200]
@@ -87,10 +74,14 @@ cdef class parametric:
       i+=1
     
     nvar = len(vars)
-    for i in nvar:
+    for i in range(nvar):
       key[i] = vars[i]
 
-    self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    if self.initfunc==NULL:
+      raise NotImplementedError("Must fill self.initfunc with a valid c function")
+      #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    else:
+      self.celf = (<simple_init>self.initfunc)(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
     er=doError(err)
     if er:
       raise er
@@ -168,239 +159,33 @@ cdef class parametric:
     if self.celf!=NULL:
       parametric_free(<void**>&(self.celf))
 
+
 cdef class powerlaw(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = powerlaw_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
+  def __cinit__(self):
+    self.initfunc = <void*>powerlaw_init
 
 cdef class powerlaw_free_emissivity(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
+  def __cinit__(self):
+    self.initfunc = <void*>powerlaw_free_emissivity_init
 
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = powerlaw_free_emissivity_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-
-cdef class radiogal(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = radiogal_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-cdef class galametric(parametric):
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = galactic_component_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-
-def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
-  return c_dust_spectrum(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
-
-def d_dust_spectrum_d_T_dust(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
-  return c_d_dust_spectrum_d_T_dust(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
-
-def d_dust_spectrum_d_beta_dust(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
-  return c_d_dust_spectrum_d_beta_dust(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
-
-def non_thermal_spectrum(nu,alpha_non_thermal=-1.0,nu0=143.0):
-  return c_non_thermal_spectrum(<double>nu,<double>alpha_non_thermal,<double>nu0)
-
-def d_non_thermal_spectrum_d_alpha_non_thermal(nu,alpha_non_thermal=-1.0,nu0=143.0):
-  return c_d_non_thermal_spectrum_d_alpha_non_thermal(<double>nu,<double>alpha_non_thermal,<double>nu0)
-
-def dBdT(nu,nu0=143.0):
-  return c_dBdT(<double>nu,<double>nu0)
-
-cdef class ir_poisson(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = ir_poisson_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-cdef class ir_clustered(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    self.celf = ir_clustered_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-def get_data_path():
+def get_data_path(plg=None):
   import os
   if "CLIK_DATA" in os.environ:
-    return os.environ["CLIK_DATA"]
+    res=os.environ["CLIK_DATA"]
+    if plg:
+      return osp.join(res,plg)
   return ""
 
-def get_pep_cib_data_path():
-  return osp.join(get_data_path(),"pep_cib")
+cdef class parametric_template(parametric):
+  def __cinit__(self):
+    self.initfunc = NULL
+    self.template_name = ""
+    self.plugin_name = ""
 
-cdef class ir_poisson_pep(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,data_dir="",data_path="",data_file="",data=None):
     cdef int p_detlist[200]
     cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef double *rq_poisson_in
+    cdef double *template
     cdef error *_err,**err
     
     _err = NULL
@@ -423,100 +208,51 @@ cdef class ir_poisson_pep(parametric):
       key[i] = vars[i]
 
 
-    if input_filename:
-      tmp = nm.loadtxt(input_filename)
+    if data is None:
+      if data_path:
+        pth = data_path
+      else:
+        bpth = get_data_path(self.plugin_name)
+        if data_dir:
+          bpth = data_dir
+        fpth = self.template_name
+        if data_file:
+          fpth = data_file
+        pth = osp.join(bpth,fpth)
+      tmp = nm.loadtxt(pth)
     else:
-      tmp = nm.loadtxt(osp.join(get_pep_cib_data_path(),"ir_poisson_pep.dat"))
-    rq_poisson_in = <double*> nm.PyArray_DATA(tmp)
+      tmp = nm.array(data)
+    template = <double*> nm.PyArray_DATA(tmp)
+    
+    if self.initfunc==NULL:
+      raise NotImplementedError("Must fill self.initfunc with a valid c function")
+      #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    else:
+      self.celf = (<template_init>self.initfunc)(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,template,err)
         
-    self.celf = ir_poisson_pep_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_poisson_in,err)
     er=doError(err)
     if er:
       raise er
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
-cdef class ir_clustered_pep(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef double *rq_clustered_in
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-    
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
+component_list = []
+simple_parametric_list = component_list
 
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
+def register_plugin(plg):
+  import sys
+  mlg =__import__("clik."+plg,fromlist=[plg])
+  global component_list
+  component_list += mlg.component_list
+  for cp in mlg.component_list:
+    globals()[cp]=getattr(mlg,cp)
 
-    if input_filename:
-      tmp = nm.loadtxt(input_filename)
-    else:
-      tmp = nm.loadtxt(osp.join(get_pep_cib_data_path(),"ir_clustered_pep.dat"))
-    rq_clustered_in = <double*> nm.PyArray_DATA(tmp)
-        
-    self.celf = ir_clustered_pep_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_clustered_in,err)
-    er=doError(err)
-    if er:
-      raise er
+import os
+plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]
 
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
+for plg in plgs:
+  try:
+    register_plugin(plg)
+  except Exception,e:
+    pass
 
-def get_psm_cib_data_path():
-  return osp.join(get_data_path(),"psm_cib")
-
-cdef class psm_cib(parametric):
-  
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,input_filename=""):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
-    cdef double *rq_clustered_in
-    cdef error *_err,**err
-    
-    _err = NULL
-    err = &_err
-
-    ndef = len(defs)
-    ndet = len(detlist)
-    
-    for i in range(ndet):
-      p_detlist[i] = detlist[i]
-
-    i = 0
-    for k,v in defs.items():
-      defkey[i] = k
-      defvalue[i] = v
-      i+=1
-    
-    nvar = len(vars)
-    for i in range(nvar):
-      key[i] = vars[i]
-
-    if input_filename:
-      tmp = nm.loadtxt(input_filename)
-    else:
-      tmp = nm.loadtxt(osp.join(get_psm_cib_data_path(),"psm_cib.dat"))
-    rq_clustered_in = <double*> nm.PyArray_DATA(tmp)
-    
-    self.celf = psm_cib_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,rq_clustered_in,err)
-    er=doError(err)
-    if er:
-      raise er
-
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
-
-simple_parametric_list = ["radiogal","ir_clustered","ir_poisson","ir_clustered_pep","ir_poisson_pep","galametric","psm_cib"]

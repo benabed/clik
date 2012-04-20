@@ -1,0 +1,3 @@
+source : pep_cib.c
+data : ir_clustered_pep.dat ir_poisson_pep.dat
+python : pep_cib.pyx

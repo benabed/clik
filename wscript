@@ -1,6 +1,7 @@
 from waflib import Logs
 import sys
 import os.path as osp
+import re
 
 clik_version = "3.1b"
 
@@ -167,6 +168,34 @@ def configure(ctx):
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
       allgood = False
   
+  # go through the component plugins
+  for plg in os.listdir("src/component_plugin"):
+    if plg[0]==".":
+      continue
+    pth = osp.join("src/component_plugin",plg)
+    if not osp.isdir(pth):
+      continue
+    ctx.start_msg("plugin : '%s'"%plg)
+    try:
+      f = open(osp.join(pth,"plugin.txt"))
+      txt = f.read()
+      decr = {"source":"","data":"","python":""}
+      decr.update(dict(re.findall("(.+?)\s+:\s+(.+)",txt)))
+      for k in decr:
+        decr[k] = [l.strip() for l in decr[k].split() if l.strip()]
+        for f in decr[k]:
+          if not osp.exists(osp.join(pth,f)):
+            raise Exception((osp.join(pth,f))+" does not exists")
+    except Exception,e:
+      ctx.end_msg("Ignored (%s)"%e,"YELLOW")
+      continue
+    ctx.end_msg("ok")
+    ctx.env.append_unique("PLG",[plg])
+    ctx.env.append_unique("PLG_%s_SRC"%plg,decr["source"])
+    ctx.env.append_unique("PLG_%s_DATA"%plg,decr["data"])
+    ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
+
+
   if allgood==False:
     print "configure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
   else:
@@ -183,8 +212,10 @@ def build(ctx):
     ctx.install_files('${PREFIX}/share/clik/egfs', 
                     'src/egfs/egfs_data/clustered_150.dat src/egfs/egfs_data/clustered_flat.dat src/egfs/egfs_data/ksz_ov.dat src/egfs/egfs_data/ksz_patchy.dat src/egfs/egfs_data/tsz.dat src/egfs/egfs_data/clustered_1108.4614.dat')
 
-  ctx.install_files('${PREFIX}/share/clik/pep_cib','data/pep_cib/ir_clustered_pep.dat  data/pep_cib/ir_poisson_pep.dat')
-  ctx.install_files('${PREFIX}/share/clik/psm_cib','src/component_plugin/psm_cib/psm_cib.dat')
+  for plg in ctx.env.PLG:
+    data = getattr(ctx.env,"PLG_%s_DATA"%plg)
+    if data:
+      ctx.install_files('${PREFIX}/share/clik/%s'%plg,[osp.join('src/component_plugin/%s'%plg,dt) for dt in data])
 
   ctx.add_post_fun(post)
 
@@ -307,7 +338,7 @@ set newvar=%(PATH)s:${newvar}
 setenv %(VAR)s %(PATH)s:${newvar} 
 endif"""
   
-  __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath)
+  __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath)
 
   #bash and co
   shell = "sh"
@@ -334,11 +365,11 @@ else
 addvar %(VAR)s %(PATH)s
 fi"""
     
-  __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath)
+  __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath)
   
   print "Source clik_profile.sh (or clik_profile.csh) to set the environment variables needed by clik"
  
-def __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath):
+def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   import sys
   if sys.platform.lower()=="darwin":
     LD_LIB = "DYLD_LIBRARY_PATH"
@@ -352,7 +383,8 @@ def __dofile(ctx,name,shell,extra,multi_tmpl,full_libpath):
   print >>f,multi_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
   for pt in full_libpath:
     print >>f,multi_tmpl%{"PATH":pt,"VAR":LD_LIB}
-  print >>f,multi_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
+  print >>f,single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
+  print >>f,single_tmpl%{"PATH":",".join(ctx.env.PLG),"VAR":"CLIK_PLUGIN"}
   f.close()
 
 def options_h5py(ctx):
