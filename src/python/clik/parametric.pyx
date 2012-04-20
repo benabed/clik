@@ -36,16 +36,17 @@ cdef extern from "clik_parametric.h":
   ctypedef struct c_parametric "parametric":
     int lmin,lmax,ndet,nfreq,nvar
 
-  c_parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+  c_parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   void parametric_free(void** pegl)
   void parametric_compute(c_parametric *egl, double *pars, double* Rq, double *dRq, error **err)
   double parametric_get_default(c_parametric* egl,char *key, error **err)
   double parametric_get_value(c_parametric *egl, char *key, error **err)
   void parametric_dnofail(c_parametric* egl, int vl)
+  void parametric_set_color(c_parametric *egl,double *color, error **err)
 
 
-  c_parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-  c_parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+  c_parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+  c_parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
 
 cdef class parametric:
@@ -53,9 +54,9 @@ cdef class parametric:
   def __cinit__(self):
     self.initfunc=NULL
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None):
+    cdef double p_detlist[2000]
+    cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef error *_err,**err
     
     _err = NULL
@@ -85,10 +86,25 @@ cdef class parametric:
     er=doError(err)
     if er:
       raise er
-    
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
 
-  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail):
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color)
+
+  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color):
+    cdef double _color[2000]
+    cdef int i
+    cdef error *_err,**err
+    
+    _err = NULL
+    err = &_err
+    
+    if color is not None:
+      for i in range(len(detlist)):
+        _color[i] = color[i]
+      parametric_set_color(self.celf,_color,err)
+      er=doError(err)
+      if er:
+        raise er
+
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
     if not dnofail:
@@ -159,6 +175,9 @@ cdef class parametric:
     if self.celf!=NULL:
       parametric_free(<void**>&(self.celf))
 
+  def get_template(self,data_dir="",data_path="",data_file="",data=None):
+    return None
+
 
 cdef class powerlaw(parametric):
   def __cinit__(self):
@@ -182,9 +201,9 @@ cdef class parametric_template(parametric):
     self.template_name = ""
     self.plugin_name = ""
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,data_dir="",data_path="",data_file="",data=None):
-    cdef int p_detlist[200]
-    cdef char *defkey[200],*defvalue[200],*key[200]
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,data_dir="",data_path="",data_file="",data=None):
+    cdef double p_detlist[2000]
+    cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef double *template
     cdef error *_err,**err
     
@@ -207,21 +226,9 @@ cdef class parametric_template(parametric):
     for i in range(nvar):
       key[i] = vars[i]
 
-
-    if data is None:
-      if data_path:
-        pth = data_path
-      else:
-        bpth = get_data_path(self.plugin_name)
-        if data_dir:
-          bpth = data_dir
-        fpth = self.template_name
-        if data_file:
-          fpth = data_file
-        pth = osp.join(bpth,fpth)
-      tmp = nm.loadtxt(pth)
-    else:
-      tmp = nm.array(data)
+    print " ici" 
+    tmp = self.get_template(data_dir,data_path,data_file,data)
+    print "la"
     template = <double*> nm.PyArray_DATA(tmp)
     
     if self.initfunc==NULL:
@@ -234,7 +241,24 @@ cdef class parametric_template(parametric):
     if er:
       raise er
 
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail)
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color)
+
+  def get_template(self,data_dir="",data_path="",data_file="",data=None):
+    if data is None:
+      if data_path:
+        pth = data_path
+      else:
+        bpth = get_data_path(self.plugin_name)
+        if data_dir:
+          bpth = data_dir
+        fpth = self.template_name
+        if data_file:
+          fpth = data_file  
+        pth = osp.join(bpth,fpth)
+      tmp = nm.loadtxt(pth)
+    else:
+      tmp = nm.array(data)
+    return tmp
 
 component_list = []
 simple_parametric_list = component_list

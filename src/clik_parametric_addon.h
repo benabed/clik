@@ -2,7 +2,7 @@
 #define _CPADN_
 #include "clik_helper.h"
 
-void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, int** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
+void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
 SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
 #define CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(NAME,INIT_FUNC) \
@@ -10,7 +10,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   parametric* p_model;  \
   SmicaComp *SC;  \
   int lmin,lmax;  \
-  int *detlist;  \
+  double *detlist;  \
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
   herr_t hstat;  \
@@ -54,7 +54,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   parametric* p_model;  \
   SmicaComp *SC;  \
   int lmin,lmax;  \
-  int *detlist;  \
+  double *detlist;  \
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
   herr_t hstat;  \

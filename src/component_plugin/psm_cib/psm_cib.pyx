@@ -1,7 +1,7 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template
 
-cdef extern c_parametric *psm_cib_free_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err)
-cdef extern c_parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err)
+cdef extern c_parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err)
+cdef extern c_parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err)
 
 cdef class psm_cib(parametric_template):
   def __cinit__(self):

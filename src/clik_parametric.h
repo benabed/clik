@@ -32,7 +32,8 @@ typedef void (exg_freepayload)(void** data);
 typedef struct {
   void *payload;
   pflist *pf;
-  int *freqlist;
+  double *freqlist;
+  double *detlist;
   int *det2freq;
   int ndet;
   int nfreq;
@@ -45,9 +46,11 @@ typedef struct {
   pfchar *varkey;
   pflist *default_settings;
   int dnofail;
+  double *color;
 } parametric;
 
-parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *parametric__bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void parametric_free(void** pegl);
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err);
 double parametric_get_default(parametric* egl,char *key, error **err);
@@ -55,11 +58,13 @@ double parametric_get_value(parametric *egl, char *key, error **err);
 void parametric_dnofail(parametric* egl, int vl);
 void parametric_set_default(parametric* egl,char *key, double value,error **err);
 
+void parametric_set_color(parametric *egl,double *color, error **err);
+
 double dBdT(double nu, double nu0);
 
-parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *powerlaw_init(int ndet, double* detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void powerlaw_compute(void* exg, double *Rq, double*dRq, error **err);
-parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void powerlaw_free_emissivity_free(void **pp);
 void powerlaw_free_emissivity_compute(void* exg, double *Rq, double*dRq, error **err);
 

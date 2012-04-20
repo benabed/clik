@@ -56,6 +56,10 @@ def main(argv):
       print "    has window function"
     if "nbins" in lkli.attrs:
       print "    nbins = %d"%lkli.attrs["nbins"]
+    if lkli.attrs["lkl_type"]=="smica":
+      print "    component 0 : CMB"
+      for nc in range(1,lkli.attrs["n_component"]):
+        print "    component %d : %s"%(nc,lkli["component_%d"%nc].attrs["component_type"])
 
     extn = clikl.get_extra_parameter_names_by_lkl(ilkl)
     print "    number of extra parameters = %d %s"%(len(extn),extn)

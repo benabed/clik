@@ -6,7 +6,7 @@
 void radiogal_compute(void* exg, double *Rq, double* dRq, error **err);
 void radiogal_free(void **pp);
 
-parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *radiogal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &radiogal_compute;
@@ -142,7 +142,7 @@ void radiogal_free(void **pp) {
 void ir_poisson_compute(void* exg, double *Rq, double* dRq, error **err);
 void ir_poisson_free(void **pp);
 
-parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *ir_poisson_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   egl->eg_compute = &ir_poisson_compute;
@@ -277,7 +277,7 @@ void ir_poisson_free(void **pp) {
 
 void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err);
 void ir_clustered_free(void **pp);
-parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *ir_clustered_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
@@ -317,7 +317,7 @@ parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, c
     pfchar name;
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
-        sprintf(name,"ir_clustered_correlation_M_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+        sprintf(name,"ir_clustered_correlation_M_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
         parametric_set_default(egl,name,1,err);
         forwardError(*err,__LINE__,NULL);
       }
@@ -407,7 +407,7 @@ void ir_clustered_compute(void* exg, double *Rq, double* dRq, error **err) {
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
         pfchar name;
-        sprintf(name,"ir_clustered_correlation_M_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+        sprintf(name,"ir_clustered_correlation_M_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
         dcm[m1*egl->nfreq+m2] = parametric_get_value(egl,name,err);
         forwardError(*err,__LINE__,);
         dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
@@ -565,7 +565,7 @@ double d_non_thermal_spectrum_d_alpha_non_thermal(double nu, double alpha_non_th
 void galactic_component_compute(void* exg, double *Rq, double *dRq, error **err);
 void galactic_component_free(void **pp);
 
-parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   pfchar type;
   char* pt;

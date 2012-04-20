@@ -130,39 +130,57 @@ void pflist_remove_item(pflist* pf, int index,error **err) {
   pf->nkey--;
 }
 
-void get_freq(int ndet, int *detlist, int* pnfreq, int** pfreqlist, int** pdet2freq, error **err) {
+void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** pdet2freq, error **err) {
   int i,j;
-  int *freqlist,*det2freq;
+  double *freqlist;
+  int *det2freq;
   int nfreq;
-  
-  freqlist = malloc_err(sizeof(int)*ndet,err);
+  int mdet;
+
+  mdet = ndet;
+  if (ndet<0) {
+    mdet=-ndet;
+  }
+
+  freqlist = malloc_err(sizeof(double)*mdet,err);
   forwardError(*err,__LINE__,);
   
-  det2freq = malloc_err(sizeof(int)*ndet, err);
+  det2freq = malloc_err(sizeof(int)*mdet, err);
   forwardError(*err,__LINE__,);
   
-  nfreq = 0;
-  for(i=0;i<ndet;i++) {
-    det2freq[i]=-1;
-    for(j=0;j<nfreq;j++) {
-      if (freqlist[j]==detlist[i]) {
-        det2freq[i] = j;
-        break;
-      }
-    }
-    if (det2freq[i]==-1) {
-      det2freq[i]=nfreq;
-      freqlist[nfreq]=detlist[i];
-      nfreq++;
+  if (ndet<0) {
+    nfreq = mdet;
+    for(i=0;i<mdet;i++) {
+      det2freq[i] = i;
+      freqlist[i]=detlist[i];
     }
   }
+  else {
+    nfreq = 0;
+    for(i=0;i<mdet;i++) {
+      det2freq[i]=-1;
+      for(j=0;j<nfreq;j++) {
+        if (fabs(freqlist[j]-detlist[i])<1e-6) {
+          det2freq[i] = j;
+          break;
+        }
+      }
+      if (det2freq[i]==-1) {
+        det2freq[i]=nfreq;
+        freqlist[nfreq]=detlist[i];
+        //_DEBUGHERE_("f %g",detlist[i]);
+        nfreq++;
+      }
+    }  
+  }
+  
   *pnfreq = nfreq;
   *pfreqlist = freqlist;
   *pdet2freq = det2freq;
 }
 
 
-parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *epl;
   int i;
   char *nop;
@@ -189,9 +207,16 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   epl->ndef = ndef;
 
   epl->ndet = ndet;
+  if (ndet<0) {
+    epl->ndet = -ndet;
+  }
   get_freq(ndet, detlist, &(epl->nfreq), &(epl->freqlist), &(epl->det2freq),err);
   forwardError(*err,__LINE__,NULL);
   
+  epl->detlist = malloc_err(sizeof(double)*epl->ndet,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(epl->detlist,detlist,sizeof(double)*epl->ndet);
+
   epl->payload = NULL;
   epl->eg_compute = NULL;
   epl->eg_free = NULL;
@@ -214,7 +239,28 @@ parametric *parametric_init(int ndet, int *detlist, int ndef, char** defkey, cha
   
   epl->dnofail=0;
 
+  epl->color = malloc_err(sizeof(double)*epl->ndet,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(i=0;i<epl->ndet;i++) {
+    epl->color[i]=1;
+  }  
+
   return epl;
+}
+
+parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric * egl;
+
+  egl = parametric_init(-ndet,detlist,ndef,defkey,defvalue, nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void parametric_set_color(parametric *egl,double *color, error **err) {
+  _DEBUGHERE_("","");
+  memcpy(egl->color,color,sizeof(double)*egl->ndet);
 }
 
 void parametric_dnofail(parametric* egl, int vl) {
@@ -231,6 +277,8 @@ void parametric_free(void** pegl) {
     
   free(egl->det2freq);
   free(egl->freqlist);
+  free(egl->detlist);
+  free(egl->color);
   free(egl->sdRq);
   free(egl->sRq);
   pflist_free(&(egl->pf));
@@ -283,7 +331,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
             //_DEBUGHERE_("%d->%d %d->%d %d %d",idet,midet,jdet,mjdet,egl->ndet,egl->nfreq);
-            v = sRq[fell + midet*egl->nfreq + mjdet];
+            v = sRq[fell + midet*egl->nfreq + mjdet] * egl->color[idet] * egl->color[jdet];
             Rq[mell + idet*egl->ndet + jdet] = v;
             Rq[mell + jdet*egl->ndet + idet] = v;
           }
@@ -299,7 +347,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
             for(dvar=0;dvar<egl->nvar;dvar++) {
-              v = sdRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet];
+              v = sdRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet] * egl->color[idet] * egl->color[jdet];
               dRq[dvar*mdvar + mell + idet*egl->ndet + jdet] = v;
               dRq[dvar*mdvar + mell + jdet*egl->ndet + idet] = v;
             }
@@ -393,7 +441,7 @@ double dBdT(double nu, double nu0) {
 
 // Simple power low in ell, constant emissivity
 
-parametric *powerlaw_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
 
   egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
@@ -489,7 +537,7 @@ void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
 // Simple power law in ell, arbitrary emissivity (including arbitrary cross-correlations, i.e. NOT rank=1 a priori)
 // This could be used e.g for CIB Poisson
 
-parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
   int m1,m2;
   pfchar name;
@@ -508,7 +556,7 @@ parametric *powerlaw_free_emissivity_init(int ndet, int *detlist, int ndef, char
 
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
-      sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+      sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       parametric_set_default(egl,name,1,err);
       forwardError(*err,__LINE__,NULL);
     }
@@ -544,7 +592,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
   nfreq = egl->nfreq;
   for(m1=0;m1<nfreq;m1++) {
     for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+      sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       v = 1;
       v = parametric_get_value(egl,name,err);
       A[m1*nfreq+m2] = v;
@@ -588,7 +636,7 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
       stop = 0;
       for(m1=0;m1<nfreq;m1++) {
         for(m2=m1;m2<nfreq;m2++) {
-          sprintf(name,"A_%d_%d",egl->freqlist[m1],egl->freqlist[m2]);
+          sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
   
           if (strcmp(egl->varkey[iv],name)==0) {
             stop=1;

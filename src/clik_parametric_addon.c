@@ -143,7 +143,7 @@ void free_comp_parametric(void** data) {
   *data = NULL;
 }
 
-void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, int** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
+void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
   int dz,i;
   char *keyvartable,*deftable,*valtable;
   herr_t hstat;
@@ -199,9 +199,23 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, int** detli
   }  
   
   dz = ndet;
-  *detlist = hdf5_int_attarray(comp_id,cur_lkl,"freq",&dz, err);
-  forwardError(*err,__LINE__,);
-
+  hstat = H5LTfind_attribute (comp_id, "dfreq");
+  if (hstat ==1) {
+    *detlist = hdf5_double_attarray(comp_id,cur_lkl,"dfreq",&dz, err);
+    forwardError(*err,__LINE__,);
+  } else {
+    int * ietlist;
+    ietlist = hdf5_int_attarray(comp_id,cur_lkl,"freq",&dz, err);
+    forwardError(*err,__LINE__,);
+    *detlist = malloc_err(sizeof(double)*ndet,err);
+    forwardError(*err,__LINE__,);
+    
+    for(i=0;i<ndet;i++) {
+      (*detlist)[i]=ietlist[i];
+    }
+    free(ietlist);
+  }
+  
   return;
 
 }
@@ -213,9 +227,21 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   SmicaComp *SC;
   int lmin,lmax;
   herr_t hstat;
+  double *color;
+  int dz;
 
-
+  hstat = H5LTfind_dataset(comp_id, "color");
+  if (hstat ==1) {
+    dz  = p_model->ndet;
+    color = hdf5_double_datarray(comp_id,cur_lkl,"color",&dz, err);
+    forwardError(*err,__LINE__,NULL);
+    parametric_set_color(p_model,color,err);
+    forwardError(*err,__LINE__,NULL);
+    free(color);
+  }
+    
   lmin = ell[0];
+
   lmax = ell[nell-1];
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);
 

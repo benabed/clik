@@ -27,7 +27,7 @@ void psm_cib_compute(void* exg, double *Rq, double* dRq, error **err) {
 
   for (m1=0;m1<nfreq;m1++) {
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1] == hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ind_freq[m1]=m2;
       }
     }
@@ -81,7 +81,7 @@ void psm_cib_free(void **pp) {
   *pp=NULL;
 }
 
-parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
+parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
@@ -99,7 +99,7 @@ parametric *psm_cib_init(int ndet, int *detlist, int ndef, char** defkey, char *
     int ok;
     ok = 0;
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1]==hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ok=1;
         break;
       }
@@ -140,7 +140,7 @@ void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
   forwardError(*err,__LINE__,);
 
   for(m1=0;m1<nfreq;m1++) {    
-    sprintf(name,"A_%d",egl->freqlist[m1]);
+    sprintf(name,"A_%d",(int)egl->freqlist[m1]);
     N[m1] = parametric_get_value(egl,name,err);
     forwardError(*err,__LINE__,);
   }
@@ -163,7 +163,7 @@ void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
 
       done = 0;
       for(m=0;m<nfreq;m++) {
-        sprintf(name,"A_%d",egl->freqlist[m]);
+        sprintf(name,"A_%d",(int)egl->freqlist[m]);
         if (strcmp(egl->varkey[iv],name)==0) {
           memset(dRq,0,sizeof(double)*(egl->lmax-egl->lmin+1)*nfreq*nfreq);
           for (ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -195,7 +195,7 @@ void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
 }
 
 
-parametric *psm_cib_free_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
+parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
@@ -217,7 +217,7 @@ parametric *psm_cib_free_init(int ndet, int *detlist, int ndef, char** defkey, c
   memcpy(egl->payload,rq_clustered_in,(lmax_in+1)*sizeof(double));
    
   for(m1=0;m1<egl->nfreq;m1++) {
-    sprintf(name,"A_%d",egl->freqlist[m1]);
+    sprintf(name,"A_%d",(int)egl->freqlist[m1]);
     pt = name;
 
     parametric_set_default(egl,pt,1,err);

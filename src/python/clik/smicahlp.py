@@ -29,8 +29,8 @@ def add_component(lkl_grp,typ,position=-1):
     position = nc
   assert position <=nc
   for ic in range(nc,position,-1):
-    lkl_grp.copy("component_%d"%ic-1,"component_%d"%ic)
-    del lkl_grp["component_%d"%ic]
+    lkl_grp.copy("component_%d"%(ic-1),"component_%d"%ic)
+    del lkl_grp["component_%d"%(ic-1)]
   agrp = lkl_grp.create_group("component_%d"%(position))  
   agrp.attrs["component_type"]=typ
   lkl_grp.attrs["n_component"] = nc+1
@@ -114,15 +114,15 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
-def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,data=None,position=-1):
   import parametric
   import os.path as osp
 
   # initialize parameters
-  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults)
+  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color)
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
-  agrp = add_component(lkl_grp,name)
+  agrp = add_component(lkl_grp,name,position)
   agrp.attrs["ndim"] = len(npars)
   agrp.attrs["keys"] = php.pack256(*npars)
   
@@ -135,17 +135,21 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={}):
   agrp.attrs["lmin"] = lmin
   agrp.attrs["lmax"] = lmax
 
-  agrp.attrs["freq"] = [int(d) for d in dets]
+  agrp.attrs["dfreq"] = [float(d) for d in dets]
   agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
 
-  if name in ('ir_clustered_pep','ir_poisson_pep'):
-    pth = osp.join(parametric.get_pep_cib_data_path(),name+".dat")
-    template = nm.loadtxt(pth)
-    agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
-  if name == "psm_cib":
-    pth = osp.join(parametric.get_psm_cib_data_path(),name+".dat")
-    template = nm.loadtxt(pth)
-    agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
+  if color is not None:
+    agrp.create_dataset("color",data=color.flat[:])  
+
+  template = pm.get_template()
+  if template is None:
+    pass
+  else:
+    if data is None:
+      agrp.create_dataset("template",data=data.flat[:])  
+    else:
+      agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
+
   return agrp
 
 def set_criterion(lkl_grp,typ,**extra):

@@ -30,7 +30,7 @@ void ir_clustered_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
 
   for (m1=0;m1<nfreq;m1++) {
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1] == hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ind_freq[m1]=m2;
       }
     }
@@ -84,7 +84,7 @@ void ir_clustered_pep_free(void **pp) {
   *pp=NULL;
 }
 
-parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
+parametric *ir_clustered_pep_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
@@ -102,7 +102,7 @@ parametric *ir_clustered_pep_init(int ndet, int *detlist, int ndef, char** defke
     int ok;
     ok = 0;
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1]==hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ok=1;
         break;
       }
@@ -145,7 +145,7 @@ void ir_poisson_pep_compute(void* exg, double *Rq, double* dRq, error **err) {
 
   for (m1=0;m1<nfreq;m1++) {
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1] == hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ind_freq[m1]=m2;
       }
     }
@@ -199,7 +199,7 @@ void ir_poisson_pep_free(void **pp) {
   *pp=NULL;
 }
 
-parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_poisson_in, error **err) {
+parametric *ir_poisson_pep_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_poisson_in, error **err) {
   parametric *egl;
   int hfi_freqlist[6] = {100,143,217,353,545,857};
   int nfreqs_hfi = 6;
@@ -212,7 +212,7 @@ parametric *ir_poisson_pep_init(int ndet, int *detlist, int ndef, char** defkey,
     int ok;
     ok = 0;
     for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (egl->freqlist[m1]==hfi_freqlist[m2]) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
         ok=1;
         break;
       }

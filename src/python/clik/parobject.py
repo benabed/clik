@@ -146,7 +146,17 @@ def add_selfcheck(fname,pars):
   root_grp.create_dataset("check_value",data=res)
   hf.close()
   return res
-
+def remove_selfcheck(fname=None,root_grp=None):
+  if fname!=None:
+    hf = h5py.File(fname, 'r+')
+    root_grp = hf["clik"]
+  if "check_param" in root_grp:
+    del root_grp["check_param"]
+  if "check_value" in root_grp:
+    del root_grp["check_value"]
+  if fname:
+    hf.close()
+    
 def read_somearray(somepath):
   # for now only ascii arrays
   try:
