@@ -114,12 +114,12 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
-def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,data=None,position=-1):
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},data=None,position=-1):
   import parametric
   import os.path as osp
 
   # initialize parameters
-  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color)
+  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename)
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
   agrp = add_component(lkl_grp,name,position)
@@ -150,6 +150,12 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     else:
       agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
 
+  if rename:
+    rename_from = rename.keys()
+    rename_to = [rename[k] for k in rename_from]
+    agrp.attrs["rename_from"] = php.pack256(*rename_from)
+    agrp.attrs["rename_to"] = php.pack256(*rename_to)
+  
   return agrp
 
 def set_criterion(lkl_grp,typ,**extra):

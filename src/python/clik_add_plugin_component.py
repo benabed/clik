@@ -55,7 +55,14 @@ def main(argv):
   if "color" in pars:
     color = nm.array(pars.float_array.color)
 
-  slp.add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults,color=color, data=data,position=position)
+  if "rename_prefix" in pars:
+    prefix = pars.rename_prefix
+    lp = len(prefix)
+    rename = dict([(pp,pp[lp:]) pp for vpars + defaults.keys() if pp.startwith(prefix)])
+  if "rename_from" in pars:
+    rename = dict([vv for vv in zip(pars.str_array.rename_from, pars.str_array.rename_to)])
+
+  slp.add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults,color=color, rename = rename, data=data,position=position)
 
   php.remove_selfcheck(root_grp = outhf["clik"])
   

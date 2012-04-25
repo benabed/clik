@@ -4,89 +4,45 @@
 ////////////////////////////////////////////////////////////////////////////////////////
 // PSM CIB rigid model
 ////////////////////////////////////////////////////////////////////////////////////////
-void psm_cib_compute(void* exg, double *Rq, double* dRq, error **err) {
-  parametric *egl;
+void psm_cib_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv,lell,mell_in;
   double psm_cib_norm;
   double *A;
-  int hfi_freqlist[4] = {100,143,217,353};
   int nfreqs_hfi = 4;
   int lmax_in = 3000;
   int *ind_freq;
   int ind1, ind2;
+  template_payload *payload;
 
-  egl = exg;
-  A = egl->payload; // Stores input C_l(nu,nu') for all HFI frequencies and ell in [0,3000]
+  payload = egl->payload;
+  A = payload->template; // Stores input C_l(nu,nu') for all HFI frequencies and ell in [0,3000]
   nfreq = egl->nfreq;
-  ind_freq = malloc_err(sizeof(int)*nfreq,err);
-  forwardError(*err,__LINE__,);
+  ind_freq = payload->ind_freq;
 
   psm_cib_norm = parametric_get_value(egl,"psm_cib_norm",err);
   forwardError(*err,__LINE__,);
 
-
-  for (m1=0;m1<nfreq;m1++) {
-    for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
-        ind_freq[m1]=m2;
-      }
-    }
-  }
-
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-    mell=(ell-egl->lmin)*nfreq*nfreq;
     mell_in=ell*nfreqs_hfi*nfreqs_hfi;
-    lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
         ind1 = ind_freq[m1];
         ind2 = ind_freq[m2];
-        Rq[mell + m1*nfreq+m2] = psm_cib_norm *1e12* A[mell_in + ind1*nfreqs_hfi + ind2];
-        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = psm_cib_norm *1e12* A[mell_in + ind1*nfreqs_hfi + ind2];
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
   }
 
-  if (dRq!=NULL) {
-    for (iv=0;iv<egl->nvar;iv++) {
-      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
-
-      if (strcmp(egl->varkey[iv],"psm_cib_norm")==0) {
-        for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-          mell = (ell-egl->lmin)*nfreq*nfreq;
-          for (m1=0;m1<nfreq;m1++) {
-            for (m2=m1;m2<nfreq;m2++) {
-              dRq[mv+mell + m1*nfreq+m2] = Rq[mell+m1*nfreq+m2]/psm_cib_norm;
-              dRq[mv+mell + m2*nfreq+m1] = Rq[mell+m2*nfreq+m1]/psm_cib_norm;
-            }
-          }
-        }
-        continue;
-      }
-      // error return
-      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
-      forwardError(*err,__LINE__,);
-    }
-  }
-
-  free(ind_freq);
   return;
 }
 
-void psm_cib_free(void **pp) {
-  double *p;
-
-  p = *pp;
-  free(p);
-  *pp=NULL;
-}
-
-parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
+parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
   int lmax_in=3000;
-  int hfi_freqlist[4] = {100,143,217,353};
+  double hfi_freqlist[4] = {100,143,217,353};
   int nfreqs_hfi = 4;
   int m1,m2;
 
@@ -95,29 +51,17 @@ parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, cha
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
   
-  for(m1=0;m1<egl->nfreq;m1++) {
-    int ok;
-    ok = 0;
-    for(m2=0;m2<nfreqs_hfi;m2++) {
-      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
-        ok=1;
-        break;
-      }
-    }
-    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,NULL,egl->freqlist[m1]);
-  }
-
-  egl->eg_compute = &psm_cib_compute;
-  egl->eg_free = &psm_cib_free;
-
-  egl->payload = malloc_err(sizeof(double)*(nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),err); //6 frequencies (HFI), lmax_in=3000
+  parametric_template_payload_init(egl,template, sizeof(double)*(nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),hfi_freqlist,nfreqs_hfi,err);
   forwardError(*err,__LINE__,NULL);
   
-  memcpy(egl->payload,rq_clustered_in,nfreqs_hfi*nfreqs_hfi*(lmax_in+1)*sizeof(double));
+  egl->eg_compute = &psm_cib_compute;
+  egl->eg_free = &parametric_template_payload_free;
 
   parametric_set_default(egl,"psm_cib_norm",1.0,err);
   forwardError(*err,__LINE__,NULL);
-
+  parametric_add_derivative_function(egl,"psm_cib_norm",&parametric_norm_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+  
   return egl;
 }
 
@@ -125,19 +69,17 @@ parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, cha
 ////////////////////////////////////////////////////////////////////////////////////////
 // PSM CIB free model
 ////////////////////////////////////////////////////////////////////////////////////////
-void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
-  parametric *egl;
+void psm_cib_free_compute(parametric* egl, double *Rq, double *dRq,error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv,lell,mell_in;
   double psm_cib_norm;
   double *A,*N;
   int lmax_in = 3000;
   pfchar name;
 
-  egl = exg;
-  A = egl->payload; // Stores input C_l
+  N = egl->payload;
+  A = N + egl->nfreq; // Stores input C_l
   nfreq = egl->nfreq;
-  N = malloc_err(sizeof(double)*nfreq,err);
-  forwardError(*err,__LINE__,);
+  
 
   for(m1=0;m1<nfreq;m1++) {    
     sprintf(name,"A_%d",(int)egl->freqlist[m1]);
@@ -146,35 +88,35 @@ void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
   }
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-    mell=(ell-egl->lmin)*nfreq*nfreq;
-    lell = ell - egl->lmin;
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-        Rq[mell + m1*nfreq+m2] = N[m1]*N[m2] * A[ell];
-        Rq[mell + m2*nfreq+m1] = Rq[mell + m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = N[m1]*N[m2] * A[ell];
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
   }
 
   if (dRq!=NULL) {
+    double *ldRq;
+
     for (iv=0;iv<egl->nvar;iv++) {
       int m,done;
-      mv = iv*(egl->lmax-egl->lmin+1)*nfreq*nfreq;
+      
+      ldRq = PTR_DER(egl,iv,dRq);
 
       done = 0;
       for(m=0;m<nfreq;m++) {
         sprintf(name,"A_%d",(int)egl->freqlist[m]);
         if (strcmp(egl->varkey[iv],name)==0) {
-          memset(dRq,0,sizeof(double)*(egl->lmax-egl->lmin+1)*nfreq*nfreq);
+          memset(ldRq,0,sizeof(double)*(egl->lmax-egl->lmin+1)*nfreq*nfreq);
           for (ell=egl->lmin;ell<=egl->lmax;ell++) {
-            mell = (ell-egl->lmin)*nfreq*nfreq;
             for (m2=0;m2<nfreq;m2++) {
               if (m2==m) {
-                dRq[mv+mell+m*nfreq+m] = 2*Rq[mell+m*nfreq+m]/N[m];
+                ldRq[IDX_R(egl,ell,m,m)] = 2*Rq[mell+m*nfreq+m]/N[m];
                 continue;    
               }
-              dRq[mv+mell + m*nfreq+m2] = Rq[mell+m*nfreq+m2]/N[m];
-              dRq[mv+mell + m2*nfreq+m] = dRq[mv+mell + m*nfreq+m2];
+              ldRq[IDX_R(egl,ell,m1,m2)] = N[m2]*A[ell];
+              ldRq[IDX_R(egl,ell,m2,m1)] = ldRq[IDX_R(egl,ell,m1,m2)];
             }
           }
           done=1;
@@ -194,8 +136,7 @@ void psm_cib_free_compute(void* exg, double *Rq, double* dRq, error **err) {
   return;
 }
 
-
-parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_clustered_in, error **err) {
+parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   pfchar type;
   char *pt;
@@ -208,13 +149,12 @@ parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
    
-  egl->eg_compute = &psm_cib_free_compute;
-  egl->eg_free = &psm_cib_free;
+  egl->eg_compute_and_deriv = &psm_cib_free_compute;
+  egl->eg_free = &parametric_simple_payload_free;
    
-  egl->payload = malloc_err(sizeof(double)*((lmax_in+1)),err); //6 frequencies (HFI), lmax_in=3000
+  egl->payload = malloc_err(sizeof(double)*((lmax_in+1)+egl->nfreq),err); //6 frequencies (HFI), lmax_in=3000
   forwardError(*err,__LINE__,NULL);
-   
-  memcpy(egl->payload,rq_clustered_in,(lmax_in+1)*sizeof(double));
+  memcpy(egl->payload+egl->nfreq,template,(lmax_in+1)*sizeof(double));
    
   for(m1=0;m1<egl->nfreq;m1++) {
     sprintf(name,"A_%d",(int)egl->freqlist[m1]);
@@ -223,7 +163,7 @@ parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey
     parametric_set_default(egl,pt,1,err);
     forwardError(*err,__LINE__,NULL);
   }
-   
+
   return egl;
 }
 

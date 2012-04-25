@@ -54,7 +54,32 @@ cdef class parametric:
   def __cinit__(self):
     self.initfunc=NULL
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None):
+  def test_derivative(self,key,value=None,h = 1e-3):
+    if value == None:
+      value = self.parvalues
+    
+    value = nm.array(value)*1.
+    ref,dref = self(value,True) 
+  
+    ik = self.varpar.index(key)
+    vp = value*1.
+    if vp[ik]==0:
+      vp[ik] = h
+      step = h
+    else:
+      vp[ik] = vp[ik]*(1+h)
+      step = value[ik]*h
+    vm = value*1.
+    if vm[ik]==0:
+      vm[ik] = -h
+    else:
+      vm[ik] = vm[ik]*(1-h)
+    rp = self(vp)
+    rm = self(vm)
+    dap = (rp-rm)/(2*step)
+    return dref[ik],dap,dref[ik]-dap,(dref[ik]-dap)/dref[ik]
+
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,rename={}):
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef error *_err,**err
@@ -70,13 +95,18 @@ cdef class parametric:
 
     i = 0
     for k,v in defs.items():
-      defkey[i] = k
+      nk = rename.get(k,k)
+      defkey[i] = nk
       defvalue[i] = v
       i+=1
     
     nvar = len(vars)
     for i in range(nvar):
-      key[i] = vars[i]
+      nk = rename.get(vars[i],vars[i])
+      key[i] = nk
+
+    self.rename = rename
+    self.emaner = dict([(rename[k],k) for k in rename])
 
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
@@ -86,10 +116,10 @@ cdef class parametric:
     er=doError(err)
     if er:
       raise er
+    
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,rename)
 
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color)
-
-  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color):
+  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,*other):
     cdef double _color[2000]
     cdef int i
     cdef error *_err,**err
@@ -104,16 +134,14 @@ cdef class parametric:
       er=doError(err)
       if er:
         raise er
-
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
     if not dnofail:
       prs = [p for p in vars if self.has_parameter(p)]
       if len(prs)!= len(vars):
         parametric_free(<void**>&(self.celf))
-        self.__init__(detlist,prs,lmin,lmax,defs,False)
+        self.__init__(detlist,prs,lmin,lmax,defs,False,color,*other)
 
-    
     dv = []
     for p in prs:
       if self.has_parameter(p):
@@ -125,13 +153,14 @@ cdef class parametric:
     self.parvalues = dv
     #self.varpar = OrderedDict(zip(prs,dv))
     self.nell = lmax+1-lmin    
-
+    
   def get_default_value(self,key):
     cdef error *_err,**err
     _err = NULL
     err = &_err
     
-    res = parametric_get_default(self.celf,key, err)
+    nk = self.rename.get(key,key)
+    res = parametric_get_default(self.celf,nk, err)
     er=doError(err)
     if er:
       raise er
@@ -201,7 +230,7 @@ cdef class parametric_template(parametric):
     self.template_name = ""
     self.plugin_name = ""
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,data_dir="",data_path="",data_file="",data=None):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,rename={},data_dir="",data_path="",data_file="",data=None):
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef double *template
@@ -218,17 +247,20 @@ cdef class parametric_template(parametric):
 
     i = 0
     for k,v in defs.items():
-      defkey[i] = k
+      nk = rename.get(k,k)
+      defkey[i] = nk
       defvalue[i] = v
       i+=1
     
     nvar = len(vars)
     for i in range(nvar):
-      key[i] = vars[i]
+      nk =  rename.get(vars[i],vars[i])
+      key[i] = nk
 
-    print " ici" 
+    self.rename = rename
+    self.emaner = dict([(rename[k],k) for k in rename])
+
     tmp = self.get_template(data_dir,data_path,data_file,data)
-    print "la"
     template = <double*> nm.PyArray_DATA(tmp)
     
     if self.initfunc==NULL:
@@ -241,7 +273,7 @@ cdef class parametric_template(parametric):
     if er:
       raise er
 
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color)
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,rename,data_dir,data_path,data_file,data)
 
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
     if data is None:
@@ -278,5 +310,7 @@ for plg in plgs:
   try:
     register_plugin(plg)
   except Exception,e:
+    print "cannot register %s (%e)"%plg,e
+    #print e
     pass
 

@@ -143,13 +143,49 @@ void free_comp_parametric(void** data) {
   *data = NULL;
 }
 
+void apply_rename(int nkey, char* keys, int nrename, char* rename_from, char* rename_to) {
+  int i,j;
+
+  if (nrename==0) {
+    return;
+  }
+
+  for(i=0;i<nkey;i++) {
+    for(j=0;j<nrename;j++) {
+      if (strcmp(&(keys[i*256]),&(rename_from[j*256]))==0) {
+        memcpy(&(keys[i*256]),&(rename_from[j*256]),sizeof(char)*256);
+        break;
+      }
+    }
+  }
+}
+
 void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
   int dz,i;
   char *keyvartable,*deftable,*valtable;
   herr_t hstat;
+  int nrename;
+  char *rename_from, *rename_to;
 
   hstat = H5LTget_attribute_int( comp_id, ".", "ndim",  nvar);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read ndim in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+
+
+  nrename=0;
+  rename_from = NULL;
+  rename_to = NULL;
+
+  hstat = H5LTfind_attribute (comp_id, "nrename");
+  if (hstat ==1) {
+    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  nrename);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+    dz = -1;
+    rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
+    forwardError(*err,__LINE__,);
+    dz = -1;
+    rename_to = hdf5_char_attarray(comp_id,cur_lkl,"rename_to",&dz, err);
+    forwardError(*err,__LINE__,);
+  }
 
   dz = -1;
   keyvartable = hdf5_char_attarray(comp_id,cur_lkl,"keys",&dz, err);
@@ -164,6 +200,7 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
     (*varkeys)[0] = NULL;
   }
 
+  apply_rename(*nvar,keyvartable,nrename,rename_from,rename_to);
   for(i=0;i<*nvar;i++) {
     (*varkeys)[i] = &(keyvartable[i*256]);
   }
@@ -193,6 +230,7 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
     (*defvalues)[0] = NULL;
   }
   
+  apply_rename(*ndef,deftable,nrename,rename_from,rename_to);
   for(i=0;i<*ndef;i++) {
     (*defkeys)[i] = &(deftable[i*256]);
     (*defvalues)[i] = &(valtable[i*256]);
@@ -216,6 +254,9 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
     free(ietlist);
   }
   
+  free(rename_from);
+  free(rename_to);
+
   return;
 
 }
@@ -229,6 +270,25 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   herr_t hstat;
   double *color;
   int dz;
+  int nrename;
+  char *rename_from, *rename_to;
+  int j;
+
+  nrename=0;
+  rename_from = NULL;
+  rename_to = NULL;
+
+  hstat = H5LTfind_attribute (comp_id, "nrename");
+  if (hstat ==1) {
+    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  nrename);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+    dz = -1;
+    rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
+    forwardError(*err,__LINE__,);
+    dz = -1;
+    rename_to = hdf5_char_attarray(comp_id,cur_lkl,"rename_to",&dz, err);
+    forwardError(*err,__LINE__,);
+  }
 
   hstat = H5LTfind_dataset(comp_id, "color");
   if (hstat ==1) {
@@ -291,13 +351,23 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
     forwardError(*err,__LINE__,NULL);
   }   
   for(i=0;i<p_model->nvar;i++) {
-    xnames[i] = p_model->varkey[i];
+    char *kp;
+    kp = p_model->varkey[i];
+    for(j=0;j<nrename;j++) {
+      if (strcmp(kp,&(rename_to[j*256]))==0) {
+        kp = &(rename_from[j*256]);
+        break;
+      }
+    }
+    xnames[i] = kp;
   }
   
   SC_setnames(SC, xnames, err);
   forwardError(*err,__LINE__,NULL);
   
   free(xnames);
-  
+  free(rename_from);
+  free(rename_to);
+
   return SC;    
 }

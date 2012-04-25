@@ -194,17 +194,17 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
   epl->default_settings = pflist_init(err);
   forwardError(*err,__LINE__,NULL);
   
-  pflist_add_item(epl->pf,ndef,defkey,defvalue,err);
-  forwardError(*err,__LINE__,NULL);
-  
   nop = NULL;
   for(i=0;i<nvar;i++) {
     pflist_add_item(epl->pf,1,&(varkey[i]),&nop,err);
     forwardError(*err,__LINE__,NULL);
   }
 
+  pflist_add_item(epl->pf,ndef,defkey,defvalue,err);
+  forwardError(*err,__LINE__,NULL);
+
   epl->nvar = nvar;
-  epl->ndef = ndef;
+  epl->ndef = epl->pf->nkey - nvar;
 
   epl->ndet = ndet;
   if (ndet<0) {
@@ -235,7 +235,7 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
       forwardError(*err,__LINE__,NULL);
   }
   
-  epl->varkey = &(epl->pf->key[epl->ndef]);
+  epl->varkey = epl->pf->key;
   
   epl->dnofail=0;
 
@@ -246,8 +246,13 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
     epl->color[i]=1;
   }  
 
+  epl->eg_deriv_any = NULL;
+  epl->eg_deriv = NULL;
+  epl->nderiv = 0;
+  epl->eg_compute_and_deriv = NULL;
   return epl;
 }
+
 
 parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric * egl;
@@ -259,9 +264,24 @@ parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** de
 }
 
 void parametric_set_color(parametric *egl,double *color, error **err) {
-  _DEBUGHERE_("","");
   memcpy(egl->color,color,sizeof(double)*egl->ndet);
 }
+
+void parametric_add_derivative_function(parametric *egl, char* vk, exg_deriv* fnc,error **err) {
+  if (strcmp(vk,"any")==0) {
+    egl->eg_deriv_any = fnc;
+    return;
+  }
+  if (egl->nderiv == 0) {
+    egl->eg_deriv = malloc_err(sizeof(exg_compute*)*100,err);
+    egl->deriv_key = malloc_err(sizeof(pfchar)*100,err);
+  }
+  testErrorRet(egl->nderiv+1>100,-1234532,"too many derivative functions",*err,__LINE__,);
+  egl->eg_deriv[egl->nderiv] = fnc;
+  sprintf(egl->deriv_key[egl->nderiv],"%s",vk);
+  egl->nderiv ++;
+}
+
 
 void parametric_dnofail(parametric* egl, int vl) {
   egl->dnofail = vl;
@@ -283,7 +303,12 @@ void parametric_free(void** pegl) {
   free(egl->sRq);
   pflist_free(&(egl->pf));
   pflist_free(&(egl->default_settings));
+  if (egl->nderiv!=0) {
+    free(egl->eg_deriv);
+    free(egl->deriv_key);
+  }
   free(egl);
+
   *pegl = NULL;
 }
 
@@ -297,10 +322,8 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   double v;
 
   
-  testErrorRet(egl->eg_compute==NULL,-1234,"badly initialized",*err,__LINE__,);
-  
   for(ivar=0;ivar<egl->nvar;ivar++) {
-    sprintf(egl->pf->value[egl->ndef+ivar],"%40g",pars[ivar]);
+    sprintf(egl->pf->value[ivar],"%40g",pars[ivar]);
   }
   
   if (egl->ndet!=egl->nfreq) {  
@@ -312,7 +335,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
     if (dRq!=NULL) {
       sdRq = egl->sdRq;
     }
-    egl->eg_compute(egl,sRq, sdRq, err);
+    parametric_compute_loop(egl,sRq,sdRq,err);
     forwardError(*err,__LINE__,);
   
     m2 = egl->ndet;
@@ -321,7 +344,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
     f2 = f2*f2;
     mdvar = (egl->lmax+1-egl->lmin) * m2;
     fdvar = (egl->lmax+1-egl->lmin) * f2;
-
+  
     if (sRq!=NULL) {
       for(ell=0;ell<egl->lmax+1-egl->lmin;ell++) {
         mell = ell*m2;
@@ -356,9 +379,58 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
       }      
     }
   } else {
-    egl->eg_compute(egl, Rq, dRq, err);
+    parametric_compute_loop(egl,Rq,dRq,err);
     forwardError(*err,__LINE__,);
   }
+  
+}
+
+void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **err) {
+  int ok,i,j;
+
+  testErrorRet(egl->eg_compute==NULL && egl->eg_compute_and_deriv==NULL ,-1234,"badly initialized",*err,__LINE__,);
+  testErrorRet(egl->eg_compute_and_deriv==NULL && egl->nderiv==0 && egl->eg_deriv_any==NULL && dRq!=NULL,-1234,"Don't know how to compute derivatives",*err,__LINE__,);
+  
+  
+  if (egl->eg_compute_and_deriv!=NULL) {
+    egl->eg_compute_and_deriv(egl, Rq, dRq, err);
+    forwardError(*err,__LINE__,);
+    return;
+  }
+  
+  // first use the compute function
+  egl->eg_compute(egl, Rq, err);
+  forwardError(*err,__LINE__,);
+  
+  // then look whether we need derivatives 
+  if (dRq==NULL) {
+    return;
+  } 
+  
+  
+  for(i=0;i<egl->nvar;i++) {
+    for(j=0;j<egl->nderiv;j++) {
+      if (strcmp(egl->varkey[i],egl->deriv_key[j])==0) {
+        egl->eg_deriv[j](egl,i,Rq,PTR_DER(egl,i,dRq),err);
+        forwardError(*err,__LINE__,);
+        ok = 1;
+        break;      
+      }
+    }
+    if (ok==1) {
+      continue;
+    }
+    
+    if (egl->eg_deriv_any!=NULL) {
+      egl->eg_deriv_any(egl,i,Rq,PTR_DER(egl,i,dRq),err);
+      forwardError(*err,__LINE__,);
+      continue;
+    }
+    
+    parametric_end_derivative_loop(egl,dRq,egl->varkey[i],err);
+    forwardError(*err,__LINE__,);
+  }
+  return;
 }
 
 void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, error **err) {
@@ -381,14 +453,28 @@ double parametric_get_default(parametric* egl,char *key, error **err) {
 void parametric_set_default(parametric* egl,char *key, double value,error **err) {
   char calue[200];
   char *nalue;
+  int ps;
+  char nop;
+  char *res;
 
-  //_DEBUGHERE_("%g",value);
+  //_DEBUGHERE_("%s %g",key,value);
   sprintf(calue,"%30g",value);
   //_DEBUGHERE_("%p",egl->default_settings);
   //_DEBUGHERE_("%s",calue);
   nalue = calue;
   //_DEBUGHERE_("%p %p",&(nalue),calue);
   
+  //has it been defined already ?
+  nop = '\0';
+  res = pflist_get_value(egl->pf,key,&nop,err);
+  forwardError(*err,__LINE__,);
+  //_DEBUGHERE_("'%s' %d",res,res[0]);
+  if (res[0]!='\0') {
+    //_DEBUGHERE_("","");
+    sprintf(calue,"%s",res);
+  }
+  //_DEBUGHERE_("value %s",nalue);
+
   pflist_add_item(egl->default_settings,1, &key, (char**)&(nalue),err);
   forwardError(*err,__LINE__,);
   //_DEBUGHERE_("","");
@@ -422,6 +508,51 @@ void parametric_declare_mandatory(parametric *egl, char* key, error **err) {
   return;
 }
 
+void parametric_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err) {
+  double norm;
+  int ell,m1,m2;
+  char *key;
+
+  key = egl->varkey[iv];
+  norm = parametric_get_value(egl,key,err);
+  forwardError(*err,__LINE__,);
+
+  if (norm==0) {
+    sprintf(egl->pf->value[iv],"%40g",1.);
+    egl->eg_compute(egl,dRq,err);
+    forwardError(*err,__LINE__,);
+    sprintf(egl->pf->value[iv],"%40g",0.);
+    return;
+  }
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for (m1=0;m1<egl->nfreq;m1++) {
+      for (m2=m1;m2<egl->nfreq;m2++) {
+        dRq[IDX_R(egl,ell,m1,m2)] = Rq[IDX_R(egl,ell,m1,m2)]/norm;
+        dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+  return;
+}
+
+void parametric_index_derivative(parametric * egl, int iv, double* Rq, double *dRq, error **err) {
+  double index,l_pivot;
+  int ell,m1,m2;
+
+  l_pivot = egl->l_pivot;
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for (m1=0;m1<egl->nfreq;m1++) {
+      for (m2=m1;m2<egl->nfreq;m2++) {
+        dRq[IDX_R(egl,ell,m1,m2)] = Rq[IDX_R(egl,ell,m1,m2)]  * log((double)ell/l_pivot);
+        dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+  return;
+}
+
 // ASTRO PART //
 
 // To get from intensity to \delta_T (CMB)
@@ -439,7 +570,36 @@ double dBdT(double nu, double nu0) {
 
 }
 
-// Simple power low in ell, constant emissivity
+// Simple power law in ell, constant emissivity
+
+
+void powerlaw_compute(parametric* egl, double *Rq, error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double l_pivot,index,A,v;
+  
+  l_pivot = parametric_get_value(egl,"pw_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  egl->l_pivot = l_pivot;
+
+  index = parametric_get_value(egl,"pw_index",err);
+  forwardError(*err,__LINE__,);
+
+  A = parametric_get_value(egl,"pw_A",err);  
+  forwardError(*err,__LINE__,);
+
+  
+  nfreq = egl->nfreq;
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = A*pow((double) ell/l_pivot,(double) index);
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        Rq[IDX_R(egl,ell,m1,m2)] = v;
+        Rq[IDX_R(egl,ell,m2,m1)] = v;
+      }  
+    }
+  }
+  return;
+}
 
 parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *egl;
@@ -449,150 +609,44 @@ parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, ch
   egl->eg_free = NULL;
   
   // set default settings (those will be overide by defkey/value and varkey/value)
-  parametric_set_default(egl,"l_pivot",500,err);
+  parametric_set_default(egl,"pw_l_pivot",500,err);
   forwardError(*err,__LINE__,NULL);
   
-  parametric_set_default(egl,"index",0,err);
+  parametric_set_default(egl,"pw_index",0,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"pw_index",parametric_index_derivative,err);  
   forwardError(*err,__LINE__,NULL);
    
-  parametric_set_default(egl,"A",1,err);
+  parametric_set_default(egl,"pw_A",1,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"pw_A",parametric_norm_derivative,err);  
   forwardError(*err,__LINE__,NULL);
   
   return egl;
-}
-
-void powerlaw_compute(void* exg, double *Rq, double* dRq, error **err) {
-  parametric *egl;
-  int ell,m1,m2,mell,nfreq,iv,mv;
-  double l_pivot,index,A,v;
-  
-  egl = exg;
-  l_pivot = parametric_get_value(egl,"l_pivot",err);
-  forwardError(*err,__LINE__,);
-  
-  index = parametric_get_value(egl,"index",err);
-  forwardError(*err,__LINE__,);
-
-  A = parametric_get_value(egl,"A",err);  
-  forwardError(*err,__LINE__,);
-
-  
-  nfreq = egl->nfreq;
-  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-    //_DEBUGHERE_("%g %g %g %g",A,ell,l_pivot,index);
-    v = A*pow((double) ell/l_pivot,(double) index);
-    //_DEBUGHERE_("%g ",v);
-    mell = (ell-egl->lmin)*nfreq*nfreq;
-    for(m1=0;m1<nfreq;m1++) {
-      for(m2=m1;m2<nfreq;m2++) {
-        Rq[mell + m1*nfreq + m2] = v;
-        Rq[mell + m2*nfreq + m1] = v;
-      }  
-    }
-  }
-  
-  if (dRq!=NULL) {
-    for(iv=0;iv<egl->nvar;iv++) {
-      mv = iv*(egl->lmax+1-egl->lmin)*nfreq*nfreq;
-      
-      if (strcmp(egl->varkey[iv],"index")==0) {
-        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = A * log((double)ell/l_pivot) * pow((double) ell/l_pivot,(double) index);
-          mell = (ell-egl->lmin)*nfreq*nfreq;
-          for(m1=0;m1<nfreq;m1++) {
-            for(m2=m1;m2<nfreq;m2++) {
-              //_DEBUGHERE_("%d %d %g",mv+mell + m1*nfreq + m2,mv+mell + m1*nfreq + m2,v)
-              dRq[mv+mell + m1*nfreq + m2] = v;
-              dRq[mv+mell + m2*nfreq + m1] = v;
-            }  
-          }
-        }        
-        continue;
-      }
-      
-      if (strcmp(egl->varkey[iv],"A")==0) {
-        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = pow((double) ell/l_pivot,(double) index);
-          mell = (ell-egl->lmin)*nfreq*nfreq;
-          for(m1=0;m1<nfreq;m1++) {
-            for(m2=m1;m2<nfreq;m2++) {
-              //_DEBUGHERE_("%d %d %g",mv+mell + m1*nfreq + m2,mv+mell + m1*nfreq + m2,v)
-              dRq[mv+mell + m1*nfreq + m2] = v;
-              dRq[mv+mell + m2*nfreq + m1] = v;
-            }  
-          }
-        }        
-        continue;
-      }
-
-      // error return
-      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
-      forwardError(*err,__LINE__,);
-    }
-  }
-
-  return;
 }
 
 // Simple power law in ell, arbitrary emissivity (including arbitrary cross-correlations, i.e. NOT rank=1 a priori)
 // This could be used e.g for CIB Poisson
 
-parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
-  parametric *egl;
-  int m1,m2;
-  pfchar name;
-
-  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
-  egl->eg_compute = &powerlaw_free_emissivity_compute;
-  egl->eg_free = &powerlaw_free_emissivity_free;
-  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
-  forwardError(*err,__LINE__,NULL);
-
-  parametric_set_default(egl,"l_pivot",500,err);
-  forwardError(*err,__LINE__,NULL);
-
-  parametric_set_default(egl,"index",0,err);
-  forwardError(*err,__LINE__,NULL);
-
-  for(m1=0;m1<egl->nfreq;m1++) {
-    for(m2=m1;m2<egl->nfreq;m2++) {
-      sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-      parametric_set_default(egl,name,1,err);
-      forwardError(*err,__LINE__,NULL);
-    }
-  }  
-
-  return egl;
-}
-
-void powerlaw_free_emissivity_free(void **pp) {
-  double *p;
-
-  p = *pp;
-  free(p);
-  *pp=NULL;
-}
-
-void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error **err) {
-  parametric *egl;
+void powerlaw_free_emissivity_compute(parametric* egl, double *Rq,  error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv;
   double l_pivot,index,v,lA;
   double *A;
   pfchar name;
   int stop;
 
-  egl = exg;
-  l_pivot = parametric_get_value(egl,"l_pivot",err);
+  l_pivot = parametric_get_value(egl,"pwfe_l_pivot",err);
   forwardError(*err,__LINE__,);
-  
-  index = parametric_get_value(egl,"index",err);
+  egl->l_pivot = l_pivot;
+
+  index = parametric_get_value(egl,"pwfe_index",err);
   forwardError(*err,__LINE__,);
 
   A = egl->payload;
   nfreq = egl->nfreq;
   for(m1=0;m1<nfreq;m1++) {
     for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       v = 1;
       v = parametric_get_value(egl,name,err);
       A[m1*nfreq+m2] = v;
@@ -607,63 +661,162 @@ void powerlaw_free_emissivity_compute(void* exg, double *Rq, double *dRq, error 
     for(m1=0;m1<nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
         lA = A[m1*nfreq+m2];
-        Rq[mell + m1*nfreq + m2] = lA*v;
-        Rq[mell + m2*nfreq + m1] = lA*v;
+        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
+        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
       }  
     }
   }
 
-  if (dRq!=NULL) {
-    for(iv=0;iv<egl->nvar;iv++) {
-      mv = iv*(egl->lmax+1-egl->lmin)*nfreq*nfreq;
-      
-      if (strcmp(egl->varkey[iv],"index")==0) {
-        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = log(ell/l_pivot) * pow(ell/l_pivot,index);
-          mell = (ell-egl->lmin)*nfreq*nfreq;
-          for(m1=0;m1<nfreq;m1++) {
-            for(m2=m1;m2<nfreq;m2++) {
-              lA = A[m1*nfreq+m2];
-              //_DEBUGHERE_("%d %d %g %g %d %d",m1,m2,lA,v,mv+mell + m1*nfreq + m2,mv+mell + m2*nfreq + m1);
-              dRq[mv+mell + m1*nfreq + m2] = lA*v;
-              dRq[mv+mell + m2*nfreq + m1] = lA*v;
-            }  
-          }
-        }        
-        continue;
-      }
-      
-      stop = 0;
-      for(m1=0;m1<nfreq;m1++) {
-        for(m2=m1;m2<nfreq;m2++) {
-          sprintf(name,"A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+  return;
+}
+
+void powerlaw_free_emissivity_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err) {
+  int ell,m1,m2,mell,nfreq,mv;
+  double l_pivot,index,v,lA;
+  double *A;
+  pfchar name;
+  int stop;
+
+  l_pivot = parametric_get_value(egl,"l_pivot",err);
+  forwardError(*err,__LINE__,);
   
-          if (strcmp(egl->varkey[iv],name)==0) {
-            stop=1;
-            memset(&(dRq[mv]),0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
-            for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-              v = pow(ell/l_pivot,index);
-              mell = (ell-egl->lmin)*nfreq*nfreq;
-              //_DEBUGHERE_("%d %d %g %g %d %d",m1,m2,lA,v,mv+mell + m1*nfreq + m2,mv+mell + m2*nfreq + m1);
-              dRq[mv+mell + m1*nfreq + m2] = v;
-              dRq[mv+mell + m2*nfreq + m1] = v;
-            }
-            break;
-          }
-        }
-        if (stop==1) {
-          break;
-        }
-      }
-      if (stop==1) {
-        continue;
-      }
-      
-      // error return
-      parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
-      forwardError(*err,__LINE__,);
+  index = parametric_get_value(egl,"index",err);
+  forwardError(*err,__LINE__,);
+
+  A = egl->payload;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      v = 1;
+      v = parametric_get_value(egl,name,err);
+      A[m1*nfreq+m2] = v;
+      A[m2*nfreq+m1] = v;
     }
   }
+
+  stop = 0;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      if (strcmp(egl->varkey[iv],name)==0) {
+        stop=1;
+        memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
+        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+          v = pow(ell/l_pivot,index);
+          dRq[IDX_R(egl,ell,m1,m2)] = v;
+          dRq[IDX_R(egl,ell,m2,m1)] = v;
+        }
+        break;
+      }
+    }
+    if (stop==1) {
+      break;
+    }
+  }      
+  // error return
+  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  forwardError(*err,__LINE__,);
+
   return;
+}
+
+
+parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int m1,m2;
+  pfchar name;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &powerlaw_free_emissivity_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"pwfe_l_pivot",500,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"pwfe_index",0,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"pwfe_index",parametric_index_derivative,err);  
+  forwardError(*err,__LINE__,NULL);
+  
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      parametric_set_default(egl,name,1,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  parametric_add_derivative_function(egl,"any",powerlaw_free_emissivity_A_derivative,err);  
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void parametric_check_freq(parametric *egl, double* freqlist, int nfreq, error **err) {
+  int m1,m2, ok;
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    ok = 0;
+    for(m2=0;m2<nfreq;m2++) {
+      if (fabs(egl->freqlist[m1]-freqlist[m2])<1e-6) {
+        ok=1;
+        break;
+      }
+    }
+    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,,egl->freqlist[m1]);
+  }
+}
+
+void parametric_template_payload_init(parametric *egl, double *template, int template_size, double *hfi_freqlist, int nfreqs_hfi, error **err) {
+  int m1,m2;
+  template_payload *payload;
+
+  parametric_check_freq(egl, hfi_freqlist, nfreqs_hfi,err);
+  forwardError(*err,__LINE__,);
+
+  egl->payload = malloc_err(sizeof(template_payload),err);
+  forwardError(*err,__LINE__,);
+
+  payload = egl->payload;
+
+  payload->ind_freq = malloc_err(sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,);
+
+  for (m1=0;m1<egl->nfreq;m1++) {
+    for(m2=0;m2<nfreqs_hfi;m2++) {
+      if (fabs(egl->freqlist[m1]-hfi_freqlist[m2])<1e-6) {
+        payload->ind_freq[m1]=m2;
+      }
+    }
+  }
+
+  payload->template = malloc_err(sizeof(double)*template_size,err);
+  forwardError(*err,__LINE__,);
+
+  memcpy(payload->template,template,sizeof(double)*template_size);
+}
+
+void parametric_simple_payload_free(void **pp) {
+  void *p;
+
+  p = *pp;
+  if (p!=NULL) {
+    free(p);
+  }
+  *pp=NULL;
+}
+
+
+void parametric_template_payload_free(void **pp) {
+  template_payload *p;
+  p = *pp;
+  if (p!=NULL) {
+    free(p->template);
+    free(p->ind_freq);
+    free(p);
+  }
+  *pp=NULL;
 }
 
