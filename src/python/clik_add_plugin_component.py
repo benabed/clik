@@ -55,10 +55,11 @@ def main(argv):
   if "color" in pars:
     color = nm.array(pars.float_array.color)
 
+  rename = {}
   if "rename_prefix" in pars:
     prefix = pars.rename_prefix
     lp = len(prefix)
-    rename = dict([(pp,pp[lp:]) pp for vpars + defaults.keys() if pp.startwith(prefix)])
+    rename = dict([(pp,pp[lp:]) for pp in vpars + defaults.keys() if pp.startwith(prefix)])
   if "rename_from" in pars:
     rename = dict([vv for vv in zip(pars.str_array.rename_from, pars.str_array.rename_to)])
 

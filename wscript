@@ -175,12 +175,12 @@ def configure(ctx):
     pth = osp.join("src/component_plugin",plg)
     if not osp.isdir(pth):
       continue
-    ctx.start_msg("plugin : '%s'"%plg)
+    ctx.start_msg("Add plugin : '%s'"%plg)
     try:
       f = open(osp.join(pth,"plugin.txt"))
       txt = f.read()
       decr = {"source":"","data":"","python":""}
-      decr.update(dict(re.findall("(.+?)\s+:\s+(.+)",txt)))
+      decr.update(dict(re.findall("(.+?)\s+(?::|=)\s+(.+)",txt)))
       for k in decr:
         decr[k] = [l.strip() for l in decr[k].split() if l.strip()]
         for f in decr[k]:
@@ -197,9 +197,9 @@ def configure(ctx):
 
 
   if allgood==False:
-    print "configure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
+    print "\nConfigure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
   else:
-    print "configure ok\n\nrun './waf install' now !"
+    print "\nConfigure ok\n\nrun './waf install' now !"
   
   
 def build(ctx):
