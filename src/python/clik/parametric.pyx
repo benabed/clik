@@ -310,7 +310,7 @@ for plg in plgs:
   try:
     register_plugin(plg)
   except Exception,e:
-    print "cannot register %s (%e)"%plg,e
+    print "cannot register %s (%s)"%(plg,e)
     #print e
     pass
 
