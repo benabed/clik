@@ -82,7 +82,7 @@ void psm_cib_free_compute(parametric* egl, double *Rq, double *dRq,error **err) 
   
 
   for(m1=0;m1<nfreq;m1++) {    
-    sprintf(name,"A_%d",(int)egl->freqlist[m1]);
+    sprintf(name,"psm_cib_free_A_%d",(int)egl->freqlist[m1]);
     N[m1] = parametric_get_value(egl,name,err);
     forwardError(*err,__LINE__,);
   }
@@ -106,7 +106,7 @@ void psm_cib_free_compute(parametric* egl, double *Rq, double *dRq,error **err) 
 
       done = 0;
       for(m=0;m<nfreq;m++) {
-        sprintf(name,"A_%d",(int)egl->freqlist[m]);
+        sprintf(name,"psm_cib_free_A_%d",(int)egl->freqlist[m]);
         if (strcmp(egl->varkey[iv],name)==0) {
           memset(ldRq,0,sizeof(double)*(egl->lmax-egl->lmin+1)*nfreq*nfreq);
           for (ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -157,7 +157,7 @@ parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey
   memcpy(egl->payload+egl->nfreq,template,(lmax_in+1)*sizeof(double));
    
   for(m1=0;m1<egl->nfreq;m1++) {
-    sprintf(name,"A_%d",(int)egl->freqlist[m1]);
+    sprintf(name,"psm_cib_free_A_%d",(int)egl->freqlist[m1]);
     pt = name;
 
     parametric_set_default(egl,pt,1,err);
