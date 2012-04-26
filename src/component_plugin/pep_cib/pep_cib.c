@@ -51,7 +51,7 @@ parametric *ir_clustered_pep_init(int ndet, double *detlist, int ndef, char** de
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_template_payload_init(egl,template, sizeof(double)*(nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),hfi_freqlist,nfreqs_hfi,err);
+  parametric_template_payload_init(egl,template, (nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),hfi_freqlist,nfreqs_hfi,err);
   forwardError(*err,__LINE__,NULL);
   
   egl->eg_compute = &ir_clustered_pep_compute;
@@ -103,7 +103,7 @@ parametric *ir_poisson_pep_init(int ndet, double *detlist, int ndef, char** defk
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
   
-  parametric_template_payload_init(egl,template, sizeof(double)*(nfreqs_hfi*nfreqs_hfi),hfi_freqlist,nfreqs_hfi,err);
+  parametric_template_payload_init(egl,template, (nfreqs_hfi*nfreqs_hfi),hfi_freqlist,nfreqs_hfi,err);
   forwardError(*err,__LINE__,NULL);
   
   egl->eg_compute = &ir_poisson_pep_compute;

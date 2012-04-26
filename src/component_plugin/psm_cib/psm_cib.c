@@ -51,7 +51,7 @@ parametric *psm_cib_init(int ndet, double *detlist, int ndef, char** defkey, cha
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
   
-  parametric_template_payload_init(egl,template, sizeof(double)*(nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),hfi_freqlist,nfreqs_hfi,err);
+  parametric_template_payload_init(egl,template, (nfreqs_hfi*nfreqs_hfi*(lmax_in+1)),hfi_freqlist,nfreqs_hfi,err);
   forwardError(*err,__LINE__,NULL);
   
   egl->eg_compute = &psm_cib_compute;
