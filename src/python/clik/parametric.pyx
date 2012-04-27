@@ -295,22 +295,27 @@ cdef class parametric_template(parametric):
 component_list = []
 simple_parametric_list = component_list
 
-def register_plugin(plg):
+def register_plugin(plg,gl):
   import sys
+  print plg
   mlg =__import__("clik."+plg,fromlist=[plg])
   global component_list
   component_list += mlg.component_list
   for cp in mlg.component_list:
-    globals()[cp]=getattr(mlg,cp)
+    gl[cp]=getattr(mlg,cp)
+    print "add %s"%cp
 
-import os
-plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]
 
-for plg in plgs:
-  try:
-    register_plugin(plg)
-  except Exception,e:
-    print "cannot register %s (%s)"%(plg,e)
-    #print e
-    pass
+def register_all(gl=__dict__):
+  import os  
+  plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]
 
+  for plg in plgs:
+    try:
+      register_plugin(plg,gl)
+    except Exception,e:
+      print "cannot register %s (%s)"%(plg,e)
+      #print e
+      pass
+
+register_all()

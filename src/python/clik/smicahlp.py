@@ -115,8 +115,10 @@ def add_from_pars(lkl_grp,parfile):
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
 def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},data=None,position=-1):
+  import os
   import parametric
   import os.path as osp
+  parametric.register_all(parametric.__dict__)
 
   # initialize parameters
   pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename)
@@ -146,9 +148,9 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     pass
   else:
     if data is None:
-      agrp.create_dataset("template",data=data.flat[:])  
+      agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])  
     else:
-      agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])
+      agrp.create_dataset("template",data=nm.array(data,dtype=nm.double).flat[:])
 
   if rename:
     rename_from = rename.keys()
