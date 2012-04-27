@@ -132,7 +132,6 @@ void psm_cib_free_compute(parametric* egl, double *Rq, double *dRq,error **err) 
     }
   }
 
-  free(N);
   return;
 }
 
@@ -154,8 +153,8 @@ parametric *psm_cib_free_init(int ndet, double *detlist, int ndef, char** defkey
    
   egl->payload = malloc_err(sizeof(double)*((lmax_in+1)+egl->nfreq),err); //6 frequencies (HFI), lmax_in=3000
   forwardError(*err,__LINE__,NULL);
-  memcpy(egl->payload+egl->nfreq,template,(lmax_in+1)*sizeof(double));
-   
+  memcpy(egl->payload+egl->nfreq*sizeof(double),template,(lmax_in+1)*sizeof(double));
+  
   for(m1=0;m1<egl->nfreq;m1++) {
     sprintf(name,"psm_cib_free_A_%d",(int)egl->freqlist[m1]);
     pt = name;
