@@ -746,7 +746,7 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
     parametric_add_derivative_function(egl,"gal_beta_dust",gal_beta_dust_derivative,err);  
     forwardError(*err,__LINE__,NULL);
 
-    parametric_set_default(egl,"gal_T_dust",1.8,err);
+    parametric_set_default(egl,"gal_T_dust",18,err);
     forwardError(*err,__LINE__,NULL);
     parametric_add_derivative_function(egl,"gal_T_dust",gal_T_dust_derivative,err);  
     forwardError(*err,__LINE__,NULL);
