@@ -306,7 +306,8 @@ def register_plugin(plg,gl):
     print "add %s"%cp
 
 
-def register_all(gl=__dict__):
+def register_all(gl=globals()):
+  print gl
   import os  
   plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]
 
