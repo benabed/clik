@@ -250,6 +250,7 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
   epl->eg_deriv = NULL;
   epl->nderiv = 0;
   epl->eg_compute_and_deriv = NULL;
+
   return epl;
 }
 
@@ -259,7 +260,7 @@ parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** de
 
   egl = parametric_init(-ndet,detlist,ndef,defkey,defvalue, nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
-
+  
   return egl;
 }
 
@@ -426,7 +427,7 @@ void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **
       forwardError(*err,__LINE__,);
       continue;
     }
-    
+        
     parametric_end_derivative_loop(egl,dRq,egl->varkey[i],err);
     forwardError(*err,__LINE__,);
   }
@@ -535,6 +536,65 @@ void parametric_norm_derivative(parametric * egl, int iv, double *Rq, double *dR
   }
   return;
 }
+
+void parametric_tensor_fill(parametric *egl,double *A,error **err) {
+  int ic;
+  pfchar Ac;
+
+  for(ic=0;ic<egl->nfreq;ic++) {
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic);    
+    A[ic] = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,);  
+  } 
+}
+
+void parametric_tensor_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err) {
+  double norm;
+  int ell,m1,m2;
+  char *key,*kp;
+  int ic;
+  double *mRq;
+
+  key = egl->varkey[iv];
+  
+  testErrorRet(strncmp(key,egl->tensor_norm_template,egl->tensor_norm_template_len)!=0,-141241,"Argl",*err,__LINE__,);
+  ic = atoi(&(key[egl->tensor_norm_template_len]));
+
+  norm = parametric_get_value(egl,key,err);
+  forwardError(*err,__LINE__,);
+
+  mRq = Rq;
+
+  if (norm==0) {
+    sprintf(egl->pf->value[iv],"%40g",1.);
+    egl->eg_compute(egl,dRq,err);
+    forwardError(*err,__LINE__,);
+    sprintf(egl->pf->value[iv],"%40g",0.);
+    norm = 1;
+    mRq = dRq;
+  }
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for (m1=0;m1<egl->nfreq;m1++) {
+      if (m1==ic) {
+        dRq[IDX_R(egl,ell,m1,m1)] = 2*mRq[IDX_R(egl,ell,m1,m1)]/norm;  
+      } else {
+        dRq[IDX_R(egl,ell,m1,m1)] = 0;
+      }
+      
+      for (m2=m1+1;m2<egl->nfreq;m2++) {
+        if (m2==ic || m1==ic) {
+          dRq[IDX_R(egl,ell,m1,m2)] = mRq[IDX_R(egl,ell,m1,m2)]/norm;
+        } else {
+          dRq[IDX_R(egl,ell,m1,m2)] = 0;
+        }
+        dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+  return;
+}
+
 
 void parametric_index_derivative(parametric * egl, int iv, double* Rq, double *dRq, error **err) {
   double index,l_pivot;

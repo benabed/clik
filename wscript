@@ -182,7 +182,7 @@ def configure(ctx):
       decr = {"source":"","data":"","python":""}
       decr.update(dict(re.findall("(.+?)\s+(?::|=)\s+(.+)",txt)))
       for k in decr:
-        decr[k] = [l.strip() for l in decr[k].split() if l.strip()]
+        decr[k] = [l.strip() for l in re.split("(?:\s|,|;)+",decr[k]) if l.strip()]
         for f in decr[k]:
           if not osp.exists(osp.join(pth,f)):
             raise Exception((osp.join(pth,f))+" does not exists")

@@ -142,6 +142,7 @@ void radiogal_compute(parametric* egl, double *Rq, error **err) {
 
 
 
+
 ////////////////////////////////////////////////////////////////////////////////////////////
 // CIB model. Millea et al. for now
 ////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,18 +288,22 @@ double ir_clustered_step_index(parametric* egl, int m1,int m2) {
 void ir_clustered_step_derivative(parametric* egl, int iv, double *Rq, double *dRq, error **err) {
   int ell,m1,m2; 
   double step ;
+  char *key;
 
-  step = step = parametric_get_value(egl,"ir_clustered_correlation_step",err);
+  key = egl->varkey[iv];
+  step = parametric_get_value(egl,key,err);
   forwardError(*err,__LINE__,);
+  
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
     for (m1=0;m1<egl->nfreq;m1++) {
-      dRq[IDX_R(egl,ell,m1,m2)] = 0; //diagonal unchanged
+      dRq[IDX_R(egl,ell,m1,m1)] = 0; //diagonal unchanged
       for (m2=m1+1;m2<egl->nfreq;m2++) {
         dRq[IDX_R(egl,ell,m1,m2)] = Rq[IDX_R(egl,ell,m1,m2)]/step * ir_clustered_step_index(egl,m1,m2);
         dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
       }
     }
   }
+  
   return;
 }
 
@@ -765,7 +770,154 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   return egl;
 }
 
+void poisson_tensor_bydet_compute(parametric* exg, double *Rq, error **err);
+
+parametric *poisson_tensor_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int ic;
+  pfchar Ac;
+  
+  egl = parametric_bydet_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &poisson_tensor_bydet_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*(egl->nfreq),err);
+  forwardError(*err,__LINE__,NULL);
+
+  sprintf(egl->tensor_norm_template,"%s","poisson_tensor_bydet_A_");
+  egl->tensor_norm_template_len = strlen(egl->tensor_norm_template);
+  
+  for(ic=0;ic<egl->nfreq;ic++) {
+    double nrm,frq;
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic);    
+    frq = egl->freqlist[ic];
+    nrm = sqrt(80/(3000.*3001./2./M_PI)*(1.98984227 * frq*frq*frq -27.70516974 *frq*frq + 125.04493152 *frq -181.36576083));
+    parametric_set_default(egl,Ac,nrm,err);
+    forwardError(*err,__LINE__,NULL);
+  }
+  
+  egl->eg_deriv_any = &parametric_tensor_norm_derivative;
+
+  return egl;
+}
+
+void poisson_tensor_bydet_compute(parametric* egl, double *Rq, error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double *A;
+  int ic;
+  pfchar Ac;
+
+  A = egl->payload;
+
+  parametric_tensor_fill(egl,A,err);
+  forwardError(*err,__LINE__,);  
+  
+  nfreq = egl->nfreq;
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+        Rq[IDX_R(egl,ell,m1,m2)] = A[m1] * A[m2];
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+  
+  return;
+}
+
+void powerlaw_tensor_bydet_compute(parametric* exg, double *Rq, error **err);
+
+parametric *powerlaw_tensor_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int ic;
+  pfchar Ac;
+
+  egl = parametric_bydet_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  egl->eg_compute = &powerlaw_tensor_bydet_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+
+  egl->payload = malloc_err(sizeof(double)*(egl->nfreq*egl->nfreq + egl->nfreq),err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"powerlaw_tensor_bydet_index",-1.25,err); // Karim's favorite
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl, "powerlaw_tensor_bydet_index", &parametric_index_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"powerlaw_tensor_bydet_correlation_step",1,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl, "powerlaw_tensor_bydet_correlation_step", &ir_clustered_step_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  sprintf(egl->tensor_norm_template,"%s","powerlaw_tensor_bydet_A_");
+  egl->tensor_norm_template_len = strlen(egl->tensor_norm_template);
+  
+  for(ic=0;ic<egl->nfreq;ic++) {
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic);    
+    parametric_set_default(egl,Ac,1,err);
+    forwardError(*err,__LINE__,NULL);
+  }
+  
+  parametric_set_default(egl,"powerlaw_tensor_bydet_l_pivot",1000,err);
+  forwardError(*err,__LINE__,NULL);
+    
+  egl->eg_deriv_any = &parametric_tensor_norm_derivative;
+  return egl;
+}
+
+void powerlaw_tensor_bydet_compute(parametric* egl, double *Rq, error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv,lell;
+  double l_pivot,index,v;
+  double x, lnx, ln2x;
+  double *A,*dcm;
+  pfchar type;
+  char *pt;
+  double step;
+  int isstep;
+  
+  A = egl->payload;
+  parametric_tensor_fill(egl,A,err);
+  forwardError(*err,__LINE__,);  
+
+  l_pivot = parametric_get_value(egl,"powerlaw_tensor_bydet_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  egl->l_pivot = l_pivot;
+
+  index = parametric_get_value(egl,"powerlaw_tensor_bydet_index",err);
+  forwardError(*err,__LINE__,);
+
+  nfreq = egl->nfreq;
+  step = parametric_get_value(egl,"powerlaw_tensor_bydet_correlation_step",err);  
+  forwardError(*err,__LINE__,);
+
+  dcm = A + egl->nfreq;
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    dcm[m1*egl->nfreq+m1] = 1.;
+    for(m2=0;m2<m1;m2++) {
+      dcm[m1*egl->nfreq+m2] = pow(step,ir_clustered_step_index(egl,m1,m2));
+      dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
+      //_DEBUGHERE_("%d %d %g %g",m1,m2,dcm[m1*egl->nfreq+m2],fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33)
+    }
+  }
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow((double) ell/l_pivot,(double) index);
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        Rq[IDX_R(egl,ell,m1,m2)] = A[m1]*A[m2] * dcm[m1*egl->nfreq+m2] * v;
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }  
+    }
+  }
+  return;
+}
+
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_poisson,ir_poisson_init);
 CREATE_PARAMETRIC_FILE_INIT(galametric,galactic_component_init);
+CREATE_PARAMETRIC_FILE_INIT(poisson_tensor_bydet,poisson_tensor_bydet_init);
+CREATE_PARAMETRIC_FILE_INIT(powerlaw_tensor_bydet,powerlaw_tensor_bydet_init);

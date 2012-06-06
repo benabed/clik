@@ -57,10 +57,12 @@ typedef struct parametric_struct {
   int dnofail;
   double *color;
   double l_pivot;
+  pfchar tensor_norm_template;
+  int tensor_norm_template_len;
 } parametric;
 
 parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
-parametric *parametric__bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void parametric_free(void** pegl);
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err);
 void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **err);
@@ -93,5 +95,8 @@ void parametric_template_payload_init(parametric *egl, double *template, int tem
 void parametric_template_payload_free(void **pp);
 
 void parametric_simple_payload_free(void **pp);
+
+void parametric_tensor_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err);
+void parametric_tensor_fill(parametric *egl,double *A,error **err);
 
 #endif
