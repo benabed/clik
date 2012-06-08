@@ -176,14 +176,14 @@ double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **
 
   //_DEBUGHERE_("%s %d",key,pf->ncommon);
   ps=pflist_key_index(pf,key,err);
-  forwardError(*err,__LINE__,NAN);
+  forwardError(*err,__LINE__,M_NAN);
 
   if (ps==-1) {
     return *safeguard;
   }
 
   //_DEBUGHERE_("%s",key);
-  if isnan(pf->dvalue[ps]) {
+  if m_isnan(pf->dvalue[ps]) {
     //_DEBUGHERE_("","");
     pf->dvalue[ps] = atof(pf->value[ps]);
   }
@@ -519,11 +519,11 @@ double parametric_get_default(parametric* egl,char *key, error **err) {
 
   //_DEBUGHERE_("%s %d",key,egl->default_settings->ncommon);
   ps=pflist_key_index(egl->default_settings,key,err);
-  forwardError(*err,__LINE__,NAN);
+  forwardError(*err,__LINE__,M_NAN);
   testErrorRetVA(ps==-1,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
 
   //_DEBUGHERE_("%s",key);
-  if isnan(egl->default_settings->dvalue[ps]) {
+  if m_isnan(egl->default_settings->dvalue[ps]) {
     //_DEBUGHERE_("","");
     egl->default_settings->dvalue[ps] = atof(egl->default_settings->value[ps]);
   }

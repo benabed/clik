@@ -5,6 +5,13 @@
 #ifndef CLIK_PARAMETRIC
 #define CLIK_PARAMETRIC
 
+#ifndef NAN
+#define M_NAN -1.2345e32
+#define m_isnan(v) (v == M_NAN)
+#else
+#define M_NAN NAN
+#define m_isnan(v) (isnan(v))
+#endif
 
 #define pfcharsize 256
 
