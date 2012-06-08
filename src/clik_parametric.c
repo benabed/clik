@@ -71,7 +71,7 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     } else {
       pf->value[idx][0] = '\0';
     }
-    pf->dvalue[idx] = NAN;
+    pf->dvalue[idx] = M_NAN;
 
     //_DEBUGHERE_("added %d '%s' : '%s'",idx,pf->key[idx],pf->value[idx]);
   }
