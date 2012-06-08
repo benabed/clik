@@ -13,8 +13,10 @@ typedef char pfchar[pfcharsize];
 typedef struct {
   pfchar *key;
   pfchar *value;
+  double *dvalue;
   int nkey;
   int nmax;
+  int ncommon;
 } pflist;
 
 pflist* pflist_init(error **err);
@@ -25,6 +27,7 @@ int pflist_key_index(pflist *pf, char *key, error **err);
 void pflist_remove_item(pflist* pf, int index,error **err);
 long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err);
 double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **err);
+void pflist_compute_ncommon(pflist *pf, error **err);
 
 struct parametric_struct;
 

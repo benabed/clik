@@ -13,7 +13,11 @@ pflist* pflist_init(error **err) {
   forwardError(*err,__LINE__,NULL);
   pf->value = malloc_err(sizeof(pfchar)*pf->nmax,err);
   forwardError(*err,__LINE__,NULL);
-    
+  pf->dvalue = malloc_err(sizeof(double)*pf->nmax,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  pf->ncommon = 0;
+
   return pf;
 }
 
@@ -24,6 +28,7 @@ void pflist_free(void **ppf) {
   if (pf->nmax !=0) {
     free(pf->key);
     free(pf->value);
+    free(pf->dvalue);
   }
   free(pf);
   *ppf = NULL;
@@ -41,6 +46,8 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     pf->key=resize_err(pf->key, sizeof(pfchar)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
     forwardError(*err,__LINE__,);
     pf->value=resize_err(pf->value, sizeof(pfchar)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
+    forwardError(*err,__LINE__,);
+    pf->dvalue=resize_err(pf->dvalue, sizeof(double)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
     forwardError(*err,__LINE__,);
     pf->nmax =  nnmax;
   }
@@ -64,19 +71,76 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     } else {
       pf->value[idx][0] = '\0';
     }
+    pf->dvalue[idx] = NAN;
+
     //_DEBUGHERE_("added %d '%s' : '%s'",idx,pf->key[idx],pf->value[idx]);
   }
   pf->nkey = cur;  
+  pflist_compute_ncommon(pf,err);
+  forwardError(*err,__LINE__,);
+  //_DEBUGHERE_("ncommon %d",pf->ncommon);
   //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
-
 }
 
-int pflist_key_index(pflist *pf, char *key, error **err) {
+void pflist_compute_ncommon(pflist *pf, error **err) {
+  int i,j;
+  char k0,k;
+
+
+
+  j = 0;
+  for(;;) {
+    //_DEBUGHERE_("%s",pf->key[0]);
+    k0 = pf->key[0][j];
+    if (k0 == '\0') {
+      pf->ncommon = j;
+      //_DEBUGHERE_("%d",pf->ncommon);
+      return;
+    }
+    for(i=1;i<pf->nkey;i++) {
+      //_DEBUGHERE_("%d %s",i,pf->key[i]);
+      k = pf->key[i][j];
+      //_DEBUGHERE_("%d %c %c",j,k,k0);
+      if (k == '\0' || k!=k0) {
+        pf->ncommon = j;
+        return;
+      }
+      
+    }
+    j++;
+    //_DEBUGHERE_("%c %d",k0,j);  
+  }
+}
+
+int _pflist_key_index(pflist *pf, char *key, error **err) {
   int i;
 
   for(i=0;i<pf->nkey;i++) {
     if (strcmp(key,pf->key[i])==0) {
       return i;
+    }
+  }
+  return -1;
+}
+
+int pflist_key_index(pflist *pf, char *key, error **err) {
+  int i;
+  int j;
+
+  //_DEBUGHERE_("%s %d %d",key,strlen(key),pf->ncommon);
+  if (strlen(key)<pf->ncommon) {
+    return -1;
+  }
+
+  for(i=0;i<pf->nkey;i++) {
+    for(j = pf->ncommon;;j++) {
+      if (key[j]!=pf->key[i][j]) {
+        break;
+      }
+      if (key[j] == '\0') {
+        //_DEBUGHERE_("FOUND %s %s %d",key,pf->key[i],i);
+        return i;
+      }
     }
   }
   return -1;
@@ -108,16 +172,22 @@ long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err) {
 }
 
 double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **err) {
-  char *res;
+  int ps;
 
-  res = pflist_get_value(pf,key,(char*)safeguard,err);
-  forwardError(*err,__LINE__,0);
-  
-  if (res==(char*)safeguard) {
+  //_DEBUGHERE_("%s %d",key,pf->ncommon);
+  ps=pflist_key_index(pf,key,err);
+  forwardError(*err,__LINE__,NAN);
+
+  if (ps==-1) {
     return *safeguard;
   }
 
-  return atof(res);
+  //_DEBUGHERE_("%s",key);
+  if isnan(pf->dvalue[ps]) {
+    //_DEBUGHERE_("","");
+    pf->dvalue[ps] = atof(pf->value[ps]);
+  }
+  return pf->dvalue[ps];
 }
 
 void pflist_remove_item(pflist* pf, int index,error **err) {
@@ -126,8 +196,12 @@ void pflist_remove_item(pflist* pf, int index,error **err) {
   for(i=index;i<pf->nkey-1;i++) {
     strcpy(pf->key[i],pf->key[i+1]);
     strcpy(pf->value[i],pf->value[i+1]);
+    pf->dvalue[i] = pf->dvalue[i+1];
   }
   pf->nkey--;
+  pflist_compute_ncommon(pf,err);
+  forwardError(*err,__LINE__,);
+  
 }
 
 void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** pdet2freq, error **err) {
@@ -324,7 +398,8 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
 
   
   for(ivar=0;ivar<egl->nvar;ivar++) {
-    sprintf(egl->pf->value[ivar],"%40g",pars[ivar]);
+    //sprintf(egl->pf->value[ivar],"%40g",pars[ivar]);
+    egl->pf->dvalue[ivar]=pars[ivar];
   }
   
   if (egl->ndet!=egl->nfreq) {  
@@ -440,15 +515,19 @@ void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, e
 }
 
 double parametric_get_default(parametric* egl,char *key, error **err) {
-  char *res;
-  double vres;
-  res = pflist_get_value(egl->default_settings,key,NULL,err);
-  forwardError(*err,__LINE__,0);
-  testErrorRetVA(res==NULL,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
-  //_DEBUGHERE_("'%s' -> '%s'",key,res);
-  vres = atof(res);
-  //_DEBUGHERE_("%g",vres);
-  return vres;
+  int ps;
+
+  //_DEBUGHERE_("%s %d",key,egl->default_settings->ncommon);
+  ps=pflist_key_index(egl->default_settings,key,err);
+  forwardError(*err,__LINE__,NAN);
+  testErrorRetVA(ps==-1,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
+
+  //_DEBUGHERE_("%s",key);
+  if isnan(egl->default_settings->dvalue[ps]) {
+    //_DEBUGHERE_("","");
+    egl->default_settings->dvalue[ps] = atof(egl->default_settings->value[ps]);
+  }
+  return egl->default_settings->dvalue[ps];
 }
 
 void parametric_set_default(parametric* egl,char *key, double value,error **err) {
