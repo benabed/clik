@@ -589,10 +589,11 @@ void gal_beta_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, 
   // dR/dbeta_dust
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
+    a[m1] = dust_spectrum((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
     b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
     for (m2=m1;m2<nfreq;m2++) {
-      B[m1*nfreq+m2] = b[m1]*b[m2];
-      B[m2*nfreq+m1] = b[m1]*b[m2];
+      B[m1*nfreq+m2] = a[m1]*b[m2]+a[m2]*b[m1];
+      B[m2*nfreq+m1] = B[m1*nfreq+m2];
     }
   }
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -642,10 +643,11 @@ void gal_T_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, err
   // dR/dT_dust
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
+    a[m1] = dust_spectrum((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
     b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
     for (m2=m1;m2<nfreq;m2++) {
-      B[m1*nfreq+m2] = b[m1]*b[m2];
-      B[m2*nfreq+m1] = b[m1]*b[m2];
+      B[m1*nfreq+m2] = a[m1]*b[m2]+a[m2]*b[m1];
+      B[m2*nfreq+m1] = B[m1*nfreq+m2];
     }
   }
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -691,10 +693,11 @@ void gal_alpha_non_thermal_derivative(parametric *egl, int iv, double *Rq, doubl
   // dR/dalpha_non_thermal
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
+    a[m1] = non_thermal_spectrum((double)egl->freqlist[m1],alpha_non_thermal,PRM_NU0);
     b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,PRM_NU0);
     for (m2=m1;m2<nfreq;m2++) {
-      B[m1*nfreq+m2] = b[m1]*b[m2];
-      B[m2*nfreq+m1] = b[m1]*b[m2];
+      B[m1*nfreq+m2] = a[m1]*b[m2]+a[m2]*b[m1];
+      B[m2*nfreq+m1] = B[m1*nfreq+m2];
     }
   }
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
