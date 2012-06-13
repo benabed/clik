@@ -1,8 +1,6 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template
 
 cdef extern c_parametric *radiogal_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-cdef extern c_parametric *poisson_tensor_bydet_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-cdef extern c_parametric *powerlaw_tensor_bydet_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *galactic_component_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern double c_dust_spectrum "dust_spectrum" (double nu, double T_dust, double beta_dust, double nu0)
 cdef extern double c_d_dust_spectrum_d_beta_dust "d_dust_spectrum_d_beta_dust" (double nu, double T_dust, double beta_dust, double nu0)
@@ -12,6 +10,10 @@ cdef extern double c_d_non_thermal_spectrum_d_alpha_non_thermal "d_non_thermal_s
 cdef extern double c_dBdT "dBdT" (double nu, double nu0)
 cdef extern c_parametric *ir_poisson_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *ir_clustered_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *poisson_tensor_bydet_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *powerlaw_tensor_bydet_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *poisson_tensor_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *powerlaw_tensor_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
   return c_dust_spectrum(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
@@ -57,5 +59,14 @@ cdef class poisson_tensor_bydet(parametric):
 cdef class powerlaw_tensor_bydet(parametric):
   def __cinit__(self):
     self.initfunc = <void*>powerlaw_tensor_bydet_init
+
+cdef class poisson_tensor(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*>poisson_tensor_init
+
+
+cdef class powerlaw_tensor(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*>powerlaw_tensor_init
   
-component_list = ["poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson"]
+component_list = ["poisson_tensor","powerlaw_tensor","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson"]
