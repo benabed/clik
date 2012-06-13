@@ -292,7 +292,7 @@ cdef class parametric_template(parametric):
       tmp = nm.array(data)
     return tmp
 
-component_list = [powerlaw,powerlaw_free_emissivity]
+component_list = ["powerlaw","powerlaw_free_emissivity"]
 simple_parametric_list = component_list
 
 def register_plugin(plg,gl):
