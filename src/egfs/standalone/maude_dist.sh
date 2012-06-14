@@ -12,6 +12,7 @@ cp ../../clik_parametric.c egfs_maude
 cp ../../clik_parametric.h egfs_maude
 cp ../../python/clik/egfs.pyx egfs_maude
 cp ../../python/clik/parametric.pyx egfs_maude
+ln -s ../../python/clik/clik.parametric.pxd egfs_maude/parametric.pxd
 cp ../../clik_parametric.c egfs_maude
 cp ../../clik_parametric.h egfs_maude
 
