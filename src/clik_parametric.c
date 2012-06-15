@@ -816,10 +816,10 @@ void powerlaw_free_emissivity_A_derivative(parametric* egl, int iv,double *Rq, d
   pfchar name;
   int stop;
 
-  l_pivot = parametric_get_value(egl,"l_pivot",err);
+  l_pivot = parametric_get_value(egl,"pwfe_l_pivot",err);
   forwardError(*err,__LINE__,);
   
-  index = parametric_get_value(egl,"index",err);
+  index = parametric_get_value(egl,"pwfe_index",err);
   forwardError(*err,__LINE__,);
 
   A = egl->payload;

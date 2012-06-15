@@ -458,7 +458,8 @@ double d_dust_spectrum_d_beta_dust(double nu, double T_dust, double beta_dust, d
 // Expressed in dT (CMB)
 double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
 
-  return (pow(nu/nu0,alpha_non_thermal)/dBdT(nu,nu0));
+  //return (pow(nu/nu0,alpha_non_thermal)/dBdT(nu,nu0));
+  return (exp(alpha_non_thermal*log(nu/nu0))/dBdT(nu,nu0));
 }
 
 // Derivative of non_thermal_spectrum with respect to alpha
