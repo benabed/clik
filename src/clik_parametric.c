@@ -309,8 +309,18 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
       forwardError(*err,__LINE__,NULL);
   }
   
-  epl->varkey = epl->pf->key;
-  
+  epl->varkey = malloc_err(sizeof(pfchar)*epl->nvar,err);
+  forwardError(*err,__LINE__,NULL);
+
+  {int jj ;
+    for(jj=0;jj<epl->nvar;jj++) {
+      //_DEBUGHERE_("","");
+      sprintf(epl->varkey[jj],"%s",varkey[jj]);
+      //_DEBUGHERE_("%d %s",jj,epl->varkey[jj]);
+
+    }
+  }
+
   epl->dnofail=0;
 
   epl->color = malloc_err(sizeof(double)*epl->ndet,err);
@@ -369,7 +379,7 @@ void parametric_free(void** pegl) {
   if(egl->eg_free!=NULL) {
     egl->eg_free(&(egl->payload));
   }
-    
+  free(egl->varkey); 
   free(egl->det2freq);
   free(egl->freqlist);
   free(egl->detlist);
@@ -483,9 +493,14 @@ void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **
     return;
   } 
   
-  
+  /*{int jj ;
+    for(jj=0;jj<egl->nvar;jj++) {
+      _DEBUGHERE_("%d %s",jj,egl->varkey[jj]);
+    }
+  }*/
   for(i=0;i<egl->nvar;i++) {
     for(j=0;j<egl->nderiv;j++) {
+      //_DEBUGHERE_("%s mtch %s",egl->varkey[i],egl->deriv_key[j])
       if (strcmp(egl->varkey[i],egl->deriv_key[j])==0) {
         egl->eg_deriv[j](egl,i,Rq,PTR_DER(egl,i,dRq),err);
         forwardError(*err,__LINE__,);
@@ -570,11 +585,13 @@ double parametric_get_value(parametric *egl, char *key, error **err) {
   if (ps==-1) { // not in the default/var try in the default_settings
     res = parametric_get_default(egl,key,err);
     forwardError(*err,__LINE__,0);
+    //_DEBUGHERE_("%s %g",key,res);
     return res;
   }
   res = 0;
   res = pflist_get_double_value(egl->pf,key,&res,err);
   forwardError(*err,__LINE__,);
+  //_DEBUGHERE_("%s %g",key,res);
   return res;
 }
 
