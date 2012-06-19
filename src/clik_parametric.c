@@ -18,6 +18,7 @@ pflist* pflist_init(error **err) {
 
   pf->ncommon = 0;
 
+  
   return pf;
 }
 
@@ -70,15 +71,14 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
       strcpy(pf->value[idx],value[i]);  
     } else {
       pf->value[idx][0] = '\0';
+      pf->dvalue[idx] = M_NAN;
     }
-    pf->dvalue[idx] = M_NAN;
-
     //_DEBUGHERE_("added %d '%s' : '%s'",idx,pf->key[idx],pf->value[idx]);
   }
   pf->nkey = cur;  
   pflist_compute_ncommon(pf,err);
   forwardError(*err,__LINE__,);
-  //_DEBUGHERE_("ncommon %d",pf->ncommon);
+
   //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 }
 
@@ -112,18 +112,7 @@ void pflist_compute_ncommon(pflist *pf, error **err) {
   }
 }
 
-int _pflist_key_index(pflist *pf, char *key, error **err) {
-  int i;
-
-  for(i=0;i<pf->nkey;i++) {
-    if (strcmp(key,pf->key[i])==0) {
-      return i;
-    }
-  }
-  return -1;
-}
-
-int pflist_key_index(pflist *pf, char *key, error **err) {
+int pflist_key_index_(pflist *pf, char *key, error **err) {
   int i;
   int j;
 
@@ -141,6 +130,18 @@ int pflist_key_index(pflist *pf, char *key, error **err) {
         //_DEBUGHERE_("FOUND %s %s %d",key,pf->key[i],i);
         return i;
       }
+    }
+  }
+  return -1;
+}
+
+
+int pflist_key_index(pflist *pf, char *key, error **err) {
+  int i;
+
+  for(i=0;i<pf->nkey;i++) {
+    if (strcmp(key,pf->key[i])==0) {
+      return i;
     }
   }
   return -1;
@@ -171,6 +172,29 @@ long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err) {
   return atol(res);
 }
 
+double pflist_get_double_value_(pflist *pf, char *key,double *safeguard, error **err) {
+  char *res;
+
+  res = pflist_get_value(pf,key,(char*)safeguard,err);
+  forwardError(*err,__LINE__,0);
+  
+  if (res==(char*)safeguard) {
+    return *safeguard;
+  }
+
+  return atof(res);
+}
+
+void pflist_remove_item(pflist* pf, int index,error **err) {
+  int i;
+
+  for(i=index;i<pf->nkey-1;i++) {
+    strcpy(pf->key[i],pf->key[i+1]);
+    strcpy(pf->value[i],pf->value[i+1]);
+  }
+  pf->nkey--;
+}
+
 double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **err) {
   int ps;
 
@@ -182,6 +206,7 @@ double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **
     return *safeguard;
   }
 
+  return atof(pf->value[ps]);
   //_DEBUGHERE_("%s",key);
   if m_isnan(pf->dvalue[ps]) {
     //_DEBUGHERE_("","");
@@ -190,7 +215,7 @@ double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **
   return pf->dvalue[ps];
 }
 
-void pflist_remove_item(pflist* pf, int index,error **err) {
+void pflist_remove_item_(pflist* pf, int index,error **err) {
   int i;
 
   for(i=index;i<pf->nkey-1;i++) {
@@ -256,7 +281,7 @@ void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** 
 
 parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *epl;
-  int i;
+  int i,jj;
   char *nop;
 
   epl = malloc_err(sizeof(parametric),err);
@@ -311,15 +336,21 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
   
   epl->varkey = malloc_err(sizeof(pfchar)*epl->nvar,err);
   forwardError(*err,__LINE__,NULL);
-
-  {int jj ;
-    for(jj=0;jj<epl->nvar;jj++) {
-      //_DEBUGHERE_("","");
-      sprintf(epl->varkey[jj],"%s",varkey[jj]);
-      //_DEBUGHERE_("%d %s",jj,epl->varkey[jj]);
-
-    }
+  epl->ikey = malloc_err(sizeof(int)*epl->nvar,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  
+  for(jj=0;jj<epl->nvar;jj++) {
+    int ps;
+    //_DEBUGHERE_("","");
+    sprintf(epl->varkey[jj],"%s",varkey[jj]);
+    ps = pflist_key_index(epl->pf,varkey[jj],err);
+    forwardError(*err,__LINE__,NULL);
+    testErrorRet(ps==-1,-10010,"Fatal",*err,__LINE__,NULL);
+    epl->ikey[jj]=ps;
+    //_DEBUGHERE_("%d %s",jj,epl->varkey[jj]);
   }
+
 
   epl->dnofail=0;
 
@@ -379,7 +410,9 @@ void parametric_free(void** pegl) {
   if(egl->eg_free!=NULL) {
     egl->eg_free(&(egl->payload));
   }
+    
   free(egl->varkey); 
+  free(egl->ikey); 
   free(egl->det2freq);
   free(egl->freqlist);
   free(egl->detlist);
@@ -408,8 +441,10 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
 
   
   for(ivar=0;ivar<egl->nvar;ivar++) {
-    //sprintf(egl->pf->value[ivar],"%40g",pars[ivar]);
-    egl->pf->dvalue[ivar]=pars[ivar];
+    int ps;
+    sprintf(egl->pf->value[egl->ikey[ivar]],"%40g",pars[ivar]);
+    egl->pf->dvalue[egl->ikey[ivar]]=pars[ivar];
+
   }
   
   if (egl->ndet!=egl->nfreq) {  
@@ -493,14 +528,9 @@ void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **
     return;
   } 
   
-  /*{int jj ;
-    for(jj=0;jj<egl->nvar;jj++) {
-      _DEBUGHERE_("%d %s",jj,egl->varkey[jj]);
-    }
-  }*/
+  
   for(i=0;i<egl->nvar;i++) {
     for(j=0;j<egl->nderiv;j++) {
-      //_DEBUGHERE_("%s mtch %s",egl->varkey[i],egl->deriv_key[j])
       if (strcmp(egl->varkey[i],egl->deriv_key[j])==0) {
         egl->eg_deriv[j](egl,i,Rq,PTR_DER(egl,i,dRq),err);
         forwardError(*err,__LINE__,);
@@ -530,6 +560,18 @@ void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, e
 }
 
 double parametric_get_default(parametric* egl,char *key, error **err) {
+  char *res;
+  double vres;
+  res = pflist_get_value(egl->default_settings,key,NULL,err);
+  forwardError(*err,__LINE__,0);
+  testErrorRetVA(res==NULL,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
+  //_DEBUGHERE_("'%s' -> '%s'",key,res);
+  vres = atof(res);
+  //_DEBUGHERE_("%g",vres);
+  return vres;
+}
+
+double parametric_get_default_(parametric* egl,char *key, error **err) {
   int ps;
 
   //_DEBUGHERE_("%s %d",key,egl->default_settings->ncommon);
@@ -585,13 +627,11 @@ double parametric_get_value(parametric *egl, char *key, error **err) {
   if (ps==-1) { // not in the default/var try in the default_settings
     res = parametric_get_default(egl,key,err);
     forwardError(*err,__LINE__,0);
-    //_DEBUGHERE_("%s %g",key,res);
     return res;
   }
   res = 0;
   res = pflist_get_double_value(egl->pf,key,&res,err);
   forwardError(*err,__LINE__,);
-  //_DEBUGHERE_("%s %g",key,res);
   return res;
 }
 

@@ -63,6 +63,7 @@ typedef struct parametric_struct {
   int ndef;
   int lmin,lmax;
   pfchar *varkey;
+  int *ikey;
   pflist *default_settings;
   int dnofail;
   double *color;
