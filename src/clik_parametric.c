@@ -334,9 +334,13 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
       forwardError(*err,__LINE__,NULL);
   }
   
-  epl->varkey = malloc_err(sizeof(pfchar)*epl->nvar,err);
+  mnvar = 1;
+  if (nvar!=0) {
+    mnvar = nvar;
+  }
+  epl->varkey = malloc_err(sizeof(pfchar)*mnvar,err);
   forwardError(*err,__LINE__,NULL);
-  epl->ikey = malloc_err(sizeof(int)*epl->nvar,err);
+  epl->ikey = malloc_err(sizeof(int)*mnvar,err);
   forwardError(*err,__LINE__,NULL);
   
   
