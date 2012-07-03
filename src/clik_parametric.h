@@ -110,4 +110,7 @@ void parametric_simple_payload_free(void **pp);
 void parametric_tensor_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err);
 void parametric_tensor_fill(parametric *egl,double *A,error **err);
 
+void parametric_triangle_fill_derivative(parametric * egl, int iv, double *A, error **err);
+void parametric_triangle_fill(parametric *egl, double *A, error **err);
+
 #endif

@@ -1036,6 +1036,116 @@ void powerlaw_tensor_compute(parametric* egl, double *Rq, error **err) {
   return;
 }
 
+void powerlaw_triangle_compute(parametric* exg, double *Rq, error **err);
+void powerlaw_triangle_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err);
+
+
+parametric *powerlaw_triangle_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int ic;
+  pfchar Ac;
+
+  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  forwardError(*err,__LINE__,NULL);
+  
+  egl->eg_compute = &powerlaw_triangle_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+
+  egl->payload = malloc_err(sizeof(double)*((egl->nfreq*egl->nfreq)*2),err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"powerlaw_triangle_index",-1.25,err); // Karim's favorite
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl, "powerlaw_triangle_index", &parametric_index_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  
+  sprintf(egl->tensor_norm_template,"%s","powerlaw_triangle_T_");
+  egl->tensor_norm_template_len = strlen(egl->tensor_norm_template);
+  
+  for(ic=0;ic<egl->nfreq;ic++) {
+    int jc;
+    for(jc=ic;jc<egl->nfreq;jc++) {
+      sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,ic,jc);    
+      parametric_set_default(egl,Ac,1,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }
+  
+  parametric_set_default(egl,"powerlaw_triangle_l_pivot",1000,err);
+  forwardError(*err,__LINE__,NULL);
+    
+  egl->eg_deriv_any = &powerlaw_triangle_norm_derivative;
+  return egl;
+}
+
+void powerlaw_triangle_compute(parametric* egl, double *Rq, error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv,lell;
+  double l_pivot,index,v;
+  double x, lnx, ln2x;
+  double *A,*dcm;
+  pfchar type;
+  char *pt;
+  double step;
+  int isstep;
+  
+  A = egl->payload;
+  parametric_triangle_fill(egl,A,err);
+  forwardError(*err,__LINE__,);  
+
+  l_pivot = parametric_get_value(egl,"powerlaw_triangle_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  egl->l_pivot = l_pivot;
+
+  index = parametric_get_value(egl,"powerlaw_triangle_index",err);
+  forwardError(*err,__LINE__,);
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow((double) ell/l_pivot,(double) index);
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        Rq[IDX_R(egl,ell,m1,m2)] = A[m1*egl->nfreq+m2] * v;
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }  
+    }
+  }
+  return;
+}
+
+void powerlaw_triangle_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err) {
+  int ell,m1,m2,mell,nfreq,mv,lell;
+  double l_pivot,index,v;
+  double x, lnx, ln2x;
+  double *A,*dcm;
+  pfchar type;
+  char *pt;
+  double step;
+  int isstep;
+  
+  A = egl->payload;
+  parametric_triangle_fill_derivative(egl,iv,A,err);
+  forwardError(*err,__LINE__,);  
+
+  l_pivot = parametric_get_value(egl,"powerlaw_triangle_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  egl->l_pivot = l_pivot;
+
+  index = parametric_get_value(egl,"powerlaw_triangle_index",err);
+  forwardError(*err,__LINE__,);
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow((double) ell/l_pivot,(double) index);
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        dRq[IDX_R(egl,ell,m1,m2)] = A[m1*egl->nfreq+m2] * v;
+        dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+      }  
+    }
+  }
+  return;
+}
+
+
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_poisson,ir_poisson_init);
@@ -1044,3 +1154,4 @@ CREATE_PARAMETRIC_FILE_INIT(poisson_tensor_bydet,poisson_tensor_bydet_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_tensor_bydet,powerlaw_tensor_bydet_init);
 CREATE_PARAMETRIC_FILE_INIT(poisson_tensor,poisson_tensor_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_tensor,powerlaw_tensor_init);
+CREATE_PARAMETRIC_FILE_INIT(powerlaw_triangle,powerlaw_triangle_init);

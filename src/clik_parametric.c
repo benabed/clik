@@ -281,7 +281,7 @@ void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** 
 
 parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *epl;
-  int i,jj;
+  int i,jj,mnvar;
   char *nop;
 
   epl = malloc_err(sizeof(parametric),err);
@@ -677,6 +677,56 @@ void parametric_norm_derivative(parametric * egl, int iv, double *Rq, double *dR
   return;
 }
 
+
+void parametric_triangle_fill(parametric *egl, double *A, error **err) {
+  int m1,m2,p;
+  pfchar Ac;
+  double *Abuf;
+
+  Abuf = A + egl->nfreq*egl->nfreq;
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+    sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,m1,m2);    
+    Abuf[m1*egl->nfreq+m2] = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,);  
+    }
+  }
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      A[m1*egl->nfreq+m2] = Abuf[m1*egl->nfreq+p] * Abuf[m2*egl->nfreq+p];
+      for(p=m2+1;p<egl->nfreq;p++) {
+        A[m1*egl->nfreq+m2] += Abuf[m1*egl->nfreq+p] * Abuf[m2*egl->nfreq+p];
+      }
+      A[m2*egl->nfreq+m1] = A[m1*egl->nfreq+m2];
+    }
+  }
+}
+
+
+void parametric_triangle_fill_derivative(parametric * egl, int iv, double *A, error **err) {
+  double norm;
+  int ell,m1,m2;
+  char *key,*kp;
+  int ic1,ic2,p;
+  double *mRq;
+
+  key = egl->varkey[iv];
+  
+  testErrorRet(strncmp(key,egl->tensor_norm_template,egl->tensor_norm_template_len)!=0,-141241,"Argl",*err,__LINE__,);
+  sscanf(&(key[egl->tensor_norm_template_len]),"%d_%d",&ic1,&ic2);
+
+  memset(A,0,sizeof(double)*egl->nfreq*egl->nfreq);
+
+  for(p=1;p<=ic2;p++) {
+    pfchar Ac;
+    sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,p,ic2);    
+    A[ic1*egl->nfreq+p] += parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,); 
+    A[p*egl->nfreq+ic1] += A[ic1*egl->nfreq+p];
+  }
+}
+
+
 void parametric_tensor_fill(parametric *egl,double *A,error **err) {
   int ic;
   pfchar Ac;
@@ -911,7 +961,7 @@ void powerlaw_free_emissivity_A_derivative(parametric* egl, int iv,double *Rq, d
       }
     }
     if (stop==1) {
-      break;
+      return;
     }
   }      
   // error return
