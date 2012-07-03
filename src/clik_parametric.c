@@ -686,18 +686,23 @@ void parametric_triangle_fill(parametric *egl, double *A, error **err) {
   Abuf = A + egl->nfreq*egl->nfreq;
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
-    sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,m1,m2);    
-    Abuf[m1*egl->nfreq+m2] = parametric_get_value(egl,Ac,err);
-    forwardError(*err,__LINE__,);  
+      sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,m1,m2);    
+      Abuf[m1*egl->nfreq+m2] = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,);  
+      //_DEBUGHERE_("%d %d %g",m1,m2,Abuf[m1*egl->nfreq+m2])
     }
   }
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
-      A[m1*egl->nfreq+m2] = Abuf[m1*egl->nfreq+p] * Abuf[m2*egl->nfreq+p];
+      A[m1*egl->nfreq+m2] = Abuf[m1*egl->nfreq+m2] * Abuf[m2*egl->nfreq+m2];
+      //_DEBUGHERE_("%d %d %g %g %g",m1,m2,Abuf[m1*egl->nfreq],Abuf[m2*egl->nfreq],A[m1*egl->nfreq+m2])
+
       for(p=m2+1;p<egl->nfreq;p++) {
         A[m1*egl->nfreq+m2] += Abuf[m1*egl->nfreq+p] * Abuf[m2*egl->nfreq+p];
+        //_DEBUGHERE_("%d %d %d %g %g %g",m1,m2,p,Abuf[m1*egl->nfreq+p],Abuf[m2*egl->nfreq+p],A[m1*egl->nfreq+m2])
       }
       A[m2*egl->nfreq+m1] = A[m1*egl->nfreq+m2];
+
     }
   }
 }
@@ -717,12 +722,13 @@ void parametric_triangle_fill_derivative(parametric * egl, int iv, double *A, er
 
   memset(A,0,sizeof(double)*egl->nfreq*egl->nfreq);
 
-  for(p=1;p<=ic2;p++) {
+  for(p=0;p<=ic2;p++) {
     pfchar Ac;
     sprintf(Ac,"%s%d_%d",egl->tensor_norm_template,p,ic2);    
     A[ic1*egl->nfreq+p] += parametric_get_value(egl,Ac,err);
     forwardError(*err,__LINE__,); 
     A[p*egl->nfreq+ic1] += A[ic1*egl->nfreq+p];
+    //_DEBUGHERE_("%s %d %d -> %d %d %g %d %d %g",key,ic1,ic2,p,ic1, A[p*egl->nfreq+ic1] ,ic1,p, A[ic1*egl->nfreq+p]);
   }
 }
 
