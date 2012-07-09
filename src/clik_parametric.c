@@ -370,6 +370,9 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
   epl->nderiv = 0;
   epl->eg_compute_and_deriv = NULL;
 
+  epl->nvoid = 0;
+  epl->voidlist = NULL;
+
   return epl;
 }
 
@@ -429,9 +432,25 @@ void parametric_free(void** pegl) {
     free(egl->eg_deriv);
     free(egl->deriv_key);
   }
+  if (egl->nvoid!=0) {
+    free(egl->voidlist);
+  }
+
   free(egl);
 
   *pegl = NULL;
+}
+
+void parametric_set_void(parametric *egl, int nvoid, int *voidlist,error **err) {
+  int i;
+  
+  egl->nvoid = nvoid;
+  egl->voidlist = malloc_err(sizeof(int)*nvoid,err);
+  forwardError(*err,__LINE__,);
+  for(i=0;i<nvoid;i++) {
+    testErrorRet(voidlist[i]<0 || voidlist[i]>=egl->ndet,-3525342,"bad void list",*err,__LINE__,);
+    egl->voidlist[i]=voidlist[i];
+  }
 }
 
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err) {
@@ -507,7 +526,37 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
     parametric_compute_loop(egl,Rq,dRq,err);
     forwardError(*err,__LINE__,);
   }
+  if (egl->nvoid!=0) {
   
+    for(ell=0;ell<egl->lmax+1-egl->lmin;ell++) {
+      int ii;
+      mell = ell*m2;
+      for(ii=0;ii<egl->nvoid;ii++) {
+        idet = egl->voidlist[ii];
+        for(jdet=0;jdet<egl->ndet;jdet++) {
+          Rq[mell+idet*egl->ndet + jdet] = 0;
+          Rq[mell+jdet*egl->ndet + idet] = 0;
+        }
+      }
+    }
+    if (dRq!=NULL) {
+      for(dvar=0;dvar<egl->nvar;dvar++) {
+        int pvar;
+        pvar = dvar*mdvar;
+        for(ell=0;ell<egl->lmax+1-egl->lmin;ell++) {
+          int ii;
+          mell = ell*m2;
+          for(ii=0;ii<egl->nvoid;ii++) {
+            idet = egl->voidlist[ii];
+            for(jdet=0;jdet<egl->ndet;jdet++) {
+              Rq[pvar + mell+idet*egl->ndet + jdet] = 0;
+              Rq[pvar + mell+jdet*egl->ndet + idet] = 0;
+            }
+          }
+        } 
+      }
+    }
+  }
 }
 
 void parametric_compute_loop(parametric * egl, double* Rq, double *dRq, error **err) {

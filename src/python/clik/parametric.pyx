@@ -43,6 +43,7 @@ cdef extern from "clik_parametric.h":
   double parametric_get_value(c_parametric *egl, char *key, error **err)
   void parametric_dnofail(c_parametric* egl, int vl)
   void parametric_set_color(c_parametric *egl,double *color, error **err)
+  void parametric_set_void(c_parametric *egl, int nvoid, int *voidlist,error **err)
 
 
   c_parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -79,10 +80,11 @@ cdef class parametric:
     dap = (rp-rm)/(2*step)
     return dref[ik],dap,dref[ik]-dap,(dref[ik]-dap)/dref[ik]
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,rename={}):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef error *_err,**err
+
     
     _err = NULL
     err = &_err
@@ -117,13 +119,16 @@ cdef class parametric:
     if er:
       raise er
     
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,rename)
+    
 
-  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,*other):
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
+
+  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
     cdef double _color[2000]
     cdef int i
     cdef error *_err,**err
-    
+    cdef int voidlist[2000]
+
     _err = NULL
     err = &_err
     
@@ -134,6 +139,18 @@ cdef class parametric:
       er=doError(err)
       if er:
         raise er
+
+    if voidmask:
+      _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
+      nvoid = len(_voidlist)
+      if nvoid!=0:
+        for i in range(nvoid):
+          voidlist[i]=_voidlist[i]
+        parametric_set_void(self.celf,nvoid,voidlist,err)
+        er=doError(err)
+        if er:
+          raise er
+
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
     if not dnofail:
@@ -230,7 +247,7 @@ cdef class parametric_template(parametric):
     self.template_name = ""
     self.plugin_name = ""
 
-  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,rename={},data_dir="",data_path="",data_file="",data=None):
+  def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef double *template
@@ -273,7 +290,7 @@ cdef class parametric_template(parametric):
     if er:
       raise er
 
-    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,rename,data_dir,data_path,data_file,data)
+    self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename,data_dir,data_path,data_file,data)
 
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
     if data is None:

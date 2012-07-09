@@ -70,6 +70,8 @@ typedef struct parametric_struct {
   double l_pivot;
   pfchar tensor_norm_template;
   int tensor_norm_template_len;
+  int nvoid;
+  int *voidlist;
 } parametric;
 
 parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
@@ -85,6 +87,7 @@ void parametric_add_derivative_function(parametric *egl, char* vk, exg_deriv* fn
 void parametric_end_derivative_loop(parametric *egl,double* dRq, char* varkey, error **err);
 void parametric_norm_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err);
 void parametric_index_derivative(parametric * egl, int iv, double *Rq, double *dRq, error **err);
+void parametric_set_void(parametric *egl, int nvoid, int *voidlist,error **err);
 
 void parametric_set_color(parametric *egl,double *color, error **err);
 
