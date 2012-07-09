@@ -114,14 +114,14 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
-def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},data=None,position=-1):
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",data=None,position=-1):
   import os
   import parametric
   import os.path as osp
   parametric.register_all(parametric.__dict__)
 
   # initialize parameters
-  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename)
+  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
   agrp = add_component(lkl_grp,name,position)
@@ -140,6 +140,13 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["dfreq"] = [float(d) for d in dets]
   agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
 
+  if voidmask:
+      _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
+      nvoid = len(_voidlist)
+      if nvoid!=0:
+        agrp.attrs["nvoid"] = nvoid
+        agrp.attrs["voidlist"] = _voidlist
+      
   if color is not None:
     agrp.create_dataset("color",data=color.flat[:])  
 

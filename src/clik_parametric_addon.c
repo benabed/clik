@@ -273,6 +273,8 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   int nrename;
   char *rename_from, *rename_to;
   int j;
+  int nvoid;
+  int *voidlist;
 
   nrename=0;
   rename_from = NULL;
@@ -280,7 +282,7 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
 
   hstat = H5LTfind_attribute (comp_id, "nrename");
   if (hstat ==1) {
-    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  nrename);
+    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  &nrename);
     testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
     dz = -1;
     rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
@@ -299,7 +301,19 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
     forwardError(*err,__LINE__,NULL);
     free(color);
   }
-    
+  
+  hstat = H5LTfind_dataset(comp_id, "nvoid");
+  if (hstat ==1) {
+    hstat = H5LTget_attribute_int( comp_id, ".", "nvoid",  &nvoid);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read nvoid in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+    dz = nvoid;
+    voidlist = hdf5_int_attarray(comp_id,cur_lkl,"voidlist",&dz, err);
+    forwardError(*err,__LINE__,NULL);
+    parametric_set_void(p_model,nvoid,voidlist,err);
+    forwardError(*err,__LINE__,NULL);
+    free(voidlist);
+  }
+      
   lmin = ell[0];
 
   lmax = ell[nell-1];
