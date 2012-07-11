@@ -157,7 +157,7 @@ cdef class parametric:
       prs = [p for p in vars if self.has_parameter(p)]
       if len(prs)!= len(vars):
         parametric_free(<void**>&(self.celf))
-        self.__init__(detlist,prs,lmin,lmax,defs,False,color,*other)
+        self.__init__(detlist,prs,lmin,lmax,defs,False,color,voidmask,*other)
 
     dv = []
     for p in prs:
