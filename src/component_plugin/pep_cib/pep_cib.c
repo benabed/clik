@@ -97,7 +97,7 @@ void ir_poisson_pep_compute(parametric* egl, double *Rq, error **err) {
 
 parametric *ir_poisson_pep_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
-  double hfi_freqlist[6] = {100,143,217,353,545,857};
+  double hfi_freqlist[6] = {100.,143.,217.,353.,545.,857.};
   int nfreqs_hfi = 6;
   
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
