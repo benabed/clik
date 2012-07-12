@@ -11,7 +11,7 @@ cdef class ir_clustered_pep(parametric_template):
 
 cdef class ir_poisson_pep(parametric_template):
   def __cinit__(self):
-    self.initfunc = <void*> ir_clustered_pep_init;
+    self.initfunc = <void*> ir_poisson_pep_init;
     self.template_name = "ir_poisson_pep.dat"
     self.plugin_name = "pep_cib"
 
