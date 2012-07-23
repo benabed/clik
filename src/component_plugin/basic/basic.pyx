@@ -15,6 +15,7 @@ cdef extern c_parametric *powerlaw_tensor_bydet_init(int ndet, int *detlist, int
 cdef extern c_parametric *poisson_tensor_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_tensor_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_triangle_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *powerlaw_tanh_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
   return c_dust_spectrum(<double>nu,<double>T_dust,<double>beta_dust,<double>nu0)
@@ -73,5 +74,9 @@ cdef class powerlaw_tensor(parametric):
 cdef class powerlaw_triangle(parametric):
   def __cinit__(self):
     self.initfunc = <void*>powerlaw_triangle_init
+
+cdef class powerlaw_tanh(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*>powerlaw_tanh_init
   
-component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson"]
+component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson"]

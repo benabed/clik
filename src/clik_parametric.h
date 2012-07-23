@@ -116,4 +116,7 @@ void parametric_tensor_fill(parametric *egl,double *A,error **err);
 void parametric_triangle_fill_derivative(parametric * egl, int iv, double *A, error **err);
 void parametric_triangle_fill(parametric *egl, double *A, error **err);
 
+void parametric_tanh_fill_derivative(parametric * egl, int iv, double *A, error **err);
+void parametric_tanh_fill(parametric *egl, double *A, error **err);
+
 #endif

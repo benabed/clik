@@ -781,6 +781,87 @@ void parametric_triangle_fill_derivative(parametric * egl, int iv, double *A, er
   }
 }
 
+void parametric_tanh_fill(parametric *egl, double *A, error **err) {
+  int m1,m2,p;
+  pfchar Ac;
+  double *Abuf;
+  double theta;
+
+  Abuf = A + egl->nfreq*egl->nfreq;
+  for(m1=0;m1<egl->nfreq;m1++) {
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,m1);    
+    Abuf[m1] = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,); 
+  }
+  for(m1=0;m1<egl->nfreq;m1++) { 
+    A[m1*egl->nfreq+m1] = Abuf[m1]*Abuf[m1];
+    for(m2=m1+1;m2<egl->nfreq;m2++) {
+      sprintf(Ac,"%sT_%d_%d",egl->tensor_norm_template,m1,m2);    
+      theta = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,); 
+      A[m1*egl->nfreq+m2] = Abuf[m1]*Abuf[m2]*tanh(theta);
+    }
+  }
+}
+
+
+void parametric_tanh_fill_derivative(parametric * egl, int iv, double *A, error **err) {
+  double norm;
+  int ell,m1,m2;
+  char *key,*kp;
+  int ic1,ic2,p;
+  double *mRq;
+  double A1,A2,theta,dm;
+  pfchar Ac;
+    
+
+  key = egl->varkey[iv];
+  memset(A,0,sizeof(double)*egl->nfreq*egl->nfreq);
+  
+  testErrorRet(strncmp(key,egl->tensor_norm_template,egl->tensor_norm_template_len)!=0,-141241,"Argl",*err,__LINE__,);
+  if (key[egl->tensor_norm_template_len]=='T') {
+    sscanf(&(key[egl->tensor_norm_template_len]),"T_%d_%d",&ic1,&ic2);
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic1);    
+    A1 = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,); 
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic2);    
+    A2 = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,); 
+    sprintf(Ac,"%sT_%d_%d",egl->tensor_norm_template,ic1,ic2);    
+    theta = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,);
+    A[ic1*egl->nfreq+ic2] = A1*A2 * (1-tanh(theta)*tanh(theta));
+    A[ic2*egl->nfreq+ic1] = A[ic1*egl->nfreq+ic2];
+  } else {
+    sscanf(&(key[egl->tensor_norm_template_len]),"%d",&ic1);
+    for(p=0;p<ic1;p++) {
+      sprintf(Ac,"%s%d",egl->tensor_norm_template,p);    
+      A1 = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,); 
+      sprintf(Ac,"%sT_%d_%d",egl->tensor_norm_template,p,ic1);    
+      theta = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,); 
+      A[ic1*egl->nfreq+p] = tanh(theta)*A1;
+      A[p*egl->nfreq+ic1] = A[ic1*egl->nfreq+p];
+    }
+    sprintf(Ac,"%s%d",egl->tensor_norm_template,ic1);    
+    A1 = parametric_get_value(egl,Ac,err);
+    forwardError(*err,__LINE__,); 
+    A[ic1*egl->nfreq+ic1] = 2*A1;
+
+    for(p=ic1+1;p<egl->nfreq;p++) {
+      sprintf(Ac,"%s%d",egl->tensor_norm_template,p);    
+      A1 = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,); 
+      sprintf(Ac,"%sT_%d_%d",egl->tensor_norm_template,ic1,p);    
+      theta = parametric_get_value(egl,Ac,err);
+      forwardError(*err,__LINE__,); 
+      A[ic1*egl->nfreq+p] = tanh(theta)*A1;
+      A[p*egl->nfreq+ic1] = A[ic1*egl->nfreq+p];
+    }
+  }
+}
+
 
 void parametric_tensor_fill(parametric *egl,double *A,error **err) {
   int ic;
