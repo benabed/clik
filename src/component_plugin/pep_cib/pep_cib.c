@@ -199,7 +199,7 @@ void ir_poisson_guilaine_compute(parametric* egl, double *Rq, error **err) {
       for (m2=m1;m2<nfreq;m2++) {
         ind1 = ind_freq[m1];
         ind2 = ind_freq[m2];
-        Rq[IDX_R(egl,ell,m1,m2)] = ir_poisson_pep_norm * A[ind1*nfreqs_hfi + ind2];
+        Rq[IDX_R(egl,ell,m1,m2)] = ir_poisson_guilaine_norm * A[ind1*nfreqs_hfi + ind2];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
@@ -218,7 +218,7 @@ parametric *ir_poisson_guilaine_init(int ndet, double *detlist, int ndef, char**
   parametric_template_payload_init(egl,template, (nfreqs_hfi*nfreqs_hfi),hfi_freqlist,nfreqs_hfi,err);
   forwardError(*err,__LINE__,NULL);
   
-  egl->eg_compute = &ir_poisson_pep_compute;
+  egl->eg_compute = &ir_poisson_guilaine_compute;
   egl->eg_free = &parametric_template_payload_free;
 
   parametric_set_default(egl,"ir_poisson_guilaine_norm",1.0,err);
