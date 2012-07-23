@@ -179,7 +179,7 @@ parametric *ir_poisson_pep_init(int ndet, double *detlist, int ndef, char** defk
 
 void ir_poisson_guilaine_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv,lell;
-  double ir_poisson_pep_norm;
+  double ir_poisson_guilaine_norm;
   double *A;
   int *ind_freq;
   int ind1, ind2;
