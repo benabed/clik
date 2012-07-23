@@ -191,7 +191,7 @@ void ir_poisson_guilaine_compute(parametric* egl, double *Rq, error **err) {
   nfreq = egl->nfreq;
   ind_freq = payload->ind_freq;
 
-  ir_poisson_pep_norm = parametric_get_value(egl,"ir_poisson_guilaine_norm",err);
+  ir_poisson_guilaine_norm = parametric_get_value(egl,"ir_poisson_guilaine_norm",err);
   forwardError(*err,__LINE__,);
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
