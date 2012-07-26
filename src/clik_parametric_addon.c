@@ -386,5 +386,4 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   return SC;    
 }
 
-CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_init);
 
