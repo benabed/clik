@@ -177,8 +177,8 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
 
   hstat = H5LTfind_attribute (comp_id, "nrename");
   if (hstat ==1) {
-    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  nrename);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  &nrename);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read nrename in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
     dz = -1;
     rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
     forwardError(*err,__LINE__,);
