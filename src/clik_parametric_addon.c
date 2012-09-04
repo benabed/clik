@@ -153,7 +153,7 @@ void apply_rename(int nkey, char* keys, int nrename, char* rename_from, char* re
   for(i=0;i<nkey;i++) {
     for(j=0;j<nrename;j++) {
       if (strcmp(&(keys[i*256]),&(rename_from[j*256]))==0) {
-        memcpy(&(keys[i*256]),&(rename_from[j*256]),sizeof(char)*256);
+        memcpy(&(keys[i*256]),&(rename_to[j*256]),sizeof(char)*256);
         break;
       }
     }
