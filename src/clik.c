@@ -16,7 +16,7 @@
 // YOU HAVE BEEN WARNED !
 
 clik_object* clik_init(char* hdffilepath, error **_err) {
-  hid_t file_id,group_id,prior_id;
+  hid_t file_id,group_id,prior_id,def_id;
   herr_t hstat;
   int n_lkl,i_lkl;
   int lmax[6];
@@ -70,6 +70,46 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   
   group_id = H5Gopen(file_id,"clik", H5P_DEFAULT );
   
+  hstat = H5Lexists(group_id, "default", H5P_DEFAULT);
+  if (hstat==1) {
+    int nepar,ndef,idef,j;
+    char *defname;
+    int *ldef;
+    double *loc;
+    parname *pn;
+    
+    def_id = H5Gopen(group_id, "default", H5P_DEFAULT );
+    nepar = clik_get_extra_parameter_names(target,&pn,err);
+    _forwardError(*err,__LINE__,NULL);
+    _testErrorRetVA(nepar==0,hdf5_base,"cannot add defaults without extra parameters",*err,__LINE__,NULL,"");    
+    ndef = -1;
+    defname = hdf5_char_attarray(def_id,cur_lkl,"name",&ndef, err);
+    _forwardError(*err,__LINE__,NULL);
+    ndef = ndef/256;
+    _testErrorRetVA(nepar<ndef,hdf5_base,"too many defaults ! Expected less than %d got %d",*err,__LINE__,NULL,nepar,ndef);
+
+    ldef = malloc_err(sizeof(int)*ndef,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    for(idef=0;idef<ndef;idef++) {
+      ldef[idef] = -1;
+      for (j=0;j<nepar;j++) {
+        if (strcmp(pn[j],&(defname[256*idef]))==0) {
+          ldef[idef] = n_cl+j;
+          break;   
+        }
+      }
+      _testErrorRetVA(ldef[idef]==-1,hdf5_base,"Unknown extra parameter %s",*err,__LINE__,NULL,defname[256*idef]);
+    }
+    free(defname);
+    free(pn);
+    loc = hdf5_double_datarray(def_id, cur_lkl,"loc",&ndef,err);
+    _forwardError(*err,__LINE__,NULL);  
+    distribution_set_default(target, ndef, ldef, loc,err);
+    _forwardError(*err,__LINE__,NULL);  
+    
+  }
+
   hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
   
   if (hstat==1) {
@@ -204,24 +244,46 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
   lklbs *lbs;
   int i;
   _dealwitherr;
+  int n_cl=0;
+  int lmax[6];
+  int cli;
+  int ii;
 
+  target = _clik_dig2(clikid,err);
+  _forwardError(*err,__LINE__,-1);
   lbs = _clik_dig(clikid,err);
   _forwardError(*err,__LINE__,-1);
+  
+  ii = 0;
   if (names!=NULL) {
     if (lbs->xdim==0) {
       //for now, no extr parameters
       pn = malloc_err(1*sizeof(parname),err);
       _forwardError(*err,__LINE__,-1);
     } else {
+      clik_get_lmax(clikid,lmax,err);
+      _forwardError(*err,__LINE__,-1);
+      
+      n_cl = 0;
+      for(cli=0;cli<6;cli++) {
+        n_cl += lmax[cli]+1;
+      }
+      
       pn = malloc_err(lbs->xdim*sizeof(parname),err);
       _forwardError(*err,__LINE__,-1);
     }
+
     for(i=0;i<lbs->xdim;i++) {
-      sprintf(pn[i],"%s",lbs->xnames[i]);
+      
+      if  (target->ndef==0 || target->def[i+n_cl]==0) {
+      
+        sprintf(pn[ii],"%s",lbs->xnames[i]);
+        ii++;
+      }
     }
     *names = pn;  
   }
-  return lbs->xdim;
+  return ii;
 }
 
 int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err) {
@@ -279,6 +341,26 @@ void* _clik_dig(clik_object* clikid, error **err) {
   }
   if (target->log_pdf==&lklbs_lkl) {
     return target->data;
+  }
+  testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
+}
+
+void* _clik_dig2(clik_object* clikid, error **err) {
+  distribution *target;
+  target = clikid;
+  if (target->log_pdf == &combine_lkl) { 
+    // return the first clik likelihood
+    int i;
+    comb_dist_data* cbd;
+    cbd = target->data;
+    for (i=0;i<cbd->ndist;i++) {
+      if (cbd->dist[i]->log_pdf == &lklbs_lkl) {
+        return cbd->dist[i];
+      }
+    }
+  }
+  if (target->log_pdf==&lklbs_lkl) {
+    return target;
   }
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
 }

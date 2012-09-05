@@ -59,6 +59,7 @@ void clik_cleanup(clik_object** pclikid);
 
 //internal
 void* _clik_dig(clik_object* clikid, error **err);
+void* _clik_dig2(clik_object* clikid, error **err);
 
 #ifdef __cplusplus
 }
