@@ -8,6 +8,7 @@ cdef extern double c_d_dust_spectrum_d_T_dust "d_dust_spectrum_d_T_dust" (double
 cdef extern double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, double alpha_non_thermal, double nu0)
 cdef extern double c_d_non_thermal_spectrum_d_alpha_non_thermal "d_non_thermal_spectrum_d_alpha_non_thermal" (double nu, double alpha_non_thermal, double nu0)
 cdef extern double c_dBdT "dBdT" (double nu, double nu0)
+cdef extern double c_sz_spectrum "sz_spectrum" (double nu, double nu0)
 cdef extern c_parametric *ir_poisson_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *ir_clustered_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *poisson_tensor_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -36,6 +37,9 @@ def d_non_thermal_spectrum_d_alpha_non_thermal(nu,alpha_non_thermal=-1.0,nu0=143
 
 def dBdT(nu,nu0=143.0):
   return c_dBdT(<double>nu,<double>nu0)
+
+def sz_spectrum(nu,nu0=143.0):
+  return c_sz_spectrum(<double>nu,<double>nu0)
 
 cdef class radiogal(parametric):
   def __cinit__(self):

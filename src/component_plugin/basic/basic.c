@@ -1270,15 +1270,13 @@ void sz_compute(parametric* egl, double *Rq, error **err);
 
 parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
-  int lmax_sz_template= 2;
-  int lmin_sz_template= 9000;
+  int lmin_sz_template= 2;
+  int lmax_sz_template= 9000;
 
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,);
 
   // Declare payload, allocate it and fill it
-  egl->payload = malloc_err(sizeof(double),err);
-  forwardError(*err,__LINE__,);
 
   egl->payload = malloc_err(sizeof(double)*(lmax_sz_template-lmin_sz_template+1 + egl->nfreq),err);
   forwardError(*err,__LINE__,);
@@ -1290,6 +1288,7 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   parametric_set_default(egl,"sz_norm",4.0,err);
   forwardError(*err,__LINE__,);
   parametric_add_derivative_function(egl,"sz_norm",&parametric_norm_derivative,err);
+  forwardError(*err,__LINE__,);
 
   return egl;
 }
@@ -1304,8 +1303,8 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
   double sz_norm;
   
   nfreq = egl->nfreq;
-  A = egl->payload;
-  cl = (double*) A;
+  A = (double*) egl->payload;
+  cl = A;
   fnu = &(A[lmax_sz_template-lmin_sz_template+1]);
   
   sz_norm = parametric_get_value(egl,"sz_norm",err);
@@ -1314,6 +1313,7 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
   // Compute SZ spectrum
   for (m1=0;m1<nfreq;m1++) {
     fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
   }
 
   // Create covariance matrix

@@ -94,6 +94,7 @@ void parametric_set_color(parametric *egl,double *color, error **err);
 void parametric_check_freq(parametric *egl, double* frq, int nfreq, error **err);
 
 double dBdT(double nu, double nu0);
+double sz_spectrum(double nu, double nu0);
 
 parametric *powerlaw_init(int ndet, double* detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);

@@ -956,9 +956,19 @@ double dBdT(double nu, double nu0) {
 
 }
 
+double sz_spectrum(double nu, double nu0) {
+
+  // This gives the SZ spectrum in \delta_T (CMB)
+  // normalized at nu0
+  double x, x0, res, res0;
+  x0 = nu0/56.78;
+  x  = nu /56.78;
+  res = 2.0-x/2.0/tanh(x/2.0);
+  res0 = 2.0-x0/2.0/tanh(x0/2.0);
+  return (res/res0);
+}
+
 // Simple power law in ell, constant emissivity
-
-
 void powerlaw_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv;
   double l_pivot,index,A,v;
