@@ -1,2 +1,3 @@
 source : basic.c
 python : basic.pyx
+data   : sz.dat

@@ -1264,6 +1264,74 @@ void powerlaw_tanh_norm_derivative(parametric * egl, int iv, double *Rq, double 
   return;
 }
 
+
+// SZ
+void sz_compute(parametric* egl, double *Rq, error **err);
+
+parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  int lmax_sz_template= 2;
+  int lmin_sz_template= 9000;
+
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,);
+
+  // Declare payload, allocate it and fill it
+  egl->payload = malloc_err(sizeof(double),err);
+  forwardError(*err,__LINE__,);
+
+  egl->payload = malloc_err(sizeof(double)*(lmax_sz_template-lmin_sz_template+1 + egl->nfreq),err);
+  forwardError(*err,__LINE__,);
+  memcpy(egl->payload,template,sizeof(double)*(lmax_sz_template-lmin_sz_template+1));
+  
+  egl->eg_compute = &sz_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  parametric_set_default(egl,"sz_norm",4.0,err);
+  forwardError(*err,__LINE__,);
+  parametric_add_derivative_function(egl,"sz_norm",&parametric_norm_derivative,err);
+
+  return egl;
+}
+
+
+void sz_compute(parametric* egl, double *Rq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  int lmax_sz_template = 9000;
+  int lmin_sz_template = 2;
+  double *cl, *fnu, *A;
+  double sz_norm;
+  
+  nfreq = egl->nfreq;
+  A = egl->payload;
+  cl = (double*) A;
+  fnu = &(A[lmax_sz_template-lmin_sz_template+1]);
+  
+  sz_norm = parametric_get_value(egl,"sz_norm",err);
+  forwardError(*err,__LINE__,);
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+  }
+
+  // Create covariance matrix
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell = (ell-lmin_sz_template);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+	Rq[IDX_R(egl,ell,m1,m2)] = sz_norm * cl[mell] * fnu[m1] * fnu[m2];
+	Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+
+  return;
+
+}
+
+
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_poisson,ir_poisson_init);
@@ -1275,3 +1343,4 @@ CREATE_PARAMETRIC_FILE_INIT(powerlaw_tensor,powerlaw_tensor_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_triangle,powerlaw_triangle_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_tanh,powerlaw_tanh_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_init);
+CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz,sz_init);
