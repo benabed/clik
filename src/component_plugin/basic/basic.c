@@ -1272,7 +1272,14 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   parametric *egl;
   int lmin_sz_template= 2;
   int lmax_sz_template= 9000;
+  double fac;
+  int l;
 
+  // make sure C_l template is normalized to 1 at l=3000 
+  fac = template[3000-lmin_sz_template];
+  for (l=lmin_sz_template;l<=lmax_sz_template;l++) {
+    template[l-lmin_sz_template] /= fac;
+  }
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,);
 
@@ -1300,8 +1307,10 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
   int lmax_sz_template = 9000;
   int lmin_sz_template = 2;
   double *cl, *fnu, *A;
-  double sz_norm;
+  double sz_norm, d3000;
   
+  d3000 = 3000.*3001./2./M_PI;
+
   nfreq = egl->nfreq;
   A = (double*) egl->payload;
   cl = A;
@@ -1321,7 +1330,7 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
     mell = (ell-lmin_sz_template);
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-	Rq[IDX_R(egl,ell,m1,m2)] = sz_norm * cl[mell] * fnu[m1] * fnu[m2];
+	Rq[IDX_R(egl,ell,m1,m2)] = sz_norm/d3000 * cl[mell] * fnu[m1] * fnu[m2];
 	Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
