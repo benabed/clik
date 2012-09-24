@@ -117,6 +117,7 @@ void fortran_get_lmax_(long *pself, int* lmax) {
 // will expect an array ordered this way
 // C_0^TT ... C_lmax[0]^TT C_0^EE ... C_lmax[1]^EE C_0^TE ... C_lmax[3]^T3 extrapar1 extrapar2 extrapar3
 
+
 #ifdef ADD0US
 void fortran_clik_compute(long* pself, double* cl_and_pars, double* lkl) {
 #elseif ADD2US
@@ -126,8 +127,40 @@ void fortran_clik_compute_(long* pself, double* cl_and_pars, double* lkl) {
 #endif
   clik_object* self;
   self = *pself;
-  *lkl=clik_compute(self,cl_and_pars,NULL);
+  error *_err;
+  error **err;
+  _err = NULL;
+  err = &_err;
+  *lkl=clik_compute(self,cl_and_pars,err);
+  if (isError(*err)) {
+    printError(stderr,*err);
+    purgeError(err);
+    *lkl = nan("");
+  }
+}
 
+#ifdef ADD0US
+void fortran_clik_compute_with_error(long* pself, double* cl_and_pars, double* lkl,int *ier) {
+#elseif ADD2US
+void fortran_clik_compute_with_error__(long* pself, double* cl_and_pars, double* lkl,int *ier) {
+#else
+void fortran_clik_compute_with_error_(long* pself, double* cl_and_pars, double* lkl,int *ier) {
+#endif
+  clik_object* self;
+  self = *pself;
+  error *_err;
+  error **err;
+  _err = NULL;
+  err = &_err;
+  *ier = 1;
+  *lkl=clik_compute(self,cl_and_pars,err);
+  if (isError(*err)) {
+    printError(stderr,*err);
+    purgeError(err);
+    *lkl = nan("");
+    *ier = 1;
+  }
+  *ier = 0;
 }
 
 // cleanup

@@ -78,19 +78,31 @@ def main(argv):
   fcs.read()
   c_inv = fcs.read("%df64"%(nX)**2)
   
-  fsz = forfile(pars.input_szfile_100)
-  lmax_sz = fsz.read('i32')
-  sz_100 = fsz.read("%df64"%(lmax_sz+1))
 
-  fsz = forfile(pars.input_szfile_143)
-  lmax_sz_143 = fsz.read('i32')
-  sz_143 = fsz.read("%df64"%(lmax_sz+1))
+  tsz = nm.loadtxt(pars.input_tszfile)
+  ksz = nm.loadtxt(pars.input_kszfile)
+  tszXcib = nm.loadtxt(pars.input_tszXcibfile)
 
-  assert lmax_sz==lmax_sz_143
+  tsz_temp = nm.zeros(5001)
+  ksz_temp = nm.zeros(5001)
+  tszXcib_temp = nm.zeros(5001)
+
+  tsz_temp[tsz[0,0]:]=tsz[:5001-tsz[0,0],1]
+  ksz_temp[ksz[0,0]:]=ksz[:5001-ksz[0,0],1]
+  tszXcib_temp[tszXcib[0,0]:]=tszXcib[:5001-tszXcib[0,0],1]
+
+  beam_Nspec = 0
+  if "input_beamfile" in pars:
+    fcs = forfile(pars.input_beamfile)
+    beam_Nspec,num_modes_per_beam,beam_lmax = fcs.read("i32 "*3)
+    cov_dim = beam_Nspec * num_modes_per_beam
+    beam_modes = fcs.read("%df64"%(beam_Nspec*(beam_lmax+1)*num_modes_per_beam))
+    fcs.read()
+    beam_cov_inv = fcs.read("%df64"%(cov_dim*cov_dim))
 
   lmin = nm.min(lminX)
   lmax = nm.max(lmaxX)
-
+  
   hascl = [0]*6
   hascl[0] = 1
   hascl = nm.array(hascl,dtype=nm.int)
@@ -108,12 +120,25 @@ def main(argv):
 
   lkl_grp.attrs["nX"]          = nX
   
-  lkl_grp.attrs["lmax_sz"]     = lmax_sz
+  lkl_grp.attrs["lmax_sz"]     = 5000
 
   lkl_grp.create_dataset('X', data=X)
-  lkl_grp.create_dataset('sz_100', data=sz_100)
-  lkl_grp.create_dataset('sz_143', data=sz_143)
   lkl_grp.create_dataset('c_inv', data=c_inv)
+  lkl_grp.create_dataset('tsz', data=tsz_temp)
+  lkl_grp.create_dataset('ksz', data=ksz_temp)
+  lkl_grp.create_dataset('tszXcib', data=tszXcib_temp)
+
+  lkl_grp.attrs["beam_Nspec"] = beam_Nspec
+  if beam_Nspec!=0:
+    lkl_grp.attrs["beam_lmax"] = beam_lmax
+    lkl_grp.attrs["num_modes_per_beam"] = num_modes_per_beam
+    lkl_grp.attrs["cov_dim"] = cov_dim
+    lkl_grp.create_dataset('beam_cov_inv', data=beam_cov_inv)
+    # beware beam_modes wants to be transposed...
+    beam_modes.shape = (num_modes_per_beam,beam_lmax+1,beam_Nspec)
+    bm = beam_modes.T*1.
+    lkl_grp.create_dataset('beam_modes', data=bm.flat[:])
+
   hf.close()
   
 import sys

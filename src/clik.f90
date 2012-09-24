@@ -82,6 +82,28 @@ contains
     return
 
   end function clik_compute
+  
+  real(kind=8) function clik_compute_with_error(clikid,cl_and_pars,ler)
+
+    !Input
+    type(clik_object), intent(in) :: clikid
+    real(kind=8), dimension(:) :: cl_and_pars
+    logical,intent(inout)::ler
+    ! Local 
+    real(kind=8) :: lkl
+    integer(kind=4)::ier
+    ier = 0
+    call fortran_clik_compute_with_error(clikid%ptr,cl_and_pars,lkl,ier)
+    if (ier.eq.0) then
+      ler = .FALSE.
+    else
+      ler = .TRUE.
+    endif
+
+    clik_compute_with_error = lkl
+    return
+
+  end function clik_compute_with_error
 
   subroutine clik_cleanup(clikid)
 

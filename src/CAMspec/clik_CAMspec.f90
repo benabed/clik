@@ -23,19 +23,22 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
+SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
     USE CAMSPEC_EXTRA
     USE temp_like
     implicit none
-    integer, intent(in):: iNspec, iNx,ilmax_sz
-    integer,dimension(1:iNspec),intent(in)::ilmaxX, ilminX,inp,inpt
-    real(8),dimension(0:ilmax_sz),intent(in)::sz_100,sz_143
-    real(8),dimension(1:iNx),intent(in)::mX
-    real(8),dimension(1:iNx,1:iNx),intent(in)::mc_inv
+    integer,intent(in)::iNspec,inX,inum_modes_per_beam,ibeam_lmax,ibeam_Nspec,icov_dim,ilmax_sz
+    integer,dimension(1:iNspec)::ilminX,ilmaxX,inp,inpt
+    real*8, dimension(1:iNx) :: iX
+    real*8,  dimension(1:iNx,1:iNx) ::ic_inv
+    real*8,intent(in) :: iksz_temp(0:ilmax_sz), itszxcib_temp(0:ilmax_sz)
+    real*8,intent(in) :: isz_143_temp(0:ilmax_sz)
+    real*8, dimension(1:icov_dim,1:icov_dim) :: ibeam_cov_inv
+    real*8, dimension(1:inum_modes_per_beam,0:ibeam_lmax,1:ibeam_Nspec) :: ibeam_modes ! mode#, l, spec#
 
     integer::i
     
-    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_100,sz_143,mc_inv,mX)
+    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
     
     lmax = ilmaxX(1)
     DO i=2,iNspec
@@ -50,7 +53,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt,ilmax_sz, sz_10
     !IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
-    npar = lmax+1-lmin+11
+    npar = lmax+1-lmin+13+ beam_Nspec * num_modes_per_beam
     
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
@@ -69,19 +72,21 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     REAL(8),INTENT(OUT)::LKL
     REAL(8),DIMENSION(0:npar-1)::CL
     real(8)::zlike, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, &
-         cal0, cal1, cal2
-    INTEGER::l
+         cal0, cal1, cal2, xi, A_ksz
+    real*8, dimension(1:beam_Nspec,1:num_modes_per_beam) :: beam_coeffs
+    INTEGER::l,i,j,cnt
     real(8)::tlkl
 
     cltt(:lmin-1) = 0
     DO l=lmin,lmax
         ! camspec expects cl/2pi !!! argl !
-        cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
+        !cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
+        cltt(l)=CL(l-lmin)/2./3.141592653589793
     ENDDO
 
-    A_ps_100 = CL(lmax+1-lmin + 0)
-    A_ps_143 = CL(lmax+1-lmin + 1)
-    A_ps_217 = CL(lmax+1-lmin + 2)
+    A_ps_100  = CL(lmax+1-lmin + 0)
+    A_ps_143  = CL(lmax+1-lmin + 1)
+    A_ps_217  = CL(lmax+1-lmin + 2)
     A_cib_143 = CL(lmax+1-lmin + 3)
     A_cib_217 = CL(lmax+1-lmin + 4)
     A_sz      = CL(lmax+1-lmin + 5)
@@ -90,8 +95,20 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     cal0      = CL(lmax+1-lmin + 8) 
     cal1      = CL(lmax+1-lmin + 9) 
     cal2      = CL(lmax+1-lmin + 10)     
+    xi        = CL(lmax+1-lmin + 11)     
+    A_ksz     = CL(lmax+1-lmin + 12)
 
-    call calc_like(tlkl,  cltt, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, cal0,cal1, cal2)
+    cnt = 0
+    DO i=1,beam_Nspec
+        DO j=1,num_modes_per_beam
+            beam_coeffs(i,j) = CL(lmax+1-lmin+13+cnt)
+            cnt = cnt + 1
+        ENDDO
+    ENDDO
+
+
+    call calc_like(tlkl,  cltt, A_ps_100,  A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz,  &
+       r_ps, r_cib, xi, A_ksz, cal0, cal1, cal2, beam_coeffs)
     ! lkl is -2loglike clik returns loglik
     !print *,tlkl
     lkl = -tlkl/2.
