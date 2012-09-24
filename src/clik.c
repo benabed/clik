@@ -274,14 +274,18 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
     }
 
     for(i=0;i<lbs->xdim;i++) {
-      
       if  (target->ndef==0 || target->def[i+n_cl]==0) {
-      
         sprintf(pn[ii],"%s",lbs->xnames[i]);
         ii++;
       }
     }
     *names = pn;  
+  } else {
+    for(i=0;i<lbs->xdim;i++) {
+      if  (target->ndef==0 || target->def[i+n_cl]==0) {
+        ii++;
+      }
+    }
   }
   return ii;
 }
