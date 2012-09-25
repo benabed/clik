@@ -1,4 +1,4 @@
-import Options
+from waflib import Options
 from waflib import Logs
 from waflib import  Context
 from waflib import Errors
@@ -22,7 +22,7 @@ def show_linkline(ctx):
 def do_icc(ctx):
   ctx.env.CC=[]
   ctx.env.LINK_CC=[]
-  ctx.check_tool('icc')
+  ctx.load('icc')
   ctx.check_cc(
       errmsg="failed",msg="Compile a test code with icc",
       mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
@@ -58,7 +58,7 @@ def do_icc(ctx):
 def do_gcc(ctx):
   ctx.env.CC=[]
   ctx.env.LINK_CC=[]
-  ctx.check_tool('gcc')
+  ctx.load('gcc')
   ctx.start_msg("Check gcc version") 
   v90 = ctx.cmd_and_log(ctx.env.CC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
@@ -79,7 +79,6 @@ def do_gcc(ctx):
   ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
 
 def configure_iccfirst(ctx):
-  import Options
   from waflib import Logs
   ctx.env.has_icc = False
   if not Options.options.gcc:
@@ -94,7 +93,6 @@ def configure_iccfirst(ctx):
 
 
 def configure_gccfirst(ctx):
-  import Options
   from waflib import Logs
   from waflib import  Context
   from waflib import Errors

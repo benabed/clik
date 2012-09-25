@@ -60,7 +60,7 @@ def add_lib(conf,prefix,include,libpath,libname, funcname="",headername="",libs 
   if type(defines)==type(""):
     defines=[defines]
     
-  conf.parse_flags(flagline,uselib=libname)
+  conf.parse_flags(flagline,libname)
 
   conf.check_cc(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
   for fnc in funcname:
@@ -84,7 +84,7 @@ def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",l
   if type(defines)==type(""):
     defines=[defines]
     
-  conf.parse_flags(flagline,uselib=libname)
+  conf.parse_flags(flagline,libname)
   # do nothing for now...
   for inc in libpath:
     if inc:
@@ -134,8 +134,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
   #print install and (getattr(ctx.options,opt_name+"_install",False) or getattr(ctx.options,opt_name+"_forceinstall",False))
   #print install ,(getattr(ctx.options,opt_name+"_install",False) ,getattr(ctx.options,opt_name+"_forceinstall",False))
   iall =shouldIinstall_all(ctx,name)
-  if install and (upgrade(ctx,name) or getattr(ctx.options,opt_name+"_forceinstall",False) or iall):
-    #print "LALALA"
+  if install and (upgrade(ctx,name) or forceinstall or getattr(ctx.options,opt_name+"_forceinstall",False) or iall):
     # first try without install !
     setattr(ctx.env,"has_"+name,True)
     setattr(ctx.options,"%s_islocal"%opt_name,True)

@@ -1,6 +1,6 @@
 import re
 import sys
-import Options
+from waflib import Options
 import os.path as osp
 from waflib import Logs
 from waflib import  Context
@@ -48,7 +48,7 @@ def ifort_conf(ctx):
   import waflib
   import os
   ctx.env.FC=[]
-  ctx.check_tool('ifort')
+  ctx.load('ifort')
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
   ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
@@ -90,7 +90,7 @@ def ifort_conf(ctx):
 
 def ifort_conf_(ctx):
   ctx.env.FC=[]
-  ctx.check_tool('ifort')
+  ctx.load('ifort')
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
   ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
@@ -139,7 +139,7 @@ def ifort_conf_(ctx):
 def gfortran_conf(ctx):
   ctx.env.FC=[]
   ctx.env.FCFLAGS = []
-  ctx.check_tool('gfortran')
+  ctx.load('gfortran')
   ctx.env["FCFLAGS_fc_omp"]=[]
   ctx.env.append_value("FCFLAGS_fc_omp","-fopenmp")
   ctx.env.append_value("FCFLAGS","-DGFORTRAN")

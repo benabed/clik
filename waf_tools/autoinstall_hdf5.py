@@ -19,10 +19,11 @@ def configure(ctx):
     unsigned int majnum,minnum,relnum;
     res = H5get_libversion(&majnum, &minnum, &relnum );
     if (res<0) return -1;
-    printf("%d.%d.%d",majnum,minnum,relnum);
+    printf("%d.%d.%d\\n",majnum,minnum,relnum);
+    printf("%d\\n",H5Gopen == H5Gopen2);
     return 0;}'''
     kw["use"] = "hdf5"
-    kw["execute"] = "true"
+    kw["execute"] = True
     kw['compiler']='c'
     kw['define_ret'] = "HDF5_VERSION"
     ctx.validate_c(kw)
@@ -32,16 +33,25 @@ def configure(ctx):
       ret=ctx.run_c_code(**kw)
     except ctx.errors.ConfigurationError ,e:
       ctx.end_msg(kw['errmsg'],'YELLOW')
+      from waflib import Logs
       if Logs.verbose>1:
         raise
       else:
         ctx.fatal('The configuration failed')
     else:
-      if int(ret.split(".")[1])!=8:
+      rets = ret.split("\n")
+      ret1= rets[0]
+      ret2=rets[1]
+      if int(ret1.split(".")[1])!=8 or int(ret2)!=1:
+        if int(ret1.split(".")[1])!=8:
+          ret = ret1
+        else:
+          ret = "using HDF 1.6 API"
         ctx.end_msg(ret,"YELLOW")
         raise Exception("Atrgl")
       else:
-        ctx.end_msg(ret)
+        ctx.end_msg(ret1)
+    
   except Exception,e:
     print e
     atl.conf_lib(ctx,tool,["hdf5","hdf5_hl"],"H5Fcreate","hdf5.h",defines="HAS_HDF5",install=installhdf5,forceinstall=True)  
