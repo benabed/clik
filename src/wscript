@@ -164,5 +164,5 @@ def build(bld):
   #bld(execrule=excc.createconfig(pmclinkline,pmcincline,pmcdefline), target="clik-config", install_path='${BINDIR}',use='clik')
 
   if bld.env.has_f90:  
-    bld(features="build_pkgconfig", use='clik', flavor='c',target='clik-config_f90')
+    bld(features="build_pkgconfig", use='clik_f90', flavor='f90',target='clik-config_f90')
   

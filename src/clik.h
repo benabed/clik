@@ -7,13 +7,14 @@
  *
  */
 
-#include "pmc.h"
 #ifndef _CLIK_
 #define _CLIK_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "pmc.h"
 
 #define _pn_size 256
 typedef char parname[_pn_size];

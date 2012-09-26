@@ -27,20 +27,21 @@ def build_pkgconfig(self):
   if self.flavor=='c':  
     USELIB_VARS['build_pkgconfig']   = set(['INCLUDES', 'DEFINES', 'CPPFLAGS', 'CFLAGS']+['LIB', 'STLIB', 'LIBPATH', 'STLIBPATH', 'LINKFLAGS', 'RPATH', 'LINKDEPS'])
     cf = ['CPPFLAGS', 'CFLAGS']
+    addlib = ["clik"]
   else:
     USELIB_VARS['build_pkgconfig']   =set(['FCFLAGS','DEFINES','INCLUDES']+['LIB','STLIB','LIBPATH','STLIBPATH','LINKFLAGS','RPATH','LINKDEPS'])
     cf = ['FCFLAGS']
+    addlib = ["clik","clik_f90"]
 
   #USELIB_VARS['cprogram']
   self.process_use()
   self.propagate_uselib_vars()
   vrs = dict([(v,list(set(self.env[v]))) for v in USELIB_VARS['build_pkgconfig']])
-
   includepath = ptrquote(" ".join([self.env.CPPPATH_ST%v for v in uniqify(vrs["INCLUDES"])]))
   libpath = ptrquote(" ".join([self.env.LIBPATH_ST%v for v in uniqify(vrs["LIBPATH"])]))
   rlibpath = ptrquote(" ".join([self.env.RPATH_ST%v for v in uniqify(vrs["RPATH"])]))
   stlibpath = ptrquote(" ".join([self.env.LIBPATH_ST%v for v in uniqify(vrs["STLIBPATH"])]))
-  libs = ptrquote(" ".join([self.env.LIB_ST%v for v in uniqify(vrs["LIB"])]))
+  libs = ptrquote(" ".join([self.env.LIB_ST%v for v in uniqify(vrs["LIB"]+addlib)]))
   stlibs = ptrquote(" ".join([self.env.STLIB_ST%v for v in uniqify(vrs["STLIB"])]))
   defines = ptrquote(" ".join([self.env.DEFINES_ST%v for v in uniqify(vrs["DEFINES"])]))
   cfs = []
