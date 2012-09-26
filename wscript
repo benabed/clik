@@ -525,6 +525,10 @@ int main(int argc, char **argv)
       cf_ebd = [vl for vl in env["CFLAGS_PYEMBED"] if vl!="-march=native"]
       env["CFLAGS_PYEMBED"] = cf_ebd
       env["CFLAGS_PYEXT"] = cf_ext
+    env["CFLAGS_PYEMBED"] =  env["CFLAGS_PYEMBED"]+["-pthread"]
+    env["CFLAGS_PYEXT"] += ["-pthread"]
+    env["LIB_PYEMBED"] =  env["LIB_PYEMBED"]+["pthread"]
+    env["LIB_PYEXT"] += ["pthread"]
 
 
     for name in('python'+env['PYTHON_VERSION'],'python'+env['PYTHON_VERSION'].replace('.','')):
@@ -584,6 +588,7 @@ int main(int argc, char **argv)
       env.append_value('CXXFLAGS_PYEXT',dist_compiler.compile_options)
       env.append_value('LINKFLAGS_PYEXT',dist_compiler.ldflags_shared)
     try:
+      #print env
       conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',uselib='PYEMBED',fragment=FRAG,errmsg=':-(')
     except conf.errors.ConfigurationError:
       xx=conf.env.CXX_NAME and'cxx'or'c'
