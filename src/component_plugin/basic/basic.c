@@ -733,7 +733,7 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   forwardError(*err,__LINE__,NULL);
   parametric_declare_mandatory(egl,"gal_norm",err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"gal_norm",parametric_norm_derivative,err);  
+  parametric_add_derivative_function(egl,"gal_norm",&parametric_norm_derivative,err);  
   forwardError(*err,__LINE__,NULL);
   
   parametric_set_default(egl,"gal_l_pivot",500,err);
@@ -743,7 +743,7 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   forwardError(*err,__LINE__,NULL);
   parametric_declare_mandatory(egl,"gal_index",err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"gal_index",parametric_index_derivative,err);  
+  parametric_add_derivative_function(egl,"gal_index",&parametric_index_derivative,err);  
   forwardError(*err,__LINE__,NULL);
 
   sprintf(type,"dust");
@@ -755,19 +755,19 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   if (strcmp(pt,"dust")==0) {
     parametric_set_default(egl,"gal_beta_dust",1.8,err);
     forwardError(*err,__LINE__,NULL);
-    parametric_add_derivative_function(egl,"gal_beta_dust",gal_beta_dust_derivative,err);  
+    parametric_add_derivative_function(egl,"gal_beta_dust",&gal_beta_dust_derivative,err);  
     forwardError(*err,__LINE__,NULL);
 
     parametric_set_default(egl,"gal_T_dust",18,err);
     forwardError(*err,__LINE__,NULL);
-    parametric_add_derivative_function(egl,"gal_T_dust",gal_T_dust_derivative,err);  
+    parametric_add_derivative_function(egl,"gal_T_dust",&gal_T_dust_derivative,err);  
     forwardError(*err,__LINE__,NULL);
 
   } else if (strcmp(pt,"non_thermal")==0) {
     //Intensity, = -3.0 in RJ
     parametric_set_default(egl,"gal_alpha_non_thermal",-1,err);
     forwardError(*err,__LINE__,NULL);
-    parametric_add_derivative_function(egl,"gal_alpha_non_thermal",gal_alpha_non_thermal_derivative,err);  
+    parametric_add_derivative_function(egl,"gal_alpha_non_thermal",&gal_alpha_non_thermal_derivative,err);  
     forwardError(*err,__LINE__,NULL);
   } else {
     testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,,type);
@@ -1265,7 +1265,7 @@ void powerlaw_tanh_norm_derivative(parametric * egl, int iv, double *Rq, double 
 }
 
 
-// SZ
+// SZ alone
 void sz_compute(parametric* egl, double *Rq, error **err);
 
 parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
@@ -1340,6 +1340,58 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
 
 }
 
+
+/*
+// SZ, CIB and correlation a la GPE
+void sz_cib_compute(parametric* egl, double *Rq, error **err);
+
+parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+
+  parametric *egl;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 9000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9000;
+  int lnorm = 3000; //used to normalize templates
+  double *sz_template, *corr_template, *psz_template, *pcorr_template;
+
+  sz_template = template;
+  //arithmetic on pointers, should be allright since all are double*
+  corr_template = template + lmax_sz_template - lmin_sz_template + 1;
+
+  // Normalize both templates to 1 at l=lnorm
+  fac = sz_template[lnorm-lmin_sz_template];
+  for (l=lmin_sz_template;l<=lmax_sz_template;l++) {
+    sz_template[l-lmin_sz_template] /= fac;
+  }
+  fac = corr_template[lnorm-lmin_corr_template];
+  for (l=lmin_corr_template;l<=lmax_corr_template;l++) {
+    corr_template[l-lmin_corr_template] /= fac;
+  }
+  egl =  parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,);
+
+  // Allocate payload and fill with both templates
+  egl->payload = malloc_err(sizeof(double)*(lmax_sz_template-lmin_sz_template+1 +
+					    lmax_corr_template-lmin_corr_template+1 +
+					    egl->nfreq), err);
+  forwardError(*err,__LINE__,);
+  psz_template = egl->payload;
+  pcorr_template = (double*)egl->payload + lmax_sz_template-lmin_sz_template+1;
+  memcpy(psz_template,sz_template,sizeof(double)*(lmax_sz_template-lmin_sz_template+1));
+  memcpy(pcorr_template,corr_template,sizeof(double)*(lmax_corr_template-lmin_corr_template+1));
+  
+  egl->eg_compute = &sz_cib_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  // Parameters
+  parametric_set_default(egl,"sz_norm",4.0,err);
+  forwardError(*err,__LINE__,);
+  
+					   
+TO BE CONTINUED ...
+*/  
+  
 
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
