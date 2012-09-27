@@ -1010,12 +1010,12 @@ parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, ch
   
   parametric_set_default(egl,"pw_index",0,err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"pw_index",parametric_index_derivative,err);  
+  parametric_add_derivative_function(egl,"pw_index",&parametric_index_derivative,err);  
   forwardError(*err,__LINE__,NULL);
    
   parametric_set_default(egl,"pw_A",1,err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"pw_A",parametric_norm_derivative,err);  
+  parametric_add_derivative_function(egl,"pw_A",&parametric_norm_derivative,err);  
   forwardError(*err,__LINE__,NULL);
   
   return egl;
@@ -1134,7 +1134,7 @@ parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, c
 
   parametric_set_default(egl,"pwfe_index",0,err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"pwfe_index",parametric_index_derivative,err);  
+  parametric_add_derivative_function(egl,"pwfe_index",&parametric_index_derivative,err);  
   forwardError(*err,__LINE__,NULL);
   
   for(m1=0;m1<egl->nfreq;m1++) {
@@ -1144,7 +1144,7 @@ parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, c
       forwardError(*err,__LINE__,NULL);
     }
   }  
-  parametric_add_derivative_function(egl,"any",powerlaw_free_emissivity_A_derivative,err);  
+  parametric_add_derivative_function(egl,"any",&powerlaw_free_emissivity_A_derivative,err);  
   forwardError(*err,__LINE__,NULL);
 
   return egl;
