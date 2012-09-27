@@ -19,7 +19,9 @@ def main(argv):
   print "clik lkl file =  %s"%sys.argv[1]
   print "  number of likelihoods = %d"%lkl.attrs["n_lkl_object"]
   print "  lmax ( "+ " ".join([nl+" = %d"%ll for nl,ll in zip(("TT","EE","BB","TE","TB","EB"),lkl.attrs["lmax"]) if ll >-1])+" )"
-  print "  number of extra parameters = %d %s"%(len(extn),extn)
+  print "  number of varying extra parameters %d"%(len(extn))
+  for n in extn:
+    print "    %s"%n
   if "prior" in lkl:
     print "  gaussian priors on %s"%lkl["prior"].attrs["name"]
     loc = lkl["prior/loc"][:]
@@ -30,11 +32,18 @@ def main(argv):
     var.shape=(len(loc),-1)
     print "  with variance"
     print "\n".join(["    "+" ".join([str(v) for v in vl]) for vl in var])
+  if "default" in lkl:
+    loc = lkl["default/loc"][:] 
+    print "  number of fixed parameters = %d"%len(loc)
+    nms = lkl["default"].attrs["name"]
+    nms = [nms[i*256:i*256+256].strip() for i in range(len(loc))]
+    for n,l in zip(nms,loc):
+      print "    %s = %g"%(n,l)
 
   ilkl = 0
   for lkli_n in ("lkl_%d"%v for v in range(lkl.attrs["n_lkl_object"])):
     lkli = lkl[lkli_n]
-    print "  %s"%lkli_n
+    print "\n  %s"%lkli_n
     print "    lkl_type = %s"%lkli.attrs["lkl_type"]
     print "    unit = %g"%lkli.attrs["unit"]
     
