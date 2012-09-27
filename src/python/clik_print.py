@@ -12,13 +12,13 @@ def main(argv):
     sys.exit(1)
   
   clikl = clik.clik(sys.argv[1])
+  extn = clikl.extra_parameter_names
   
   lkl = h5py.File(sys.argv[1],"r")["clik"]
   
   print "clik lkl file =  %s"%sys.argv[1]
   print "  number of likelihoods = %d"%lkl.attrs["n_lkl_object"]
   print "  lmax ( "+ " ".join([nl+" = %d"%ll for nl,ll in zip(("TT","EE","BB","TE","TB","EB"),lkl.attrs["lmax"]) if ll >-1])+" )"
-  extn = clikl.extra_parameter_names
   print "  number of extra parameters = %d %s"%(len(extn),extn)
   if "prior" in lkl:
     print "  gaussian priors on %s"%lkl["prior"].attrs["name"]

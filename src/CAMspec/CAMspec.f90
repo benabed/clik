@@ -130,7 +130,7 @@ contains
     ! tsz_x_cib_template.txt is is (l D_l), from l=2 to 9999, normalized to unity 
     !    at l=3000 
 
-    if(needinit==.false.) then
+    if(needinit .eqv. .false.) then
        return
     endif
 
@@ -321,7 +321,7 @@ contains
        zCIB = 1.134d0*A_cib_143*(dfloat(l)/3000.)**(0.8)/dfloat(l*(l+1))
        X_f(l - lminX(2) + npt(2)) = A_ps_143*1.d-6 + zCIB + &
             A_ksz*ksz_temp(l)/dfloat(l*(l+1))+&
-            A_sz*0.95d0*sz_143_temp(l)/dfloat(l*(l+1)) + &
+            A_sz*0.95d0*sz_143_temp(l)/dfloat(l*(l+1))  &
             -2.0*sqrt(1.134d0*A_cib_143*0.95d0*A_sz*4.796)*xi*tszxcib_temp(l)/dfloat(l*(l+1))
        X_data(l - lminX(2) +npt(2)) = X(l - lminX(2) + npt(2))
        X_theory(l-lminX(2) + npt(2)) = cell_cmb(l) 

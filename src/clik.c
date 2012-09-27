@@ -107,7 +107,8 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     _forwardError(*err,__LINE__,NULL);  
     distribution_set_default(target, ndef, ldef, loc,err);
     _forwardError(*err,__LINE__,NULL);  
-    
+    hstat = H5Gclose(def_id);
+    _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/default",hdffilepath,hstat);    
   }
 
   hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
