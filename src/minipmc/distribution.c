@@ -542,6 +542,91 @@ void add_to_combine_distribution(distribution *comb, distribution *addon, int *d
   
 }
 
+typedef struct {
+  double *mean,*tmp;
+  double *std;
+  int ndim;
+  double logdets2;
+} ezgauss;
+
+void ezgauss_free(void **ping) {
+  ezgauss * ing;
+  ing = *ping;
+  free(ing->std);
+  free(ing->mean);
+  free(ing);
+  *ping = NULL;
+}
+
+double ezgauss_log_pdf(void* ping, double* pars, error **err) {
+  ezgauss *ing;
+  int i;
+  double log_CN;
+  char uplo,trans,diag;
+  int xinc;
+  
+  ing = ping;
+  log_CN=0;
+  
+  for(i=0;i<ing->ndim;i++) {
+    ing->tmp[i] = pars[i] - ing->mean[i];
+  }
+  
+  uplo  = 'L';
+  trans = 'N';
+  diag = 'N';
+  xinc = 1;
+  dtrsv(&uplo,&trans,&diag,&ing->ndim,ing->std,&ing->ndim,ing->tmp,&xinc);
+  
+  for(i=0;i<ing->ndim;i++) {
+    log_CN += ing->tmp[i]*ing->tmp[i];     
+  }
+  return - 0.5 * (log_CN) - ing->logdets2;
+}
+
+distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) {
+  ezgauss *ing;
+  distribution *ding;
+  int plus;
+  int info;
+  double det;
+  char uplo;
+  int i;
+  
+  ing = malloc_err(sizeof(ezgauss), err);
+  forwardError(*err,__LINE__,NULL);
+  
+  ing->mean = malloc_err(sizeof(double)*ndim,err);
+  forwardError(*err,__LINE__,NULL);
+  ing->tmp = malloc_err(sizeof(double)*ndim,err);
+  forwardError(*err,__LINE__,NULL);
+  ing->std = malloc_err(sizeof(double)*ndim*ndim,err);
+  forwardError(*err,__LINE__,NULL);
+  ing->ndim = ndim;
+
+  memcpy(ing->mean,mean,sizeof(double)*ndim);
+  memcpy(ing->std,Sig,sizeof(double)*ndim*ndim);
+
+  uplo = 'L';
+  dpotrf(&uplo,&ing->ndim,ing->std,&ing->ndim,&info);
+  testErrorRetVA(info!=0,-1616165,"Could not cholesky decompose using dpotrf (%d)",*err,__LINE__,NULL,info);
+
+  det = 1;
+  for (i = 0; i < ing->ndim*ing->ndim; i+=(ing->ndim+1)) {
+    det *= ing->std[i];
+  }
+  ing->logdets2=log(det);
+
+  ding = init_distribution(ndim, ing, &ezgauss_log_pdf, &ezgauss_free, NULL,err);
+  forwardError(*err,__LINE__,NULL);
+
+  return ding;
+}
+
+
+
+
+
 distribution *add_gaussian_prior(distribution *orig, int ndim, int *idim, double* loc, double *var, error **err) {
   distribution *dres;
   int i;
@@ -565,21 +650,24 @@ distribution *add_gaussian_prior(distribution *orig, int ndim, int *idim, double
 
 distribution *add_gaussian_prior_2(distribution *orig, int ndim, int *idim, double* loc, double *var, error **err) {
   distribution *dres,*dmv;
-  mvdens *mv;
+  //mvdens *mv;
   
   //_DEBUGHERE_("","");
   
-  mv = mvdens_alloc(ndim,err);
+  //mv = mvdens_alloc(ndim,err);
+  //forwardError(*err,__LINE__,NULL);
+  //memcpy(mv->mean,loc,sizeof(double)*ndim);
+  //memcpy(mv->std,var,sizeof(double)*ndim*ndim);
+  
+  //_DEBUGHERE_("","");
+  
+  //dmv = init_distribution(ndim, mv, &mvdens_log_pdf_void, &mvdens_free_void, NULL,err);
+  //forwardError(*err,__LINE__,NULL);
+  
+  //_DEBUGHERE_("","");
+  
+  dmv = ezgauss_init(ndim,loc,var,err);
   forwardError(*err,__LINE__,NULL);
-  memcpy(mv->mean,loc,sizeof(double)*ndim);
-  memcpy(mv->std,var,sizeof(double)*ndim*ndim);
-  
-  //_DEBUGHERE_("","");
-  
-  dmv = init_distribution(ndim, mv, &mvdens_log_pdf_void, &mvdens_free_void, NULL,err);
-  forwardError(*err,__LINE__,NULL);
-  
-  //_DEBUGHERE_("","");
   
   if (orig->log_pdf == &combine_lkl) {
     //_DEBUGHERE_("","");

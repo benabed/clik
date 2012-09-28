@@ -1,5 +1,6 @@
 #include "clik_helper.h"
 
+#if 0 
 cmblkl* clik_lowly_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   powly *self;
   cmblkl *cing;
@@ -231,7 +232,7 @@ cmblkl* clik_gauss_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   forwardError(*err,__LINE__,NULL);
   return cing;  
 }
-
+#endif
 
 cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   Smica *ing;

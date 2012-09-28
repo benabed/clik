@@ -20,7 +20,7 @@ def options(ctx):
   ctx.load("try_icc","waf_tools")
   ctx.load("try_ifort","waf_tools")
   ctx.load("mbits","waf_tools")
-  ctx.load("autoinstall_gsl","waf_tools")
+  #ctx.load("autoinstall_gsl","waf_tools")
   ctx.load("autoinstall_hdf5","waf_tools")
   ctx.load("any_lapack","waf_tools")
   ctx.load("chealpix","waf_tools")
@@ -125,10 +125,10 @@ def configure(ctx):
     ctx.env.has_lapack = True
     ctx.load("any_lapack","waf_tools")
 
-  if (not ctx.env.has_pmc) or ("gsl" not in ctx.env.LIB_pmc):
-    # configure gsl
-    ctx.env.has_gsl = True
-    ctx.load("autoinstall_gsl","waf_tools")
+  #if (not ctx.env.has_pmc) or ("gsl" not in ctx.env.LIB_pmc):
+  #  # configure gsl
+  #  ctx.env.has_gsl = True
+  #  ctx.load("autoinstall_gsl","waf_tools")
 
   #configure chealpix
   ctx.env.has_chealpix = True
@@ -327,7 +327,8 @@ def post(ctx):
 def build_env_files(ctx):
   import os
   import os.path as ops
-  full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
+  #full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
+  full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
 
   #tcsh and co
   shell = "csh"

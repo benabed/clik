@@ -8,6 +8,9 @@ typedef struct {
   double unit;
   int *ell;
   double *bins,*wl;
+  double *wbins;
+  int *bi,*bo;
+  int bn;
   double *A;
   } parametric_smica;
 
@@ -85,15 +88,33 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
 
     //printMat(&rq[10*ndim], egfs_pay->m,egfs_pay->m);
     //printMat(r10, egfs_pay->m,egfs_pay->m);
+    //{
+    //  int il,iq,if1,if2;
+    //  for(il=0;il<nell;il++) {
+    //    for(iq=0;iq<nbns;iq++) {
+    //      for(if1=0;if1<p_pay->m;if1++) {
+    //        for(if2=0;if2<p_pay->m;if2++) {
+    //          rq[iq*ndim+if1*p_pay->m+if2] += p_pay->bins[iq*nell+il] * p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
+    //          /*if (iq==10)
+    //            r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
+    //        }  
+    //      }
+    //    }
+    //  }
+    //}
     {
-      int il,iq,if1,if2;
-      for(il=0;il<nell;il++) {
-        for(iq=0;iq<nbns;iq++) {
+     int il,iq,if1,if2,bb;
+     double w;
+      bb=0;
+      for(iq=0;iq<nbns;iq++) {
+        for(il=p_pay->bi[iq];il<p_pay->bo[iq];il++) {
+          w = p_pay->wbins[bb];
+          bb++;
           for(if1=0;if1<p_pay->m;if1++) {
             for(if2=0;if2<p_pay->m;if2++) {
-              rq[iq*ndim+if1*p_pay->m+if2] += p_pay->bins[iq*nell+il] * p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
+              rq[iq*ndim+if1*p_pay->m+if2] += w * p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
               /*if (iq==10)
-                r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
+                  r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
             }  
           }
         }
@@ -135,6 +156,10 @@ void free_comp_parametric(void** data) {
   if (p_pay->wl!=NULL) {
     free(p_pay->wl);
   }
+  free(p_pay->bi);
+  free(p_pay->bo);
+  free(p_pay->wbins);
+  
   parametric_free(&(p_pay->p_model));
   free(p_pay->A);
 
@@ -340,9 +365,34 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   p_pay->nbins = nbins;
   p_pay->bins = NULL;
   if (nbins !=0) {
+    int li,bi,bn;
     p_pay->bins = malloc_err(sizeof(double)*(nell*nbins),err);
     forwardError(*err,__LINE__,NULL);
     memcpy(p_pay->bins,bins,sizeof(double)*nbins*nell);    
+    p_pay->bi = malloc_err(sizeof(int)*nbins,err);
+    forwardError(*err,__LINE__,NULL);
+    p_pay->bo = malloc_err(sizeof(int)*nbins,err);
+    forwardError(*err,__LINE__,NULL);
+    p_pay->wbins = malloc_err(sizeof(double)*nell,err);
+    bn = 0;
+    for(bi=0;bi<nbins;bi++) {
+      for(li = 0;li<nell;li++) {
+        p_pay->bi[bi] = 0;
+        if (p_pay->bins[bi*nell+li]!=0) {
+          p_pay->bi[bi] = li;
+          break;
+        }
+      }
+      for(li=p_pay->bi[bi];li<nell;li++) {
+        p_pay->bo[bi] = nell;
+        if (p_pay->bins[bi*nell+li]==0) {
+          p_pay->bo[bi] = li;
+          break; 
+        }
+      }
+      memcpy(&(p_pay->wbins[bn]),&(p_pay->bins[bi*nell+ p_pay->bi[bi]]),sizeof(double)*( p_pay->bo[bi]- p_pay->bi[bi])); 
+      bn += p_pay->bo[bi]- p_pay->bi[bi];
+    }
   }
   p_pay->wl = NULL;
   if (wl!=NULL) {

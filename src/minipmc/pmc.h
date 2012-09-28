@@ -9,7 +9,7 @@
 
 #include "errorlist.h"
 #include "io.h"
-#include "mvdens.h"
+//#include "mvdens.h"
 #include "maths_base.h"
 
 #include <dlfcn.h>
