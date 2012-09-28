@@ -1,10 +1,14 @@
 #include "clik.h"
 #include "hdf5.h"
 #include "lklbs.h"
-#include "aplowly.h"
-#include "fowly.h"
 #include "smica.h"
 #include <dlfcn.h>
+#include <string.h>
+#include <errno.h>
+#if 0
+#include "aplowly.h"
+#include "fowly.h"
+#endif
 
 #ifndef _CLIK_HLP_
 #define _CLIK_HLP_

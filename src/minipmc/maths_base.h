@@ -13,12 +13,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#if 0
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_vector_int.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
-
+#endif
+ 
 #ifdef __PLANCK__
 #include "HL2_likely/tools/errorlist.h"
 #include "HL2_likely/tools/io.h"
