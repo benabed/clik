@@ -19,6 +19,7 @@ cdef extern c_parametric *powerlaw_triangle_init(int ndet, double *detlist, int 
 cdef extern c_parametric *powerlaw_tanh_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 #cdef extern c_parametric *constant_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
@@ -96,5 +97,11 @@ cdef class sz(parametric_template):
     self.template_name = "sz.dat"
     self.plugin_name = "basic"
 
-component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz"]
+cdef class sz_cib(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> sz_cib_init;
+    self.template_name = "sz_cib.dat"
+    self.plugin_name = "basic"
+
+component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib"]
 
