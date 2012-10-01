@@ -12,6 +12,17 @@
 //#include "mvdens.h"
 #include "maths_base.h"
 
+#ifdef HAS_MKL
+#include "mkl_lapack.h"
+#elif HL2_ACML
+#include <acml.h>
+#include <acml_mv.h>
+#elif LAPACK_CLIK
+#include "lapack_clik.h"
+#else
+#include "clapack.h"
+#endif
+ 
 #include <dlfcn.h>
 
 struct _pmc_simu_struct_;

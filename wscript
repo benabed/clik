@@ -143,6 +143,9 @@ def configure(ctx):
   #camspec
   ctx.env.has_camspec = osp.exists("src/CAMspec")
 
+  #actspt
+  ctx.env.has_actspt = osp.exists("src/act_spt")
+
   #egfs 
   ctx.env.has_egfs = osp.exists("src/egfs")
 
