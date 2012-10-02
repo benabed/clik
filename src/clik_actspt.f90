@@ -38,7 +38,10 @@ SUBROUTINE ACTSPT_EXTRA_LKL(LKL,CL)
 	cltt = 0
 	
 	DO i = clik_lmin,clik_lmax
-		cltt(i)=CL(cur)*(i*(i+1.))/2/PI
+		cltt(i)=CL(cur)*(i*(i+1.))/2./PI
+		!if (cur<10) then
+		!	print *,cur,CL(cur),cltt(i)
+		!endif
 		cur = cur + 1
 	END DO	
 
@@ -93,17 +96,18 @@ END SUBROUTINE 	ACTSPT_EXTRA_LKL
 
 
 
-SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22,ilmax11,ilmax12,ilmax22,itt_lmax_mc,iuse_act_south  , iuse_act_equa   , iuse_spt_lowell , iuse_spt_highell)
+SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22,ilmax11,ilmax12,ilmax22,itt_lmax_mc,iuse_act_south  , iuse_act_equa    , iuse_spt_highell)
 	use highell_options
 	use highell_likelihood
 	use ACTSPT_EXTRA
 
-	INTEGER,INTENT(IN)::l_datadir,ilmin11,ilmin12,ilmin22,ilmax11,ilmax12,ilmax22,iuse_act_south  , iuse_act_equa   , iuse_spt_lowell , iuse_spt_highell
+	INTEGER,INTENT(IN)::l_datadir,ilmin11,ilmin12,ilmin22,ilmax11,ilmax12,ilmax22,iuse_act_south  , iuse_act_equa    , iuse_spt_highell
 	character(len=l_datadir)::datadir
 	
+	
 	data_dir = TRIM(datadir)
-	ACT_data_dir = TRIM(data_dir)//"/data_act"
-	SPT_data_dir = TRIM(data_dir)//"/data_spt"
+	ACT_data_dir = TRIM(data_dir)//"/data_act/"
+	SPT_data_dir = TRIM(data_dir)//"/data_spt/"
 
 	lmin11 = ilmin11
 	lmin12 = ilmin12
@@ -114,20 +118,27 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 
 	tt_lmax_mc = itt_lmax_mc
 
+	use_spt_lowell = .false.
+
+	use_spt_highell = .false.
 	if (iuse_spt_highell.EQ.1) then
 		use_spt_highell = .true.
 	endif
-	if (iuse_spt_lowell.EQ.1) then
-		use_spt_lowell = .true.
-	endif
+
+	use_act_equa = .false.
 	if (iuse_act_equa.EQ.1) then
 		use_act_equa = .true.
 	endif
+
+	use_act_south = .false.
 	if (iuse_act_south.EQ.1) then
 		use_act_south = .true.
 	endif
 
-	clik_lmax = lmax11
+	clik_lmax = spt_highell_lmax
+	if (lmax11>clik_lmax) then
+		clik_lmax = lmax11
+	endif
 	if (lmax12>clik_lmax) then
 		clik_lmax = lmax12
 	endif
@@ -139,7 +150,10 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 		clik_lmax = tt_lmax_mc
 	endif
 
-	clik_lmin = lmin11
+	clik_lmin = spt_highell_lmin
+	if (lmin12<clik_lmin) then
+		clik_lmin = lmin12
+	endif
 	if (lmin12<clik_lmin) then
 		clik_lmin = lmin12
 	endif
@@ -149,6 +163,7 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 
 	allocate( cltt(2:big_clik_lmax) )
 	
+	!PRINT *,lmin11,lmin12,lmin22,lmax11,lmax12,lmax22,use_act_south,use_act_equa,use_spt_highell,data_dir,ACT_data_dir,SPT_data_dir
 	call highell_likelihood_init
-
+	
 END SUBROUTINE 	ACTSPT_EXTRA_PARAMETER_INIT

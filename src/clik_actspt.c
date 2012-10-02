@@ -15,13 +15,14 @@ void free_actspt(void **none) {
 double actspt_lkl(void* none, double* pars, error **err) {
   double lkl;
   
+  //_DEBUGHERE_("%g %g %g %g",pars[0],pars[1],pars[2],pars[3]);
   actspt_extra_lkl_(&lkl,pars);
   return lkl;
 }
 
 cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   hsize_t ndum;
-  char directory_name[4096],pwd[4096];
+  char directory_name[4096],pwd[4096],pwd2[4096];
   int status;
   int bok;
   cmblkl *cing;
@@ -31,11 +32,10 @@ cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int*
   char dir_data[2048];
   int ldd;
   int xdim;
-  char *xnames_def[] = {"a_tsz","a_ksz", "xi", "a_ps_148","a_ps_217","a_ps_95","a_ps_150","a_ps_220","a_cib_150",
-        "a_cib_220","r_ps_0","r_ps_1","r_ps","r_cib","c_as_1","c_as_2","c_ae_1","c_ae_2","cal_1","cal_2","cal_3"};
+  char *xnames_def[] = {"A_sz","A_ksz", "xi_sz_cib", "a_ps_act_148","a_ps_act_217","a_ps_spt_95","a_ps_spt_150","a_ps_spt_220","A_cib_143",
+        "A_cib_217","r_ps_spt_95x150","r_ps_spt_95x220","r_ps_150x220","r_cib","cal_acts_148","cal_acts_217","cal_acte_148","cal_acte_217","cal_spt_95","cal_spt_150","cal_spt_220"};
 
 
-  
   actspt_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"actspt already initialized",*err,__LINE__,NULL);
   
@@ -63,9 +63,6 @@ cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int*
   hstat = H5LTget_attribute_int( group_id, ".", "use_act_equa",  &iuse_act_equa);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read use_act_equa in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
-  hstat = H5LTget_attribute_int( group_id, ".", "use_spt_lowell",  &iuse_spt_lowell);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read use_spt_lowell in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-
   hstat = H5LTget_attribute_int( group_id, ".", "use_act_south",  &iuse_act_south);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read use_act_south in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
@@ -77,8 +74,9 @@ cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int*
   sprintf(dir_data,"data/");
   dir_data[5] = ' ';
   ldd = 5;
+  
   // call actspt_init
-  actspt_extra_parameter_init_(dir_data,&ldd,&ilmin11,&ilmin12,&ilmin22,&ilmax11,&ilmax12,&ilmax22,&itt_lmax_mc,&iuse_act_south  , &iuse_act_equa   , &iuse_spt_lowell , &iuse_spt_highell);
+  actspt_extra_parameter_init_(dir_data,&ldd,&ilmin11,&ilmin12,&ilmin22,&ilmax11,&ilmax12,&ilmax22,&itt_lmax_mc,&iuse_act_south  , &iuse_act_equa    , &iuse_spt_highell);
 
   clik_external_data_cleanup(directory_name,pwd,err);  
   forwardError(*err,__LINE__,NULL);

@@ -8,9 +8,12 @@ MODULE HIGHELL_OPTIONS
 !---------------------------------------------------
 ! location of input data
 ! ---------------------------------------------------
-  character(len=5000) :: data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/'
-  character(len=5000) :: ACT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_act/'
-  character(len=5000) :: SPT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_spt/'
+  !character(len=5000) :: data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/'
+  !character(len=5000) :: ACT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_act/'
+  !character(len=5000) :: SPT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_spt/'
+  character(len=5000) :: data_dir =     '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/'
+  character(len=5000) :: ACT_data_dir = '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_act/'
+  character(len=5000) :: SPT_data_dir = '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_spt/'
 
 !---------------------------------------------------
 ! general settings
@@ -67,14 +70,16 @@ MODULE HIGHELL_OPTIONS
   integer, parameter :: bmax0_k  = 47 !max nbins in SPT data
 !650-2000 selected in the inverse covmat calculation - 27 effective bins
 !---------------------------------------------------
-
+integer :: spt_highell_lmax                = 10000
+integer :: spt_highell_lmin                = 2000
+  
 !---------------------------------------------------
 ! change these to include/exclude experiments
 !---------------------------------------------------
   logical :: use_act_south    = .true. ! include ACT south data
   logical :: use_act_equa     = .true. ! include ACT equa data
   logical :: use_spt_lowell   = .false. ! include SPT keisler data
-  logical :: use_spt_highell  = .false. ! include SPT reichardt data
+  logical :: use_spt_highell  = .true. ! include SPT reichardt data
 !---------------------------------------------------
   integer :: sample_flag = 0
 

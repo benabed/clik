@@ -27,7 +27,7 @@ contains
     
     INTEGER  :: i,j,lun,il
     REAL(8)  :: dummy
-    CHARACTER(LEN=240) :: ttfilename(nspec_e), winfilename(nspec), invcovfilename(datap_e,datap_e)
+    CHARACTER(LEN=240) :: ttfilename(nspec_e), winfilename(nspec), invcovfilename
     LOGICAL  :: good
 
     allocate(cl_tsz(2:tt_lmax),cl_ksz(2:tt_lmax),cl_szcib(2:tt_lmax),cl_src(2:tt_lmax))

@@ -29,7 +29,7 @@ MODULE Highell_likelihood
   SUBROUTINE highell_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot)
 
     IMPLICIT NONE
-    REAL(8), dimension(tt_lmax_mc) :: cl_tt
+    REAL(8), dimension(2:tt_lmax_mc) :: cl_tt
     REAL(8), intent(in) :: amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3
     REAL(8)  :: like_sptr,like_sptk,like_acts,like_acte
     REAL(8), intent(out) :: like_tot
@@ -41,6 +41,9 @@ MODULE Highell_likelihood
     like_tot  = 0.d0
 
 
+    !print *,cl_tt(2000),cl_tt(2001),cl_tt(2002),cl_tt(2003),amp_tsz
+    !print *,cl_tt(2000)/2000./2001.*2*PI,cl_tt(2001)/2001./2002.*2*PI,cl_tt(2002)/2002./2003.*2*PI,cl_tt(2003)/2003./2004.*2*PI
+    !print *,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3
     if (use_act_south == .true.) then
        call act_south_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,acib150,acib220,rps,rcib,cas1,cas2,like_acts)
        print *, "----------------------------------------"

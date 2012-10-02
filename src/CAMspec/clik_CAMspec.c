@@ -26,7 +26,7 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   int xcase;
   double xdim;
   char *xnames_def[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
-                      "r_ps", "r_cib","cal0", "cal1", "cal2","xi","A_ksz"};
+                      "r_ps", "r_cib","cal_100", "cal_143", "cal_217","xi_sz_cib","A_ksz"};
   
   char *xnames_1[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
                       "r_ps", "r_cib","cal0", "cal1", "cal2"};

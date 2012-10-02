@@ -27,10 +27,11 @@ contains
     
     INTEGER  :: i,j,lun,il
     REAL(8)  :: dummy
-    CHARACTER(LEN=240) :: ttfilename(nspec_s), winfilename(nspec), invcovfilename(datap_s,datap_s)
+    CHARACTER(LEN=240) :: ttfilename(nspec_s), winfilename(nspec), invcovfilename
     LOGICAL  :: good
 
-    allocate(cl_tsz(2:tt_lmax),cl_ksz(2:tt_lmax),cl_szcib(2:tt_lmax),cl_src(2:tt_lmax))
+    
+    allocate(cl_tsz(2:tt_lmax),cl_ksz(2:tt_lmax),cl_szcib(2:tt_lmax),cl_src(2:tt_lmax))    
     allocate(cl_c(2:tt_lmax),cl_p(2:tt_lmax))
 
 #ifdef TIMING
@@ -68,7 +69,7 @@ contains
     winfilename(1) = trim(ACT_data_dir)//'south/BblMean_148x148.dat'
     winfilename(2) = trim(ACT_data_dir)//'south/BblMean_148x220.dat'
     winfilename(3) = trim(ACT_data_dir)//'south/BblMean_220x220.dat'
-
+    
     !----------------------------------------------
     ! load TT data 
     !----------------------------------------------

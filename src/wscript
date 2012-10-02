@@ -101,7 +101,11 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-      
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join("act_spt",'test_actspt.f90'),
+        use = 'actspt',
+        target = 'test_actspt')
       
       
       uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
