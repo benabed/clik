@@ -400,12 +400,12 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
 
     if(strcmp(crit_name,"classic")==0) {
       //nothing to do here, we are fine
-    } else if(strcmp(crit_name,"quadratic")==0) {
+    } else if(strcmp(crit_name,"gauss")==0) {
       double *quad_crit;
       int nqu;
 
       nqu = (nb*m*(m+1))/2;
-      quad_crit = hdf5_double_datarray(group_id, cur_lkl,"criterion_quadratic_mat",&nqu,err);
+      quad_crit = hdf5_double_datarray(group_id, cur_lkl,"criterion_gauss_mat",&nqu,err);
       forwardError(*err,__LINE__,NULL);
       smica_set_crit_gauss(smic, quad_crit,err);
       forwardError(*err,__LINE__,NULL);
@@ -424,6 +424,9 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
       if (nrm!=NULL) {
         free(nrm);    
       }
+    } else if(strcmp(crit_name,"quad")==0) {
+      smica_set_crit_quad(smic, err);
+      forwardError(*err,__LINE__,NULL);
     } else {
       testErrorRetVA(1==1,hdf5_base,"does not understand criterion '%s' in %s",*err,__LINE__,NULL,crit_name,cur_lkl);
     }

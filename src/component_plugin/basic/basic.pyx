@@ -96,12 +96,12 @@ cdef class sz(parametric_template):
     self.initfunc = <void*> sz_init;
     self.template_name = "sz.dat"
     self.plugin_name = "basic"
-
-cdef class sz_cib(parametric_template):
-  def __cinit__(self):
-    self.initfunc = <void*> sz_cib_init;
-    self.template_name = "sz_cib.dat"
-    self.plugin_name = "basic"
-
+#
+#cdef class sz_cib(parametric_template):
+#  def __cinit__(self):
+#    self.initfunc = <void*> sz_cib_init;
+#    self.template_name = "sz_cib.dat"
+#    self.plugin_name = "basic"
+#
 component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib"]
 
