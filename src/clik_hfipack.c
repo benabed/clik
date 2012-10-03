@@ -425,8 +425,21 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
         free(nrm);    
       }
     } else if(strcmp(crit_name,"quad")==0) {
-      smica_set_crit_quad(smic, err);
+      double *fid;
+      int nqu;
+
+      fid = NULL;
+      hstat = H5LTfind_dataset(group_id, "criterion_quad_mat");
+      if (hstat == 1) { 
+        nqu = nb*m*m;
+        fid = hdf5_double_datarray(group_id, cur_lkl,"criterion_quad_mat",&nqu,err);
+        forwardError(*err,__LINE__,NULL);
+      }
+      smica_set_crit_quad(smic, fid,err);
       forwardError(*err,__LINE__,NULL);
+      if (fid!=NULL) {
+        free(fid);  
+      }
     } else {
       testErrorRetVA(1==1,hdf5_base,"does not understand criterion '%s' in %s",*err,__LINE__,NULL,crit_name,cur_lkl);
     }
