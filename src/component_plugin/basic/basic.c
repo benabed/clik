@@ -1339,6 +1339,10 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
 
 }
 
+// SZ+CIB+CROSS
+
+void sz_cib_compute(parametric *egl, double *Rq, error **err) ;
+
 parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
 
   parametric *egl;

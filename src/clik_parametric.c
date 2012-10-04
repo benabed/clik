@@ -1194,6 +1194,34 @@ void parametric_template_payload_init(parametric *egl, double *template, int tem
   memcpy(payload->template,template,sizeof(double)*template_size);
 }
 
+void parametric_sz_cib_payload_init(parametric *egl, double *template, int template_size, double *cib_freqlist, int nfreqs_cib, error **err) {
+
+  int m1,m2;
+  template_payload *payload;
+  egl->payload = malloc_err(sizeof(template_payload), err);
+  forwardError(*err, __LINE__,);
+
+  payload = egl->payload;
+  payload ->ind_freq = malloc_err(sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,);
+  
+  for (m1=0;m1<egl->nfreq;m1++) {
+    payload->ind_freq[m1]=-1;
+    for (m2=0;m2<nfreqs_cib;m2++) {
+      if (fabs(egl->freqlist[m1]-cib_freqlist[m2])<1e-6) {
+	payload->ind_freq[m1]=m2;
+      }
+    }
+  }
+
+  payload->template = malloc_err(sizeof(double)*template_size,err);
+  forwardError(*err,__LINE__,);
+
+  memcpy(payload->template,template,sizeof(double)*template_size);
+
+}
+
+
 void parametric_simple_payload_free(void **pp) {
   void *p;
 
