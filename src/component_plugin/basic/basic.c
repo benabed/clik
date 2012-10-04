@@ -1342,6 +1342,12 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
 // SZ+CIB+CROSS
 
 void sz_cib_compute(parametric *egl, double *Rq, error **err) ;
+void sz_cib_A_sz_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
+void sz_cib_A_cib_143_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
+void sz_cib_A_cib_217_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
+void sz_cib_r_cib_143_217_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
+void sz_cib_xi_sz_cib_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
+void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err);
 
 parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
 
@@ -1391,29 +1397,29 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   egl->eg_free = &parametric_template_payload_free;
   
   // Parameters
-  parametric_set_default(egl,"a_sz",4.0,err);
+  parametric_set_default(egl,"A_sz",4.0,err);
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"a_sz",&sz_cib_a_sz_derivative,err);
+  parametric_add_derivative_function(egl,"A_sz",&sz_cib_A_sz_derivative,err);
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"a_cib_143",1.0,err); // change value
+  parametric_set_default(egl,"A_cib_143",6.0,err); // change value
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"a_cib_143",&sz_cib_a_cib_143_derivative,err);
+  parametric_add_derivative_function(egl,"A_cib_143",&sz_cib_A_cib_143_derivative,err);
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"a_cib_217",1.0,err); // change value
+  parametric_set_default(egl,"A_cib_217",70.0,err); // change value
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"a_cib_217",&sz_cib_a_cib_217_derivative,err);
+  parametric_add_derivative_function(egl,"A_cib_217",&sz_cib_A_cib_217_derivative,err);
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_143_217",0.8,err); // change value
+  parametric_set_default(egl,"r_cib_143_217",0.85,err); // change value
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"r_cib_143_217",&sz_cib_r_cib_143_217_derivative,err);
+  parametric_add_derivative_function(egl,"r_cib_143_217",&sz_cib_r_cib_143_217_derivative,err);
   forwardError(*err,__LINE__,);
   parametric_set_default(egl,"xi_sz_cib",0.5,err); // change value
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"xi_sz_cib",&sz_cib_xi_sz_cib_derivative,err);
+  parametric_add_derivative_function(egl,"xi_sz_cib",&sz_cib_xi_sz_cib_derivative,err);
   forwardError(*err,__LINE__,);
   parametric_set_default(egl,"cib_index",-1.3,err); // change value
   forwardError(*err,__LINE__,);
-  //parametric_add_derivative_function(egl,"cib_index",&sz_cib_cib_index_derivative,err);
+  parametric_add_derivative_function(egl,"cib_index",&sz_cib_cib_index_derivative,err);
   forwardError(*err,__LINE__,);
 
   return egl;
@@ -1446,11 +1452,11 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
   forwardError(*err,__LINE__,);
   nfreq = egl->nfreq;
  // Get parameters values
-  a_sz = parametric_get_value(egl,"a_sz",err);
+  a_sz = parametric_get_value(egl,"A_sz",err);
   forwardError(*err,__LINE__,);
-  a_cib_143 = parametric_get_value(egl,"a_cib_143",err);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
   forwardError(*err,__LINE__,);
-  a_cib_217 = parametric_get_value(egl,"a_cib_217",err);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
   forwardError(*err,__LINE__,);
   r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
   forwardError(*err,__LINE__,);
@@ -1492,7 +1498,7 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
     for(m1=0;m1<nfreq;m1++) {
       ind1 = ind_freq[m1];
-      for (m2=0;m2<nfreq;m2++){
+      for (m2=m1;m2<nfreq;m2++){
         ind2 = ind_freq[m2];
 
         if ((ind1 >= 0) && (ind2 >= 0)) {// either 143 or 217 GHz for now
@@ -1514,7 +1520,7 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
     mell = ell - lmin_corr_template;
     for (m1=0;m1<nfreq;m1++){
       ind1 = ind_freq[m1];
-      for (m2=0;m2<nfreq;m2++) {
+      for (m2=m1;m2<nfreq;m2++) {
         ind2 = ind_freq[m2];
         if ((ind1 >= 0) && (ind2 >= 0)) { // either 143 or 217 GHz for now
           Rq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib[ind2]) + sqrt(fnu[m2]*a_cib[ind1]) ) *
@@ -1530,119 +1536,601 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
 }  
 
 
-void pointsource_compute(parametric* egl, double *Rq,  error **err) {
-  int ell,m1,m2,mell,nfreq,iv,mv;
-  double l_pivot,index,v,lA,nrm;
-  double *A;
-  pfchar name;
-  int stop;
+void sz_cib_A_sz_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
 
-  l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
   forwardError(*err,__LINE__,);
 
-  nrm = l_pivot*(l_pivot+1)/2/M_PI;
-  
-  A = egl->payload;
-  nfreq = egl->nfreq;
-  for(m1=0;m1<nfreq;m1++) {
-    for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-      v = 1;
-      v = parametric_get_value(egl,name,err);
-      A[m1*nfreq+m2] = v/nrm;
-      A[m2*nfreq+m1] = v/nrm;
-    }
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
   }
 
-  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-    v = 1;
-    mell = (ell-egl->lmin)*nfreq*nfreq;
-    for(m1=0;m1<nfreq;m1++) {
-      for(m2=m1;m2<nfreq;m2++) {
-        lA = A[m1*nfreq+m2];
-        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
-        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
-      }  
-    }
-  }
-
-  return;
-}
-
-void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err) {
-  int ell,m1,m2,mell,nfreq,mv;
-  double l_pivot,index,v,lA;
-  double *A;
-  pfchar name;
-  int stop;
-
-  //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
-  //forwardError(*err,__LINE__,);
-  //
-  //A = egl->payload;
-  nfreq = egl->nfreq;
-  //for(m1=0;m1<nfreq;m1++) {
-  //  for(m2=m1;m2<nfreq;m2++) {
-  //    sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-  //    v = 1;
-  //    v = parametric_get_value(egl,name,err);
-  //    A[m1*nfreq+m2] = v;
-  //    A[m2*nfreq+m1] = v;
-  //  }
-  //}
-
-  stop = 0;
-  for(m1=0;m1<nfreq;m1++) {
-    for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-      if (strcmp(egl->varkey[iv],name)==0) {
-        stop=1;
-        memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
-        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = 1;
-          dRq[IDX_R(egl,ell,m1,m2)] = v;
-          dRq[IDX_R(egl,ell,m2,m1)] = v;
-        }
-        break;
+  // Compute the SZ part first
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = (ell-lmin_sz_template);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+        dRq[IDX_R(egl,ell,m1,m2)] = 2.0*M_PI/(dell*(dell+1.0)) * sz_template[mell] * fnu[m1] * fnu[m2];
+        dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
       }
     }
-    if (stop==1) {
-      return;
+  }
+
+  // NO CIB part
+  // Add the CIB-SZ correlation part
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = ell - lmin_corr_template;
+    for (m1=0;m1<nfreq;m1++){
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++) {
+        ind2 = ind_freq[m2];
+        if ((ind1 >= 0) && (ind2 >= 0)) { // either 143 or 217 GHz for now
+          dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * 1./(2.0*sqrt(a_sz)) * ( sqrt(fnu[m1]*a_cib[ind2]) + sqrt(fnu[m2]*a_cib[ind1]) ) *
+	    corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+          dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+        }
+      }
     }
-  }      
-  // error return
-  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  }
+
+  free(a_cib);
+  return;
+}  
+
+void sz_cib_A_cib_143_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
   forwardError(*err,__LINE__,);
 
-  return;
-}
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
 
-parametric *pointsource_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
-  parametric *egl;
-  int m1,m2;
-  pfchar name;
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
+  }
 
-  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
-  egl->eg_compute = &pointsource_compute;
-  egl->eg_free = &parametric_simple_payload_free;
-  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
-  forwardError(*err,__LINE__,NULL);
-
-  parametric_set_default(egl,"ps_l_pivot",3000,err);
-  forwardError(*err,__LINE__,NULL);
-  
-  for(m1=0;m1<egl->nfreq;m1++) {
-    for(m2=m1;m2<egl->nfreq;m2++) {
-      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-      parametric_set_default(egl,name,1,err);
-      forwardError(*err,__LINE__,NULL);
+  // NO SZ part, initialize to zero
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      for (m2=0;m2<nfreq;m2++){
+	dRq[IDX_R(egl,ell,m1,m2)] = 0.0;
+	dRq[IDX_R(egl,ell,m2,m1)] = 0.0;
+      }
     }
-  }  
-  parametric_add_derivative_function(egl,"any",&pointsource_A_derivative,err);  
-  forwardError(*err,__LINE__,NULL);
+  }
 
-  return egl;
-}
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+  // Add the CIB part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++){
+        ind2 = ind_freq[m2];
+
+        if ((ind1 >= 0) && (ind2 >= 0)) {// either 143 or 217 GHz for now
+          if (m1==m2) {
+            cib_corr = 1.0;
+          } else {
+            cib_corr = r_cib_143_217;
+          }
+	  if (ind1==0) { // freq1 = 143 GHz
+	    if (ind2==0) { // freq2 = 143 GHz
+	      dRq[IDX_R(egl,ell,m1,m2)] += cib_corr/d3000 * pow(((double)ell/(double)lnorm),cib_index);
+	    } else { // freq2 = 217 GHz
+	      dRq[IDX_R(egl,ell,m1,m2)] += cib_corr*sqrt(a_cib[ind2]/a_cib[ind1])/2.0/d3000 * pow(((double)ell/(double)lnorm),cib_index);
+	      dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+	    }
+	  }
+        }        
+      }
+    }
+  }
+
+  // Add the CIB-SZ correlation part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = ell - lmin_corr_template;
+    for (m1=0;m1<nfreq;m1++){
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++) {
+        ind2 = ind_freq[m2];
+        if ((ind1 >= 0) && (ind2 >= 0)) { // either 143 or 217 GHz for now
+	  if (ind1==0) {
+	    if (ind2==0) {
+	      dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * sqrt(fnu[m1]/a_cib[ind1]) * corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+	    } else {
+	      dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * sqrt(fnu[m2]/a_cib[ind1])/2.0 *  corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+	      dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+	    }
+	  }
+        }
+      }
+    }
+  }
+
+  free(a_cib);
+  return;
+}  
+
+void sz_cib_A_cib_217_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
+  }
+
+  // NO SZ part, initialize to zero
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      for (m2=0;m2<nfreq;m2++){
+	dRq[IDX_R(egl,ell,m1,m2)] = 0.0;
+	dRq[IDX_R(egl,ell,m2,m1)] = 0.0;
+      }
+    }
+  }
+
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+  // Add the CIB part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++){
+        ind2 = ind_freq[m2];
+
+        if ((ind1 >= 0) && (ind2 >= 0)) {// either 143 or 217 GHz for now
+          if (m1==m2) {
+            cib_corr = 1.0;
+          } else {
+            cib_corr = r_cib_143_217;
+          }
+	  if (ind2==1) { // freq2 = 217 GHz
+	    if (ind1==1) { // freq1 = 217 GHz
+	      dRq[IDX_R(egl,ell,m1,m2)] += cib_corr/d3000 * pow(((double)ell/(double)lnorm),cib_index);
+	    } else { // freq1 = 143 GHz
+	      dRq[IDX_R(egl,ell,m1,m2)] += cib_corr*sqrt(a_cib[ind1]/a_cib[ind2])/2.0/d3000 * pow(((double)ell/(double)lnorm),cib_index);
+	      dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+	    }
+	  }
+        }        
+      }
+    }
+  }
+
+  // Add the CIB-SZ correlation part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = ell - lmin_corr_template;
+    for (m1=0;m1<nfreq;m1++){
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++) {
+        ind2 = ind_freq[m2];
+        if ((ind1 >= 0) && (ind2 >= 0)) { // either 143 or 217 GHz for now
+	  if (ind2==1) {
+	    if (ind1==1) {
+	      dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * sqrt(fnu[m1]/a_cib[ind1]) * corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+	    } else {
+	      dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * sqrt(fnu[m1]/a_cib[ind2])/2.0 *  corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+	      dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+	    }
+	  }
+        }
+      }
+    }
+  }
+
+  free(a_cib);
+  return;
+}  
+
+void sz_cib_r_cib_143_217_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
+  }
+
+  // NO SZ part, initialize to zero
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      for (m2=0;m2<nfreq;m2++){
+	dRq[IDX_R(egl,ell,m1,m2)] = 0.0;
+	dRq[IDX_R(egl,ell,m2,m1)] = 0.0;
+      }
+    }
+  }
+
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+  // Add the CIB part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++){
+        ind2 = ind_freq[m2];
+        if ((ind1 == 0) && (ind2 == 1)) {// 143,217 GHz 
+	  
+          dRq[IDX_R(egl,ell,m1,m2)] += sqrt(a_cib[ind1]*a_cib[ind2])/d3000 * pow(((double)ell/(double)lnorm),cib_index);
+          dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)]; 
+        }        
+      }
+    }
+  }
+
+  // NO CIB-SZ correlation part
+
+  free(a_cib);
+  return;
+}  
+
+void sz_cib_xi_sz_cib_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
+  }
+
+  // NO SZ part, no CIB part, initialize to zero
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      for (m2=0;m2<nfreq;m2++){
+	dRq[IDX_R(egl,ell,m1,m2)] = 0.0;
+	dRq[IDX_R(egl,ell,m2,m1)] = 0.0;
+      }
+    }
+  }
+
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+
+  // Add the CIB-SZ correlation part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = ell - lmin_corr_template;
+    for (m1=0;m1<nfreq;m1++){
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++) {
+        ind2 = ind_freq[m2];
+        if ((ind1 >= 0) && (ind2 >= 0)) { // either 143 or 217 GHz for now
+          dRq[IDX_R(egl,ell,m1,m2)] -= sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib[ind2]) + sqrt(fnu[m2]*a_cib[ind1]) ) *
+	    corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+          dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
+        }
+      }
+    }
+  }
+
+  free(a_cib);
+  return;
+}  
+
+void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dRq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  double a_sz, a_cib_143, a_cib_217, r_cib_143_217, xi_sz_cib;
+  int *ind_freq;
+  int ind1, ind2;
+  template_payload *payload;
+  int lmin_sz_template = 2;
+  int lmax_sz_template = 10000;
+  int lmin_corr_template = 2;
+  int lmax_corr_template = 9999;
+  int sz_template_size, corr_template_size;
+  int lnorm = 3000; //used to normalize templates
+  double cib_freqlist[2]={143,217};
+  double *a_cib;
+  double cib_corr, cib_index;
+  int nfreqs_cib=2;
+  double *sz_template, *corr_template, *fnu;
+  double d3000, dell;
+
+  d3000 = (3000.0*3001.)/2.0/M_PI;
+
+  a_cib = malloc_err(nfreqs_cib*sizeof(double),err);
+  forwardError(*err,__LINE__,);
+  nfreq = egl->nfreq;
+ // Get parameters values
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  a_cib_143 = parametric_get_value(egl,"A_cib_143",err);
+  forwardError(*err,__LINE__,);
+  a_cib_217 = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  r_cib_143_217 = parametric_get_value(egl,"r_cib_143_217",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+  cib_index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  // Deal with payload
+  payload = egl->payload;
+  sz_template_size = lmax_sz_template - lmin_sz_template + 1;
+  corr_template_size = lmax_corr_template - lmin_corr_template + 1;
+  sz_template = payload->template;
+  corr_template = &(payload->template[sz_template_size]);
+  fnu = &(payload->template[sz_template_size+corr_template_size]);
+  ind_freq = payload->ind_freq;
+
+  // Compute SZ spectrum
+  for (m1=0;m1<nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    //printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
+  }
+
+  // NO SZ part, no CIB part, initialize to zero
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      for (m2=0;m2<nfreq;m2++){
+	dRq[IDX_R(egl,ell,m1,m2)] = 0.0;
+	dRq[IDX_R(egl,ell,m2,m1)] = 0.0;
+      }
+    }
+  }
+
+  a_cib[0] = a_cib_143;
+  a_cib[1] = a_cib_217;
+  // Add the CIB part
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {      
+    for(m1=0;m1<nfreq;m1++) {
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++){
+        ind2 = ind_freq[m2];
+
+        if ((ind1 >= 0) && (ind2 >= 0)) {// either 143 or 217 GHz for now
+          if (m1==m2) {
+            cib_corr = 1.0;
+          } else {
+            cib_corr = r_cib_143_217;
+          }
+          dRq[IDX_R(egl,ell,m1,m2)] += cib_corr*sqrt(a_cib[ind1]*a_cib[ind2])/d3000 * log((double)ell/(double)lnorm)*pow(((double)ell/(double)lnorm),cib_index);
+          dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)]; 
+        }        
+      }
+    }
+  }
+
+  // No CIB-SZ correlation part
+
+  free(a_cib);
+  return;
+}  
+
+
+// CIB a la GPE+Dunkley
 
 void cib_compute(parametric* egl, double *Rq,  error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv,nrm;
@@ -1773,6 +2261,121 @@ parametric *cib_init(int ndet, double *detlist, int ndef, char** defkey, char **
   return egl;
 }
 
+// PS a la GPE+Dunkley
+
+void pointsource_compute(parametric* egl, double *Rq,  error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv;
+  double l_pivot,index,v,lA,nrm;
+  double *A;
+  pfchar name;
+  int stop;
+
+  l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
+  forwardError(*err,__LINE__,);
+
+  nrm = l_pivot*(l_pivot+1)/2/M_PI;
+  
+  A = egl->payload;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      v = 1;
+      v = parametric_get_value(egl,name,err);
+      A[m1*nfreq+m2] = v/nrm;
+      A[m2*nfreq+m1] = v/nrm;
+    }
+  }
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = 1;
+    mell = (ell-egl->lmin)*nfreq*nfreq;
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        lA = A[m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
+        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
+      }  
+    }
+  }
+
+  return;
+}
+
+void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err) {
+  int ell,m1,m2,mell,nfreq,mv;
+  double l_pivot,index,v,lA;
+  double *A;
+  pfchar name;
+  int stop;
+
+  //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
+  //forwardError(*err,__LINE__,);
+  //
+  //A = egl->payload;
+  nfreq = egl->nfreq;
+  //for(m1=0;m1<nfreq;m1++) {
+  //  for(m2=m1;m2<nfreq;m2++) {
+  //    sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+  //    v = 1;
+  //    v = parametric_get_value(egl,name,err);
+  //    A[m1*nfreq+m2] = v;
+  //    A[m2*nfreq+m1] = v;
+  //  }
+  //}
+
+  stop = 0;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      if (strcmp(egl->varkey[iv],name)==0) {
+        stop=1;
+        memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
+        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+          v = 1;
+          dRq[IDX_R(egl,ell,m1,m2)] = v;
+          dRq[IDX_R(egl,ell,m2,m1)] = v;
+        }
+        break;
+      }
+    }
+    if (stop==1) {
+      return;
+    }
+  }      
+  // error return
+  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  forwardError(*err,__LINE__,);
+
+  return;
+}
+
+parametric *pointsource_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int m1,m2;
+  pfchar name;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &pointsource_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"ps_l_pivot",3000,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      parametric_set_default(egl,name,1,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  parametric_add_derivative_function(egl,"any",&pointsource_A_derivative,err);  
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
 
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
