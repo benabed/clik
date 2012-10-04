@@ -190,3 +190,47 @@ def set_criterion(lkl_grp,typ,**extra):
     lkl_grp.create_dataset("criterion_quadratic_mat",data=extra["quadratic_mat"])
     return
 
+def parametric_from_smica(h5file,lmin=-1,lmax=-1):
+  import parametric as prm
+  import hpy
+  ff = hpy.File(h5file,"r")
+  nc = ff["clik/lkl_0"].attrs["n_component"]
+  prms = []
+  for i in range(1,nc):
+    compot = ff["clik/lkl_0/component_%d"%i].attrs["component_type"]
+    if not (compot in dir(prm)):
+      continue
+    key = [v.strip() for v in ff["clik/lkl_0/component_%d"%i].attrs["keys"].split("\0") if v.strip() ]
+    default = [v.strip() for v in ff["clik/lkl_0/component_%d"%i].attrs["defaults"].split("\0") if v.strip() ]
+    value = [v.strip() for v in ff["clik/lkl_0/component_%d"%i].attrs["values"].split("\0") if v.strip() ]
+    defdir = dict(zip(default,value))
+    frq = ff["clik/lkl_0/component_%d"%i].attrs["dfreq"]
+    try:
+      rename_from = [v.strip() for v in ff["clik/lkl_0/component_%d"%i].attrs["rename_from"].split("\0") if v.strip() ]
+      rename_to = [v.strip() for v in ff["clik/lkl_0/component_%d"%i].attrs["rename_to"].split("\0") if v.strip() ]
+      rename = dict(zip(rename_from,rename_to))
+    except Exception,e:
+      rename = {}
+    #print rename
+    #print key
+    #print default
+    #print value
+    try:
+      color = ff["clik/lkl_0/component_%d/color"%i][:]
+    except Exception,e:
+      color = None
+    try:
+      data = ff["clik/lkl_0/component_%d/data"%i][:]
+    except Exception,e:
+      data = None
+    if lmin==-1:
+      lmin = ff["clik/lkl_0/component_%d"%i].attrs["lmin"]
+    if lmax==-1:
+      lmax = ff["clik/lkl_0/component_%d"%i].attrs["lmax"]
+    if data == None:
+      prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color)]
+    else:
+      prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color,data=data)]
+
+  ff.close()
+  return prms  
