@@ -56,6 +56,7 @@ cdef class parametric:
     self.initfunc=NULL
 
   def test_derivative(self,key,value=None,h = 1e-3):
+    """test_derivative(key,value=None,h = 1e-3) -> exact, approx, diff, reldiff"""
     if value == None:
       value = self.parvalues
     

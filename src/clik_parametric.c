@@ -1079,17 +1079,17 @@ void powerlaw_free_emissivity_A_derivative(parametric* egl, int iv,double *Rq, d
   index = parametric_get_value(egl,"pwfe_index",err);
   forwardError(*err,__LINE__,);
 
-  A = egl->payload;
+  //A = egl->payload;
   nfreq = egl->nfreq;
-  for(m1=0;m1<nfreq;m1++) {
-    for(m2=m1;m2<nfreq;m2++) {
-      sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
-      v = 1;
-      v = parametric_get_value(egl,name,err);
-      A[m1*nfreq+m2] = v;
-      A[m2*nfreq+m1] = v;
-    }
-  }
+  //for(m1=0;m1<nfreq;m1++) {
+  //  for(m2=m1;m2<nfreq;m2++) {
+  //    sprintf(name,"pwfe_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+  //    v = 1;
+  //    v = parametric_get_value(egl,name,err);
+  //    A[m1*nfreq+m2] = v;
+  //    A[m2*nfreq+m1] = v;
+  //  }
+  //}
 
   stop = 0;
   for(m1=0;m1<nfreq;m1++) {

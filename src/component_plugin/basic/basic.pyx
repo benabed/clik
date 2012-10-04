@@ -17,7 +17,8 @@ cdef extern c_parametric *poisson_tensor_init(int ndet, double *detlist, int nde
 cdef extern c_parametric *powerlaw_tensor_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_triangle_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_tanh_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-#cdef extern c_parametric *constant_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *pointsource_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
@@ -87,9 +88,9 @@ cdef class powerlaw_tanh(parametric):
   def __cinit__(self):
     self.initfunc = <void*>powerlaw_tanh_init
 
-#cdef class constant(parametric):
-#  def __cinit__(self):
-#    self.initfunc = <void*>constant_init
+cdef class pointsource(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*>pointsource_init
   
 cdef class sz(parametric_template):
   def __cinit__(self):
@@ -103,5 +104,9 @@ cdef class sz_cib(parametric_template):
     self.template_name = "sz_cib.dat"
     self.plugin_name = "basic"
 
-component_list = ["poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib"]
+cdef class cib(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*> cib_init;
+    
+component_list = ["cib","pointsource","poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib"]
 
