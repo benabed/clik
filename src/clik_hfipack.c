@@ -428,20 +428,21 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
       double *fid;
       int nqu;
       int *mask;
-
       fid = NULL;
       hstat = H5LTfind_dataset(group_id, "criterion_quad_mat");
       if (hstat == 1) { 
-        nqu = nb*m*m;
+        nqu = -1;
         fid = hdf5_double_datarray(group_id, cur_lkl,"criterion_quad_mat",&nqu,err);
         forwardError(*err,__LINE__,NULL);
       }
       mask = NULL;
       hstat = H5LTfind_dataset(group_id, "criterion_quad_mask");
       if (hstat == 1) { 
+        int i;
         nqu = m*m;
         mask = hdf5_int_datarray(group_id, cur_lkl,"criterion_quad_mask",&nqu,err);
         forwardError(*err,__LINE__,NULL);
+
       }
       smica_set_crit_quad(smic, fid,mask,err);
       forwardError(*err,__LINE__,NULL);

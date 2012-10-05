@@ -167,7 +167,10 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     agrp.attrs["nrename"] = len(rename_from)
   return agrp
 
+import numpy as nm
+
 def set_criterion(lkl_grp,typ,**extra):
+  print typ
   if typ.lower()=="classic":
     lkl_grp.attrs["criterion"]="classic"
     return
@@ -175,20 +178,69 @@ def set_criterion(lkl_grp,typ,**extra):
     lkl_grp.attrs["criterion"]="eig"
     if "eig_norm" in extra:
       lkl_grp["criterion_eig_norm"]=extra["eig_nrm"]
-    else:
-      import numpy.linalg as la
-      import numpy as nm
-      rqh = lkl_grp["Rq_hat"][:]
-      nq = len(lkl_grp["wq"][:])
-      m = lkl_grp.attrs["m_channel_T"] + lkl_grp.attrs["m_channel_P"] 
-      rqh.shape=(nq,m,m)
-      nrm = nm.array([.5*(nm.log(nm.abs(la.det(rqh[i])))+m) for i in range(nq)])
-      lkl_grp["criterion_eig_norm"] = nrm
-    return
-  if typ.lower()=="quadratic":
-    lkl_grp.attrs["criterion"]="quadratic"
-    lkl_grp.create_dataset("criterion_quadratic_mat",data=extra["quadratic_mat"])
-    return
+    return 
+  if typ.lower()=="gauss":
+    import numpy.linalg as la
+    import numpy as nm
+    rqh = lkl_grp["Rq_hat"][:]
+    nq = len(lkl_grp["wq"][:])
+    m = lkl_grp.attrs["m_channel_T"] + lkl_grp.attrs["m_channel_P"] 
+    rqh.shape=(nq,m,m)
+    nrm = nm.array([.5*(nm.log(nm.abs(la.det(rqh[i])))+m) for i in range(nq)])
+    lkl_grp["criterion_eig_norm"] = nrm
+    return 
+  if typ.lower()=="quad":
+    import numpy as nm
+    print "ici"
+    if "fid" in extra:
+      if "mask" in extra:
+        lkl_grp["criterion_quad_mask"] = extra["mask"].flat[:]
+        mask = extra["mask"].flat[:]
+        rq = extra["fid"]*1.
+        n = int(nm.sqrt(mask.size))
+        rq.shape=(-1,n,n)
+        mask.shape=(n,n)
+        sn = int(nm.sum(nm.triu(mask)))
+        fq = nm.zeros((len(rq),sn,sn))
+        for i in range(len(rq)):
+          ifq = build_tensormat(rq[i],mask)
+          fq[i] = nm.linalg.inv(ifq)
+        lkl_grp["criterion_quad_mat"] = fq.flat[:]
+      else:
+        lkl_grp["criterion_quad_mat"]=extra["fid"].flat[:]
+    print "la"
+    lkl_grp.attrs["criterion"]="quad"
+
+  return
+  
+def build_tensormat(rq,mask=None):
+  n = len(rq)
+  if mask==None:
+    mask = nm.ones((n,n))
+  M = nm.zeros((n**2,n**2))
+  for i in range(n):
+    for j in range(n):
+      for k in range(n):
+        for l in range(n):
+          M[j*n+k,l*n+i] = rq[i,j]*rq[k,l]
+  B = build_vecproj(mask)
+  return nm.dot(B.T,nm.dot(M,B))
+
+def build_vecproj(mask):
+  n=len(mask)
+  p=0
+  B = nm.zeros((n**2,nm.sum(nm.triu(mask))))
+  for i in range(n):
+    for j in range(i,n):
+      if mask[i,j]==0:
+        continue
+      B[i*n+j,p]=.5
+      B[j*n+i,p]=.5
+      if i==j:
+        B[i*n+j,p]=1
+      p+=1
+  return B
+
 
 def parametric_from_smica(h5file,lmin=-1,lmax=-1):
   import parametric as prm
