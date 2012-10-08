@@ -2389,6 +2389,7 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
   double *A;
   pfchar name;
   int stop;
+  double nrm;
 
   //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
   //forwardError(*err,__LINE__,);
