@@ -79,6 +79,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     parname *pn;
     
     def_id = H5Gopen(group_id, "default", H5P_DEFAULT );
+    
     nepar = clik_get_extra_parameter_names(target,&pn,err);
     _forwardError(*err,__LINE__,NULL);
     _testErrorRetVA(nepar==0,hdf5_base,"cannot add defaults without extra parameters",*err,__LINE__,NULL,"");    
@@ -255,6 +256,14 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
   lbs = _clik_dig(clikid,err);
   _forwardError(*err,__LINE__,-1);
   
+  clik_get_lmax(clikid,lmax,err);
+  _forwardError(*err,__LINE__,-1);
+  
+  n_cl = 0;
+  for(cli=0;cli<6;cli++) {
+    n_cl += lmax[cli]+1;
+  }
+
   ii = 0;
   if (names!=NULL) {
     if (lbs->xdim==0) {
@@ -262,13 +271,6 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
       pn = malloc_err(1*sizeof(parname),err);
       _forwardError(*err,__LINE__,-1);
     } else {
-      clik_get_lmax(clikid,lmax,err);
-      _forwardError(*err,__LINE__,-1);
-      
-      n_cl = 0;
-      for(cli=0;cli<6;cli++) {
-        n_cl += lmax[cli]+1;
-      }
       
       pn = malloc_err(lbs->xdim*sizeof(parname),err);
       _forwardError(*err,__LINE__,-1);
