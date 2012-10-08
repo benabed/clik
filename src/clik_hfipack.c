@@ -350,7 +350,7 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
     hstat = H5LTget_attribute_string(comp_id, ".", "component_type",  comp_type);
     testErrorRetVA(hstat<0,hdf5_base,"cannot read component_type in %s/%s (got %d)",*err,__LINE__,NULL,cur_lkl,cur_cmp,hstat);
     
-    
+    //_DEBUGHERE_("%s",comp_type);
     sprintf(init_func_name,"clik_smica_comp_%s_init",comp_type);
     smica_dl_init = dlsym(dlhandle,init_func_name);
     testErrorRetVA(smica_dl_init==NULL,-1111,"Cannot initialize smica component type %s from %s dl error : %s",*err,__LINE__,NULL,comp_type,cur_lkl,dlerror()); 

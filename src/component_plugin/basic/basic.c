@@ -2261,6 +2261,87 @@ parametric *cib_init(int ndet, double *detlist, int ndef, char** defkey, char **
   return egl;
 }
 
+void cibr_compute(parametric* egl, double *Rq,  error **err) {
+  int ell,m1,m2,mell,nfreq,iv,mv,nrm;
+  double l_pivot,index,v,lA;
+  double *A;
+  pfchar name;
+  int stop;
+
+  l_pivot = parametric_get_value(egl,"cib_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  egl->l_pivot = l_pivot;
+  nrm = l_pivot*(l_pivot+1)/2/M_PI;
+
+  index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  A = egl->payload;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    sprintf(name,"cib_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m1]);
+    v = 1;
+    v = parametric_get_value(egl,name,err);
+    A[m1*nfreq+m1] = v/nrm;
+  }
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1+1;m2<nfreq;m2++) {
+      sprintf(name,"cib_r_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      v = 1;
+      v = parametric_get_value(egl,name,err);
+      A[m1*nfreq+m2] = v*sqrt(A[m1*nfreq+m1]*A[m2*nfreq+m2]);
+      A[m2*nfreq+m1] = A[m1*nfreq+m2];
+    }
+  }
+
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow(ell/l_pivot,index);
+    mell = (ell-egl->lmin)*nfreq*nfreq;
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        lA = A[m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
+        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
+      }  
+    }
+  }
+
+  return;
+}
+
+parametric *cibr_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int m1,m2;
+  pfchar name;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &cibr_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_l_pivot",3000,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_index",-1.3,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"cib_index",&parametric_index_derivative,err);  
+  forwardError(*err,__LINE__,NULL);
+  
+  for(m1=0;m1<egl->nfreq;m1++) {
+    sprintf(name,"cib_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m1]);
+    parametric_set_default(egl,name,1,err);
+    for(m2=m1+1;m2<egl->nfreq;m2++) {
+      sprintf(name,"cib_r_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      parametric_set_default(egl,name,1,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+
+  return egl;
+}
+
 // PS a la GPE+Dunkley
 
 void pointsource_compute(parametric* egl, double *Rq,  error **err) {
@@ -2389,6 +2470,7 @@ CREATE_PARAMETRIC_FILE_INIT(powerlaw_triangle,powerlaw_triangle_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_tanh,powerlaw_tanh_init);
 CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_init);
 CREATE_PARAMETRIC_FILE_INIT(cib,cib_init);
+CREATE_PARAMETRIC_FILE_INIT(cibr,cibr_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz,sz_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_cib,sz_cib_init);
 CREATE_PARAMETRIC_FILE_INIT(pointsource,pointsource_init);
