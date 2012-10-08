@@ -2405,7 +2405,9 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
   //  }
   //}
 
+  nrm = l_pivot*(l_pivot+1)/2/M_PI;
   stop = 0;
+  v = 1/nrm;
   for(m1=0;m1<nfreq;m1++) {
     for(m2=m1;m2<nfreq;m2++) {
       sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
@@ -2413,7 +2415,6 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
         stop=1;
         memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
         for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-          v = 1;
           dRq[IDX_R(egl,ell,m1,m2)] = v;
           dRq[IDX_R(egl,ell,m2,m1)] = v;
         }
