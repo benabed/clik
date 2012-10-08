@@ -16,6 +16,9 @@ real(8)            :: cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3
 integer            :: il, dummy 
 !---------------------------------------------------
 
+data_dir = "/Users/benabed/Desktop/actspt/data/"
+ACT_data_dir = "/Users/benabed/Desktop/actspt/data/data_act/"
+SPT_data_dir = "/Users/benabed/Desktop/actspt/data/data_spt/"
 print *,""
 print *,"High ell likelihood chi2 test"
 print *,"==================================="
@@ -23,7 +26,7 @@ print *,"==================================="
 !---------------------------------------------------
 ! read in test Cls
 !---------------------------------------------------
-filename = 'actsptF_cltest.dat'
+filename = 'actspt_cl1.par'
 write(*,*)"Reading in Cls from: ",trim(filename)
 open(unit=557,file=filename,action='read',status='old')
 
@@ -65,10 +68,10 @@ close(557)
 
 call highell_likelihood_init
 
-do il=2,1999
-	cl_tt(il) = 0
-enddo
-do il=2000,tt_lmax_mc
+!do il=2,1999
+!	cl_tt(il) = 0
+!enddo
+do il=2,tt_lmax_mc
    cl_tt(il) = cl_tt(il) *il *(il+1)/2./PI
 enddo
 

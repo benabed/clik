@@ -36,11 +36,10 @@ SUBROUTINE ACTSPT_EXTRA_LKL(LKL,CL)
 	!TT
 	cur = 0
 	cltt = 0
-	
 	DO i = clik_lmin,clik_lmax
 		cltt(i)=CL(cur)*(i*(i+1.))/2./PI
 		!if (cur<10) then
-		!	print *,cur,CL(cur),cltt(i)
+		!	print *,i,cur,CL(cur),cltt(i)
 		!endif
 		cur = cur + 1
 	END DO	
@@ -135,7 +134,7 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 		use_act_south = .true.
 	endif
 
-	clik_lmax = spt_highell_lmax
+	clik_lmax = tt_lmax_k
 	if (lmax11>clik_lmax) then
 		clik_lmax = lmax11
 	endif
@@ -150,7 +149,8 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 		clik_lmax = tt_lmax_mc
 	endif
 
-	clik_lmin = spt_highell_lmin
+	
+	clik_lmin = 2
 	if (lmin12<clik_lmin) then
 		clik_lmin = lmin12
 	endif
@@ -161,6 +161,7 @@ SUBROUTINE ACTSPT_EXTRA_PARAMETER_INIT(datadir,l_datadir,ilmin11,ilmin12,ilmin22
 		clik_lmin = lmin22
 	endif
 
+	
 	allocate( cltt(2:big_clik_lmax) )
 	
 	!PRINT *,lmin11,lmin12,lmin22,lmax11,lmax12,lmax22,use_act_south,use_act_equa,use_spt_highell,data_dir,ACT_data_dir,SPT_data_dir

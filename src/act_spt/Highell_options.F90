@@ -8,37 +8,36 @@ MODULE HIGHELL_OPTIONS
 !---------------------------------------------------
 ! location of input data
 ! ---------------------------------------------------
-  !character(len=5000) :: data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/'
-  !character(len=5000) :: ACT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_act/'
-  !character(len=5000) :: SPT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_spt/'
-  character(len=5000) :: data_dir =     '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/'
-  character(len=5000) :: ACT_data_dir = '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_act/'
-  character(len=5000) :: SPT_data_dir = '/Users/benabed/Desktop/actse_sptfull_camspecfgmodel_pkcibf_v0/data/data_spt/'
+  character(len=5000) :: data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/' 
+  character(len=5000) :: ACT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/data_act/' 
+  character(len=5000) :: SPT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/data_spt/'
+!---------------------------------------------------
 
 !---------------------------------------------------
 ! general settings
 !---------------------------------------------------
-  integer :: tt_lmax_mc             = 6000
-  integer :: tt_lmax                = 10000
-  real(8), parameter :: PI          = 3.14159265358979323846264d0
+  integer :: tt_lmax_mc       = 6000
+  integer :: tt_lmax          = 10000
+  real(8), parameter :: PI    = 3.14159265358979323846264d0
 !---------------------------------------------------
 
 !---------------------------------------------------
 ! likelihood terms from ACT data
 !---------------------------------------------------
   integer, parameter :: nbin11  = 30 !data from 500 to 10000
-  integer, parameter :: nbin12  = 20 !data from 1500 to 10000
-  integer, parameter :: nbin22  = 20 !data from 1500 to 10000
+  integer, parameter :: nbin12  = 20 !data from 1000 to 10000
+  integer, parameter :: nbin22  = 20 !data from 1000 to 10000
   integer, parameter :: nspec   = 3  !number of theory spectra
   integer, parameter :: tbin    = 34 !theory from 2 to 10000
 !---------------------------------------------------
 !chande here to choose your ell range
-  integer :: lmin11  = 2000   !148x148
+  integer :: lmin11  = 2000   !148x148 not below 500
   integer :: lmax11  = 10000 !148x148
-  integer :: lmin12  = 2000  !148x220
+  integer :: lmin12  = 2000  !148x220 not below 1500
   integer :: lmax12  = 10000 !148x220
-  integer :: lmin22  = 2000  !220x220
+  integer :: lmin22  = 2000  !220x220 not below 1500
   integer :: lmax22  = 10000 !220x220
+
 !south
 !---------------------------------------------------
   integer, parameter :: nsp11_s  = 6
@@ -59,20 +58,19 @@ MODULE HIGHELL_OPTIONS
 !---------------------------------------------------
 ! likelihood terms from SPT Reichardt data
 !---------------------------------------------------
-  integer, parameter :: nspec_r     = 6
-  integer, parameter :: bmax0_r     = 15 !max nbins in SPT data 
-  integer, parameter :: datap_r     = 90 !15 bins x 6 spectra 
+  integer, parameter :: nspec_r  = 6 
+  integer, parameter :: bmax0_r  = 15 !max nbins in SPT data	
+  integer, parameter :: datap_r  = 90 !15 bins x 6 spectra 
 !---------------------------------------------------
+
 !---------------------------------------------------
 ! likelihood terms from SPT Keisler data
 !---------------------------------------------------
-  integer :: tt_lmax_k           = 3300
-  integer, parameter :: bmax0_k  = 47 !max nbins in SPT data
+  integer :: tt_lmax_k = 3300
+  integer, parameter :: bmax0_k   = 47 !max nbins in SPT data
 !650-2000 selected in the inverse covmat calculation - 27 effective bins
 !---------------------------------------------------
-integer :: spt_highell_lmax                = 10000
-integer :: spt_highell_lmin                = 2000
-  
+ 
 !---------------------------------------------------
 ! change these to include/exclude experiments
 !---------------------------------------------------
@@ -81,6 +79,5 @@ integer :: spt_highell_lmin                = 2000
   logical :: use_spt_lowell   = .false. ! include SPT keisler data
   logical :: use_spt_highell  = .true. ! include SPT reichardt data
 !---------------------------------------------------
-  integer :: sample_flag = 0
 
 END MODULE HIGHELL_OPTIONS

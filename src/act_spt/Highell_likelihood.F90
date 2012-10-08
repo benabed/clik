@@ -3,7 +3,7 @@ MODULE Highell_likelihood
 ! call high ells experiments
 
   use highell_options
-!  use inversecov_selection
+  use foregrounds_loading
   use act_south_likelihood
   use act_equa_likelihood
   use spt_reichardt_likelihood
@@ -14,14 +14,15 @@ MODULE Highell_likelihood
   ! ===========================================================================
   SUBROUTINE highell_likelihood_init
 
-!   call inverse_init
    call act_south_likelihood_init
    call act_equa_likelihood_init
    call spt_reichardt_likelihood_init
    call spt_keisler_likelihood_init
-   print *, 'Initializing High ell likelihood'
-  
-  END SUBROUTINE highell_likelihood_init
+   call foregrounds_init
+
+   print *, 'Initializing High ell likelihood'  
+
+ END SUBROUTINE highell_likelihood_init
   ! ===========================================================================
 
 
@@ -40,10 +41,8 @@ MODULE Highell_likelihood
     like_sptk = 0.d0
     like_tot  = 0.d0
 
+    print *,cl_tt(2),cl_tt(3)
 
-    !print *,cl_tt(2000),cl_tt(2001),cl_tt(2002),cl_tt(2003),amp_tsz
-    !print *,cl_tt(2000)/2000./2001.*2*PI,cl_tt(2001)/2001./2002.*2*PI,cl_tt(2002)/2002./2003.*2*PI,cl_tt(2003)/2003./2004.*2*PI
-    !print *,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3
     if (use_act_south == .true.) then
        call act_south_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,acib150,acib220,rps,rcib,cas1,cas2,like_acts)
        print *, "----------------------------------------"
@@ -67,8 +66,10 @@ MODULE Highell_likelihood
 
     like_tot= like_acts + like_acte + like_sptr + like_sptk
 
+
   END SUBROUTINE highell_likelihood_compute
   ! ====================================================================================================================================
+
 
 END MODULE Highell_likelihood
 
