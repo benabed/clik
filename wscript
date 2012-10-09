@@ -294,7 +294,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx src/component_plugin/** src/* src/CAMspec/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat  clik.pdf" )
+  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx src/component_plugin/** src/* src/CAMspec/* src/act_spt/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat  clik.pdf" )
   
 import waflib
 class Dist_public(waflib.Scripting.Dist):
