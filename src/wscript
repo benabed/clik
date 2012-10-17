@@ -95,7 +95,7 @@ def build(bld):
     if bld.env.has_actspt:
       bld.objects(
         features = 'fc',
-        source = ['clik_actspt.f90'] + [osp.join("act_spt",vv) for vv in 'Foregrounds_loading.F90 Highell_subroutines.F90 ACT_equa_likelihood.F90 Highell_likelihood.F90 Inversecov_selection.F90 SPT_reichardt_likelihood.F90 ACT_south_likelihood.F90 Highell_options.F90 SPT_keisler_likelihood.F90'.split()],
+        source = ['clik_actspt.f90'] + [osp.join("act_spt",vv) for vv in 'Foregrounds_loading.F90 Highell_subroutines.F90 ACT_equa_likelihood.F90 Highell_likelihood.F90 SPT_reichardt_likelihood.F90 ACT_south_likelihood.F90 Highell_options.F90 SPT_keisler_likelihood.F90'.split()],
         target = 'actspt',
         uselib = 'lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
