@@ -43,23 +43,23 @@ MODULE Highell_likelihood
 
     print *,cl_tt(2),cl_tt(3)
 
-    if (use_act_south == .true.) then
+    if (use_act_south .eqv. .true.) then
        call act_south_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,acib150,acib220,rps,rcib,cas1,cas2,like_acts)
        print *, "----------------------------------------"
        print *, 'ACT south chi2 =', 2*like_acts
     end if
 
-    if (use_act_equa == .true.) then
+    if (use_act_equa .eqv. .true.) then
        call act_equa_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,acib150,acib220,rps,rcib,cae1,cae2,like_acte)
        print *, 'ACT equa chi2 =', 2*like_acte
     end if
 
-    if (use_spt_highell == .true.) then
+    if (use_spt_highell .eqv. .true.) then
         call spt_reichardt_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cal_1,cal_2,cal_3,like_sptr)
         print *, 'SPT high ell chi2 =', 2*like_sptr 
     end if
 
-    if (use_spt_lowell == .true.) then
+    if (use_spt_lowell .eqv. .true.) then
        call spt_keisler_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps150,acib150,cal_2,like_sptk)
        print *, 'SPT low ell chi2 =', 2*like_sptk
     end if

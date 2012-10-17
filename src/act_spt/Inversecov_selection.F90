@@ -22,7 +22,7 @@ contains
     
     INTEGER  :: i,j,k,l,lun,n,stat
     REAL(8)  :: dummy
-    CHARACTER(LEN=240) :: binfilename,invcovfilenames(datap_s,datap_s),invcovfilenamee(datap_e,datap_e)
+    CHARACTER(LEN=240) :: binfilename,invcovfilenames,invcovfilenamee
     LOGICAL  :: good
     REAL(8)  :: dum_mat_s(datap_s,datap_s),dum_mat_e(datap_e,datap_e)
     INTEGER  :: lmin(nspec),lmax(nspec)
