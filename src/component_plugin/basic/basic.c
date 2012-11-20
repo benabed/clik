@@ -1450,7 +1450,7 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   forwardError(*err,__LINE__,);
   parametric_add_derivative_function(egl,"A_sz",&sz_cib_A_sz_derivative,err);
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"A_cib_100",0.5,err); // change value
+  parametric_set_default(egl,"A_cib_100",0.,err); // change value
   forwardError(*err,__LINE__,);
   parametric_add_derivative_function(egl,"A_cib_100",&sz_cib_A_cib_100_derivative,err);
   forwardError(*err,__LINE__,);
@@ -1464,11 +1464,11 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   forwardError(*err,__LINE__,);
   parametric_set_default(egl,"r_cib_143_217",0.85,err); // change value
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_100_143",0.85,err); // change value
+  parametric_set_default(egl,"r_cib_100_143",0.,err); // change value
   forwardError(*err,__LINE__,); 
   parametric_add_derivative_function(egl,"r_cib_100_143",&sz_cib_r_cib_100_143_derivative,err);
   forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_100_217",0.5,err); // change value
+  parametric_set_default(egl,"r_cib_100_217",0.,err); // change value
   forwardError(*err,__LINE__,);
   parametric_add_derivative_function(egl,"r_cib_100_217",&sz_cib_r_cib_100_217_derivative,err);
   forwardError(*err,__LINE__,);
