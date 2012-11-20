@@ -9,6 +9,7 @@ def build(bld):
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
   source_clik += ['clik_lowlike.c']*(bool(bld.env.has_lowlike))
   source_clik += ['clik_actspt.c']*(bool(bld.env.has_actspt))
+  source_clik += ['clik_gibbs.c']*(bool(bld.env.has_gibbs))
   
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   #source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c mvdens.c'.split()]*( not bld.env.has_pmc)
@@ -33,6 +34,7 @@ def build(bld):
   use_clik += ["myegfs"]*bool(bld.env.has_f90 and bld.env.has_egfs)
   use_clik += ["CAMspec"]*bool(bld.env.has_camspec)
   use_clik += ["actspt"]*bool(bld.env.has_camspec)
+  use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
 
   bld.shlib(
     source   = source_clik,
@@ -82,16 +84,7 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-    if bld.env.has_bopix:
-      bld.objects(
-        features = 'fc',
-        source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
-        target = 'mybopix',
-        uselib = 'healpix_f90 pmc lapack gsl fc_omp fc_runtime',
-        fcflags = bld.env.FCFLAGS_fpic,
-        cflags = bld.env.CFLAGS_cpic,
-        )
-
+    
     if bld.env.has_actspt:
       bld.objects(
         features = 'fc',
@@ -106,9 +99,35 @@ def build(bld):
         source = osp.join("act_spt",'test_actspt.f90'),
         use = 'actspt',
         target = 'test_actspt')
+      uselib_actspt = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
+
       
-      
-      uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+    if bld.env.has_bopix:
+      bld.objects(
+        features = 'fc',
+        source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
+        target = 'mybopix',
+        uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
+        )
+      uselib_bopix = [ff for ff in ('healpix_f90 pmc lapack fc_omp fc_runtime').split() if ff]
+    
+    if bld.env.has_gibbs:
+      bld.objects(
+        features = 'fc',
+        source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90'.split()],
+        target = 'gibbs',
+        uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
+        )
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join("gibbs",'test_comm.f90'),
+        use = 'gibbs',
+        target = 'test_comm')
+      uselib_gibbs = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
     
     if bld.env.has_lowlike or bld.env.wmap_src:
       if bld.env.wmap_scr:
@@ -133,7 +152,7 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-      uselib_lowlike = [ff for ff in ('healpix_f90 pmc lapack gsl fc_omp fc_runtime').split() if ff]
+      uselib_lowlike = [ff for ff in ('healpix_f90 pmc lapack fc_omp fc_runtime').split() if ff]
       #bld(
       #  features = 'fc fcprogram',
       #  source = osp.join("lowlike",'test.F90'),

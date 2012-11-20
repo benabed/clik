@@ -146,6 +146,9 @@ def configure(ctx):
   #actspt
   ctx.env.has_actspt = osp.exists("src/act_spt")
 
+  #gibbs
+  ctx.env.has_gibbs = osp.exists("src/gibbs")
+
   #egfs 
   ctx.env.has_egfs = osp.exists("src/egfs")
 
