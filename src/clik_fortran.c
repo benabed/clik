@@ -189,7 +189,7 @@ void fortran_clik_lensing_init_(long *pself,char *fpath, int* fpathlen) {
 #endif
   clik_lensing_object* self;
   fpath[*fpathlen]='\0';
-  self = clik_lensing_init(hdffilepath,NULL);
+  self = clik_lensing_init(fpath,NULL);
   *pself = self; 
 }
 
@@ -251,6 +251,21 @@ void fortran_clik_lensing_get_extra_parameter_names_(long* pself, char* names) {
 }
 
 #ifdef ADD0US
+void fortran_clik_lensing_get_extra_parameter_number(long* pself, int* numnames) {
+#elseif ADD2US
+void fortran_clik_lensing_get_extra_parameter_number__(long* pself, int* numnames) {
+#else
+void fortran_clik_lensing_get_extra_parameter_number_(long* pself, int* numnames) {
+#endif
+
+  clik_object* self;
+  parname* names;
+  self = *pself;
+  *numnames = clik_lensing_get_extra_parameter_names(self,&names,NULL);
+
+}
+
+#ifdef ADD0US
 void fortran_clik_lensing_cleanup(long* pself) {
 #elseif ADD2US
 void fortran_clik_lensing_cleanup__(long* pself) {
@@ -276,7 +291,7 @@ void fortran_clik_lensing_cltt_fid_(long* pself, double *cltt) {
   self = *pself;
   tmp = clik_lensing_cltt_fid(self, NULL);
   lmax = clik_lensing_get_lmax(self,NULL);
-  memcpy(cltt,tmp,sizeof(double)*(lmax+1))
+  memcpy(cltt,tmp,sizeof(double)*(lmax+1));
   free(tmp);
 }
 
@@ -293,7 +308,7 @@ void fortran_clik_lensing_clpp_fid_(long* pself, double *cltt) {
   self = *pself;
   tmp = clik_lensing_clpp_fid(self, NULL);
   lmax = clik_lensing_get_lmax(self,NULL);
-  memcpy(cltt,tmp,sizeof(double)*(lmax+1))
+  memcpy(cltt,tmp,sizeof(double)*(lmax+1));
   free(tmp);
 }
 

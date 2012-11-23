@@ -204,10 +204,11 @@ def build(bld):
   
     bld(
       features = "fc cshlib c fcshlib",
-      source = 'clik_fortran.c clik.f90',
+      source = 'clik_fortran.c clik.F90',
       target = 'clik_f90',
       includes = '.'+" minipmc/"*(not bld.env.has_pmc),
       use = 'clik',
+      defines = ['NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
       uselib = 'fc_runtime'
       )
     

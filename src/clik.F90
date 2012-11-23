@@ -275,5 +275,100 @@ contains
 
   end subroutine  clik_fill_cl  
 
+#ifdef CLIK_LENSING
+  subroutine clik_lensing_init(clikid,hdffilepath)
+    
+    ! Input
+    type(clik_object), intent(out) :: clikid
+    character(len=*), intent(in) :: hdffilepath
+    ! Local
+    integer(kind=4) :: fpathlen
+    fpathlen = len_trim(hdffilepath)
+    ! Call wrapping routine
+    call fortran_clik_lensing_init(clikid%ptr,trim(hdffilepath),fpathlen)
+    
+  end subroutine clik_lensing_init
+  
+  subroutine clik_lensing_get_lmax(clikid,lmax)
+
+    ! Input
+    type(clik_object), intent(in) :: clikid
+    integer(kind=4), intent(out) :: lmax
+    
+    call fortran_clik_lensing_get_lmax(lmax,clikid%ptr)
+
+  end subroutine clik_lensing_get_lmax
+
+  integer(kind=4) function clik_lensing_get_extra_parameter_names(clikid,names)
+
+    ! Input
+    type(clik_object), intent(in) :: clikid
+    character(len=256), dimension(:), pointer :: names
+    integer(kind=4) :: numnames
+
+    ! Local
+    character(len=PN_SIZE*MAX_NUMNAMES) :: buf_names
+
+    ! Get number of extra parameters
+    call fortran_clik_lensing_get_extra_parameter_number(clikid%ptr,numnames)
+    if (numnames > 0) then
+       ! Allocate character buffer
+       allocate(names(numnames))
+       ! Get the numnames, and copy into the names array
+       call fortran_clik_lensing_get_extra_parameter_names(clikid%ptr,buf_names)
+        do i=1,numnames
+          names(i) = buf_names(1+(i-1)*PN_SIZE:(i)*PN_SIZE)
+       enddo
+    endif
+
+    clik_lensing_get_extra_parameter_names=numnames
+
+  end function clik_lensing_get_extra_parameter_names
+
+  real(kind=8) function clik_lensing_compute(clikid,cl_and_pars)
+
+    !Input
+    type(clik_object), intent(in) :: clikid
+    real(kind=8), dimension(:) :: cl_and_pars
+    ! Local 
+    real(kind=8) :: lkl
+    call fortran_clik_lensing_compute(clikid%ptr,cl_and_pars,lkl)
+
+    clik_lensing_compute = lkl
+    return
+
+  end function clik_lensing_compute
+  
+  subroutine clik_lensing_cleanup(clikid)
+
+    !Input
+    type(clik_object), intent(in) :: clikid
+    call fortran_clik_lensing_cleanup(clikid%ptr)
+
+  end subroutine clik_lensing_cleanup
+
+  subroutine clik_lensing_cltt_fid(clikid,cltt)
+    !Input
+    type(clik_object), intent(in) :: clikid
+    real(kind=8),dimension(:),allocatable,intent(out)::cltt
+    integer::lmax
+
+    call clik_lensing_get_lmax(clikid,lmax)
+    allocate(cltt(0:lmax+1))
+    call fortran_clik_lensing_cltt_fid(clikid,cltt)
+  end subroutine clik_lensing_cltt_fid
+
+  subroutine clik_lensing_clpp_fid(clikid,cltt)
+    !Input
+    type(clik_object), intent(in) :: clikid
+    real(kind=8),dimension(:),allocatable,intent(out)::cltt
+    integer::lmax
+
+    call clik_lensing_get_lmax(clikid,lmax)
+    allocate(cltt(0:lmax+1))
+    call fortran_clik_lensing_clpp_fid(clikid,cltt)
+  end subroutine clik_lensing_clpp_fid
+
+#endif
 
 end module clik
