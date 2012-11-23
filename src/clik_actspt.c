@@ -33,7 +33,7 @@ cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int*
   int ldd;
   int xdim;
   char *xnames_def[] = {"A_sz","A_ksz", "xi_sz_cib", "a_ps_act_148","a_ps_act_217","a_ps_spt_95","a_ps_spt_150","a_ps_spt_220","A_cib_143",
-        "A_cib_217","r_ps_spt_95x150","r_ps_spt_95x220","r_ps_150x220","r_cib","cal_acts_148","cal_acts_217","cal_acte_148","cal_acte_217","cal_spt_95","cal_spt_150","cal_spt_220"};
+        "A_cib_217","r_ps_spt_95x150","r_ps_spt_95x220","r_ps_150x220","r_cib","a_gs","a_ge","cal_acts_148","cal_acts_217","cal_acte_148","cal_acte_217","cal_spt_95","cal_spt_150","cal_spt_220"};
 
 
   actspt_extra_only_one_(&bok);
@@ -82,7 +82,7 @@ cmblkl* clik_actspt_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int*
   forwardError(*err,__LINE__,NULL);
   
     
-  xdim = 21;
+  xdim = 23;
 
   cing = init_cmblkl(NULL, &actspt_lkl, 
                      &free_actspt,

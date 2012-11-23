@@ -62,6 +62,19 @@ void clik_cleanup(clik_object** pclikid);
 void* _clik_dig(clik_object* clikid, error **err);
 void* _clik_dig2(clik_object* clikid, error **err);
 
+// lensing
+#ifdef CLIK_LENSING
+
+typedef void clik_lensing_object;
+clik_lensing_object* clik_lensing_init(char *fpath, error **err);
+int clik_lensing_get_lmax(clik_lensing_object *lclik, error **err);
+double clik_lensing_compute(clik_lensing_object *lclik, double *pars, error **err);
+int clik_lensing_get_extra_parameter_names(clik_lensing_object* clikid, parname **names, error **_err);
+void clik_lensing_cleanup(clik_lensing_object **plclik);
+double* clik_lensing_cltt_fid(clik_lensing_object* clikid, error **_err);
+double* clik_lensing_clpp_fid(clik_lensing_object* clikid, error **_err);
+#endif
+
 #ifdef __cplusplus
 }
 #endif

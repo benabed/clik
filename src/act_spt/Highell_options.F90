@@ -8,15 +8,15 @@ MODULE HIGHELL_OPTIONS
 !---------------------------------------------------
 ! location of input data
 ! ---------------------------------------------------
-  character(len=5000) :: data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/' 
-  character(len=5000) :: ACT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/data_act/' 
-  character(len=5000) :: SPT_data_dir = '/usersVol2/erminia/planck_groupshare/erminia/likelihood_release/actse_sptkr_clean_lranges_fg_camspecmodel_v0/data/data_spt/'
+  character(len=5000) :: data_dir = 'data/'
+  character(len=5000) :: ACT_data_dir = 'data/data_act/' 
+  character(len=5000) :: SPT_data_dir = 'data/data_spt/'
 !---------------------------------------------------
 
 !---------------------------------------------------
 ! general settings
 !---------------------------------------------------
-  integer :: tt_lmax_mc       = 6000
+  integer :: tt_lmax_mc       = 5000
   integer :: tt_lmax          = 10000
   real(8), parameter :: PI    = 3.14159265358979323846264d0
 !---------------------------------------------------

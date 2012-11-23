@@ -12,9 +12,8 @@ MODULE planck_likelihood
 
   USE Planck_options
   use Planck_teeebb_lowl
-  use planck_gibbs
 
-  character(len=*), parameter, public :: planck_lowlike_version='v1.0'
+  character(len=*), parameter, public :: planck_lowlike_version='v2'
 
   logical :: initialise_pass2=.true.
 
@@ -48,10 +47,6 @@ SUBROUTINE planck_lowlike_init
         !write(*,*) use_lowl_pol, 'using low ell'
         call teeebb_lowl_like_setup
  endif
-
- if(use_lowl_TT) then
-       call setup_for_tt_gibbs()
-  endif
 
   initialise_pass2 = .false.
 
@@ -96,17 +91,6 @@ SUBROUTINE planck_lowlike_compute(cltt,clte,clee,clbb,like)
   enddo
 
   cltt_temp(2:lowl_max)=cltt(2:lowl_max)
-
-  !---------------------------------------------------------------------------
-  ! low l TT likelihood
-  !---------------------------------------------------------------------------
-  if(use_lowl_TT)then
-        call compute_tt_gibbslike(cltt_temp(2:lowl_max),Like(ttlowllike))
-        Like(ttlowldet) = 0.0
-        tt_hi_l_start = lowl_max+1
-  else
-     tt_hi_l_start = ttmin
-  endif
 
   !---------------------------------------------------------------------------
   ! low l TE/EE/BB likelihood

@@ -27,27 +27,19 @@ MODULE PLANCK_OPTIONS
 !---------------------------------------------------
   integer :: ttmin                = 2    ! must be l.ge.2 
   integer :: temin                = 2    ! must be l.ge.2 
-   integer :: ttmax                = 200    ! must be l.ge.2
-  integer :: temax                = 200    ! must be l.ge.2
+   integer :: ttmax                = 32    ! must be l.ge.2
+  integer :: temax                = 32    ! must be l.ge.2
 
 
 !---------------------------------------------------
 ! various likelihood options
 ! change these to include/ exclude various likelihood aspects
 !---------------------------------------------------
-  logical :: use_lowl_TT          = .true. ! include TT pixel likelihood, for l<=lowl_max
   logical :: use_lowl_pol         = .true. ! include TE,EE,BB pixel likelihood for l<24
 
-  logical :: use_wmap_pol	  = .true. !Use WMAP for low-ell pol
+  logical :: use_wmap_pol	  = .false. !Use WMAP for low-ell pol
 
   integer :: lowl_max             = 32     ! use low l TT code 2<l<lowl_max
-  character(len=*), parameter :: gibbs_sigma_filename =Planck_data_dir//'lowlT/gibbs/sigmaEllsHkeChu_run4_kq85.fits'
-  integer :: gibbs_first_iteration = 10
-  integer :: gibbs_last_iteration = 120000
-  integer :: gibbs_skip = 2
-
-! The sum in the BR estimator goes up to this value:
-  integer :: gibbs_ell_max = 32 
 
  double precision, parameter :: teeebb_pixlike_lndet_offset &
                 = 16078.083180d0
@@ -62,7 +54,6 @@ contains
     print *, "ttmin = ", ttmin 
     print *, "temin = ", temin
     print *, ""
-    print *, "use_lowl_TT =       ", use_lowl_TT       
     print *, "use_lowl_pol =      ", use_lowl_pol         
     print *, ""
     print *, "lowl_tt_res = ", lowl_tt_res

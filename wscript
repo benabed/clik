@@ -23,6 +23,8 @@ def options(ctx):
   #ctx.load("autoinstall_gsl","waf_tools")
   ctx.load("autoinstall_hdf5","waf_tools")
   ctx.load("any_lapack","waf_tools")
+  ctx.load("cfitsio","waf_tools")
+
   ctx.load("chealpix","waf_tools")
   ctx.load("pmclib","waf_tools")
   ctx.load("python")
@@ -52,6 +54,7 @@ def options(ctx):
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
   #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
+  grp.add_option("--no_lenslike",action="store_true",default=False,help="do not build the lensing likelihood")
   
   ctx.add_option_group(grp)
   
@@ -130,16 +133,25 @@ def configure(ctx):
   #  ctx.env.has_gsl = True
   #  ctx.load("autoinstall_gsl","waf_tools")
 
-  #configure chealpix
-  ctx.env.has_chealpix = True
-  ctx.load("chealpix","waf_tools")
+  #configure cfitsio
+  ctx.env.has_cfitsio = True
+  ctx.load("cfitsio","waf_tools")
+
+  #lenslike
+  ctx.env.has_lenslike = not (ctx.options.no_lenslike or not osp.exists("src/lenslike"))
   
   #bopix
   ctx.env.has_bopix = not (ctx.options.no_bopix or not osp.exists("src/bopix"))
-
+  
   #lowlike
   ctx.env.has_lowlike =   not (ctx.options.no_lowlike or not osp.exists("src/lowlike"))
 
+  #configure chealpix
+  if ctx.env.has_bopix or ctx.env.has_lowlike:
+    ctx.env.has_chealpix = ctx.env.has_bopix
+    ctx.load("chealpix","waf_tools")
+  
+  
   #camspec
   ctx.env.has_camspec = osp.exists("src/CAMspec")
 
@@ -150,7 +162,8 @@ def configure(ctx):
   ctx.env.has_gibbs = osp.exists("src/gibbs")
 
   #egfs 
-  ctx.env.has_egfs = osp.exists("src/egfs")
+  #ctx.env.has_egfs = osp.exists("src/egfs")
+  ctx.env.has_egfs = False
 
   # wmap
   if ctx.options.wmap_install or ctx.options.install_all_deps or ctx.options.upgrade_all_deps or not ctx.options.wmap_src:
@@ -335,7 +348,7 @@ def build_env_files(ctx):
   import os.path as ops
   #full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
   full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
-
+  #print full_libpath
   #tcsh and co
   shell = "csh"
   name = "clik_profile.csh"

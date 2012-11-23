@@ -25,7 +25,7 @@ def main(argv):
   lmax12 = min(10000,pars.int(default=10000).lmax12)
   lmax22 = min(10000,pars.int(default=10000).lmax22)
   
-  tt_lmax_mc = min(10000,pars.int(default=6000).tt_lmax_mc)
+  tt_lmax_mc = min(10000,pars.int(default=5000).tt_lmax_mc)
   
   
   lmin = min(2,lmin11,lmin12,lmin22)

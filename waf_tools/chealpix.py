@@ -10,47 +10,47 @@ def options(ctx):
   
 twice = False
 def configure(ctx):
-  atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="healpix",uselib=["cshlib"],install=install_cfitsio)
+  #atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="healpix",uselib=["cshlib"],install=install_cfitsio)
   ctx.env.th = False
-  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cpic"],install=install_healpix)
-  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fpic"],install=install_healpix)
+  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cpic","cfistio"],install=install_healpix)
+  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fpic","cfistio"],install=install_healpix)
 
-def configure_old(ctx):
-  iall = atl.shouldIinstall_all(ctx,"healpix")
-  if ctx.options.healpix_install or ctx.options.healpix_forceinstall or iall:
-    #print "do install"
-    ctx.options.healpix_islocal=True
-    ctx.options.healpix_forceinstall=True
-  #try:
-  #  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cshlib"])
-  #  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fcshlib"])
-  #except:
-    #if not ctx.options.healpix_install:
-    #  raise
-    #else:
-    #Logs.pprint("PINK","healpix not found. Try to install it")
-    Logs.pprint("PINK","Try to install healpix it")
-    ctx.options.healpix_islocal=True
-    #atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="cfitsio will be installed",opt_name="healpix",uselib=["cshlib"])
-    #if not bool(ctx.env.has_cfitsio):
-    install_cfitsio(ctx)
-    atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="cfitsio will be installed",opt_name="healpix",uselib=["cshlib"])
-    if not bool(ctx.env.has_cfitsio):
-      raise Errors.WafError("Cannot build %s"%"cfitsio")
-    install_healpix(ctx)
-  atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="healpix",uselib=["cshlib"])
-  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cpic"])
-  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fpic"])
-      
-def install_cfitsio(ctx):
-  atl.installsmthg_pre(ctx,"ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz")
-  CCMACRO = "\"%s %s\""%(ctx.env.CC[0],ctx.env.mopt)
-  CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
-  CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC[0])
-  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j %d ;make -j %d shared;make install"%("cfitsio",ctx.env.mprefix,"",CCMACRO, CPPMACRO,ctx.options.jobs,ctx.options.jobs)
-  Logs.pprint("PINK",cmdline)
-  if ctx.exec_command(cmdline)!=0:
-    raise Errors.WafError("Cannot build %s"%"cfitsio")
+#def configure_old(ctx):
+#  iall = atl.shouldIinstall_all(ctx,"healpix")
+#  if ctx.options.healpix_install or ctx.options.healpix_forceinstall or iall:
+#    #print "do install"
+#    ctx.options.healpix_islocal=True
+#    ctx.options.healpix_forceinstall=True
+#  #try:
+#  #  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cshlib"])
+#  #  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fcshlib"])
+#  #except:
+#    #if not ctx.options.healpix_install:
+#    #  raise
+#    #else:
+#    #Logs.pprint("PINK","healpix not found. Try to install it")
+#    Logs.pprint("PINK","Try to install healpix it")
+#    ctx.options.healpix_islocal=True
+#    #atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="cfitsio will be installed",opt_name="healpix",uselib=["cshlib"])
+#    #if not bool(ctx.env.has_cfitsio):
+#    install_cfitsio(ctx)
+#    atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="cfitsio will be installed",opt_name="healpix",uselib=["cshlib"])
+#    if not bool(ctx.env.has_cfitsio):
+#      raise Errors.WafError("Cannot build %s"%"cfitsio")
+#    install_healpix(ctx)
+#  atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="healpix",uselib=["cshlib"])
+#  atl.conf_lib(ctx,"chealpix",["chealpix","m","cfitsio"],"pix2vec_ring","chealpix.h",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",uselib=["cpic"])
+#  atl.conf_lib(ctx,"healpix_f90",["healpix","cfitsio"],"HEALPIX_TYPES",msg="or check that the path also point toward your cfitsio install",opt_name="healpix",add_lib_code="f90",uselib=["fpic"])
+#      
+#def install_cfitsio(ctx):
+#  atl.installsmthg_pre(ctx,"ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz")
+#  CCMACRO = "\"%s %s\""%(ctx.env.CC[0],ctx.env.mopt)
+#  CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
+#  CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC[0])
+#  cmdline = "cd build/%s; ./configure --prefix=%s %s  %s %s; make clean;make -j %d ;make -j %d shared;make install"%("cfitsio",ctx.env.mprefix,"",CCMACRO, CPPMACRO,ctx.options.jobs,ctx.options.jobs)
+#  Logs.pprint("PINK",cmdline)
+#  if ctx.exec_command(cmdline)!=0:
+#    raise Errors.WafError("Cannot build %s"%"cfitsio")
     
 def install_healpix(ctx):
   if ctx.env.th:

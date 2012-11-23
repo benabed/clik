@@ -46,6 +46,17 @@ def build(ctx):
       cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
+    if ctx.env.has_lenslike:
+      ctx(
+        features = "c cshlib pyext",
+        source = "clik/lkl_lensing.pyx",
+        target  = "lkl_lensing",
+        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+        use = "clik",
+        cflags = "-fopenmp",
+        install_path = "${PYTHONDIR}/clik",
+        defines = ["CLIK_LENSING"]
+      ) 
     ctx(
       features = "c cshlib pyext",
       source = "clik/parametric.pyx",

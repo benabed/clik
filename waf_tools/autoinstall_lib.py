@@ -20,20 +20,17 @@ def noemptylist(li):
   return [ll for ll in li if ll]
   
 def opt_to_libpaths(ctx,name):
+  prefix = [getattr(ctx.options,name+"_prefix","usr/local/")]
+  include = [v for v in getattr(ctx.options,name+"_include","").split(":") if v]
+  lib = [v for v in getattr(ctx.options,name+"_lib","").split(":") if v]
+  link = libsfromlinkline(getattr(ctx.options,name+"_link"))
   if getattr(ctx.options,name+"_islocal",None):
-    prefix=ctx.env.localpref
-    include=[]
-    lib=[]
-    link=[]
-  else :
-    prefix = getattr(ctx.options,name+"_prefix")
-    if not prefix:
-      prefix = "/usr/local/lib"
-    include = getattr(ctx.options,name+"_include").split(":")
-    lib = getattr(ctx.options,name+"_lib").split(":")
-    link = libsfromlinkline(getattr(ctx.options,name+"_link"))
-  include += [osp.join(prefix,"include")]
-  lib += [osp.join(prefix,"lib")]
+    prefix = [ctx.env.localpref] + prefix
+    
+  for prf in prefix[::-1]:
+    if prf:
+      include = [osp.join(prf,"include")] + include 
+      lib = [osp.join(prf,"lib")] + lib 
   
   return prefix,include,lib,link
       
@@ -143,16 +140,13 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       #print forceinstall==False,getattr(ctx.options,opt_name+"_forceinstall",False)==False
       #print "LALALA",getattr(ctx.options,opt_name+"_forceinstall","MUMUMU")
       assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False
-      #print "wowow"
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
       return
     except Exception,e:
-      #print e
       if forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False:
         Logs.pprint("RED","%s not found, try to install it"%name)
       install(ctx)
   # compute paths
-  #print "ici"
   prefix,include,lib,link = opt_to_libpaths(ctx,opt_name)
   
   # libs to test for

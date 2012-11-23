@@ -371,3 +371,107 @@ void* _clik_dig2(clik_object* clikid, error **err) {
   }
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
 }
+
+#ifdef CLIK_LENSING
+#include "lenslike/plenslike/plenslike.h"
+
+clik_lensing_object* clik_lensing_init(char *fpath, error **_err) {
+  plenslike_dat_mono *lclik;
+  _dealwitherr;
+
+  lclik = malloc_err(sizeof(plenslike_dat_mono),err);
+  _forwardError(*err,__LINE__,NULL);
+
+  load_plenslike_dat_mono(lclik, fpath);
+
+  return lclik;
+}
+
+int clik_lensing_get_lmax(clik_lensing_object *lclik, error **_err) {
+  plenslike_dat_mono *plid;
+  plid = lclik;
+  _dealwitherr;
+
+
+  return plid->lmax;
+}
+
+int clik_lensing_get_extra_parameter_names(clik_lensing_object* lclik, parname **names, error **_err) {
+  parname *pn;
+  _dealwitherr;
+
+  if (names!=NULL) {
+    pn = malloc_err(1*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+    *names = pn;  
+  }
+  return 0;
+}
+
+double* clik_lensing_cltt_fid(clik_lensing_object* lclik, error **_err) {
+  plenslike_dat_mono *plid;
+  double *cltt;
+  int lmax;
+  _dealwitherr;
+
+  plid = lclik;
+
+  lmax = clik_lensing_get_lmax(lclik,err);
+  _forwardError(*err,__LINE__,NULL);
+
+  cltt = malloc_err(sizeof(double)*(lmax+1),err);
+  _forwardError(*err,__LINE__,NULL);
+
+  memcpy(cltt,plid->cltt_fid,sizeof(double)*(lmax+1));
+
+  return cltt;
+}
+
+double* clik_lensing_clpp_fid(clik_lensing_object* lclik, error **_err) {
+  plenslike_dat_mono *plid;
+  double *cltt;
+  int lmax;
+  _dealwitherr;
+
+  plid = lclik;
+
+  lmax = clik_lensing_get_lmax(lclik,err);
+  _forwardError(*err,__LINE__,NULL);
+
+  cltt = malloc_err(sizeof(double)*(lmax+1),err);
+  _forwardError(*err,__LINE__,NULL);
+
+  memcpy(cltt,plid->clpp_fid,sizeof(double)*(lmax+1));
+
+  return cltt;
+}
+
+double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_err) {
+  plenslike_dat_mono *plid;
+  double *cltt, *clphi;
+  int nextra,lmax;
+  double lkl;
+  _dealwitherr;
+
+  plid = lclik;
+  /*nextra = int clik_lensing_get_extra_parameter_names(clikid, NULL, err);
+  _forwardError(*err,__LINE__,NULL);*/
+  lmax = clik_lensing_get_lmax(lclik,err);
+  _forwardError(*err,__LINE__,-1);
+
+  clphi = pars;
+  cltt = pars + lmax+1;
+
+  lkl = calc_plenslike_mono_renorm( plid, clphi, cltt, plid->bl_fid);
+  return lkl;
+}
+
+void clik_lensing_cleanup(clik_lensing_object **plclik) {
+  plenslike_dat_mono *plid;
+  plid = *plclik;
+  free_plenslike_dat_mono(plid);
+  free(plid);
+  *plclik = NULL;  
+}
+
+#endif

@@ -8,6 +8,11 @@ try:
   _lkl_ok = True
 except ImportError,e:
   print "Cannot use clik wrapper (cause = '%s')"%e
+try:
+  from lkl_lensing import clik_lensing
+  _lkl_lensing_ok = True
+except ImportError,e:
+  print "Cannot use clik_lensing wrapper (cause = '%s')"%e
 
 import re
 import numpy as nm

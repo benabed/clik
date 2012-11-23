@@ -82,9 +82,9 @@ else
   eebbdir = trim(Planck_data_dir)//'lowlP/planck/'
    filename(0)=trim(eebbdir)//'masked_ee_ninvplninv_qu_r3.fits'
    filename(1)=trim(eebbdir)//'masked_bb_ninvplninv_qu_r3.fits'
-   filename(2)=trim(eebbdir)//'masked_ninv_qu_r3_v.fits'
-   filename(3)=trim(eebbdir)//'wt_r3_v_map_q.fits'
-   filename(4)=trim(eebbdir)//'wt_r3_v_map_u.fits'
+   filename(2)=trim(eebbdir)//'masked_ninv_qu_r3_KaQV.fits'
+   filename(3)=trim(eebbdir)//'wt_r3_KaQV_map_q.fits'
+   filename(4)=trim(eebbdir)//'wt_r3_KaQV_map_u.fits'
    filename(6)=trim(eebbdir)//'masked_ninvy_e_qu_r3.fits'
 endif
 
@@ -481,7 +481,7 @@ subroutine teeebb_lowl_likelihood(nlmaxin,clttin,cltein,cleein,clbbin,chisq_r3,l
 
   CALL DPOTRF('U',2*mp,Dp,2*mp,info) 
   IF(info.NE.0)then
-write(*,*) 'error HERE' !	call wmap_likelihood_error( 'teeebb: bad dpotrf', info )
+write(*,*) 'error' !	call wmap_likelihood_error( 'teeebb: bad dpotrf', info )
 	chisq_r3 = 0d0
 	lndet = 0d0
 	return
