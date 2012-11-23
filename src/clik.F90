@@ -354,7 +354,7 @@ contains
     integer::lmax
 
     call clik_lensing_get_lmax(clikid,lmax)
-    allocate(cltt(0:lmax+1))
+    allocate(cltt(0:lmax))
     call fortran_clik_lensing_cltt_fid(clikid,cltt)
   end subroutine clik_lensing_cltt_fid
 
@@ -365,7 +365,7 @@ contains
     integer::lmax
 
     call clik_lensing_get_lmax(clikid,lmax)
-    allocate(cltt(0:lmax+1))
+    allocate(cltt(0:lmax))
     call fortran_clik_lensing_clpp_fid(clikid,cltt)
   end subroutine clik_lensing_clpp_fid
 
