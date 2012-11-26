@@ -20,7 +20,7 @@ Having a full python installation (i.e. including the library and header, often 
 Mandatory requisites that will be installed automatically if absent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `gsl <http://www.gnu.org/software/gsl/>`_ (version>1.10), `hdf5 <http://www.hdfgroup.org/HDF5>`_ (version>1.8), `healpix c and f90 <http://healpix.jpl.nasa.gov/>`_ (version>2.20a shared) libraries with their dependency (i.e. cfitsio) as well as blas and lapack distribution (preferably intel MKL) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using the options described below.
+The `hdf5 <http://www.hdfgroup.org/HDF5>`_ (version>1.8), `cfitsio`_, `healpix c and f90 <http://healpix.jpl.nasa.gov/>`_ (version>2.20a shared) libraries with their dependency (i.e. cfitsio) as well as blas and lapack distribution (preferably intel MKL) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using the options described below.
 
 Optional requisites 
 ^^^^^^^^^^^^^^^^^^^
