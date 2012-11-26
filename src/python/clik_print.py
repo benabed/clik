@@ -10,8 +10,20 @@ def main(argv):
   if len(sys.argv)!=2:
     print "usage : %s lkl_file"
     sys.exit(1)
-  
+
+  main_CMB(argv)
+  return 
+  try:
+    main_CMB(argv)
+  except Exception,e:
+    try:
+      main_lensing(argv)
+    except Exception,e:
+      raise Exception("Can't initialize CMB or lensing likelihood (%s)"%e)
+
+def main_CMB(argv):
   clikl = clik.clik(sys.argv[1])
+
   extn = clikl.extra_parameter_names
   
   lkl = h5py.File(sys.argv[1],"r")["clik"]
@@ -73,5 +85,14 @@ def main(argv):
     extn = clikl.get_extra_parameter_names_by_lkl(ilkl)
     print "    number of extra parameters = %d %s"%(len(extn),extn)
     ilkl +=1
+
+def main_lensing(argv):
+  lkl = clik.clik_lensing(sys.argv[1])
+  print "clik lensing file = %s"%sys.argv[1]
+  print "  lmax = %d"%lkl.lmax
+  print "  number of extra parameters %d"%len(lkl.extra_parameter_names)
+  for nn in lkl.extra_parameter_names:
+    print "     %s"%nn
+
 if __name__=="__main__":
   main(sys.argv)

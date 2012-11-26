@@ -87,9 +87,9 @@ SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,
 	temax = te_max
 	lowl_max = 32
 	
-	if (ttmin>lowl_max) then
-		use_lowl_TT = .false.
-	endif
+	!if (ttmin>lowl_max) then
+	!	use_lowl_TT = .false.
+	!endif
 	
 	use_lowl_pol = .false.
 	if (m_use_lowl_pol==1) then
