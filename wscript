@@ -310,7 +310,18 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx src/component_plugin/** src/* src/CAMspec/* src/act_spt/* src/minipmc/* src/bopix/* src/lowlike/* src/fakedf/* waf_tools/*.py src/egfs/*.f90 src/egfs/egfs_data/*.dat  clik.pdf" )
+  dist_list =  "svnversion waf wscript **/wscript src/minipmc/* src/fakedf/* waf_tools/*.py clik.pdf "
+  dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
+  dist_list += "examples/*.par examples/*.dat "
+  dist_list += "src/component_plugin/** "
+  dist_list += "src/* src/CAMspec/* "
+  dist_list += "src/act_spt/* "
+  dist_list += "src/bopix/* "
+  dist_list += "src/lowlike/* "
+  dist_list += "src/gibbs/* "
+  dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
+  
+  ctx.files = ctx.path.ant_glob(dist_list)
   
 import waflib
 class Dist_public(waflib.Scripting.Dist):

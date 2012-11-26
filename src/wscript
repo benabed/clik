@@ -36,7 +36,7 @@ def build(bld):
   use_clik += ["actspt"]*bool(bld.env.has_camspec)
   use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
   use_clik += ["lenslike"]*bool(bld.env.has_lenslike)
-  print use_clik
+  
   bld.shlib(
     source   = source_clik,
     target   = 'clik', 
