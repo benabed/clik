@@ -44,6 +44,7 @@ cdef extern from "clik.h":
   void clik_lensing_cleanup(clik_lensing_object** pself)
   double* clik_lensing_cltt_fid(clik_lensing_object* clikid, error **_err)
   double* clik_lensing_clpp_fid(clik_lensing_object* clikid, error **_err)
+  int clik_try_lensing(char *fpath,error **_err)
 
 cdef class clik_lensing:
   cdef clik_lensing_object* celf
@@ -144,5 +145,15 @@ cdef class clik_lensing:
     stdlib.free(cltt)
     return rltt
 
-
+def try_lensing(fl):
+  cdef error *_err,**err
+  _err = NULL
+  err = &_err
+    
+  r = clik_try_lensing(fl,err)
+  er=doError(err)
+  if er:
+    raise er
+    
+  return bool(r==1)
 

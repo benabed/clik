@@ -63,7 +63,7 @@ void* _clik_dig(clik_object* clikid, error **err);
 void* _clik_dig2(clik_object* clikid, error **err);
 
 // lensing
-#ifdef CLIK_LENSING
+//#ifdef CLIK_LENSING
 
 typedef void clik_lensing_object;
 clik_lensing_object* clik_lensing_init(char *fpath, error **err);
@@ -73,7 +73,7 @@ int clik_lensing_get_extra_parameter_names(clik_lensing_object* clikid, parname 
 void clik_lensing_cleanup(clik_lensing_object **plclik);
 double* clik_lensing_cltt_fid(clik_lensing_object* clikid, error **_err);
 double* clik_lensing_clpp_fid(clik_lensing_object* clikid, error **_err);
-#endif
+//#endif
 
 #ifdef __cplusplus
 }

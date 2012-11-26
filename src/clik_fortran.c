@@ -194,6 +194,18 @@ void fortran_clik_lensing_init_(long *pself,char *fpath, int* fpathlen) {
 }
 
 #ifdef ADD0US
+void fortran_clik_try_lensing(int *isl,char *fpath, int* fpathlen) {
+#elseif ADD2US
+void fortran_clik_try_lensing__(int *isl,char *fpath, int* fpathlen) {
+#else
+void fortran_clik_try_lensing_(int *isl,char *fpath, int* fpathlen) {
+#endif
+  fpath[*fpathlen]='\0';
+  *isl = clik_try_lensing(fpath,NULL);
+  
+}
+
+#ifdef ADD0US
 void fortran_clik_lensing_get_lmax(int* lmax,long* *pself) {
 #elseif ADD2US
 void fortran_clik_lensing_get_lmax__(int* lmax,long* *pself) {
@@ -213,17 +225,21 @@ void fortran_clik_lensing_compute__(double* res, long *pself, double *pars) {
 void fortran_clik_lensing_compute_(double* res, long *pself, double *pars) {
 #endif
   clik_lensing_object* self;
+    
   self = *pself;
   error *_err;
   error **err;
   _err = NULL;
   err = &_err;
+  
   *res=clik_lensing_compute(self,pars,err);
+  
   if (isError(*err)) {
     printError(stderr,*err);
     purgeError(err);
     *res = nan("");
   }
+  
 }
 
 // retrieve the names of extra parameters

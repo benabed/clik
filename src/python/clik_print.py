@@ -11,15 +11,10 @@ def main(argv):
     print "usage : %s lkl_file"
     sys.exit(1)
 
+  if clik.try_lensing(argv[1]):
+    main_lensing(argv)
+    return
   main_CMB(argv)
-  return 
-  try:
-    main_CMB(argv)
-  except Exception,e:
-    try:
-      main_lensing(argv)
-    except Exception,e:
-      raise Exception("Can't initialize CMB or lensing likelihood (%s)"%e)
 
 def main_CMB(argv):
   clikl = clik.clik(sys.argv[1])

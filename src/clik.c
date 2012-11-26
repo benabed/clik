@@ -372,13 +372,35 @@ void* _clik_dig2(clik_object* clikid, error **err) {
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
 }
 
-#ifdef CLIK_LENSING
+//#ifdef CLIK_LENSING
 #include "lenslike/plenslike/plenslike.h"
 
+int clik_try_lensing(char *fpath,error **_err) {
+  FILE *f;
+  char buf[100];
+  char test[] = "# planck lensing";
+  _dealwitherr;
+
+  f = fopen_err(fpath,"r",err);
+  _forwardError(*err,__LINE__,0);
+  
+  fread(buf,sizeof(char),16,f);
+  buf[16]='\0';
+
+  if (strcmp(buf,test)==0) {
+    fclose(f);
+    return 1;
+  }
+  fclose(f);
+  return 0;
+
+}
 clik_lensing_object* clik_lensing_init(char *fpath, error **_err) {
   plenslike_dat_mono *lclik;
   _dealwitherr;
 
+  _testErrorRetVA(clik_try_lensing(fpath,err)==0,-123442,"%s doesn't appear to be a clik lensing likelihood file",*err,__LINE__,NULL,fpath);
+  
   lclik = malloc_err(sizeof(plenslike_dat_mono),err);
   _forwardError(*err,__LINE__,NULL);
 
@@ -474,4 +496,4 @@ void clik_lensing_cleanup(clik_lensing_object **plclik) {
   *plclik = NULL;  
 }
 
-#endif
+//#endif

@@ -275,7 +275,7 @@ contains
 
   end subroutine  clik_fill_cl  
 
-#ifdef CLIK_LENSING
+!#ifdef CLIK_LENSING
   subroutine clik_lensing_init(clikid,hdffilepath)
     
     ! Input
@@ -332,8 +332,7 @@ contains
     real(kind=8), dimension(:) :: cl_and_pars
     ! Local 
     real(kind=8) :: lkl
-    call fortran_clik_lensing_compute(clikid%ptr,cl_and_pars,lkl)
-
+    call fortran_clik_lensing_compute(lkl,clikid%ptr,cl_and_pars)
     clik_lensing_compute = lkl
     return
 
@@ -369,6 +368,25 @@ contains
     call fortran_clik_lensing_clpp_fid(clikid,cltt)
   end subroutine clik_lensing_clpp_fid
 
-#endif
+  subroutine clik_try_lensing(is_lensing,hdffilepath)
+    
+    ! Input
+    logical,intent(out)::is_lensing
+    character(len=*), intent(in) :: hdffilepath
+    ! Local
+    integer(kind=4) :: fpathlen
+    integer(kind=4):: isl
+
+    fpathlen = len_trim(hdffilepath)
+    ! Call wrapping routine
+    call fortran_clik_try_lensing(isl,trim(hdffilepath),fpathlen)
+    
+    is_lensing = .FALSE.
+    if (isl==1) then
+      is_lensing = .TRUE.
+    endif
+
+  end subroutine clik_try_lensing
+!#endif
 
 end module clik
