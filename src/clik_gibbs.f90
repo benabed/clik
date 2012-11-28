@@ -37,9 +37,6 @@ SUBROUTINE GIBBS_EXTRA_LKL(LKL,handle,CL)
 	cltt = 0
 	DO i = clik_lmin(handle),clik_lmax(handle)
 		cltt(i)=CL(cur)*(i*(i+1.))/2./PI
-		if (cur<10) then
-			print *,i,cur,CL(cur),cltt(i),PI
-		endif
 		cur = cur + 1
 	END DO	
 

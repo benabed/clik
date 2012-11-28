@@ -395,6 +395,45 @@ int clik_try_lensing(char *fpath,error **_err) {
   return 0;
 
 }
+
+void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err) {
+  int lmax,nextra,ndim;
+  double *clX, *clt;
+  double res;
+
+  lmax = clik_lensing_get_lmax(lclik,err);
+  forwardError(*err,__LINE__,);
+
+  nextra = clik_lensing_get_extra_parameter_names(lclik,NULL,err);
+  forwardError(*err,__LINE__,);
+
+  ndim = lmax+1 + lmax+1 + nextra;
+  
+  clt = malloc_err(sizeof(double)*ndim,err);
+  forwardError(*err,__LINE__,);
+
+  clX = clik_lensing_clpp_fid(lclik,err);
+  forwardError(*err,__LINE__,);
+
+  memcpy(clt,clX,sizeof(double)*(lmax+1));
+
+  free(clX);
+  
+  clX = clik_lensing_cltt_fid(lclik,err);
+  forwardError(*err,__LINE__,);
+
+  memcpy(clt+(lmax+1),clX,sizeof(double)*(lmax+1));
+
+  free(clX);
+
+  res = clik_lensing_compute(lclik,clt,err);
+  forwardError(*err,__LINE__,);
+
+  printf("Checking lensing likelihood '%s' on test data. got %g\n",fpath,res);
+
+  free(clt);
+}
+
 clik_lensing_object* clik_lensing_init(char *fpath, error **_err) {
   plenslike_dat_mono *lclik;
   _dealwitherr;
@@ -406,8 +445,12 @@ clik_lensing_object* clik_lensing_init(char *fpath, error **_err) {
 
   load_plenslike_dat_mono(lclik, fpath);
 
+  clik_lensing_selftest(lclik,fpath,err);
+  _forwardError(*err,__LINE__,NULL);
+
   return lclik;
 }
+
 
 int clik_lensing_get_lmax(clik_lensing_object *lclik, error **_err) {
   plenslike_dat_mono *plid;
