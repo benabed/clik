@@ -43,7 +43,7 @@ def build(bld):
     includes = '.'+" minipmc/"*(not bld.env.has_pmc),
     uselib   = uselib_clik,
     use = use_clik,
-    defines = ['NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
+    defines = ['CLIKSVNVERSION = "%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
     cflags = "-fopenmp"
     )
   bld.install_files('${INCDIR}', 

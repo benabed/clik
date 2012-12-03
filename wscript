@@ -220,6 +220,11 @@ def configure(ctx):
     ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
 
 
+  f=open("svnversion")
+  ctx.env.svnversion = f.read()
+  f.close()
+
+    
   if allgood==False:
     print "\nConfigure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
   else:

@@ -14,6 +14,10 @@
 extern "C" {
 #endif
 
+#ifndef CLIKSVNVERSION
+#define CLIKSVNVERSION "NOPE"
+#endif
+
 #include "pmc.h"
 
 #define _pn_size 256
@@ -61,6 +65,8 @@ void clik_cleanup(clik_object** pclikid);
 //internal
 void* _clik_dig(clik_object* clikid, error **err);
 void* _clik_dig2(clik_object* clikid, error **err);
+
+char* clik_get_version(clik_object *clikid,error **err);
 
 // lensing
 //#ifdef CLIK_LENSING

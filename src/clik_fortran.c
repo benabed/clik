@@ -89,6 +89,25 @@ void fortran_clik_get_extra_parameter_names_(long* pself, char* names) {
 
 }
 
+#ifdef ADD0US
+void fortran_clik_get_version(long* pself, char* names) {
+#elseif ADD2US
+void fortran_clik_get_version__(long* pself, char* names) {
+#else
+void fortran_clik_get_version_(long* pself, char* names) {
+#endif  
+  clik_object* self;
+  char *version;
+  
+  self = *pself;
+  
+  version = clik_get_version(self,NULL);
+  sprintf(names,"%s",version);
+  names[strlen(version)]=' ';
+  free(version);
+
+}
+
 // retrieve the lmax for each power spectrum
 // -1 --> no cl
 // order is TT EE BB TE TB EB

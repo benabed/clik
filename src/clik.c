@@ -14,6 +14,27 @@
 // ARE YOU STILL READING ?
 
 // YOU HAVE BEEN WARNED !
+char* clik_get_version(clik_object *clikid,error **_err) {
+  char *version_str;
+  lklbs *lbs;
+  int ilkl;
+  _dealwitherr;
+
+  version_str = malloc_err(sizeof(char)*500,err);
+  _forwardError(*err,__LINE__,NULL);
+
+  sprintf(version_str,"clik version %s",CLIKSVNVERSION);
+
+  if (clikid!=NULL) {
+    lbs = _clik_dig(clikid,err);
+    _forwardError(*err,__LINE__,-1);
+    for(ilkl=0;ilkl<lbs->nlkl;ilkl++) {
+      sprintf(version_str,"%s\n  %s",version_str,lbs->lkls[ilkl]->version);
+    }
+
+  }
+  return version_str;
+}
 
 clik_object* clik_init(char* hdffilepath, error **_err) {
   hid_t file_id,group_id,prior_id,def_id;
@@ -176,6 +197,15 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   }
 
 
+  {
+    char *version;
+    version = clik_get_version(target,err);
+    _forwardError(*err,__LINE__,NULL);
+    
+    printf("----\n%s\n",version);
+    free(version);
+  }
+
   hstat = H5LTfind_dataset(group_id, "check_param");
 
   if (hstat==1) {
@@ -197,12 +227,15 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     printf("Checking likelihood '%s' on test data. got %g expected %g (diff %g)\n",hdffilepath,res2,res,res-res2);
     free(chkp);
   }
+  printf("----\n");
+
   hstat = H5Gclose(group_id);
   _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik",hdffilepath,hstat);    
   
   hstat = H5Fclose(file_id);
-  _testErrorRetVA(hstat<0,hdf5_base,"cannot close ile %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);    
+  _testErrorRetVA(hstat<0,hdf5_base,"cannot close file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);    
   
+
   return target;
 }
 

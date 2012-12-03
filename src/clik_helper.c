@@ -180,6 +180,7 @@ int clik_getenviron_numthread(char* name, int sfg, error **err) {
 cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   cmblkl *clkl;
   parname lkl_type;
+  char version[100];
   herr_t hstat;
   int has_cl[6];
   int nell, *ell,nbins,i,cli;
@@ -333,6 +334,18 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
 
   clkl = clik_dl_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
   forwardError(*err,__LINE__,NULL); 
+
+  hstat = H5LTfind_attribute(group_id, "pipeid");
+  if (hstat == 1) {
+    char vv[100];
+    hstat = H5LTget_attribute_string( group_id, ".", "pipeid",  version);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read version in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+    _DEBUGHERE_("%s",version);
+    sprintf(vv,"%s %s",lkl_type,version);
+    cmblkl_set_version(clkl,vv);
+  } else {
+    cmblkl_set_version(clkl,lkl_type);
+  }
 
   // cleanups
   if(wl!=NULL) {

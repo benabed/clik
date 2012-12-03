@@ -42,12 +42,25 @@ cdef extern from "clik.h":
   double clik_compute(clik_object* self, double* cl_and_pars,error **err)
   void clik_cleanup(clik_object** pself)
   int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err)
-  
+  char* clik_get_version(clik_object *clikid,error **_err)
+
 cdef class clik:
   cdef clik_object* celf
   cdef error *_err,**err
   cdef int ndim  
   
+  def version(self):
+    cdef char* ver_str
+
+    ver_str = clik_get_version(self.celf,self.err)
+    er=doError(self.err)
+    if er:
+      raise er
+    pyver = ver_str
+    pyver = pyver + ""
+    stdlib.free(ver_str)
+    return pyver
+    
   def __init__(self,filename):
     self.celf=NULL
     self._err = NULL

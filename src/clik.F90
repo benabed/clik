@@ -10,6 +10,13 @@ module clik
 
 contains
   
+  subroutine clik_get_version(clikid,version)
+    type(clik_object), intent(in) :: clikid
+    character(len=*), intent(out) :: version
+    
+    call fortran_clik_get_version(clikid,version)  
+  end subroutine
+
   subroutine clik_init(clikid,hdffilepath)
     
     ! Input
