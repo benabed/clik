@@ -12,7 +12,6 @@ import os.path as osp
 import os
 import shutil
 import clik.hpy as h5py
-import clik.egfs
 
 
 def read_gcal_data(pars,lkl_grp):

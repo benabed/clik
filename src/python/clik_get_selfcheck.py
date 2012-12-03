@@ -14,10 +14,10 @@ import clik.hpy as h5py
 
 
 def main(argv):
-  pars = clik.miniparse(argv[1])
-  cls = nm.loadtxt(pars.input_cl)
-  res = php.add_selfcheck(pars.input_object,cls)
-  print "lkl for init cl %g"%res 
+  
+  lkl = h5py.File(sys.argv[1],"r")
+  cls = lkl["clik/check_param"][:]
+  cls.tofile(sys.argv[-1],sep=" ")
     
 import sys
 if __name__=="__main__":
