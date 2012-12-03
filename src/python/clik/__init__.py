@@ -14,7 +14,7 @@ try:
 except ImportError,e:
   print "Cannot use clik_lensing wrapper (cause = '%s')"%e
   def try_lensing(fl):
-    return false
+    return False
   
 import re
 import numpy as nm
