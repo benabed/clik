@@ -1411,11 +1411,13 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   parametric *egl;
   double fac;
   int l, template_size;
+  long remove_100,m1;
+  template_payload *payload;
   SZ_CIB_DEFS;
+
 
   testErrorRetVA(lmax>lmax_sz_template,-1111,"lmax too big (got %d should be < %d",*err,__LINE__,NULL,lmax,lmax_sz_template);
   testErrorRetVA(lmax>lmax_corr_template,-1111,"lmax too big (got %d should be < %d",*err,__LINE__,NULL,lmax,lmax_corr_template);
-
 
   sz_template = template;
   //arithmetic on pointers, should be allright since all are double*
@@ -1440,49 +1442,69 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
 		   lmax_corr_template-lmin_corr_template+1 +
 		   egl->nfreq);
   parametric_sz_cib_payload_init(egl,template,template_size,cib_freqlist,nfreqs_cib,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
   
   egl->eg_compute = &sz_cib_compute;
   egl->eg_free = &parametric_template_payload_free;
   
   // Parameters
   parametric_set_default(egl,"A_sz",4.0,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
   parametric_add_derivative_function(egl,"A_sz",&sz_cib_A_sz_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"A_cib_100",0.,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"A_cib_100",&sz_cib_A_cib_100_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"A_cib_143",6.0,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"A_cib_143",&sz_cib_A_cib_143_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"A_cib_217",70.0,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"A_cib_217",&sz_cib_A_cib_217_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_143_217",0.85,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_100_143",0.,err); // change value
-  forwardError(*err,__LINE__,); 
-  parametric_add_derivative_function(egl,"r_cib_100_143",&sz_cib_r_cib_100_143_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"r_cib_100_217",0.,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"r_cib_100_217",&sz_cib_r_cib_100_217_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"r_cib_143_217",&sz_cib_r_cib_143_217_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"xi_sz_cib",0.5,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"xi_sz_cib",&sz_cib_xi_sz_cib_derivative,err);
-  forwardError(*err,__LINE__,);
-  parametric_set_default(egl,"cib_index",-1.3,err); // change value
-  forwardError(*err,__LINE__,);
-  parametric_add_derivative_function(egl,"cib_index",&sz_cib_cib_index_derivative,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
 
+  parametric_set_default(egl,"A_cib_100",0.,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"A_cib_100",&sz_cib_A_cib_100_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"A_cib_143",6.0,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"A_cib_143",&sz_cib_A_cib_143_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"A_cib_217",70.0,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"A_cib_217",&sz_cib_A_cib_217_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"r_cib_143_217",0.85,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"r_cib_100_143",0.,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"r_cib_100_143",&sz_cib_r_cib_100_143_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"r_cib_100_217",0.,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"r_cib_100_217",&sz_cib_r_cib_100_217_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"r_cib_143_217",&sz_cib_r_cib_143_217_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"xi_sz_cib",0.5,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"xi_sz_cib",&sz_cib_xi_sz_cib_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_index",-1.3,err); // change value
+  forwardError(*err,__LINE__,NULL);
+  parametric_add_derivative_function(egl,"cib_index",&sz_cib_cib_index_derivative,err);
+  forwardError(*err,__LINE__,NULL);
+
+  remove_100 = 1;
+  remove_100 = pflist_get_int_value(egl->pf,"no_szxcib_100",&remove_100,err);
+  forwardError(*err,__LINE__,NULL);
+
+  if (remove_100==1) {
+    payload = egl->payload;
+    for(m1=0;m1<egl->nfreq;m1++) {
+      if(payload->ind_freq[m1]==0) {
+        payload->ind_freq[m1]=-1;
+      }
+    }
+  }
+  
   return egl;
 
 }

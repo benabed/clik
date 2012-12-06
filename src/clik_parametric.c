@@ -168,7 +168,7 @@ long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err) {
   if (res==(char*)safeguard) {
     return *safeguard;
   }
-
+  
   return atol(res);
 }
 
