@@ -405,7 +405,7 @@ void* _clik_dig2(clik_object* clikid, error **err) {
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
 }
 
-#ifdef CLIK_NO_LENSING
+#ifndef CLIK_NO_LENSING
 #include "lenslike/plenslike/plenslike.h"
 
 int clik_try_lensing(char *fpath,error **_err) {
