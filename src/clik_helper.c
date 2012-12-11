@@ -207,7 +207,7 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
 
   hstat = H5LTget_attribute_string( group_id, ".", "lkl_type",  lkl_type);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read lkl_type in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  _DEBUGHERE_("%s",lkl_type);
+  //_DEBUGHERE_("%s",lkl_type);
   
   // get unit
   hstat = H5LTget_attribute_double( group_id, ".", "unit",  &unit);
@@ -340,7 +340,7 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
     char vv[100];
     hstat = H5LTget_attribute_string( group_id, ".", "pipeid",  version);
     testErrorRetVA(hstat<0,hdf5_base,"cannot read version in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    _DEBUGHERE_("%s",version);
+    //_DEBUGHERE_("%s",version);
     sprintf(vv,"%s %s",lkl_type,version);
     cmblkl_set_version(clkl,vv);
   } else {

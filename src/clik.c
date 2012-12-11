@@ -77,6 +77,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);    
   }
   
+    
   n_cl = 0;
   for(cli=0;cli<6;cli++) {
     n_cl += lmax[cli]+1;
@@ -132,9 +133,9 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     hstat = H5Gclose(def_id);
     _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/default",hdffilepath,hstat);    
   }
-
-  hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
   
+  hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
+    
   if (hstat==1) {
     int nepar;
     parname *pn;
@@ -143,7 +144,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     char *priorname;
     int nvar;
     double *loc,*var;
-
+  
     prior_id = H5Gopen(group_id, "prior", H5P_DEFAULT );
     nepar = clik_get_extra_parameter_names(target,&pn,err);
     _forwardError(*err,__LINE__,NULL);
@@ -154,10 +155,10 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     _forwardError(*err,__LINE__,NULL);
     nprior = nprior/256;
     _testErrorRetVA(nepar<nprior,hdf5_base,"too many priors ! Expected less than %d got %d",*err,__LINE__,NULL,nepar,nprior);
-    
+      
     lprior = malloc_err(sizeof(int)*nprior,err);
     _forwardError(*err,__LINE__,NULL);
-    
+        
     for(iprior=0;iprior<nprior;iprior++) {
       lprior[iprior] = -1;
       for (j=0;j<nepar;j++) {
@@ -167,13 +168,14 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
         }
       }
       _testErrorRetVA(lprior[iprior]==-1,hdf5_base,"Unknown extra parameter %s",*err,__LINE__,NULL,priorname[256*iprior]);
-    }    
+    }   
+      
     free(priorname);
     free(pn);
-    
+      
     loc = hdf5_double_datarray(prior_id, cur_lkl,"loc",&nprior,err);
     _forwardError(*err,__LINE__,NULL);  
-      
+        
     nvar=-1;
     var = hdf5_double_datarray(prior_id, cur_lkl,"var",&nvar,err);
     _forwardError(*err,__LINE__,NULL);  
@@ -190,12 +192,12 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     free(loc);
     free(var);
     free(lprior);
-
+  
     hstat = H5Gclose(prior_id);
     _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/prior",hdffilepath,hstat);    
   
   }
-
+  
 
   {
     char *version;
@@ -228,7 +230,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     free(chkp);
   }
   printf("----\n");
-
+  
   hstat = H5Gclose(group_id);
   _testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik",hdffilepath,hstat);    
   

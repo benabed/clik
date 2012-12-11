@@ -23,11 +23,18 @@ void fortran_clik_init__(long* pself,char* hdffilepath,int* fpathlen) {
 void fortran_clik_init_(long* pself,char* hdffilepath,int* fpathlen) {
 #endif
   clik_object* self;
-  hdffilepath[*fpathlen]='\0';
-  self = clik_init(hdffilepath,NULL);
+  char *tmpchain;
+  int i;
+  tmpchain = malloc_err(sizeof(char)*(*fpathlen+1),NULL);
+  for(i=0;i<*fpathlen;i++) {
+    tmpchain[i] = hdffilepath[i];
+  }
+  tmpchain[*fpathlen]='\0';
+  self = clik_init(tmpchain,NULL);
   *pself = self; 
-
+  free(tmpchain);
 }
+
 
 // retrieve the list of cls as a list of flags 
 // order is  TT EE BB TE TB EB

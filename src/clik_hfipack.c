@@ -386,9 +386,10 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
       }
     }
   }
+    
   smic = Smica_init(nb, wq, m, rq_hat, rq_0, nc, SCs,err);
   forwardError(*err,__LINE__,NULL);
-  
+    
   // deal with criterion
   hstat = H5LTfind_attribute(group_id, "criterion");
   if (hstat == 1) {
@@ -456,7 +457,7 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
       testErrorRetVA(1==1,hdf5_base,"does not understand criterion '%s' in %s",*err,__LINE__,NULL,crit_name,cur_lkl);
     }
   }
-
+  
   free(rq_hat);
   
   if (rq_0!=NULL) {
@@ -472,13 +473,15 @@ cmblkl* clik_smica_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,xdim,err);
   forwardError(*err,__LINE__,NULL);
+  
   if (xdim!=0) {
     cmblkl_set_names(cing, xnames,err);
     forwardError(*err,__LINE__,NULL);
-
+  
     free(xnames);
     free(xnames_buf);
   }
+  
   
   
   return cing;  
@@ -580,7 +583,7 @@ SmicaComp * clik_smica_comp_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, i
     tt += ngcal[im];
   }
   
-    hstat = H5LTget_attribute_int(comp_id, ".", "binned",  &binned);
+  hstat = H5LTget_attribute_int(comp_id, ".", "binned",  &binned);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read binned in component %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
   if (binned!=0) {
     binned = 1;
@@ -611,19 +614,18 @@ SmicaComp * clik_smica_comp_gcal_log_init(hid_t comp_id, char* cur_lkl,int nb, i
       }
     }
   }
-
+  
   xnames = malloc_err(sizeof(char*)*tt,err);
   for(im=0;im<tt;im++) {
     xnames[im] =&(bnames[im*256]);
   } 
   SC_setnames(SC, xnames, err);
   forwardError(*err,__LINE__,NULL);
-  
   free(xnames); 
   free(bnames); 
   free(ngcal);
   free(gcaltpl);
-
+  
   return SC;
 }
 

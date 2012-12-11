@@ -30,7 +30,9 @@ def main_CMB(argv):
   for n in extn:
     print "    %s"%n
   if "prior" in lkl:
-    print "  gaussian priors on %s"%lkl["prior"].attrs["name"]
+    names = lkl["prior"].attrs["name"]
+    names = [names[i*256:(i+1)*256].strip() for i in range(len(names)/256)]
+    print "  gaussian priors on %s"%", ".join(names)
     loc = lkl["prior/loc"][:]
     print "  at \n    %s"%" ".join([str(l) for l in loc])
     var = lkl["prior/var"][:]

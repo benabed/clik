@@ -200,7 +200,6 @@ def set_criterion(lkl_grp,typ,**extra):
     return 
   if typ.lower()=="quad":
     import numpy as nm
-    print "ici"
     if "fid" in extra:
       if "mask" in extra:
         lkl_grp["criterion_quad_mask"] = extra["mask"].flat[:]
@@ -217,12 +216,11 @@ def set_criterion(lkl_grp,typ,**extra):
         lkl_grp["criterion_quad_mat"] = fq.flat[:]
       else:
         lkl_grp["criterion_quad_mat"]=extra["fid"].flat[:]
-    print "la"
     lkl_grp.attrs["criterion"]="quad"
 
   return
   
-def build_tensormat(rq,mask=None):
+def build_tensormat(rq ,mask=None):
   n = len(rq)
   if mask==None:
     mask = nm.ones((n,n))
