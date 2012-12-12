@@ -43,6 +43,9 @@ def main(argv):
   lkl_grp.attrs["use_lowl_pol"] = 1
   
   lkl_grp.attrs["external_dir"] = osp.realpath(pars.lowlike_data)
+
+  php.add_pid(lkl_grp,pars.str(default="").pid)
+  
   hf.close()
   
   if hasattr(clik,"clik"):

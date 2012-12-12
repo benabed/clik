@@ -51,6 +51,7 @@ def main(argv):
   f=open(osp.join(dr,"data.tar"),"r")
   dts = f.read()
   f.close()
+  php.add_pid(lkl_grp,pars.str(default="").pid)
   
   lkl_grp.create_dataset("external_data",data=nm.fromstring(dts,dtype=nm.uint8))
   hf.close()

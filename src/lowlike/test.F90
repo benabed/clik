@@ -86,13 +86,9 @@ like_tot = sum(like(1:num_pl))
   print 4, 'TOTAL -2ln(L)           ', 2*like_tot
   print 1
 
-!  if(use_wmap_pol) then
-!     expected_like_tot = 1638.592658d0
-!  else
-    expected_like_tot = 1587.474938d0
-!  endif
+  expected_like_tot = 1588.399118d0
  
- print '(A,F13.6)', "Expected -2ln(L)         = ", expected_like_tot
+  print '(A,F13.6)', "Expected -2ln(L)         = ", expected_like_tot
   print '(A,F13.6)', "      Difference         = ", 2*like_tot-expected_like_tot
   print 1
   print *, ""

@@ -139,6 +139,8 @@ def main(argv):
     bm = beam_modes.T*1.
     lkl_grp.create_dataset('beam_modes', data=bm.flat[:])
 
+  php.add_pid(lkl_grp,pars.str(default="").pid)
+  
   hf.close()
   
 import sys

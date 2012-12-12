@@ -171,6 +171,12 @@ def copy_and_get_0(pars):
   outhf = h5py.File(pars.res_object,"r+")
   return outhf["clik/lkl_0"]
 
+def add_pid(lkl_grp,pid=""):
+  if not pid:
+    import uuid
+    pid = str(uuid.uuid4())
+  lkl_grp.attrs["pipeid"]=pid
+  
 def add_prior(root_grp,name,loc,var):
   assert len(name)==len(loc)
   assert len(name)==len(var) or len(name)**2==len(var)

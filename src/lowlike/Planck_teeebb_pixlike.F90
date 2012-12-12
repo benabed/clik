@@ -88,7 +88,7 @@ else
    filename(6)=trim(eebbdir)//'masked_ninvy_e_qu_r3.fits'
 endif
 
-  filename(5)=trim(Planck_data_dir)//'lowlP/alm_tt_fs_r9_ilc_nopixwin_7yr.dat'
+  filename(5)=trim(Planck_data_dir)//'lowlP/alm_tt_commander.dat'
   filename(9)=trim(Planck_data_dir)//'healpix_data/pixel_window_n0008.txt'
  
 !------------------------------

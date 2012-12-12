@@ -61,6 +61,8 @@ def main(argv):
   
     lkl_grp.create_dataset("external_data",data=nm.frombuffer(dts,dtype=nm.uint8))
   
+  php.add_pid(lkl_grp,pars.str(default="").pid)
+  
   hf.close()
   
   cls = nm.loadtxt(osp.join(data_dir,re.findall("BOPIX_CL_FILENAME\s*=\s*(.+)",partxt)[0]))
