@@ -27,6 +27,7 @@ def cutlminlmax(nlmin, nlmax, infile, outfile):
     lmaxs  = ff["clik"].attrs["lmax"]
     lmin   = ff["clik/lkl_0"].attrs["lmin"]
     blmins = ff["clik/lkl_0/bin_lmin"][:]
+    nbins = len(blmins)
     blmaxs = ff["clik/lkl_0/bin_lmax"][:]
     nlmin  = max(nlmin, lmin)
     nlmax  = min(nlmax, lmaxs[0])
@@ -72,6 +73,16 @@ def cutlminlmax(nlmin, nlmax, infile, outfile):
         ff["clik/lkl_0/criterion_eig_norm"] = criterion[idmin:idmax+1]
     except Exception,e:
         pass
+    try :
+        criterion = ff["clik/lkl_0/criterion_quad_mat"][:]
+        del ff["clik/lkl_0/criterion_quad_mat"]
+        sn = nm.sqrt(len(criterion)/nbins)
+        criterion.shape=(nbins,sn,sn)
+        ff["clik/lkl_0/criterion_quad_mat"] = (criterion[idmin:idmax+1]*1.).flat[:]
+    except Exception,e:
+        pass
+
+
     wq = ff["clik/lkl_0/wq"][:]
     del ff["clik/lkl_0/wq"]
     ff["clik/lkl_0/wq"] = wq[idmin:idmax+1]
