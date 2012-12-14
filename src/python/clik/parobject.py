@@ -246,17 +246,23 @@ def add_default(root_grp,name,loc,extn=None):
     del(prid["loc"])
   prid["loc"]=floc.flat[:]
 
+  print "1"
+  print root_grp
+  print root_grp.items()
   if "prior" in root_grp:
+    print "2"
     prid = root_grp["prior"]
-    pname = [n.strip() for n in prid.attrs["name"].split()]
+    pname = [n.strip() for n in prid.attrs["name"].split('\0') if n.strip()]
     ploc = prid["loc"][:]
     pvar = prid["var"][:]
     if len(pvar)==len(ploc):
       pvar = nm.diag(pvar)
     pvar.shape = (len(ploc),-1)
+    print pname,fname
     idx = [i for i,n in enumerate(pname) if n not in fname]
+    print idx
     if len(idx)!=len(ploc):
-      ploc = ploc[idx]
+      ploc = ploc[idx] 
       pvar = pvar[idx][:,idx]
       pname = [pname[i] for i in idx]
       del(prid.attrs["name"])
@@ -269,4 +275,3 @@ def add_default(root_grp,name,loc,extn=None):
       else:
         del(prid)
         del(root_grp["prior"])
-
