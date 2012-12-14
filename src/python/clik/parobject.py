@@ -181,8 +181,8 @@ def add_prior(root_grp,name,loc,var):
   assert len(name)==len(loc)
   assert len(name)==len(var) or len(name)**2==len(var)
   pred = {}
-  if "clik/default" in root_grp:
-    prid = root_grp["clik/default"]
+  if "default" in root_grp:
+    prid = root_grp["default"]
     pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
     del(prid.attrs["name"])
     del[prid["loc"]]
@@ -222,14 +222,14 @@ def add_prior(root_grp,name,loc,var):
 
 def add_default(root_grp,name,loc,extn=None):
 
-  if "clik/default" in root_grp:
-    prid = root_grp["clik/default"]
+  if "default" in root_grp:
+    prid = root_grp["default"]
     #print prid.keys()
     #print prid.attrs.keys()
     pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
     print pred
   else:
-    prid = root_grp.create_group("clik/default")
+    prid = root_grp.create_group("default")
     pred = {}
   
   pred.update(dict(zip(name,loc)))
@@ -262,7 +262,11 @@ def add_default(root_grp,name,loc,extn=None):
       del(prid.attrs["name"])
       del(prid["loc"])
       del(prid["var"])
-      prid.attrs["name"] = pack256(*pname)
-      prid.create_dataset("loc", data=ploc.flat[:])
-      prid.create_dataset("var", data=pvar.flat[:])
+      if len(ploc):
+        prid.attrs["name"] = pack256(*pname)
+        prid.create_dataset("loc", data=ploc.flat[:])
+        prid.create_dataset("var", data=pvar.flat[:])
+      else:
+        del(prid)
+        del(root_grp["prior"])
 
