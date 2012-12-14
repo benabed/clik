@@ -176,10 +176,16 @@ def add_pid(lkl_grp,pid=""):
     import uuid
     pid = str(uuid.uuid4())
   lkl_grp.attrs["pipeid"]=pid
-  
+
 def add_prior(root_grp,name,loc,var):
   assert len(name)==len(loc)
   assert len(name)==len(var) or len(name)**2==len(var)
+  pred = {}
+  if "clik/default" in root_grp:
+    prid = root_grp["clik/default"]
+    pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
+    del(prid.attrs["name"])
+    del[prid["loc"]]
   if len(var) == len(loc):
       var = nm.diag(var)
   if "prior" in root_grp:
@@ -209,3 +215,54 @@ def add_prior(root_grp,name,loc,var):
   prid.attrs["name"] = pack256(*name)
   prid.create_dataset("loc", data=loc.flat[:])
   prid.create_dataset("var", data=var.flat[:])
+  if pred:
+    nam = pred.keys()
+    lo = [pred[k] for k in nam]
+    add_default(root_grp,nam,lo)
+    
+def add_default(root_grp,name,loc,extn=None):
+
+  if "clik/default" in root_grp:
+    prid = root_grp["clik/default"]
+    #print prid.keys()
+    #print prid.attrs.keys()
+    pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
+    print pred
+  else:
+    prid = root_grp.create_group("clik/default")
+    pred = {}
+  
+  pred.update(dict(zip(name,loc)))
+
+  if extn !=None:
+    for n in name:
+      if n not in extn and n not in pred:
+        raise Exception("extra parameter %s does not exist"%(n))
+
+  fname = pred.keys()
+  floc = nm.array([pred[n] for n in fname])
+  prid.attrs["name"] = php.pack256(*fname)
+  if "loc" in prid.keys():
+    del(prid["loc"])
+  prid["loc"]=floc.flat[:]
+
+  if "prior" in root_grp:
+    prid = root_grp["prior"]
+    pname = [n.strip() for n in prid.attrs["name"].split()]
+    ploc = prid["loc"][:]
+    pvar = prid["var"][:]
+    if len(pvar)==len(ploc):
+      pvar = nm.diag(pvar)
+    pvar.shape = (len(ploc),-1)
+    idx = [i for i,n in enumerate(pname) if n not in fname]
+    if len(idx)!=len(ploc):
+      ploc = ploc[idx]
+      pvar = pvar[idx][:,idx]
+      pname = [pname[i] for i in idx]
+      del(prid.attrs["name"])
+      del(prid["loc"])
+      del(prid["var"])
+      prid.attrs["name"] = pack256(*pname)
+      prid.create_dataset("loc", data=ploc.flat[:])
+      prid.create_dataset("var", data=pvar.flat[:])
+
