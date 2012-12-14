@@ -219,7 +219,7 @@ def add_prior(root_grp,name,loc,var):
     nam = pred.keys()
     lo = [pred[k] for k in nam]
     add_default(root_grp,nam,lo)
-    
+
 def add_default(root_grp,name,loc,extn=None):
 
   if "clik/default" in root_grp:
@@ -241,7 +241,7 @@ def add_default(root_grp,name,loc,extn=None):
 
   fname = pred.keys()
   floc = nm.array([pred[n] for n in fname])
-  prid.attrs["name"] = php.pack256(*fname)
+  prid.attrs["name"] = pack256(*fname)
   if "loc" in prid.keys():
     del(prid["loc"])
   prid["loc"]=floc.flat[:]
