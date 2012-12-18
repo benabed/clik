@@ -42,7 +42,7 @@ def main(argv):
       if len(pvar)==len(ploc):
         pvar = nm.diag(pvar)
       pvar.shape = (len(ploc),-1)
-      nvar = nm.zeros((len(loc),len(loc)))
+      nvar = nm.zeros((len(loc)+len(ploc),len(loc)+len(ploc)))
       nvar[:len(loc),:len(loc)] = var
       nvar[len(loc):,len(loc):] = pvar
       var = nvar
