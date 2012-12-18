@@ -75,7 +75,7 @@ SUBROUTINE LOWLIKE_EXTRA_LKL(LKL,CL)
 	LKL = -sum(like(1:num_pl))
 END SUBROUTINE 	LOWLIKE_EXTRA_LKL
 
-SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,m_use_lowl_pol)
+SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,m_use_lowl_pol,m_use_wmap_pol)
 	USE LOWLIKE_EXTRA
 	use planck_likelihood
 	use planck_options
@@ -96,6 +96,11 @@ SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,
 		use_lowl_pol = .true.
 	endif
 	
+	use_wmap_pol = .false.
+	if (m_use_wmap_pol==1) then
+		use_wmap_pol = .true.
+	endif
+	
 	
 	clik_lmax = tt_max
 	if (te_max>clik_lmax) then
@@ -111,7 +116,6 @@ SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,
 	allocate( clee(2:clik_lmax) )
 	allocate( clbb(2:clik_lmax) )
 	
-	use_wmap_pol = .false.
 	CALL planck_lowlike_init()
 
 END SUBROUTINE 	LOWLIKE_EXTRA_PARAMETER_INIT

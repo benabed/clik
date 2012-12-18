@@ -27,7 +27,7 @@ cmblkl* clik_lowlike_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   cmblkl *cing;
   int mlmax;
   herr_t hstat;
-  int ttmin,ttmax,temin,temax,use_gibbs,use_lowl_pol;
+  int ttmin,ttmax,temin,temax,use_gibbs,use_lowl_pol,use_wmap_pol;
   
   lowlike_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"lowlike already initialized",*err,__LINE__,NULL);
@@ -54,12 +54,18 @@ cmblkl* clik_lowlike_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   hstat = H5LTget_attribute_int( group_id, ".", "use_lowl_pol",  &use_lowl_pol);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read use_lowl_pol in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
 
+  use_wmap_pol = 0;
+  hstat = H5LTfind_attribute(group_id, "use_wmap_pol");
+  if (hstat==1) {
+    hstat = H5LTget_attribute_int( group_id, ".", "use_wmap_pol",  &use_wmap_pol);
+    testErrorRetVA(hstat<0,hdf5_base,"cannot read use_wmap_pol in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  } 
   mlmax = ell[nell-1];
   testErrorRet(mlmax<ttmax || mlmax<temax,-101011,"Bad parameters for lowlike likelihood",*err,__LINE__,NULL);
 
   
   // call lowlike_init
-  lowlike_extra_parameter_init_(&ttmin,&ttmax,&temin,&temax,&use_gibbs,&use_lowl_pol);
+  lowlike_extra_parameter_init_(&ttmin,&ttmax,&temin,&temax,&use_gibbs,&use_lowl_pol,&use_wmap_pol);
   
   clik_external_data_cleanup(directory_name,pwd,err);  
   forwardError(*err,__LINE__,NULL);
