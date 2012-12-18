@@ -18,10 +18,10 @@ cdef extern c_parametric *powerlaw_tensor_init(int ndet, double *detlist, int nd
 cdef extern c_parametric *powerlaw_triangle_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_tanh_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *pointsource_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
-cdef extern c_parametric *pointsource_bydet_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *cibr_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *ksz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
@@ -94,14 +94,16 @@ cdef class pointsource(parametric):
   def __cinit__(self):
     self.initfunc = <void*>pointsource_init
 
-cdef class pointsource_bydet(parametric):
-  def __cinit__(self):
-    self.initfunc = <void*>pointsource_bydet_init
-  
 cdef class sz(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> sz_init;
     self.template_name = "sz.dat"
+    self.plugin_name = "basic"
+
+cdef class ksz(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> ksz_init;
+    self.template_name = "ksz_fromcamspec.dat"
     self.plugin_name = "basic"
 
 cdef class sz_cib(parametric_template):
@@ -118,5 +120,5 @@ cdef class cibr(parametric):
   def __cinit__(self):
     self.initfunc = <void*> cibr_init;
     
-component_list = ["cib","cibr","pointsource","pointsource_bydet","poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib"]
+component_list = ["cib","cibr","pointsource","poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib","ksz"]
 

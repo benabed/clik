@@ -1339,6 +1339,76 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
 
 }
 
+// kSZ alone
+
+void ksz_compute(parametric* egl, double *Rq, error **err);
+
+parametric *ksz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  int lmin_ksz_template= 0; //CHECK
+  int lmax_ksz_template= 5000; // CHECK
+  double fac;
+  int l;
+
+  // make sure l(l+1)/(2pi)*C_l template is normalized to 1 at l=3000 
+  fac = template[3000-lmin_ksz_template];
+  for (l=lmin_ksz_template;l<=lmax_ksz_template;l++) {
+    template[l-lmin_ksz_template] /= fac;
+  }
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,);
+
+  // Declare payload, allocate it and fill it
+
+  egl->payload = malloc_err(sizeof(double)*(lmax_ksz_template-lmin_ksz_template+1),err);
+  forwardError(*err,__LINE__,);
+  memcpy(egl->payload,template,sizeof(double)*(lmax_ksz_template-lmin_ksz_template+1));
+  
+  egl->eg_compute = &ksz_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  parametric_set_default(egl,"ksz_norm",2.0,err); // PICK YOUR FAVORITE
+  forwardError(*err,__LINE__,);
+  parametric_add_derivative_function(egl,"ksz_norm",&parametric_norm_derivative,err);
+  forwardError(*err,__LINE__,);
+
+  return egl;
+}
+
+
+void ksz_compute(parametric* egl, double *Rq, error **err) {
+
+  int ell,m1,m2,mell,nfreq;
+  int lmin_ksz_template = 0; // CHECK
+  int lmax_ksz_template = 5000; // CHECK
+  double *cl,*A;
+  double ksz_norm, dell;
+  
+  nfreq = egl->nfreq;
+  A = (double*) egl->payload;
+  cl = A;
+  
+  ksz_norm = parametric_get_value(egl,"ksz_norm",err);
+  forwardError(*err,__LINE__,);
+
+  // kSZ spectrum is like CMB
+
+  // Create covariance matrix
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    dell = (double)ell;
+    mell = (ell-lmin_ksz_template);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+	Rq[IDX_R(egl,ell,m1,m2)] = ksz_norm * 2.0*M_PI/(dell*(dell+1.0)) * cl[mell];
+	Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+
+  return;
+
+}
+
 // SZ+CIB+CROSS
 
 void sz_cib_compute(parametric *egl, double *Rq, error **err) ;
@@ -2402,6 +2472,7 @@ CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_in
 CREATE_PARAMETRIC_FILE_INIT(cib,cib_init);
 CREATE_PARAMETRIC_FILE_INIT(cibr,cibr_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz,sz_init);
+CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ksz,ksz_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_cib,sz_cib_init);
 CREATE_PARAMETRIC_FILE_INIT(pointsource,pointsource_init);
 CREATE_PARAMETRIC_FILE_INIT(pointsource_bydet,pointsource_bydet_init);
