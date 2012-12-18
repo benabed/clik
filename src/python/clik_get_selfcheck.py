@@ -18,7 +18,7 @@ def main(argv):
   lkl = h5py.File(sys.argv[1],"r")
   cls = lkl["clik/check_param"][:]
   if len(argv)==2:
-  	clfile = argv+".cls"
+  	clfile = argv[1]+".cls"
   else:
   	clfile = argv[2]
   cls.tofile(clfile,sep=" ")
