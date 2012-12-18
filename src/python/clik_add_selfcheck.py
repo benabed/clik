@@ -14,10 +14,14 @@ import clik.hpy as h5py
 
 
 def main(argv):
-  pars = clik.miniparse(argv[1])
-  cls = nm.loadtxt(pars.input_cl)
-  res = php.add_selfcheck(pars.input_object,cls)
-  print "lkl for init cl %g"%res 
+	if len(argv)==3:
+		cls = nm.loadtxt(argv[2])
+		res = php.add_selfcheck(argv[1],cls)
+	else:
+	  pars = clik.miniparse(argv[1])
+	  cls = nm.loadtxt(pars.input_cl)
+	  res = php.add_selfcheck(pars.input_object,cls)
+	print "lkl for init cl %g"%res 
     
 import sys
 if __name__=="__main__":
