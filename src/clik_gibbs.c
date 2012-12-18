@@ -22,7 +22,6 @@ double gibbs_lkl(void* none, double* pars, error **err) {
   gibbs *gb;
 
   gb = none;
-  _DEBUGHERE_("%g %g %g %g",pars[0],pars[1],pars[2],pars[3]);
   gibbs_extra_lkl_(&lkl,&gb->handle,pars);
   return lkl;
 }
