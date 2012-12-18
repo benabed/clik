@@ -1367,7 +1367,7 @@ parametric *ksz_init(int ndet, double *detlist, int ndef, char** defkey, char **
   egl->eg_compute = &ksz_compute;
   egl->eg_free = &parametric_simple_payload_free;
   
-  parametric_set_default(egl,"ksz_norm",2.0,err); // PICK YOUR FAVORITE
+  parametric_set_default(egl,"ksz_norm",0.0,err); // PICK YOUR FAVORITE
   forwardError(*err,__LINE__,);
   parametric_add_derivative_function(egl,"ksz_norm",&parametric_norm_derivative,err);
   forwardError(*err,__LINE__,);
