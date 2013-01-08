@@ -24,12 +24,15 @@ void fortran_clik_init_(long* pself,char* hdffilepath,int* fpathlen) {
 #endif
   clik_object* self;
   char *tmpchain;
-  int i;
-  tmpchain = malloc_err(sizeof(char)*(*fpathlen+1),NULL);
-  for(i=0;i<*fpathlen;i++) {
+  int i,ln;
+  ln = *fpathlen;
+  ln ++;
+
+  tmpchain = malloc(sizeof(char)*(ln));
+  for(i=0;i<ln-1;i++) {
     tmpchain[i] = hdffilepath[i];
   }
-  tmpchain[*fpathlen]='\0';
+  tmpchain[ln-1]='\0';
   self = clik_init(tmpchain,NULL);
   *pself = self; 
   free(tmpchain);

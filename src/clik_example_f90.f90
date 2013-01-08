@@ -12,8 +12,8 @@ program clik_example_f90
   logical:: is_lensing
 
   nargc = iargc()
-  if (nargc < 2) then
-     print*,'usage: clik_example_f90 hdffile clfile1 [clfile2 ...]'
+  if (nargc < 1) then
+     print*,'usage: clik_example_f90 hdffile [clfile1 clfile2 ...]'
      stop
   end if
   call getarg(1,hdffilename)
@@ -39,8 +39,8 @@ subroutine main_CMB
   real(kind=8) :: lkl
   
   nargc = iargc()
-  if (nargc < 2) then
-     print*,'usage: clik_example_f90 hdffile clfile1 [clfile2 ...]'
+  if (nargc < 1) then
+     print*,'usage: clik_example_f90 hdffile [clfile1 clfile2 ...]'
      stop
   end if
   call getarg(1,hdffilename)
@@ -80,31 +80,32 @@ subroutine main_CMB
   enddo
   print*,'parameter vector has ',nl,' elements'
 
-  ! Fill cls
-  do j=2,nargc
-    call getarg(j,clfilename)  
-    open(unit=100,file=clfilename,form='formatted')
-    allocate(cl_and_pars(nl))
-    counter=1
-    do i=1,6
-      if (has_cl(i)==1) then
-        do l=0,lmax(i)
-          read(100,*),cl_and_pars(counter)
-          counter = counter + 1
-        enddo
-      endif
-    enddo
+  if (nargc>1) then
+    ! Fill cls
+    do j=2,nargc
+      call getarg(j,clfilename)  
+      open(unit=100,file=clfilename,form='formatted')
+      allocate(cl_and_pars(nl))
+      counter=1
+      do i=1,6
+        if (has_cl(i)==1) then
+          do l=0,lmax(i)
+            read(100,*),cl_and_pars(counter)
+            counter = counter + 1
+          enddo
+        endif
+      enddo
 
-    do i=1,numnames
-      read(100,*),cl_and_pars(counter)
-      counter = counter + 1
+      do i=1,numnames
+        read(100,*),cl_and_pars(counter)
+        counter = counter + 1
+      enddo
+      lkl = clik_compute(pself,cl_and_pars)
+      print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
+      close(unit=100)
+      deallocate(cl_and_pars)
     enddo
-    lkl = clik_compute(pself,cl_and_pars)
-    print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
-    close(unit=100)
-    deallocate(cl_and_pars)
-  enddo
-
+  endif
   ! Free stuff
   if (numnames > 0) then
      deallocate(names)
