@@ -73,3 +73,4 @@ cmblkl* clik_wmap_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* h
   forwardError(*err,__LINE__,NULL);
   return cing;
 }
+

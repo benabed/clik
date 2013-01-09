@@ -22,9 +22,10 @@ SUBROUTINE WMAP_EXTRA_FREE()
 	BOK =0
 END SUBROUTINE 	WMAP_EXTRA_FREE
 
+
 SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 	USE WMAP_EXTRA
-	use wmap_likelihood_7yr
+	use wmap_likelihood_9yr
 	use wmap_options
 	use wmap_util
 	use healpix_types
@@ -70,9 +71,10 @@ SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 	LKL = -sum(like(1:num_WMAP))
 END SUBROUTINE 	WMAP_EXTRA_LKL
 
+
 SUBROUTINE WMAP_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,m_use_lowl_pol)
 	USE WMAP_EXTRA
-	use wmap_likelihood_7yr
+	use wmap_likelihood_9yr
 	use wmap_options
 	use wmap_util
 	INTEGER,INTENT(IN)::tt_min,tt_max,te_min,te_max,m_use_gibbs,m_use_lowl_pol

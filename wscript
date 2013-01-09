@@ -52,7 +52,9 @@ def options(ctx):
   grp.add_option("--no_bopix",action="store_true",default=False,help="do not build bopix")
   grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
-  grp.add_option("--wmap_install",action="store_true",default=False,help="download wmap likelihood for me")
+  grp.add_option("--wmap_7_install",action="store_true",default=False,help="download wmap 7 likelihood for me")
+  grp.add_option("--wmap_9_install",action="store_true",default=False,help="download wmap 9 likelihood for me")
+  grp.add_option("--wmap_install",action="store_true",default=False,help="download latest wmap likelihood for me")
   #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
   grp.add_option("--no_lenslike",action="store_true",default=False,help="do not build the lensing likelihood")
   
@@ -166,10 +168,25 @@ def configure(ctx):
   ctx.env.has_egfs = False
 
   # wmap
-  if ctx.options.wmap_install or ctx.options.install_all_deps or ctx.options.upgrade_all_deps or not ctx.options.wmap_src:
-    atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
-    ctx.options.wmap_src = "likelihood_v4p1" 
-  ctx.env.wmap_src =   ctx.options.wmap_src
+  if (ctx.options.wmap_7_install or ctx.options.wmap_9_install or ctx.options.wmap_install) or (ctx.options.install_all_deps or ctx.options.upgrade_all_deps) and not ctx.options.wmap_src :
+    if ctx.options.wmap_7_install:
+      atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
+      ctx.options.wmap_src = "likelihood_v4p1" 
+    else:
+      atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr5/dcp/likelihood/wmap_likelihood_sw_v5.tar.gz","wmap_likelihood_sw_v5.tar.gz","src/")
+      ctx.options.wmap_src = "wmap_likelihood_v5"   
+    ctx.env.wmap_src = ctx.options.wmap_src
+
+  if ctx.options.wmap_src:
+    ld = os.listdir(osp.join("src",ctx.options.wmap_src))
+    for v in ld:
+      if "7yr" in v:
+        ctx.env.wmap_version = 7
+        break
+      elif "9yr" in v:
+        ctx.env.wmap_version = 9
+        break
+  
   
   ##wmap dh
   #if ctx.options.wmap_dh_install or ctx.options.install_all_deps:

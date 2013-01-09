@@ -12,11 +12,14 @@ import os.path as osp
 
 def main(argv):
   pars = clik.miniparse(argv[1])
-  test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/test_cls_v4.dat"))
-  
+  try:
+    test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/test_cls_v4.dat"))
+  except IOError,e:
+    test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/test_cls_v5.dat"))
+
   mcl = nm.zeros((4,1201),dtype=nm.double)
   llp1s2pi = nm.arange(1201)*nm.arange(1,1202)/2./nm.pi
-  mcl[:,2:] = (test_cl[:1201-2,1:].T)/llp1s2pi[2:]
+  mcl[:,2:] = (test_cl[:1201-2,1:5].T)/llp1s2pi[2:]
   
   ttmin = max(2,pars.int.ttmin)
   ttmax = min(1200,pars.int.ttmax)

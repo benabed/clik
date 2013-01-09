@@ -182,9 +182,13 @@ def build(bld):
       #  source = osp.join("lowlike",'test.F90'),
       #  use = 'mylowlike',
       #  target = 'test_lowlike')
-
+    
+    
     if bld.env.wmap_src:
-      wmap_src = ['clik_wmap.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
+      if bld.env.wmap_version==7:
+        wmap_src = ['clik_wmap_7.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
+      else:
+        wmap_src = ['clik_wmap_9.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_9yr_options.F90 WMAP_9yr_util.f90 WMAP_9yr_gibbs.F90 WMAP_9yr_tt_pixlike.F90 WMAP_9yr_tt_beam_ptsrc_chisq.f90 WMAP_9yr_teeebb_pixlike.F90 WMAP_9yr_tetbeebbeb_pixlike.F90 WMAP_9yr_likelihood.F90'.split()]
       bld.objects(
          features = 'fc',
          source = wmap_src,
@@ -195,6 +199,7 @@ def build(bld):
           cflags = bld.env.CFLAGS_cpic,
          )
       uselib_wmap = [ff for ff in ('healpix_f90 cfitsio lapack fc_omp fc_runtime').split() if ff]
+    
       #bld(
       #  features = 'fc fcprogram',
       #  source = osp.join(bld.env.wmap_src,'test.F90'),
