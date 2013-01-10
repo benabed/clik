@@ -169,7 +169,7 @@ class File(object):
 
 try:
   import h5py
-  def hdf2fdf_grp(hdf,fdf):
+  def hdf2cldf_grp(hdf,fdf):
     # first the metadata
     for kk in hdf.attrs.keys():
       fdf[kk] = hdf.attrs[kk]
@@ -179,14 +179,14 @@ try:
       if isinstance(god,h5py.Group):
         if not hasattr(fdf,kk):
           fdf.create_group(kk)
-        hdf2fdf_grp(god,fdf[kk])
+        hdf2cldf_grp(god,fdf[kk])
       else:
         fdf[kk] = god[:]
 
-  def hdf2fdf(ffin, ffout):
+  def hdf2cldf(ffin, ffout):
     hdf = h5py.File(ffin,"r")
     fdf = File(ffout,"w")
-    hdf2fdf_grp(hdf,fdf)
+    hdf2cldf_grp(hdf,fdf)
 except ImportError,e:
   pass
       
