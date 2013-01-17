@@ -1383,13 +1383,16 @@ void ksz_compute(parametric* egl, double *Rq, error **err) {
   int lmax_ksz_template = 5000; // CHECK
   double *cl,*A;
   double ksz_norm, dell;
-  
+
   nfreq = egl->nfreq;
   A = (double*) egl->payload;
   cl = A;
   
   ksz_norm = parametric_get_value(egl,"ksz_norm",err);
   forwardError(*err,__LINE__,);
+
+  // kSZ template re-normalized to 2.057 muK^2 at D_l = 3000 \
+  ksz_norm *= 2.057
 
   // kSZ spectrum is like CMB
 
@@ -1467,6 +1470,16 @@ void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dR
   for (m1=0;m1<nfreq;m1++) { \
     fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0); \
   } \
+  // Apply frequency averaged color corrections \
+  // Numerical values extracted from Camspec \
+  a_cib_100  *= 1.122; \
+  a_cib_143  *= 1.134; \
+  a_cib_217  *= 1.33; \
+  fnu[0]     *= 2.022; \
+  fnu[1]     *= 0.95; \
+  // SZ template re-normalized to 4.796 muK^2 at D_l = 3000 \
+  // Also, modifying kSZ template in 'ksz_compute' \
+  a_sz       *= 4.796; \
   a_cib[0]    = a_cib_100; \
   a_cib[1]    = a_cib_143; \
   a_cib[2]    = a_cib_217; \
