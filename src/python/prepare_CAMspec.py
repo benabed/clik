@@ -10,7 +10,6 @@ import os.path as osp
 import os
 import shutil
 import clik.hpy as h5py
-import clik.egfs
 
 class forfile:
   def __init__(self,fi):

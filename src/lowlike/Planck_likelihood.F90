@@ -13,7 +13,7 @@ MODULE planck_likelihood
   USE Planck_options
   use Planck_teeebb_lowl
 
-  character(len=*), parameter, public :: planck_lowlike_version='v2'
+  character(len=*), parameter, public :: planck_lowlike_version='v2.1'
 
   logical :: initialise_pass2=.true.
 

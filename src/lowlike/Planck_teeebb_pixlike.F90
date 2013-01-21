@@ -36,7 +36,6 @@ subroutine teeebb_lowl_like_setup
 !===========================================
 
   use planck_options, only : Planck_data_dir, get_free_lun, use_wmap_pol
- use fitstools	      
   implicit none
 
   character(LEN=2) :: rlz
@@ -71,13 +70,13 @@ REAL, dimension(:,:), allocatable :: inmap
   np = 12*nsmax**2
 
  if(use_wmap_pol) then
-   eebbdir = trim(Planck_data_dir)//'lowlP/wmap7/'
-   filename(0)=trim(eebbdir)//'masked_ee_ninvplninv_qu_r3_corrected_7yr.KaQV.fits'
-   filename(1)=trim(eebbdir)//'masked_bb_ninvplninv_qu_r3_corrected_7yr.KaQV.fits'
-   filename(2)=trim(eebbdir)//'masked_ninv_qu_r3_corrected_7yr.KaQV.fits'
-   filename(3)=trim(eebbdir)//'wt_r3_7yr.KaQV.map_q'
-   filename(4)=trim(eebbdir)//'wt_r3_7yr.KaQV.map_u'
-   filename(6)=trim(eebbdir)//'masked_ninvy_e_qu_r3_corrected_7yr.KaQV.fits'
+   eebbdir = trim(Planck_data_dir)//'lowlP/wmap9/'
+   filename(0)=trim(eebbdir)//'masked_ee_ninvplninv_qu_r3_corrected_9yr.KaQV.fits'
+   filename(1)=trim(eebbdir)//'masked_bb_ninvplninv_qu_r3_corrected_9yr.KaQV.fits'
+   filename(2)=trim(eebbdir)//'masked_ninv_qu_r3_corrected_9yr.KaQV.fits'
+   filename(3)=trim(eebbdir)//'wt_r3_9yr.KaQV.map_q'
+   filename(4)=trim(eebbdir)//'wt_r3_9yr.KaQV.map_u'
+   filename(6)=trim(eebbdir)//'masked_ninvy_e_qu_r3_corrected_9yr.KaQV.fits'
 else
   eebbdir = trim(Planck_data_dir)//'lowlP/planck/'
    filename(0)=trim(eebbdir)//'masked_ee_ninvplninv_qu_r3.fits'
@@ -88,7 +87,9 @@ else
    filename(6)=trim(eebbdir)//'masked_ninvy_e_qu_r3.fits'
 endif
 
-  filename(5)=trim(Planck_data_dir)//'lowlP/alm_tt_commander.dat'
+  filename(5)=trim(Planck_data_dir)//'lowlP/alms_dx9_cmb_single_sample_nopixwin.dat'
+!  filename(5)=trim(Planck_data_dir)//'lowlP/alm_tt_commander.dat'
+!  filename(5)=trim(Planck_data_dir)//'lowlP/alm_tt_fs_r9_ilc_nopixwin_7yr.dat'
   filename(9)=trim(Planck_data_dir)//'healpix_data/pixel_window_n0008.txt'
  
 !------------------------------
@@ -245,39 +246,14 @@ endif
     Stop
   End If
   qfile=filename(3)
-  if(use_wmap_pol) then
-    CALL READ_ARCHIVE_MAP(qfile,T,N,np,ReadStatus)
-    if(ReadStatus/=0)then
-     print*,'unable to read in '//trim(qfile)
-     stop
-    endif
-
-
-  else
-    call input_map(qfile,inmap,np,1,extno=0)
-    T(:) = inmap(:,1)
-    call input_map(qfile,inmap,np,1,extno=1)
-    N(:) = inmap(:,1)
-  endif
+  CALL READ_ARCHIVE_MAP(qfile,T,N,np,ReadStatus)
 
   do ip=0,mp-1
      w_r3(ip) = T(ngood(ip))*Mask_R3(ngood(ip))
   enddo
 
   ufile=filename(4)
-  if(use_wmap_pol) then
-    CALL READ_ARCHIVE_MAP(ufile,T,N,np,ReadStatus)
-    if(ReadStatus/=0)then
-     print*,'unable to read in '//trim(ufile)
-     stop
-  endif
- else
-call input_map(ufile,inmap,np,1,extno=0)
-  T(:) = inmap(:,1)
-  call input_map(ufile,inmap,np,1,extno=1)
-  N(:) = inmap(:,1)
-endif
-
+  CALL READ_ARCHIVE_MAP(ufile,T,N,np,ReadStatus)
 
   do ip=0,mp-1
      w_r3(mp+ip) = T(ngood(ip))*Mask_R3(ngood(ip))

@@ -15,7 +15,7 @@ def build(bld):
   #source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c mvdens.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['clik_egfs.c','clik_egfs_addon.c'] * bool(bld.env.has_f90 and bld.env.has_egfs)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
-  source_clik += ['fakedf/fakedf.c']
+  source_clik += ['cldf/cldf.c']
   for plg in bld.env.PLG:
     for prc in getattr(bld.env,"PLG_%s_SRC"%plg):
       source_clik += [osp.join("component_plugin",plg,prc)]
@@ -43,7 +43,7 @@ def build(bld):
     includes = '.'+" minipmc/"*(not bld.env.has_pmc),
     uselib   = uselib_clik,
     use = use_clik,
-    defines = ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
+    defines = ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX','HDF5_COMPAT_MODE']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
     cflags = "-fopenmp"
     )
   bld.install_files('${INCDIR}', 
@@ -60,8 +60,8 @@ def build(bld):
   if 0:
     bld(
       features = 'c cprogram',
-      source = 'fakedf/test_fakedf.c',
-      target = 'fakedf_test',
+      source = 'cldf/test_cldf.c',
+      target = 'cldf_test',
       use = 'clik',
       includes = '.'+" minipmc/"*(not bld.env.has_pmc)
       )
@@ -95,11 +95,11 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join("CAMspec",'CAMtst.f90'),
-        use = 'CAMspec',
-        target = 'CAMtst')
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join("CAMspec",'CAMtst.f90'),
+      #  use = 'CAMspec',
+      #  target = 'CAMtst')
     
     if bld.env.has_actspt:
       bld.objects(
@@ -110,11 +110,11 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join("act_spt",'test_actspt.f90'),
-        use = 'actspt',
-        target = 'test_actspt')
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join("act_spt",'test_actspt.f90'),
+      #  use = 'actspt',
+      #  target = 'test_actspt')
       bld(
         features = 'fc fcprogram',
         source = osp.join("act_spt",'test.f90'),

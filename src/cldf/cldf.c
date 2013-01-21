@@ -1,7 +1,7 @@
-#include "fakedf.h"
+#include "cldf.h"
 
 
-void _read_meta(fdf *df,error **err) {
+void _read_meta(cldf *df,error **err) {
   char cuf[4096];
   char li[8192];
   char *li2,*li3;
@@ -73,8 +73,8 @@ void _read_meta(fdf *df,error **err) {
 }
 
 
-fdf * fdf_open_sub(char *path, char* sub,error **err) {
-  fdf * df;
+cldf * cldf_open_sub(char *path, char* sub,error **err) {
+  cldf * df;
   struct stat buf;
   int erri;
   DIR *dd;
@@ -83,9 +83,13 @@ fdf * fdf_open_sub(char *path, char* sub,error **err) {
   char mmpath[8192];
   int maxchild,maxdata;
 
-  df = malloc_err(sizeof(fdf),err);
-  
+  df = malloc_err(sizeof(cldf),err);
   forwardError(*err,__LINE__,NULL);
+
+#ifdef HDF5_COMPAT_MODE
+  df->hid = 0;
+#endif
+
   df->root[0] = '\0';
 
   mpath = path;
@@ -128,7 +132,7 @@ fdf * fdf_open_sub(char *path, char* sub,error **err) {
         forwardError(*err,__LINE__,NULL);
         maxchild*=2;
       }
-      df->child[df->nchild] = fdf_open_sub(dc->d_name,mpath,err);
+      df->child[df->nchild] = cldf_open_sub(dc->d_name,mpath,err);
       forwardError(*err,__LINE__,NULL);      
       df->nchild++;
     } else {
@@ -147,19 +151,43 @@ fdf * fdf_open_sub(char *path, char* sub,error **err) {
   return df;
 }
 
-fdf * fdf_open(char *path, error **err) {
-  fdf *df;
+cldf * cldf_open(char *path, error **err) {
+  cldf *df;
 
-  df = fdf_open_sub(path,NULL,err);
-        forwardError(*err,__LINE__,NULL);
+#ifdef HDF5_COMPAT_MODE
+  struct stat buf;
+  int erri;
+  hid_t file_id;
+   
+  erri = stat(path, &buf);
+  testErrorRetVA(erri!=0,-1234,"cannot stat file (error %d)", *err,__LINE__,NULL,erri);
+
+  if (S_ISDIR(buf.st_mode)==0) {
+    df = malloc_err(sizeof(cldf),err);
+    forwardError(*err,__LINE__,NULL);
+
+    file_id = H5Fopen( path, H5F_ACC_RDONLY, H5P_DEFAULT);
+    testErrorRetVA(file_id<0,-331234,"cannot open  file %s (got %d)",*err,__LINE__,NULL,path,file_id);
+  
+  
+    df->hid = file_id;
+    df->isgroup = 0;
+  
+    sprintf(df->root,"%s",path);
+    return df;
+  }
+#endif
+  
+  df = cldf_open_sub(path,NULL,err);
+  forwardError(*err,__LINE__,NULL);
   return df;
 }
 
-fdf* fdf_tolast(fdf* df, char* key, char* kp, error **err) {
+cldf* cldf_tolast(cldf* df, char* key, char* kp, error **err) {
   int ls;
   int l0;
   int lk,i;
-  fdf *cdf;
+  cldf *cdf;
 
   l0 = 0;
   ls = 0;
@@ -193,7 +221,7 @@ fdf* fdf_tolast(fdf* df, char* key, char* kp, error **err) {
       }
       // pas le dernier, deplace !
       for(i=0;i<cdf->nchild;i++) {
-        if (strcmp(kp,((fdf*)cdf->child[i])->name)==0) {
+        if (strcmp(kp,((cldf*)cdf->child[i])->name)==0) {
             cdf = cdf->child[i];
             break;
         }
@@ -203,12 +231,68 @@ fdf* fdf_tolast(fdf* df, char* key, char* kp, error **err) {
   }
 }
 
-int fdf_haskey(fdf *df, char *key, error **err) {
+
+#ifdef HDF5_COMPAT_MODE
+int cldf_cut_key(char* key, char *pk) {
+  herr_t hstat;
+  int lk;
+  int value;
+
+  lk = strlen(key);
+  while(lk>0) {                
+    if (key[lk]!='/') {     
+      lk--;                 
+    } else {                
+      break;                
+    }                       
+  }
+  if (lk==0) {
+    sprintf(pk,".");
+    return -1;
+  }             
+  memcpy(pk,key,sizeof(char)*lk);
+  pk[lk]='\0';
+  return lk;      
+}
+int cldf_has_attribute(cldf* df, char* pk, char* key, int lk, error **err) {
+  hid_t group_id;
+  herr_t hstat;
+
+  group_id = H5Oopen( df->hid, pk, H5P_DEFAULT);  
+  testErrorRetVA(group_id<0,-331234,"cannot read object %s in %s (got %d)",*err,__LINE__,0,pk,df->root,group_id);
+  hstat = H5LTfind_attribute(group_id, &(key[lk+1]));
+  H5Oclose(group_id);  
+  return hstat;
+}
+
+#endif
+
+int cldf_haskey(cldf *df, char *key, error **err) {
   char kp[256];
   int i;
-  fdf * cdf;
+  cldf * cdf;
   
-  cdf = fdf_tolast(df,key,kp,err);
+#ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+      herr_t hstat;
+      int lk;
+      char pk[1000];
+      int value;
+      int hk;
+
+    hstat = H5Lexists(df->hid, key, H5P_DEFAULT);
+    if (hstat==1) {
+      return 1;
+    }
+    lk = cldf_cut_key(key,pk);
+    hk = cldf_has_attribute(df,pk,key,lk,err);
+    forwardError(*err, __LINE__,0);
+    return hk;
+  }  
+  
+#endif
+
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->nmeta;i++) {
@@ -222,19 +306,56 @@ int fdf_haskey(fdf *df, char *key, error **err) {
     }
   }
   for(i=0;i<cdf->nchild;i++) {
-    if (strcmp(kp,((fdf*) cdf->child[i])->name)==0) {
+    if (strcmp(kp,((cldf*) cdf->child[i])->name)==0) {
       return 1;
     }
   }
   return 0;
 }
 
-long fdf_readint(fdf *df, char *key, error **err) {
+long cldf_readint_default(cldf *df, char *key,long def, error **err) {
+  int hk;
+  long res;
+
+  res = def;
+  hk = cldf_haskey(df,key,err);
+  forwardError(*err,__LINE__,def);
+  if (hk == 1) {
+    res = cldf_readint(df,key,err);
+    forwardError(*err,__LINE__,def);
+  }
+  return res;
+}
+
+long cldf_readint(cldf *df, char *key, error **err) {
   char kp[256];
   int i;
-  fdf * cdf;
+  cldf * cdf;
+
+#ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+      herr_t hstat;
+      int lk;
+      char pk[1000];
+      int value;
+      int hk;
+
+      lk = cldf_cut_key(key,pk);
+      hk = cldf_has_attribute(df,pk,key,lk,err);
+      forwardError(*err, __LINE__,0);
+      if (hk == 1) {
+        hstat = H5LTget_attribute_int( df->hid, pk, &(key[lk+1]),  &value);
+        testErrorRetVA(hstat<0,-331234,"cannot read %s int in file %s (got %d)",*err,__LINE__,0,key,df->root,hstat);
+        return value;  
+      } else {
+        hstat = H5LTread_dataset_int( df->hid, key,  &value);
+        testErrorRetVA(hstat<0,-331234,"cannot read %s int in file %s (got %d)",*err,__LINE__,0,key,df->root,hstat);
+        return value;  
+      }
+  }
+#endif
   
-  cdf = fdf_tolast(df,key,kp,err);
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->nmeta;i++) {
@@ -246,14 +367,50 @@ long fdf_readint(fdf *df, char *key, error **err) {
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
 
-
-double fdf_readfloat(fdf *df, char *key, error **err) {
-  char kp[256];
-  int i;
-  fdf * cdf;
+double cldf_readfloat_default(cldf *df, char *key,double def, error **err) {
+  int hk;
   double res;
 
-  cdf = fdf_tolast(df,key,kp,err);
+  res = def;
+  hk = cldf_haskey(df,key,err);
+  forwardError(*err,__LINE__,def);
+  if (hk == 1) {
+    res = cldf_readfloat(df,key,err);
+    forwardError(*err,__LINE__,def);
+  }
+  return res;
+}
+
+double cldf_readfloat(cldf *df, char *key, error **err) {
+  char kp[256];
+  int i;
+  cldf * cdf;
+  double res;
+
+#ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+      herr_t hstat;
+      int lk;
+      char pk[1000];
+      double value;
+      int hk;
+
+      lk = cldf_cut_key(key,pk);
+      hk = cldf_has_attribute(df,pk,key,lk,err);
+      forwardError(*err, __LINE__,0);
+      if (hk == 1) {
+        hstat = H5LTget_attribute_double( df->hid, pk, &(key[lk+1]),  &value);
+        testErrorRetVA(hstat<0,-331234,"cannot read %s int in file %s (got %d)",*err,__LINE__,0,key,df->root,hstat);
+        return value;  
+      } else {
+        hstat = H5LTread_dataset_double( df->hid, key,  &value);
+        testErrorRetVA(hstat<0,-331234,"cannot read %s int in file %s (got %d)",*err,__LINE__,0,key,df->root,hstat);
+        return value;  
+      }
+  }
+#endif
+
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->nmeta;i++) {
@@ -266,13 +423,67 @@ double fdf_readfloat(fdf *df, char *key, error **err) {
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
 
-char* fdf_readstr(fdf *df, char *key, error **err) {
+char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
   char kp[256];
   int i;
-  fdf * cdf;
+  cldf * cdf;
   char* res;
+  int nsz;
 
-  cdf = fdf_tolast(df,key,kp,err);
+  if (sz==NULL) {
+    nsz = -1;
+  } else {
+    nsz = *sz;
+  }
+
+  #ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+    herr_t hstat;
+    int lk;
+    char pk[1000];
+    hsize_t ndum;
+    H5T_class_t dum;
+    size_t ddum;
+    char *res;
+    int j;
+    int hk;
+
+    lk = cldf_cut_key(key,pk);
+    hk = cldf_has_attribute(df,pk,key,lk,err);
+    forwardError(*err,__LINE__,NULL);
+      
+    if (hk == 1) {
+      hstat = H5LTget_attribute_info( df->hid, pk,&(key[lk+1]), &ddum, &dum, &ndum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      res = malloc_err(sizeof(char)*(ndum+1),err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTget_attribute_string(df->hid, pk,&(key[lk+1]),res);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 && sz!=NULL) {
+        *sz = ndum;
+      }
+      res[ndum] = '\0';
+      return res;
+    } else {
+      hstat = H5LTget_dataset_info(df->hid, key, &ddum, &dum, &ndum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      res = malloc_err(sizeof(char)*(ndum+1),err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTread_dataset_string(df->hid, key,res);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 && sz !=NULL) {
+        *sz = ndum;
+      }
+      res[ndum] = '\0';
+      return res;
+    }
+
+  }
+#endif
+
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
 
@@ -299,39 +510,70 @@ char* fdf_readstr(fdf *df, char *key, error **err) {
 
       stat(pth, &st);
       size = st.st_size;
+      testErrorRetVA((size!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,size,nsz);
       res = malloc_err(size+1,err);
       forwardError(*err,__LINE__,NULL);
       f = fopen_err(pth,"r",err);
-      fread(res, 1, size-1, f);
-      res[size-1] = '\0';
+      fread(res, 1, size, f);
+      res[size] = '\0';
       fclose(f);
-      return res;
+      if (nsz<0 && sz !=NULL) {
+        *sz = size;
+      }
+      return res; 
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
 
 
-fdf* fdf_openchild(fdf *df, char* key, error **err) {
+cldf* cldf_openchild(cldf *df, char* key, error **err) {
   char kp[256];
   int i;
-  fdf *cdf;
+  cldf *cdf;
 
-  cdf = fdf_tolast(df,key,kp,err);
+#ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+    cdf = malloc_err(sizeof(cldf),err);
+    forwardError(*err,__LINE__,NULL);
+    
+    cdf->hid = H5Gopen(df->hid, key, H5P_DEFAULT );
+    testErrorRetVA(cdf->hid<0,-331234,"cannot open  group %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,cdf->hid);
+    
+    sprintf(cdf->root,"%s/%s",df->root,key);    
+    cdf->isgroup=1;
+    return cdf;
+  }
+#endif
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->nchild;i++) {
-    if (strcmp(kp,((fdf*)cdf->child[i])->name)==0) {
+    if (strcmp(kp,((cldf*)cdf->child[i])->name)==0) {
       return cdf->child[i];
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
 
-void fdf_close(fdf** pdf) {
-  fdf *df,*cdf;
+void cldf_close(cldf** pdf) {
+  cldf *df,*cdf;
   int i;
 
+  df = *pdf;
+  
+#ifdef HDF5_COMPAT_MODE
+  if(df->hid!=0) {
+    if (df->isgroup==1) {
+      H5Gclose(df->hid);
+    } else {
+      H5Fclose(df->hid);
+    }
+    free(df);
+    *pdf = NULL;
+    return;
+  }
+#endif
   df = *pdf;
   if (df->root[0] == '\0') {
     free(df->metavalue);
@@ -341,13 +583,13 @@ void fdf_close(fdf** pdf) {
     for(i=0;i<df->nchild;i++) {
       cdf = df->child[i];
       cdf->root[0] = '\0';
-      fdf_close(&cdf);
+      cldf_close(&cdf);
     } 
   }
   *pdf = NULL;
 }
 
-void* fdf_readanyfits(char* path, int *sz, int typ, error **err) {
+void* cldf_readanyfits(char* path, int *sz, int typ, error **err) {
   void * res;
   int fitserr;
   fitsfile *fitsptr;
@@ -399,7 +641,7 @@ void* fdf_readanyfits(char* path, int *sz, int typ, error **err) {
  
 }
 
-double* fdf_readfloatarray(fdf *df, char *key, int* sz, error **err) {
+double* cldf_readfloatarray(cldf *df, char *key, int* sz, error **err) {
   double *res;
   int fitserr;
   fitsfile *fitsptr;
@@ -409,9 +651,60 @@ double* fdf_readfloatarray(fdf *df, char *key, int* sz, error **err) {
   int ploc;
   char kp[256];
   int i;
-  fdf *cdf;
+  cldf *cdf;
+  int nsz;
 
-  cdf = fdf_tolast(df,key,kp,err);
+  nsz = -1;
+  if (sz !=NULL) {
+    nsz = *sz;
+  }
+
+#ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+    herr_t hstat;
+    int lk;
+    char pk[1000];
+    hsize_t ndum;
+    H5T_class_t dum;
+    size_t ddum;
+    double *res;
+    int j;
+    int hk;
+
+    lk = cldf_cut_key(key,pk);
+    hk = cldf_has_attribute(df,pk,key,lk,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    if (hk == 1) {
+      hstat = H5LTget_attribute_info( df->hid, pk,&(key[lk+1]), &ndum, &dum, &ddum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      res = malloc_err(sizeof(double)*ndum,err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTget_attribute_double(df->hid, pk,&(key[lk+1]),res);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 && sz !=NULL) {
+        *sz = ndum;
+      }
+      return res;
+    } else {
+      hstat = H5LTget_dataset_info(df->hid, key, &ndum, &dum, &ddum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      res = malloc_err(sizeof(double)*ndum,err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTread_dataset_double(df->hid, key,res);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 && sz !=NULL) {
+        *sz = ndum;
+      }
+      return res;
+    }
+
+  }
+#endif
+
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->ndata;i++) {
@@ -424,16 +717,44 @@ double* fdf_readfloatarray(fdf *df, char *key, int* sz, error **err) {
         sprintf(pth,"%s/%s/%s",cdf->root,cdf->name,kp);  
       }
 
-      res = fdf_readanyfits(pth,sz,-64,err);
+      res = cldf_readanyfits(pth,&nsz,-64,err);
       forwardError(*err,__LINE__,NULL);
 
+      if (sz!=NULL) {
+        *sz = nsz;
+      }
       return res;
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
 
-long* fdf_readintarray(fdf *df, char *key, int* sz, error **err) {
+int* cldf_readintarray(cldf *df, char *key, int* sz, error **err) {
+  int *ires;
+  long *res;
+  int j;
+  int nsz;
+
+  nsz = -1;
+  if (sz !=NULL) {
+    nsz = *sz;
+  }
+  res = cldf_readlongarray(df,key,&nsz,err);
+  forwardError(*err,__LINE__,NULL);
+  ires = malloc_err(sizeof(int)*(nsz),err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(j=0;j<nsz;j++) {
+    ires[j] = res[j];
+  }
+  free(res);
+  if (sz !=NULL) {
+    *sz = nsz;
+  }
+  return ires;
+}
+
+long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err) {
   long *res;
   int fitserr;
   fitsfile *fitsptr;
@@ -443,9 +764,71 @@ long* fdf_readintarray(fdf *df, char *key, int* sz, error **err) {
   int ploc;
   char kp[256];
   int i;
-  fdf *cdf;
+  cldf *cdf;
+  int nsz;
 
-  cdf = fdf_tolast(df,key,kp,err);
+  nsz = -1;
+  if (sz!=NULL) {
+    nsz = *sz;
+  }
+
+  #ifdef HDF5_COMPAT_MODE
+  if (df->hid!=0) {
+    herr_t hstat;
+    int lk;
+    char pk[1000];
+    hsize_t ndum;
+    H5T_class_t dum;
+    size_t ddum;
+    int *ires;
+    long *res;
+    int j;
+    int hk;
+
+    lk = cldf_cut_key(key,pk);
+    hk = cldf_has_attribute(df,pk,key,lk,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    if (hk == 1) {
+      hstat = H5LTget_attribute_info( df->hid, pk,&(key[lk+1]), &ndum, &dum, &ddum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      ires = malloc_err(sizeof(int)*ndum,err);
+      res = malloc_err(sizeof(long)*ndum,err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTget_attribute_int(df->hid, pk,&(key[lk+1]),ires);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 && sz!=NULL) {
+        *sz = ndum;
+      }
+      for(j=0;j<ndum;j++) {
+        res[j] = ires[j];
+      }
+      free(ires);
+      return res;
+    } else {
+      hstat = H5LTget_dataset_info(df->hid, key, &ndum, &dum, &ddum);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      testErrorRetVA((ndum!=nsz && nsz>0),-331234,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,key,df->root,ndum,nsz);
+      ires = malloc_err(sizeof(int)*ndum,err);
+      res = malloc_err(sizeof(long)*ndum,err);
+      forwardError(*err,__LINE__,NULL);
+      hstat = H5LTread_dataset_int(df->hid, key,ires);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,key,df->root,hstat);
+      if (nsz<0 & sz!=NULL) {
+        *sz = ndum;
+      }
+      for(j=0;j<ndum;j++) {
+        res[j] = ires[j];
+      }
+      free(ires);
+      return res;
+    }
+
+  }
+  #endif
+
+  cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->ndata;i++) {
@@ -458,11 +841,99 @@ long* fdf_readintarray(fdf *df, char *key, int* sz, error **err) {
         sprintf(pth,"%s/%s/%s",cdf->root,cdf->name,kp);  
       }
 
-      res = fdf_readanyfits(pth,sz,64,err);
+      res = cldf_readanyfits(pth,&nsz,64,err);
       forwardError(*err,__LINE__,NULL);
-      
+ 
+      if (sz !=NULL) {
+        *sz = nsz;
+      }
+  
       return res;
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
 }
+
+void cldf_external(cldf* df, char *dirname, char* pwd, error **err) {
+  char dirtmpl[2048*4];
+  char *drn;
+  char *fpix_data_name, fpix_data_n[10000];
+  FILE *fpix_data;
+  char command[4096*4];
+  int status;
+
+  testErrorRetVA(getcwd(pwd,4096)==NULL,-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
+  
+#ifdef HDF5_COMPAT_MODE
+  herr_t hstat;
+  hsize_t ndum;
+  hid_t group_id;
+  char *cur_lkl;
+  if (df->hid!=0) {
+    group_id = df->hid;
+    cur_lkl = df->root;
+    hstat = H5LTfind_dataset (group_id, "external_data");
+    if (hstat==1) {
+      char *data;
+      
+      // yes !
+      sprintf(dirtmpl,"/tmp/clik_XXXXXX");
+      drn = mkdtemp(dirtmpl);
+      testErrorRetVA(drn==NULL,-100,"cannot create temporary dir (cause = '%s')",*err,__LINE__,,strerror(errno));
+
+      // read tarfile from hdffile
+      hstat = H5LTget_dataset_info( group_id, "external_data", &ndum, NULL,NULL);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+      data = malloc_err(sizeof(char)*ndum,err);
+      forwardError(*err,__LINE__,);
+      hstat = H5LTread_dataset(group_id,"external_data",H5T_NATIVE_UINT8,data);
+      testErrorRetVA(hstat<0,-331234,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+
+      fpix_data_name = malloc_err(sizeof(char)*4096,err);
+      forwardError(*err,__LINE__,);
+
+      // save to file !
+      sprintf(fpix_data_name,"%s/data.tar",drn);
+      fpix_data = fopen_err(fpix_data_name,"w",err);
+      forwardError(*err,__LINE__,);
+      testErrorRetVA(fwrite(data,1,ndum,fpix_data)<ndum,-100,"Cannot write to file %s",*err,__LINE__,,fpix_data_name);
+      fclose(fpix_data);
+      free(data);
+
+      // change dir
+      testErrorRetVA(chdir(drn)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,drn,strerror(errno));
+
+      // call tar to recreate the files  
+      sprintf(command,"tar xf %s",fpix_data_name);
+      status = system(command);
+      testErrorRetVA(status!=0,-100,"cannot untar, command '%s' got status %d",*err,__LINE__,,command,status);
+      sprintf(dirname,"%s",drn);
+      free(fpix_data_name);
+      return;    
+    }  
+  }
+#endif
+  fpix_data_name = cldf_readstr(df,"external_dir",NULL,err);
+  forwardError(*err,__LINE__,);
+  testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
+  dirname[0]='\0';
+  free(fpix_data_name);
+}
+
+void cldf_external_cleanup(char *dirname,char *pwd,error **err) {
+  char command[4096*4];
+  int status;
+  
+   // delete all files (like a macho !)
+  testErrorRetVA(chdir(pwd)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,pwd,strerror(errno));
+  
+  if (dirname[0]!='\0') {
+    // remove files
+    sprintf(command,"rm -rf %s",dirname); 
+    _DEBUGHERE_("%s",dirname);
+    status = system(command);
+    testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
+  }
+}
+
+

@@ -185,37 +185,38 @@ void apply_rename(int nkey, char* keys, int nrename, char* rename_from, char* re
   }
 }
 
-void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
+void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
   int dz,i;
   char *keyvartable,*deftable,*valtable;
   herr_t hstat;
   int nrename;
   char *rename_from, *rename_to;
-
-  hstat = H5LTget_attribute_int( comp_id, ".", "ndim",  nvar);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read ndim in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
-
-
+  int hk;
+  
+  *nvar = cldf_readint(df,"ndim",err);
+  forwardError(*err,__LINE__,);
+  
   nrename=0;
   rename_from = NULL;
   rename_to = NULL;
 
-  hstat = H5LTfind_attribute (comp_id, "nrename");
-  if (hstat ==1) {
-    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  &nrename);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read nrename in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+  hk = cldf_haskey(df,"nrename",err);
+  forwardError(*err,__LINE__,);  
+  if (hk ==1) {
+    nrename = cldf_readint(df,"nrename",err);
+    forwardError(*err,__LINE__,);   
     dz = -1;
-    rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
+    rename_from = cldf_readstr(df,"rename_from",&dz, err);
     forwardError(*err,__LINE__,);
     dz = -1;
-    rename_to = hdf5_char_attarray(comp_id,cur_lkl,"rename_to",&dz, err);
+    rename_to = cldf_readstr(df,"rename_to",&dz, err);
     forwardError(*err,__LINE__,);
   }
-
-  dz = -1;
-  keyvartable = hdf5_char_attarray(comp_id,cur_lkl,"keys",&dz, err);
-  forwardError(*err,__LINE__,);
   
+  dz = -1;
+  keyvartable = cldf_readstr(df,"keys",&dz, err);
+  forwardError(*err,__LINE__,);
+    
   if (*nvar!=0) {
     *varkeys = malloc_err(sizeof(char*)**nvar,err);
     forwardError(*err,__LINE__,);
@@ -224,21 +225,21 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
     forwardError(*err,__LINE__,);
     (*varkeys)[0] = NULL;
   }
-
+  
   apply_rename(*nvar,keyvartable,nrename,rename_from,rename_to);
   for(i=0;i<*nvar;i++) {
     (*varkeys)[i] = &(keyvartable[i*256]);
   }
-
+  
   // get defaults
-  hstat = H5LTget_attribute_int( comp_id, ".", "ndef",  ndef);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+  *ndef = cldf_readint(df,"ndef",err);
+  forwardError(*err,__LINE__,);
   
   dz = -1;
-  deftable = hdf5_char_attarray(comp_id,cur_lkl,"defaults",&dz, err);
+  deftable = cldf_readstr(df,"defaults",&dz, err);
   forwardError(*err,__LINE__,);
   dz = -1;
-  valtable = hdf5_char_attarray(comp_id,cur_lkl,"values",&dz, err);
+  valtable = cldf_readstr(df,"values",&dz, err);
   forwardError(*err,__LINE__,);
   
   if (*ndef!=0) {
@@ -262,13 +263,14 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
   }  
   
   dz = ndet;
-  hstat = H5LTfind_attribute (comp_id, "dfreq");
-  if (hstat ==1) {
-    *detlist = hdf5_double_attarray(comp_id,cur_lkl,"dfreq",&dz, err);
+  hk = cldf_haskey(df,"dfreq",err);
+  forwardError(*err,__LINE__,);
+  if (hk ==1) {
+    *detlist = cldf_readfloatarray(df,"dfreq",&dz, err);
     forwardError(*err,__LINE__,);
   } else {
     int * ietlist;
-    ietlist = hdf5_int_attarray(comp_id,cur_lkl,"freq",&dz, err);
+    ietlist = cldf_readintarray(df,"freq",&dz, err);
     forwardError(*err,__LINE__,);
     *detlist = malloc_err(sizeof(double)*ndet,err);
     forwardError(*err,__LINE__,);
@@ -286,7 +288,7 @@ void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** de
 
 }
 
-SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   parametric_smica *p_pay;
   int i,eb;
   char **xnames;
@@ -300,39 +302,43 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   int j;
   int nvoid;
   int *voidlist;
+  int hk;
 
   nrename=0;
   rename_from = NULL;
   rename_to = NULL;
 
-  hstat = H5LTfind_attribute (comp_id, "nrename");
-  if (hstat ==1) {
-    hstat = H5LTget_attribute_int( comp_id, ".", "nrename",  &nrename);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read ndef in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+  hk = cldf_haskey(df,"nrename",err);
+  forwardError(*err,__LINE__,NULL);  
+  if (hk ==1) {
+    nrename = cldf_readint(df,"nrename",err);
+    forwardError(*err,__LINE__,NULL);   
     dz = -1;
-    rename_from = hdf5_char_attarray(comp_id,cur_lkl,"rename_from",&dz, err);
+    rename_from = cldf_readstr(df,"rename_from",&dz, err);
     forwardError(*err,__LINE__,);
     dz = -1;
-    rename_to = hdf5_char_attarray(comp_id,cur_lkl,"rename_to",&dz, err);
+    rename_to = cldf_readstr(df,"rename_to",&dz, err);
     forwardError(*err,__LINE__,);
   }
 
-  hstat = H5LTfind_dataset(comp_id, "color");
-  if (hstat ==1) {
+  hk = cldf_haskey(df,"color",err);
+  forwardError(*err,__LINE__,NULL);  
+  if (hk ==1) {
     dz  = p_model->ndet;
-    color = hdf5_double_datarray(comp_id,cur_lkl,"color",&dz, err);
+    color = cldf_readfloatarray(df,"color",&dz, err);
     forwardError(*err,__LINE__,NULL);
     parametric_set_color(p_model,color,err);
     forwardError(*err,__LINE__,NULL);
     free(color);
   }
   
-  hstat = H5LTfind_dataset(comp_id, "nvoid");
-  if (hstat ==1) {
-    hstat = H5LTget_attribute_int( comp_id, ".", "nvoid",  &nvoid);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read nvoid in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+  hk = cldf_haskey(df,"nvoid",err);
+  forwardError(*err,__LINE__,NULL);  
+  if (hk ==1) {
+    nvoid = cldf_readint(df,"nvoid",err);
+    forwardError(*err,__LINE__,NULL);   
     dz = nvoid;
-    voidlist = hdf5_int_attarray(comp_id,cur_lkl,"voidlist",&dz, err);
+    voidlist = cldf_readintarray(df,"voidlist",&dz, err);
     forwardError(*err,__LINE__,NULL);
     parametric_set_void(p_model,nvoid,voidlist,err);
     forwardError(*err,__LINE__,NULL);
@@ -357,7 +363,7 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   p_pay->p_model = p_model;  
   p_pay->unit = unit;
   
-  p_pay->A = hdf5_double_attarray(comp_id,cur_lkl,"A_cmb",&m,err);
+  p_pay->A = cldf_readfloatarray(df,"A_cmb",&m,err);
   forwardError(*err,__LINE__,NULL);    
 
   p_pay->nell = nell;
@@ -432,7 +438,7 @@ SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, cha
   free(xnames);
   free(rename_from);
   free(rename_to);
-
+  
   return SC;    
 }
 

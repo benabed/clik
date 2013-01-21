@@ -101,7 +101,6 @@ SUBROUTINE LOWLIKE_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,
 		use_wmap_pol = .true.
 	endif
 	
-	
 	clik_lmax = tt_max
 	if (te_max>clik_lmax) then
 		clik_lmax = te_max

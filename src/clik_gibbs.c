@@ -26,7 +26,7 @@ double gibbs_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-cmblkl* clik_gibbs_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   hsize_t ndum;
   char directory_name[4096],pwd[4096],pwd2[4096];
   int status;
@@ -44,19 +44,20 @@ cmblkl* clik_gibbs_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   lmax = ell[nell-1];
   
   // get data and change dir
-  clik_external_data_init(directory_name,pwd,group_id,cur_lkl,err);
+  cldf_external(df,directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
   
-  hstat = H5LTget_attribute_int( group_id, ".", "firstchain",  &firstchain);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read firstchain in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  hstat = H5LTget_attribute_int( group_id, ".", "lastchain",  &lastchain);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read lastchain in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  hstat = H5LTget_attribute_int( group_id, ".", "firstsample",  &firstsample);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read firstsample in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  hstat = H5LTget_attribute_int( group_id, ".", "lastsample",  &lastsample);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read lastsample in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  hstat = H5LTget_attribute_int( group_id, ".", "step",  &step);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read step in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  firstchain = cldf_readint(df,"firstchain",err);
+  forwardError(*err,__LINE__,NULL);
+  lastchain = cldf_readint(df,"lastchain",err);
+  forwardError(*err,__LINE__,NULL);
+  firstsample = cldf_readint(df,"firstsample",err);
+  forwardError(*err,__LINE__,NULL);
+  lastsample = cldf_readint(df,"lastsample",err);
+  forwardError(*err,__LINE__,NULL);
+  step = cldf_readint(df,"step",err);
+  forwardError(*err,__LINE__,NULL);
+
 
   memset(dir_data,' ',sizeof(char)*2048);
   sprintf(dir_data,"data/");
@@ -73,7 +74,7 @@ cmblkl* clik_gibbs_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   gibbs_extra_parameter_init_(&(gb->handle),dir_data,&ldd,&lmin,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
   testErrorRetVA(gb->handle<=0,-4325325432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
 
-  clik_external_data_cleanup(directory_name,pwd,err);  
+  cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
   
   cing = init_cmblkl(gb, &gibbs_lkl, 

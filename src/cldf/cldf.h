@@ -9,8 +9,15 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include "fitsio.h"
+#include <dlfcn.h>
+#include <string.h>
+#include <errno.h>
 
 #define MDB "_mdb"
+
+#ifdef HDF5_COMPAT_MODE
+#include "hdf5.h"
+#endif
 
 typedef char kv[256];
 
@@ -23,16 +30,24 @@ typedef struct {
   kv* metatype;
   kv* datakey;
   void **child;
-} fdf;
+#ifdef HDF5_COMPAT_MODE
+  hid_t hid;
+  int isgroup;
+#endif
+} cldf;
 
-fdf * fdf_open(char *path, error **err);
-fdf* fdf_openchild(fdf *df, char* ipath, error **err);
-int fdf_haskey(fdf *df, char *key, error **err);
-long fdf_readint(fdf *df, char *key, error **err);
-double fdf_readfloat(fdf *df, char *key, error **err);
-char* fdf_readstr(fdf *df, char *key, error **err);
-long* fdf_readintarray(fdf *df, char *key, int* sz, error **err);
-double* fdf_readfloatarray(fdf *df, char *key, int* sz, error **err);
-
-void fdf_close(fdf** pdf);
+cldf * cldf_open(char *path, error **err);
+cldf* cldf_openchild(cldf *df, char* ipath, error **err);
+int cldf_haskey(cldf *df, char *key, error **err);
+long cldf_readint(cldf *df, char *key, error **err);
+double cldf_readfloat(cldf *df, char *key, error **err);
+long cldf_readint_default(cldf *df, char *key, long def,error **err);
+double cldf_readfloat_default(cldf *df, char *key,double def, error **err);
+char* cldf_readstr(cldf *df, char *key, int* sz, error **err);
+long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err);
+int* cldf_readintarray(cldf *df, char *key, int* sz, error **err);
+double* cldf_readfloatarray(cldf *df, char *key, int* sz, error **err);
+void cldf_external(cldf* df, char *dirname, char* pwd, error **err);
+void cldf_external_cleanup(char* pwd,char *dirname,error **err);
+void cldf_close(cldf** pdf);
 

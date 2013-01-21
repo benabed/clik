@@ -104,6 +104,7 @@ char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error
   char *res;
   
   ndum = 1020;
+  //_DEBUGHERE_("%d %s %s",group_id, ".",name);
   hstat = H5LTget_attribute_info( group_id, ".",name, &ddum, &dum, &ndum);
   testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,name,cur_lkl,hstat);
   testErrorRetVA((ndum!=*sz && *sz>0),hdf5_base,"Bad size for %s in %s (got %d expected %d)",*err,__LINE__,NULL,name,cur_lkl,ndum,*sz);
@@ -177,10 +178,10 @@ int clik_getenviron_numthread(char* name, int sfg, error **err) {
   return np;
 }
 
-cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
+cmblkl * clik_lklobject_init(cldf *df,error **err) {
   cmblkl *clkl;
   parname lkl_type;
-  char version[100];
+  char *version;
   herr_t hstat;
   int has_cl[6];
   int nell, *ell,nbins,i,cli;
@@ -189,12 +190,16 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   int lmin, lmax;
   char init_func_name[2048];
   clik_lkl_init_func *clik_dl_init;
-  clik_addon_init_func *clik_addondl_init;
+  //clik_addon_init_func *clik_addondl_init;
   void* dlhandle;   
-  char cur_addon[256],addon_type[256];
+  char cur_addon[256];
+  char *addon_type;
   int i_add,n_addons;
   hid_t add_group_id;
-  
+  int sz;
+  char *dm;
+  int *dmi;
+  int hk,j;
 
 #ifdef HAS_RTLD_DEFAULT 
   dlhandle = RTLD_DEFAULT;
@@ -204,33 +209,35 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
 
   // get the lkl type
   memset(lkl_type,0,_pn_size*sizeof(char));
+  dm = cldf_readstr(df,"lkl_type",NULL,err);
+  forwardError(*err,__LINE__,NULL);
+  sprintf(lkl_type,"%s",dm);
+  free(dm);
 
-  hstat = H5LTget_attribute_string( group_id, ".", "lkl_type",  lkl_type);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read lkl_type in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //_DEBUGHERE_("%s",lkl_type);
-  
   // get unit
-  hstat = H5LTget_attribute_double( group_id, ".", "unit",  &unit);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read unit in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  unit = cldf_readfloat(df,"unit",err);
+  forwardError(*err,__LINE__,NULL);
   
-  // get has_cl
-  hstat = H5LTget_attribute_int( group_id, ".", "has_cl",  has_cl);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read has_cl in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  
+  sz = 6;
+  dmi = cldf_readintarray(df,"has_cl",&sz,err);
+  forwardError(*err,__LINE__,NULL);
+  for(j=0;j<6;j++) {
+    has_cl[j] = dmi[j];
+  }
+  free(dmi);
+
   // get ells
-  hstat = H5LTfind_attribute (group_id, "lmax");
-  if (hstat==1) {
+  //hstat = H5LTfind_attribute (group_id, "lmax");
+  hk = cldf_haskey(df,"lmax",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
     // has lmax !
-    hstat = H5LTget_attribute_int( group_id, ".", "lmax", &lmax);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read lmax in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+    lmax = cldf_readint(df,"lmax",err);
+    forwardError(*err,__LINE__,NULL);
     
-    lmin = 0;
-    hstat = H5LTfind_attribute (group_id, "lmin");
-    if (hstat==1) {
-      hstat = H5LTget_attribute_int( group_id, ".", "lmin", &lmin);
-      testErrorRetVA(hstat<0,hdf5_base,"cannot read lmin in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-      
-    }
+    lmin = cldf_readint_default(df,"lmin",0,err);
+    forwardError(*err,__LINE__,NULL);
+    
     nell = lmax+1-lmin;
     ell = malloc_err(sizeof(int)*(nell),err);
     forwardError(*err,__LINE__,NULL);
@@ -238,35 +245,30 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
       ell[i-lmin] = i;
     }
   } else {
-    hstat = H5LTget_attribute_info(group_id, ".", "ell",&nell, NULL, NULL);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read ell in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    ell = malloc_err(sizeof(int)*(nell),err);
+    nell = -1;
+    ell = cldf_readintarray(df,"ell",&nell,err);
     forwardError(*err,__LINE__,NULL);
-    hstat = H5LTget_attribute_int(group_id, ".", "ell",ell);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read ell in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
   }  
   
   lmax = ell[nell-1];
   
   // get wl
   wl = NULL;
-  hstat = H5LTfind_attribute (group_id, "wl");
-  if (hstat==1) {
+  hk = cldf_haskey(df,"wl",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
     int nwl;
     nwl = lmax+1;
-    wl = hdf5_double_attarray(group_id,cur_lkl,"wl",&nwl,err);
+    wl = cldf_readfloatarray(df,"wl",&nwl,err);
     forwardError(*err,__LINE__,NULL);
   }
   
   // deals with bins
   nbins = 0;
   bins = NULL;
-  hstat = H5LTfind_attribute(group_id, "nbins");
+  nbins = cldf_readint_default(df,"nbins",0,err);
+  forwardError(*err,__LINE__,NULL);  
   
-  if (hstat==1) {
-    hstat = H5LTget_attribute_int(group_id, ".", "nbins",&nbins);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read nbins in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  }
   if (nbins!=0) {
     int nd;
     int ncl;
@@ -283,16 +285,15 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
         ncl++;
       }
     }
-    hstat = H5LTfind_dataset(group_id, "bins");
-    
-    if (hstat==1) { // full binning matrix
+
+    hk = cldf_haskey(df,"bins",err);
+    forwardError(*err,__LINE__,NULL);
+    if (hk==1) { // full binning matrix
       int nbn;
       nbn = nbins*nd;
-      
-      bins = hdf5_double_datarray(group_id, cur_lkl,"bins",&nbn,err);
+
+      bins = cldf_readfloatarray(df,"bins",&nbn,err);
       forwardError(*err,__LINE__,NULL);  
-      
-      
     } else { //packed binning matrix
       double *bin_ws;
       int *ellmin,*ellmax;
@@ -301,12 +302,13 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
       int wsz;
       
       nw=-1;
-      bin_ws = hdf5_double_datarray(group_id, cur_lkl,"bin_ws",&nw,err);
+      bin_ws = cldf_readfloatarray(df,"bin_ws",&nw,err);
       forwardError(*err,__LINE__,NULL);  
       
-      ellmin = hdf5_int_datarray(group_id, cur_lkl,"bin_lmin",&nbins,err);
+      ellmin = cldf_readintarray(df,"bin_lmin",&nbins,err);
       forwardError(*err,__LINE__,NULL);  
-      ellmax = hdf5_int_datarray(group_id, cur_lkl,"bin_lmax",&nbins,err);
+
+      ellmax = cldf_readintarray(df,"bin_lmax",&nbins,err);
       forwardError(*err,__LINE__,NULL);  
       
       bins = malloc_err(sizeof(double)*nd*nbins,err);
@@ -330,19 +332,21 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
 
   sprintf(init_func_name,"clik_%s_init",lkl_type);
   clik_dl_init = dlsym(dlhandle,init_func_name);
-  testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,cur_lkl,dlerror()); 
+  testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,df->root,dlerror()); 
 
-  clkl = clik_dl_init(group_id,cur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
+  clkl = clik_dl_init(df,nell,ell,has_cl,unit,wl,bins,nbins,err);
   forwardError(*err,__LINE__,NULL); 
 
-  hstat = H5LTfind_attribute(group_id, "pipeid");
-  if (hstat == 1) {
-    char vv[100];
-    hstat = H5LTget_attribute_string( group_id, ".", "pipeid",  version);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read version in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    //_DEBUGHERE_("%s",version);
+  hk = cldf_haskey(df,"pipeid",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) { 
+    char vv[1000];
+    version = cldf_readstr(df,"pipeid",NULL,err);
+    forwardError(*err,__LINE__,NULL);  
+      
     sprintf(vv,"%s %s",lkl_type,version);
     cmblkl_set_version(clkl,vv);
+    free(version);
   } else {
     cmblkl_set_version(clkl,lkl_type);
   }
@@ -357,110 +361,105 @@ cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err) {
   free(ell);
   
   // look for addons
-  n_addons = 0;
-  hstat = H5LTfind_attribute(group_id, "n_addons");
-  if (hstat==1) {
-    hstat = H5LTget_attribute_int(group_id, ".", "n_addons",&n_addons);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read n_addons in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  }
-  
-  for (i_add=0;i_add<n_addons;i_add++) {
-    sprintf(cur_addon,"addon_%d",i_add);
-    add_group_id = H5Gopen(group_id, cur_addon, H5P_DEFAULT );
-    testErrorRetVA(group_id<0,hdf5_base,"cannot read addon %s in %s (got %d)",*err,__LINE__,NULL,cur_addon,cur_lkl,hstat);
-    
-    memset(addon_type,0,256*sizeof(char));
-    hstat = H5LTget_attribute_string( add_group_id, ".", "addon_type",  addon_type);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read addon_type in %s/%s (got %d)",*err,__LINE__,NULL,cur_lkl,cur_addon,hstat);
-
-    sprintf(init_func_name,"clik_addon_%s_init",addon_type);
-    clik_addondl_init = dlsym(dlhandle,init_func_name);
-    testErrorRetVA(clik_addondl_init==NULL,-1111,"Cannot initialize addon type %s from %s/%s dl error : %s",*err,__LINE__,NULL,addon_type,cur_lkl,cur_addon,dlerror());
-    
-    // pretty print purpose
-    sprintf(cur_addon,"%s/addon_%d",cur_lkl,i_add);
-    
-    clkl = clik_addondl_init(clkl,add_group_id,cur_addon,err);
-    forwardError(*err,__LINE__,NULL);  
-
-    hstat = H5Gclose(add_group_id);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot close %s (got %d)",*err,__LINE__,NULL,cur_addon,hstat);
-  }
+  //n_addons = cldf_readint_default(df,"n_addons",0,err);
+  //forwardError(*err,__LINE__,NULL);
+  //
+  //for (i_add=0;i_add<n_addons;i_add++) {
+  //  cldf *cdf;
+  //  sprintf(cur_addon,"addon_%d",i_add);
+  //  cdf  = cldf_openchild(df,cur_addon,err);
+  //  forwardError(*err,__LINE__,NULL);
+  //  addon_type = cldf_readstr(cdf,"addon_type",NULL,err);
+  //  forwardError(*err,__LINE__,NULL);
+  //
+  //  sprintf(init_func_name,"clik_addon_%s_init",addon_type);
+  //  clik_addondl_init = dlsym(dlhandle,init_func_name);
+  //  testErrorRetVA(clik_addondl_init==NULL,-1111,"Cannot initialize addon type %s from %s/%s dl error : %s",*err,__LINE__,NULL,addon_type,df->root,cur_addon,dlerror());
+  //  
+  //  // pretty print purpose
+  //  sprintf(cur_addon,"%s",cdf->root);
+  //  
+  //  clkl = clik_addondl_init(clkl,add_group_id,cur_addon,err);
+  //  forwardError(*err,__LINE__,NULL);  
+  //
+  //  cldf_close(&cdf);
+  //  free(addon_type);
+  //}
   
   return clkl;
 }
 
-void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_lkl,error **err) {
-  herr_t hstat;
-  char dirtmpl[2048*4];
-  char *drn;
-  hsize_t ndum;
-  char fpix_data_name[2048*4];
-  FILE *fpix_data;
-  char command[4096*4];
-  int status;
-   
-  testErrorRetVA(getcwd(pwd,4096)==NULL,-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
-  
-  // do we need to extract the data ?
-  hstat = H5LTfind_dataset (group_id, "external_data");
-  if (hstat==1) {
-    char *data;
-    
-    // yes !
-    sprintf(dirtmpl,"/tmp/clik_XXXXXX");
-    drn = mkdtemp(dirtmpl);
-    testErrorRetVA(drn==NULL,-100,"cannot create temporary dir (cause = '%s')",*err,__LINE__,,strerror(errno));
+//void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_lkl,error **err) {
+//  herr_t hstat;
+//  char dirtmpl[2048*4];
+//  char *drn;
+//  hsize_t ndum;
+//  char fpix_data_name[2048*4];
+//  FILE *fpix_data;
+//  char command[4096*4];
+//  int status;
+//   
+//  testErrorRetVA(getcwd(pwd,4096)==NULL,-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
+//  
+//  // do we need to extract the data ?
+//  hstat = H5LTfind_dataset (group_id, "external_data");
+//  if (hstat==1) {
+//    char *data;
+//    
+//    // yes !
+//    sprintf(dirtmpl,"/tmp/clik_XXXXXX");
+//    drn = mkdtemp(dirtmpl);
+//    testErrorRetVA(drn==NULL,-100,"cannot create temporary dir (cause = '%s')",*err,__LINE__,,strerror(errno));
+//
+//    // read tarfile from hdffile
+//    hstat = H5LTget_dataset_info( group_id, "external_data", &ndum, NULL,NULL);
+//    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+//    data = malloc_err(sizeof(char)*ndum,err);
+//    forwardError(*err,__LINE__,);
+//    hstat = H5LTread_dataset(group_id,"external_data",H5T_NATIVE_UINT8,data);
+//    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
+//
+//    // save to file !
+//    sprintf(fpix_data_name,"%s/data.tar",drn);
+//    fpix_data = fopen_err(fpix_data_name,"w",err);
+//    forwardError(*err,__LINE__,);
+//    testErrorRetVA(fwrite(data,1,ndum,fpix_data)<ndum,-100,"Cannot write to file %s",*err,__LINE__,,fpix_data_name);
+//    fclose(fpix_data);
+//    free(data);
+//
+//    // change dir
+//    testErrorRetVA(chdir(drn)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,drn,strerror(errno));
+//
+//    // call tar to recreate the files  
+//    sprintf(command,"tar xf %s",fpix_data_name);
+//    status = system(command);
+//    testErrorRetVA(status!=0,-100,"cannot untar, command '%s' got status %d",*err,__LINE__,,command,status);
+//    sprintf(dirname,"%s",drn);
+//    
+//  }  else {
+//    memset( fpix_data_name,0,2048*4);
+//    hstat = H5LTget_attribute_string( group_id, ".", "external_dir",   fpix_data_name);
+//    testErrorRetVA(hstat<0,hdf5_base,"cannot read external_dir in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
+//    testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
+//    dirname[0]='\0';
+//  }
+//
+//}
 
-    // read tarfile from hdffile
-    hstat = H5LTget_dataset_info( group_id, "external_data", &ndum, NULL,NULL);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
-    data = malloc_err(sizeof(char)*ndum,err);
-    forwardError(*err,__LINE__,);
-    hstat = H5LTread_dataset(group_id,"external_data",H5T_NATIVE_UINT8,data);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
-
-    // save to file !
-    sprintf(fpix_data_name,"%s/data.tar",drn);
-    fpix_data = fopen_err(fpix_data_name,"w",err);
-    forwardError(*err,__LINE__,);
-    testErrorRetVA(fwrite(data,1,ndum,fpix_data)<ndum,-100,"Cannot write to file %s",*err,__LINE__,,fpix_data_name);
-    fclose(fpix_data);
-    free(data);
-
-    // change dir
-    testErrorRetVA(chdir(drn)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,drn,strerror(errno));
-
-    // call tar to recreate the files  
-    sprintf(command,"tar xf %s",fpix_data_name);
-    status = system(command);
-    testErrorRetVA(status!=0,-100,"cannot untar, command '%s' got status %d",*err,__LINE__,,command,status);
-    sprintf(dirname,"%s",drn);
-    
-  }  else {
-    memset( fpix_data_name,0,2048*4);
-    hstat = H5LTget_attribute_string( group_id, ".", "external_dir",   fpix_data_name);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read external_dir in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
-    testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
-    dirname[0]='\0';
-  }
-
-}
-
-void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {
-  char command[4096*4];
-  int status;
-  
-   // delete all files (like a macho !)
-  testErrorRetVA(chdir(pwd)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,pwd,strerror(errno));
-  
-  if (dirname[0]!='\0') {
-    // remove files
-    sprintf(command,"rm -rf %s",dirname); 
-    status = system(command);
-    testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
-  }
-}
+//void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {
+//  char command[4096*4];
+//  int status;
+//  
+//   // delete all files (like a macho !)
+//  testErrorRetVA(chdir(pwd)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,pwd,strerror(errno));
+//  
+//  if (dirname[0]!='\0') {
+//    // remove files
+//    sprintf(command,"rm -rf %s",dirname); 
+//    status = system(command);
+//    testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
+//  }
+//}
 
 
 /*

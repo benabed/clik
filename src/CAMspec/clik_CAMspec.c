@@ -17,7 +17,7 @@ double CAMspec_lkl(void* none, double* pars, error **err) {
 void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*);
 //CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
 
-cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   hsize_t ndum;
   int bok;
   cmblkl *cing;
@@ -26,7 +26,7 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   int xcase;
   double xdim;
   char *xnames_def[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
-                      "r_ps", "r_cib","cal_100", "cal_143", "cal_217","xi_sz_cib","A_ksz"};
+                      "r_ps", "r_cib","n_Dl_cib","cal_100", "cal_143", "cal_217","xi_sz_cib","A_ksz"};
   
   char *xnames_1[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
                       "r_ps", "r_cib","cal0", "cal1", "cal2"};
@@ -44,49 +44,50 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   int beam_cov_inv_sz,beam_modes_sz;
   int i,j,cnt;
   //int frq[] = {100,143,217};
-
+  
   camspec_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"CAMspec already initialized",*err,__LINE__,NULL);
   
-  hstat = H5LTget_attribute_int( group_id, ".", "Nspec",  &Nspec);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read Nspec in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  Nspec = cldf_readint(df,"Nspec",err);
+  forwardError(*err,__LINE__,NULL);
   
-  lminX = hdf5_int_attarray(group_id,cur_lkl,"lminX",&Nspec,err);
+  lminX = cldf_readintarray(df,"lminX",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
-  lmaxX = hdf5_int_attarray(group_id,cur_lkl,"lmaxX",&Nspec,err);
-  forwardError(*err,__LINE__,NULL);
-
-  np = hdf5_int_attarray(group_id,cur_lkl,"np",&Nspec,err);
-  forwardError(*err,__LINE__,NULL);
-  npt = hdf5_int_attarray(group_id,cur_lkl,"npt",&Nspec,err);
+  lmaxX = cldf_readintarray(df,"lmaxX",&Nspec,err);
   forwardError(*err,__LINE__,NULL);
 
-  hstat = H5LTget_attribute_int( group_id, ".", "nX",  &nX);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read nX in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  np = cldf_readintarray(df,"np",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+  npt = cldf_readintarray(df,"npt",&Nspec,err);
+  forwardError(*err,__LINE__,NULL);
+ 
+  nX = cldf_readint(df,"nX",err);
+  forwardError(*err,__LINE__,NULL);
 
-  hstat = H5LTget_attribute_int( group_id, ".", "lmax_sz",  &lmax_sz);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read lmax_sz in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+  lmax_sz = cldf_readint(df,"lmax_sz",err);
+  forwardError(*err,__LINE__,NULL);
 
   X_sz = -1;
-  X = hdf5_double_datarray(group_id,cur_lkl,"X",&X_sz, err);
+  X = cldf_readfloatarray(df,"X",&X_sz, err);
   forwardError(*err,__LINE__,NULL);
   
   c_inv_sz = -1;
-  c_inv = hdf5_double_datarray(group_id,cur_lkl,"c_inv",&c_inv_sz, err);
+  c_inv = cldf_readfloatarray(df,"c_inv",&c_inv_sz, err);
   forwardError(*err,__LINE__,NULL);
 
   sz_temp_sz = -1;
-  tsz = hdf5_double_datarray(group_id,cur_lkl,"tsz",&sz_temp_sz, err);
+  tsz = cldf_readfloatarray(df,"tsz",&sz_temp_sz, err);
   forwardError(*err,__LINE__,NULL);
   sz_temp_sz = -1;
-  ksz = hdf5_double_datarray(group_id,cur_lkl,"ksz",&sz_temp_sz, err);
+  ksz = cldf_readfloatarray(df,"ksz",&sz_temp_sz, err);
   forwardError(*err,__LINE__,NULL);
   sz_temp_sz = -1;
-  tszXcib = hdf5_double_datarray(group_id,cur_lkl,"tszXcib",&sz_temp_sz, err);
+  tszXcib = cldf_readfloatarray(df,"tszXcib",&sz_temp_sz, err);
   forwardError(*err,__LINE__,NULL);
 
-  hstat = H5LTget_attribute_int( group_id, ".", "beam_Nspec",  &beam_Nspec);
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read beam_Nspec in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+
+  beam_Nspec = cldf_readint(df,"beam_Nspec",err);
+  forwardError(*err,__LINE__,NULL);
 
   if (beam_Nspec==0) {
     num_modes_per_beam = 0;
@@ -97,17 +98,18 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
     beam_modes = malloc_err(sizeof(double)*1,err);
     forwardError(*err,__LINE__,NULL);
   } else {
-    hstat = H5LTget_attribute_int( group_id, ".", "beam_lmax",  &beam_lmax);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read beam_lmax in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    hstat = H5LTget_attribute_int( group_id, ".", "num_modes_per_beam",  &num_modes_per_beam);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read num_modes_per_beam in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    hstat = H5LTget_attribute_int( group_id, ".", "cov_dim",  &cov_dim);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read cov_dim in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
+    beam_lmax = cldf_readint(df,"beam_lmax",err);
+    forwardError(*err,__LINE__,NULL);
+    num_modes_per_beam = cldf_readint(df,"num_modes_per_beam",err);
+    forwardError(*err,__LINE__,NULL);
+    cov_dim = cldf_readint(df,"cov_dim",err);
+    forwardError(*err,__LINE__,NULL);
+  
     beam_cov_inv_sz = -1;
-    beam_cov_inv = hdf5_double_datarray(group_id,cur_lkl,"beam_cov_inv",&beam_cov_inv_sz, err);
+    beam_cov_inv = cldf_readfloatarray(df,"beam_cov_inv",&beam_cov_inv_sz, err);
     forwardError(*err,__LINE__,NULL);
     beam_modes_sz = -1;
-    beam_modes = hdf5_double_datarray(group_id,cur_lkl,"beam_modes",&beam_modes_sz, err);
+    beam_modes = cldf_readfloatarray(df,"beam_modes",&beam_modes_sz, err);
     forwardError(*err,__LINE__,NULL);
     
   }
@@ -115,13 +117,13 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   
   
   //camspec_extra_getcase_(&xcase);
-  xdim = 13 + beam_Nspec*num_modes_per_beam;
+  xdim = 14 + beam_Nspec*num_modes_per_beam;
   
-  for(i=0;i<13;i++) {
+  for(i=0;i<14;i++) {
     xnames_tot[i] = xnames_def[i];
   }
 
-  cnt = 13;
+  cnt = 14;
   
   for(i=0;i<beam_Nspec;i++) {
     for(j=0;j<num_modes_per_beam;j++) {
@@ -152,7 +154,7 @@ cmblkl* clik_CAMspec_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int
   free(tszXcib);
   free(beam_modes);
   free(beam_cov_inv);
-  for(i=13;i<xdim;i++) {
+  for(i=14;i<xdim;i++) {
     free(xnames_tot[i]);
   }
 

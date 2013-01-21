@@ -3,7 +3,7 @@ MODULE CAMSPEC_EXTRA
     IMPLICIT NONE
 
     INTEGER:: BOK = 0
-    real(8), dimension(:), allocatable :: cltt
+    real(8), dimension(:), allocatable :: cltt,nuisance
     INTEGER::lmin,lmax
     INTEGER::xcase,npar
 END MODULE CAMSPEC_EXTRA
@@ -53,7 +53,8 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     !IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
-    npar = lmax+1-lmin+13+ beam_Nspec * num_modes_per_beam
+    allocate(nuisance(14+beam_Nspec*num_modes_per_beam))
+    npar = lmax+1-lmin+14+ beam_Nspec * num_modes_per_beam
     
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
@@ -84,31 +85,35 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
         cltt(l)=CL(l-lmin)/2./3.141592653589793
     ENDDO
 
-    A_ps_100  = CL(lmax+1-lmin + 0)
-    A_ps_143  = CL(lmax+1-lmin + 1)
-    A_ps_217  = CL(lmax+1-lmin + 2)
-    A_cib_143 = CL(lmax+1-lmin + 3)
-    A_cib_217 = CL(lmax+1-lmin + 4)
-    A_sz      = CL(lmax+1-lmin + 5)
-    r_ps      = CL(lmax+1-lmin + 6)
-    r_cib     = CL(lmax+1-lmin + 7) 
-    cal0      = CL(lmax+1-lmin + 8) 
-    cal1      = CL(lmax+1-lmin + 9) 
-    cal2      = CL(lmax+1-lmin + 10)     
-    xi        = CL(lmax+1-lmin + 11)     
-    A_ksz     = CL(lmax+1-lmin + 12)
+    do i=1,14
+        nuisance(i) = CL(lmax+1-lmin + i-1)
+    enddo
+    !A_ps_100  = CL(lmax+1-lmin + 0)
+    !A_ps_143  = CL(lmax+1-lmin + 1)
+    !A_ps_217  = CL(lmax+1-lmin + 2)
+    !A_cib_143 = CL(lmax+1-lmin + 3)
+    !A_cib_217 = CL(lmax+1-lmin + 4)
+    !A_sz      = CL(lmax+1-lmin + 5)
+    !r_ps      = CL(lmax+1-lmin + 6)
+    !r_cib     = CL(lmax+1-lmin + 7) 
+    !cal0      = CL(lmax+1-lmin + 8) 
+    !cal1      = CL(lmax+1-lmin + 9) 
+    !cal2      = CL(lmax+1-lmin + 10)     
+    !xi        = CL(lmax+1-lmin + 11)     
+    !A_ksz     = CL(lmax+1-lmin + 12)
 
-    cnt = 0
+    !print *,CL(lmax+1-lmin+14)
+
+    cnt = 1
     DO i=1,beam_Nspec
         DO j=1,num_modes_per_beam
-            beam_coeffs(i,j) = CL(lmax+1-lmin+13+cnt)
+            nuisance(cnt+14) = CL(lmax+1-lmin+14+cnt-1)
             cnt = cnt + 1
         ENDDO
     ENDDO
 
 
-    call calc_like(tlkl,  cltt, A_ps_100,  A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz,  &
-       r_ps, r_cib, xi, A_ksz, cal0, cal1, cal2, beam_coeffs)
+    call calc_like(tlkl,  cltt,nuisance)
     ! lkl is -2loglike clik returns loglik
     !print *,tlkl
     lkl = -tlkl/2.

@@ -90,7 +90,7 @@ def build(ctx):
       ) 
   
   ctx(
-    source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/fakedf.py",
+    source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/cldf.py",
     install_path = "${PYTHONDIR}/clik"
   )
   

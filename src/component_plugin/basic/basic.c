@@ -395,7 +395,7 @@ void ir_clustered_compute(parametric* egl, double *Rq, error **err) {
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
         Rq[IDX_R(egl,ell,m1,m2)] = ir_clustered_norm * 
-      	  template[lell]/(d3000*t3000) * 
+          template[lell]/(d3000*t3000) * 
           exp(ir_clustered_alpha*A[m1*nfreq+m2])/(vec[m1]*vec[m2]) * dcm[m1*egl->nfreq+m2];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
@@ -1329,8 +1329,8 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
     mell = (ell-lmin_sz_template);
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-	Rq[IDX_R(egl,ell,m1,m2)] = sz_norm * 2.0*M_PI/(dell*(dell+1.0)) * cl[mell] * fnu[m1] * fnu[m2];
-	Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+  Rq[IDX_R(egl,ell,m1,m2)] = sz_norm * 2.0*M_PI/(dell*(dell+1.0)) * cl[mell] * fnu[m1] * fnu[m2];
+  Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
   }
@@ -1383,16 +1383,13 @@ void ksz_compute(parametric* egl, double *Rq, error **err) {
   int lmax_ksz_template = 5000; // CHECK
   double *cl,*A;
   double ksz_norm, dell;
-
+  
   nfreq = egl->nfreq;
   A = (double*) egl->payload;
   cl = A;
   
   ksz_norm = parametric_get_value(egl,"ksz_norm",err);
   forwardError(*err,__LINE__,);
-
-  // kSZ template re-normalized to 2.057 muK^2 at D_l = 3000 \
-  ksz_norm *= 2.057
 
   // kSZ spectrum is like CMB
 
@@ -1402,8 +1399,8 @@ void ksz_compute(parametric* egl, double *Rq, error **err) {
     mell = (ell-lmin_ksz_template);
     for (m1=0;m1<nfreq;m1++) {
       for (m2=m1;m2<nfreq;m2++) {
-	Rq[IDX_R(egl,ell,m1,m2)] = ksz_norm * 2.0*M_PI/(dell*(dell+1.0)) * cl[mell];
-	Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+  Rq[IDX_R(egl,ell,m1,m2)] = ksz_norm * 2.0*M_PI/(dell*(dell+1.0)) * cl[mell];
+  Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
     }
   }
@@ -1470,22 +1467,21 @@ void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dR
   for (m1=0;m1<nfreq;m1++) { \
     fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0); \
   } \
-  // Apply frequency averaged color corrections \
-  // Numerical values extracted from Camspec \
   a_cib_100  *= 1.122; \
   a_cib_143  *= 1.134; \
   a_cib_217  *= 1.33; \
-  fnu[0]     *= 2.022; \
-  fnu[1]     *= 0.95; \
-  // SZ template re-normalized to 4.796 muK^2 at D_l = 3000 \
-  // Also, modifying kSZ template in 'ksz_compute' \
-  a_sz       *= 4.796; \
+  fnu[0]     *= sqrt(0.9619); \
+  fnu[1]     *= sqrt(0.95); \
+  fnu[2]      = 0.0; \
   a_cib[0]    = a_cib_100; \
   a_cib[1]    = a_cib_143; \
   a_cib[2]    = a_cib_217; \
   r_cib[0][1] = r_cib_100_143; \
   r_cib[0][2] = r_cib_100_217; \
   r_cib[1][2] = r_cib_143_217;
+
+// Apply frequency averaged color corrections
+// Numerical values set to agree with Camspec
 
   
   
@@ -1522,8 +1518,8 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   forwardError(*err,__LINE__,);
 
   template_size = (lmax_sz_template-lmin_sz_template+1 + 
-		   lmax_corr_template-lmin_corr_template+1 +
-		   egl->nfreq);
+       lmax_corr_template-lmin_corr_template+1 +
+       egl->nfreq);
   parametric_sz_cib_payload_init(egl,template,template_size,cib_freqlist,nfreqs_cib,err);
   forwardError(*err,__LINE__,NULL);
   
@@ -1642,7 +1638,7 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
         ind2 = ind_freq[m2];
         if ((ind1 >= 0) && (ind2 >= 0)) { // 100, 143 or 217 GHz
           Rq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib[ind2]) + sqrt(fnu[m2]*a_cib[ind1]) ) *
-	           corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+             corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
           Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
         }
       }
@@ -1690,7 +1686,7 @@ void sz_cib_A_sz_derivative(parametric *egl, int iv, double *Rq, double *dRq, er
         ind2 = ind_freq[m2];
         if ((ind1 >= 0) && (ind2 >= 0)) { // 100, 143 or 217 GHz for now
           dRq[IDX_R(egl,ell,m1,m2)] -= xi_sz_cib * 1./(2.0*sqrt(a_sz)) * ( sqrt(fnu[m1]*a_cib[ind2]) + sqrt(fnu[m2]*a_cib[ind1]) ) *
-	           corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
+             corr_template[mell] * 2.0*M_PI/(dell*(dell+1.0));
           dRq[IDX_R(egl,ell,m2,m1)] = dRq[IDX_R(egl,ell,m1,m2)];
         }
       }

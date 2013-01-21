@@ -18,9 +18,9 @@ def main(argv):
   #llp1s2pi = nm.arange(1201)*nm.arange(1,1202)/2./nm.pi
   #mcl[:,2:] = (test_cl[:1201-2,1:].T)/llp1s2pi[2:]
   
-  lmin11 = max(2,pars.int(default=2000).lmin11)
-  lmin12 = max(2,pars.int(default=2000).lmin12)
-  lmin22 = max(2,pars.int(default=2000).lmin22)
+  lmin11 = max(2,pars.int(default=1000).lmin11)
+  lmin12 = max(2,pars.int(default=1500).lmin12)
+  lmin22 = max(2,pars.int(default=1500).lmin22)
   lmax11 = min(10000,pars.int(default=10000).lmax11)
   lmax12 = min(10000,pars.int(default=10000).lmax12)
   lmax22 = min(10000,pars.int(default=10000).lmax22)
@@ -39,6 +39,14 @@ def main(argv):
   
     
   lkl_grp = php.add_lkl_generic(root_grp,"actspt",1,hascl,lmax,lmin)
+  
+  print "lmin11 = ",lmin11
+  print "lmin12 = ",lmin12
+  print "lmin22 = ",lmin22
+  print "lmax11 = ",lmax11
+  print "lmax12 = ",lmax12
+  print "lmax22 = ",lmax22
+  print "tt_lmax_mc = ",tt_lmax_mc
   
   lkl_grp.attrs["lmin11"] = lmin11
   lkl_grp.attrs["lmin12"] = lmin12

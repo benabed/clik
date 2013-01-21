@@ -19,7 +19,7 @@ double bopix_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-cmblkl* clik_bopix_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+cmblkl* clik_bopix_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   char directory_name[4096],pwd[4096];
   char *bopix_nthreads_env;
   int bopix_nthreads;
@@ -31,13 +31,13 @@ cmblkl* clik_bopix_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* 
   bopix_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"Bopix already initialized",*err,__LINE__,NULL);
   
-  clik_external_data_init(directory_name,pwd,group_id,cur_lkl,err);
+  cldf_external(df,directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
   
   // call bopix_init
   bopix_extra_parameter_init_();
   
-  clik_external_data_cleanup(directory_name,pwd,err);  
+  cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
   
   bopix_nthreads = clik_getenviron_numthread("BOPIX",1,err);

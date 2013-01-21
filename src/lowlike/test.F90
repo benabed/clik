@@ -34,7 +34,7 @@ cl_bb = 0d0
 !---------------------------------------------------
 ! read in Cls
 !---------------------------------------------------
-filename = trim(Planck_data_dir)//'test_cls_v4.dat'
+filename = trim(Planck_data_dir)//'test_cls_v5.dat'
 
 write(*,*)"Reading in Cls from: ",trim(filename)
 call get_free_lun( lun )
@@ -86,7 +86,8 @@ like_tot = sum(like(1:num_pl))
   print 4, 'TOTAL -2ln(L)           ', 2*like_tot
   print 1
 
-  expected_like_tot = 1588.399118d0
+!  expected_like_tot = 2014.086141d0
+  expected_like_tot = 1929.400163d0
  
   print '(A,F13.6)', "Expected -2ln(L)         = ", expected_like_tot
   print '(A,F13.6)', "      Difference         = ", 2*like_tot-expected_like_tot

@@ -5,6 +5,7 @@
 #include <dlfcn.h>
 #include <string.h>
 #include <errno.h>
+#include "cldf/cldf.h"
 #if 0
 #include "aplowly.h"
 #include "fowly.h"
@@ -36,13 +37,13 @@ char* clik_getenviron_string(char* name, char* sfg, error **err);
 int clik_getenviron_numthread(char* name, int sfg, error **err);
 
 // init lkls
-cmblkl * clik_lklobject_init(hid_t group_id,char* cur_lkl,error **err);
-typedef cmblkl* clik_lkl_init_func(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err);
-typedef cmblkl* clik_addon_init_func(cmblkl* base, hid_t group_id, char* cur_lkl, error **err);
-typedef SmicaComp * clik_smica_comp_init_func(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
+cmblkl * clik_lklobject_init(cldf *df,error **err);
+typedef cmblkl* clik_lkl_init_func(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err);
+//typedef cmblkl* clik_addon_init_func(cmblkl* base, hid_t group_id, char* cur_lkl, error **err);
+typedef SmicaComp * clik_smica_comp_init_func(cldf * df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
-void clik_external_data_init(char *pwd,char * dirname,hid_t group_id, char* cur_lkl,error **err);
-void clik_external_data_cleanup(char *pwd,char* dirname,error **err);
+//void clik_external_data_init(char *pwd,char * dirname,hid_t group_id, char* cur_lkl,error **err);
+//void clik_external_data_cleanup(char *pwd,char* dirname,error **err);
 
 /*typedef {
   int nc;

@@ -2,11 +2,11 @@
 #define _CPADN_
 #include "clik_helper.h"
 
-void base_parametric_hdf5_init(hid_t comp_id,char* cur_lkl,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
-SmicaComp * finalize_parametric_hdf5_init(parametric* p_model,hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
+void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
+SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
 #define CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(NAME,INIT_FUNC) \
-SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
+SmicaComp * clik_smica_comp_##NAME##_init(cldf * df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
   parametric* p_model;  \
   SmicaComp *SC;  \
   int lmin,lmax;  \
@@ -21,11 +21,11 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   lmax = ell[nell-1];  \
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);  \
   \
-  base_parametric_hdf5_init(comp_id,cur_lkl,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
+  base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   dz = -1;  \
-  template = hdf5_double_datarray(comp_id,cur_lkl,"template",&dz, err);  \
+  template = cldf_readfloatarray(df,"template",&dz, err);  \
   forwardError(*err,__LINE__,);  \
   p_model = INIT_FUNC(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err);  \
   forwardError(*err,__LINE__,NULL);  \
@@ -43,14 +43,14 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   }  \
   free(varkeys);  \
   \
-  SC = finalize_parametric_hdf5_init(p_model,comp_id,cur_lkl,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);  \
+  SC = finalize_parametric_cldf_init(p_model,df,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   return SC;  \
 }
 
 #define CREATE_PARAMETRIC_FILE_INIT(NAME,INIT_FUNC) \
-SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
+SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
   parametric* p_model;  \
   SmicaComp *SC;  \
   int lmin,lmax;  \
@@ -65,7 +65,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   lmax = ell[nell-1];  \
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);  \
   \
-  base_parametric_hdf5_init(comp_id,cur_lkl,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
+  base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   p_model = INIT_FUNC(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax, err);  \
@@ -84,7 +84,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(hid_t comp_id, char* cur_lkl,int nb, i
   }  \
   free(varkeys);  \
   \
-  SC = finalize_parametric_hdf5_init(p_model,comp_id,cur_lkl,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);  \
+  SC = finalize_parametric_cldf_init(p_model,df,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   return SC;  \

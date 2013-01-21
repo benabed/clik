@@ -11,8 +11,8 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
   REAL(8), dimension(:,:) :: btt_dat(nspec_r,0:bmax0_r-1)
   REAL(8), dimension(:,:,:) :: btt_var(nspec_r,nspec_r,0:bmax0_r-1)
   REAL(8) ::  bval(nspec_r,0:bmax0_r-1), inverse(1:datap_r,1:datap_r)
-  REAL(8), dimension (:), allocatable :: cl_src
-  REAL(8) :: win_func(nspec_r,0:bmax0_r-1,1:10000)
+  REAL(8), dimension (:), allocatable :: cl_src,cl_c
+  REAL(8) :: win_func(1:10000,0:bmax0_r-1,nspec_r)
   
   PRIVATE
   public :: spt_reichardt_likelihood_init
@@ -31,7 +31,7 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     CHARACTER(LEN=240) :: ttfilename(nspec_r),winfilename(nspec_r),invcovfilename
     LOGICAL  :: good
 
-    allocate(cl_src(2:tt_lmax))
+    allocate(cl_c(2:tt_lmax),cl_src(2:tt_lmax))
 
 #ifdef TIMING
        call spt_timing_start( 'spt_reichardt_likelihood_init' )
@@ -59,6 +59,7 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     !-----------------------------------------------
     ! load TT data 
     !----------------------------------------------
+    win_func=0
     do j=1,nspec_r
 
        inquire(file=ttfilename(j),exist = good)
@@ -80,9 +81,8 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
        endif
        call get_free_lun( lun )
        open(unit=lun,file=winfilename(j),form='formatted',status='unknown',action='read')
-       win_func(j,0:bmax0_r-1,1:10000)=0.d0 
        do il = 2, tt_lmax
-          read(lun,*) ii, (win_func(j,i,il), i=0,bmax0_r-1)       
+          read(lun,*) ii, (win_func(il,i,j), i=0,bmax0_r-1)       
        enddo
        close(lun) 
    enddo
@@ -107,11 +107,11 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
   END SUBROUTINE spt_reichardt_likelihood_init
  
  ! ==========================================================================================================================================
-  SUBROUTINE spt_reichardt_likelihood_compute(cltt,amp_tsz,amp_ksz,xi,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cal_1,cal_2,cal_3,like_sptr)
+  SUBROUTINE spt_reichardt_likelihood_compute(cltt,amp_tsz,amp_ksz,xi,aps95,aps150,aps220,acib150,acib220,ncib,rps0,rps1,rps,rcib,cal_1,cal_2,cal_3,like_sptr)
  ! ==========================================================================================================================================
 
     IMPLICIT NONE
-    REAL(8), intent(in) :: cltt(2:*), amp_tsz,amp_ksz,xi,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cal_1,cal_2,cal_3
+    REAL(8), intent(in) :: cltt(2:*), amp_tsz,amp_ksz,xi,aps95,aps150,aps220,acib150,acib220,ncib,rps0,rps1,rps,rcib,cal_1,cal_2,cal_3    
     REAL(8), intent(out) :: like_sptr
     INTEGER :: lun,il,i,j,k
     REAL(8) :: cltt_temp(2:tt_lmax)
@@ -138,7 +138,6 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     f3_synch  =214.1d0
     f3_dust   =219.6d0
  
-
     call sz_func(f1_sz,sz_corr)
     f1 = sz_corr
     call sz_func(f2_sz,sz_corr)
@@ -165,35 +164,45 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     gc3 = 2.19d0
     beta_c = 2.20d0
 
+
+    !----------------------------------------------------------------
+    ! Define CIB term
+    !----------------------------------------------------------------
+    cl_c(2:tt_lmax) = 0.d0
+    do il=2,tt_lmax
+       cl_c(il)=(il/3000.d0)**ncib
+    enddo
+
+
     !----------------------------------------------------------------
     ! Calculate theory
     !----------------------------------------------------------------
-    
+
     do j=1,nspec_r
        cltt_temp(2:tt_lmax)=0.d0
        do il=2,tt_lmax
-          if(j==1) then 
+          if(j==1) then
              cl_src(il) = aps95*cl_p(il)
              cltt_temp(il) = cltt(il)+cl_src(il)+f1*f1/f0/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)+gc1*cl_cirspt(il)
            else if (j==2) then
              cl_src(il) = rps0*sqrt(aps95*aps150)*cl_p(il)
-             cltt_temp(il) = cltt(il)+cl_src(il)+f1/f0*f2/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)-sqrt(acib150*amp_tsz*4.796*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)+sqrt(gc2*gc1)*cl_cirspt(il)
+             cltt_temp(il) = cltt(il)+cl_src(il)+f1/f0*f2/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)-sqrt(acib150*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)+sqrt(gc2*gc1)*cl_cirspt(il)
            else if (j==3) then
              cl_src(il) = rps1*sqrt(aps95*aps220)*cl_p(il)
-             cltt_temp(il) = cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*4.796*f1*f1/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc1*gc3)*cl_cirspt(il)
+             cltt_temp(il) = cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc1*gc3)*cl_cirspt(il)
            else if (j==4) then
              cl_src(il) = aps150*cl_p(il)+acib150*cl_c(il)*(f2_dust/fp2)**(2.0*beta_c)*(planckratiod2*fluxtempd2)**2.0 &
-                          -2.0*sqrt(acib150*amp_tsz*4.796*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
+                          -2.0*sqrt(acib150*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
              cltt_temp(il) =cltt(il)+cl_src(il)+f2*f2/f0/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)+gc2*cl_cirspt(il)
           else if (j==5) then
              cl_src(il) = rps*sqrt(aps150*aps220)*cl_p(il)+rcib*sqrt(acib150*acib220)*cl_c(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)
-             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*4.796*f2*f2/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc2*gc3)*cl_cirspt(il)
+             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc2*gc3)*cl_cirspt(il)
           else if(j ==6) then
              cl_src(il) = aps220*cl_p(il)+acib220*cl_c(il)*(f3_dust/fp3)**(2.0*beta_c)*(planckratiod3*fluxtempd3)**2.0
              cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)+gc3*cl_cirspt(il)
           endif
        enddo
-     btt_th(j,0:bmax0_r-1)=MATMUL(win_func(j,0:bmax0_r-1,2:tt_lmax),cltt_temp(2:tt_lmax))
+     btt_th(j,0:bmax0_r-1)=MATMUL(cltt_temp(2:tt_lmax),win_func(2:tt_lmax,0:bmax0_r-1,j))
     enddo
    
     !--------------------------------------------------------------
@@ -226,11 +235,11 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
        diffs2(1,i) = diffs(i,1)
     enddo
 
-
     tmp(:,:) = matmul(inverse(:,:),diffs(:,:))
     chi2(:,:) = matmul(diffs2(:,:),tmp(:,:)) 
 
     like_sptr = like_sptr+chi2(1,1)/2.0
+
 
    10  continue
     

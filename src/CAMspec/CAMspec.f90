@@ -216,7 +216,7 @@ contains
     real*8,intent(in) :: isz_143_temp(:)
     real*8, dimension(:,:) :: ibeam_cov_inv
     real*8, dimension(:,:,:) :: ibeam_modes ! mode#, l, spec#
-    
+    real(8)::renorm    
     
     Nspec = iNspec
     nX = inX
@@ -236,9 +236,18 @@ contains
     npt = inpt
     
     lmax_sz = ilmax_sz
+    
     ksz_temp = iksz_temp
+    renorm=1.d0/ksz_temp(3000)
+    ksz_temp=ksz_temp*renorm
+    
     sz_143_temp = isz_143_temp
+    renorm=1.d0/sz_143_temp(3000)
+    sz_143_temp=sz_143_temp*renorm
+
     tszxcib_temp = itszxcib_temp
+    renorm=1.d0/tszxcib_temp(3000)
+    tszxcib_temp=tszxcib_temp*renorm
 
     beam_Nspec = ibeam_Nspec
     num_modes_per_beam = inum_modes_per_beam
@@ -263,135 +272,168 @@ contains
   end subroutine like_init_frommem
 
 
-
-  subroutine calc_like(zlike,  cell_cmb, A_ps_100,  A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz,  &
-       r_ps, r_cib, xi, A_ksz, cal0, cal1, cal2, beam_coeffs)
-
-    integer :: i, j, l, ipause,ii,jj
-    real*8, dimension(:),  allocatable ::  X_theory, X_f, X_data, X_beam_corr_model, Y 
-    real*8, dimension(0:) :: cell_cmb
-    real*8 zlike, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, &
-         cal0, cal1, cal2, xi, A_ksz
-    real*8 zell, zGF, zCIB
-    real*8 ztemp
-
-    real*8, dimension(:,:) :: beam_coeffs
-
-    real*8 :: beamfac
-
+  subroutine calc_like(zlike,  cell_cmb, freq_params)
+    real(8), intent(in)  :: freq_params(:)
+    real(8), dimension(0:) :: cell_cmb
+    integer :: i, j, l, ii,jj
+    real(8), dimension(:),  allocatable, save ::  X_theory, X_f, X_data, X_beam_corr_model, Y
+    real(8) zlike, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, &
+    cal0, cal1, cal2, xi, A_ksz, ncib
+    real(8) zell, zCIB
+    real(8) ztemp
+    real(8) beam_coeffs(Nspec,num_modes_per_beam)
     integer :: ie1,ie2,if1,if2
+    integer num_non_beam
+    !    real(8) atime
+    real(8) Lfac
+    real(8), parameter :: sz_bandpass100_nom143 = 2.022d0
+    real(8), parameter :: cib_bandpass143_nom143 = 1.134d0
+    real(8), parameter :: sz_bandpass143_nom143 = 0.95d0
+    real(8), parameter :: cib_bandpass217_nom217 = 1.33d0
 
-    
-    if (needinit) then
-       print*, 'like_init should have been called before attempting to call calc_like.'
-       stop
+    if (.not. allocated(lminX)) then
+        print*, 'like_init should have been called before attempting to call calc_like.'
+        stop
     end if
-    allocate(X_theory(1:nX))      
-    allocate(X_data(1:nX))      
-    allocate(X_f(1:nX))      
-    allocate(X_beam_corr_model(1:nX))      
-    allocate(Y(1:nX))
+    if (.not. allocated(X_theory)) then
+        allocate(X_theory(1:nX))
+        allocate(X_data(1:nX))
+        allocate(X_f(1:nX))
+        allocate(X_beam_corr_model(1:nX))
+        allocate(Y(1:nX))
+    end if
 
+    ! atime = MPI_Wtime()
 
     if(Nspec.ne.4) then
-       print*, 'Nspec inconsistent with foreground corrections in calc_like.'
-       stop
+        print*, 'Nspec inconsistent with foreground corrections in calc_like.'
+        stop
     end if
 
+    num_non_beam = 14
+    if (size(freq_params) < num_non_beam +  beam_Nspec*num_modes_per_beam) stop 'CAMspec: not enough parameters'
+    A_ps_100=freq_params(1)
+    A_ps_143 = freq_params(2)
+    A_ps_217 = freq_params(3)
+    A_cib_143=freq_params(4)
+    A_cib_217=freq_params(5) 
+    A_sz =freq_params(6)  !143
+    r_ps = freq_params(7)
+    r_cib=freq_params(8)
+    ncib = freq_params(9)
+    cal0=freq_params(10)
+    cal1=freq_params(11) 
+    cal2=freq_params(12)
+    xi=freq_params(13)
+    A_ksz=freq_params(14)
+    do ii=1,beam_Nspec
+        do jj=1,num_modes_per_beam
+            beam_coeffs(ii,jj)=freq_params(num_non_beam+jj+num_modes_per_beam*(ii-1))
+        enddo
+    enddo
+
+    
     !   100 foreground
     !
     do l = lminX(1), lmaxX(1)
-
-       zell = dfloat(l)
-       X_f(l - lminX(1) + 1) = A_ps_100*1.d-6/9.d0 + &
-            A_ksz*ksz_temp(l)/dfloat(l*(l+1))+ &
-            A_sz*2.022d0*sz_143_temp(l)/dfloat(l*(l+1))
-       X_data(l - lminX(1) + 1) = X(l - lminX(1) + 1)
-       X_theory(l-lminX(1) + 1) = cell_cmb(l)
-       X_beam_corr_model(l-lminX(1)+1) = &
-            ( X_theory(l - lminX(1) + 1)+ X_f(l - lminX(1) + 1))* &
-            corrected_beam(1,l)/cal0
+        zell = real(l,8)
+        Lfac = real(l*(l+1),8)
+        X_f(l - lminX(1) + 1) = A_ps_100*1.d-6/9.d0 + &
+        A_ksz*ksz_temp(l)/Lfac+ &
+        A_sz*sz_bandpass100_nom143*sz_143_temp(l)/Lfac
+        X_data(l - lminX(1) + 1) = X(l - lminX(1) + 1)
+        X_theory(l-lminX(1) + 1) = cell_cmb(l)
+        X_beam_corr_model(l-lminX(1)+1) = &
+        ( X_theory(l - lminX(1) + 1)+ X_f(l - lminX(1) + 1))* &
+        corrected_beam(1,l)/cal0
     end do
 
     !   143 foreground
     !
     do l = lminX(2), lmaxX(2)
-       zell = dfloat(l)
-       zCIB = 1.134d0*A_cib_143*(dfloat(l)/3000.)**(0.8)/dfloat(l*(l+1))
-       X_f(l - lminX(2) + npt(2)) = A_ps_143*1.d-6/9.d0 + zCIB + &
-            A_ksz*ksz_temp(l)/dfloat(l*(l+1))+&
-            A_sz*0.95d0*sz_143_temp(l)/dfloat(l*(l+1))  &
-            -2.0*sqrt(1.134d0*A_cib_143*0.95d0*A_sz*4.796)*xi*tszxcib_temp(l)/dfloat(l*(l+1))
-       X_data(l - lminX(2) +npt(2)) = X(l - lminX(2) + npt(2))
-       X_theory(l-lminX(2) + npt(2)) = cell_cmb(l) 
-       X_beam_corr_model(l-lminX(2)+npt(2)) = &
-            ( X_theory(l - lminX(2) + npt(2))+ X_f(l - lminX(2) + npt(2)))* &
-            corrected_beam(2,l)/cal1
+        zell = real(l,8)
+        Lfac = real(l*(l+1),8)
+        zCIB = cib_bandpass143_nom143*A_cib_143*(zell/3000)**(ncib)/Lfac
+        X_f(l - lminX(2) + npt(2)) = A_ps_143*1.d-6/9.d0 + zCIB + &
+        A_ksz*ksz_temp(l)/Lfac + A_sz*sz_bandpass143_nom143*sz_143_temp(l)/Lfac  &
+        -2.0*sqrt(cib_bandpass143_nom143*A_cib_143*sz_bandpass143_nom143*A_sz)*xi*tszxcib_temp(l)/Lfac
+        X_data(l - lminX(2) +npt(2)) = X(l - lminX(2) + npt(2))
+        X_theory(l-lminX(2) + npt(2)) = cell_cmb(l)
+        X_beam_corr_model(l-lminX(2)+npt(2)) = &
+        ( X_theory(l - lminX(2) + npt(2))+ X_f(l - lminX(2) + npt(2)))* &
+        corrected_beam(2,l)/cal1
     end do
 
     !
     !   217 foreground
     !
     do l = lminX(3), lmaxX(3)
-       zell = dfloat(l)
-       zCIB = 1.33d0*A_cib_217*(dfloat(l)/3000.)**(0.8)/dfloat(l*(l+1))
-       X_f(l - lminX(3) + npt(3) ) = A_ps_217*1.d-6/9.d0 + zCIB &
-            + A_ksz*ksz_temp(l)/dfloat(l*(l+1))   
-       X_data(l - lminX(3) + npt(3)) = X(l - lminX(3) + npt(3))
-       X_theory(l-lminX(3) + npt(3)) = cell_cmb(l)
-       X_beam_corr_model(l-lminX(3)+npt(3)) = &
-            ( X_theory(l - lminX(3) + npt(3))+ X_f(l - lminX(3) + npt(3)))* &
-            corrected_beam(3,l)/cal2
+        zell = real(l,8)
+        Lfac = real(l*(l+1),8)
+        zCIB = cib_bandpass217_nom217*A_cib_217*(zell/3000)**(ncib)/Lfac
+        X_f(l - lminX(3) + npt(3) ) = A_ps_217*1.d-6/9.d0 + zCIB &
+        + A_ksz*ksz_temp(l)/Lfac
+        X_data(l - lminX(3) + npt(3)) = X(l - lminX(3) + npt(3))
+        X_theory(l-lminX(3) + npt(3)) = cell_cmb(l)
+        X_beam_corr_model(l-lminX(3)+npt(3)) = &
+        ( X_theory(l - lminX(3) + npt(3))+ X_f(l - lminX(3) + npt(3)))* &
+        corrected_beam(3,l)/cal2
     end do
 
-
-    !
     !   143x217 foreground
     !
     do l = lminX(4), lmaxX(4)
-       zell = dfloat(l)
-       zCIB = 1.23d0*dsqrt(A_cib_143*A_cib_217)*(dfloat(l)/3000.)**(0.8) &
-            /dfloat(l*(l+1))
-       X_f(l - lminX(4) + npt(4) ) = &
-            r_ps*dsqrt(A_ps_143*A_ps_217)*1.d-6/9.d0 + r_cib*zCIB &
-            +A_ksz*ksz_temp(l)/dfloat(l*(l+1))  &
-            -sqrt(1.33d0*A_cib_217*0.95d0*A_sz*4.796)*xi*tszxcib_temp(l)/dfloat(l*(l+1))  
-       X_data(l - lminX(4) + npt(4)) =  X(l - lminX(4) + npt(4))
-       X_theory(l-lminX(4) + npt(4)) = cell_cmb(l)
-       X_beam_corr_model(l-lminX(4)+npt(4)) = &
-            ( X_theory(l - lminX(4) + npt(4))+ X_f(l - lminX(4) + npt(4)))* &
-            corrected_beam(4,l)/dsqrt(cal1*cal2)
+        zell = real(l,8)
+        Lfac = real(l*(l+1),8)
+        zCIB = dsqrt(cib_bandpass143_nom143*A_cib_143*cib_bandpass217_nom217*A_cib_217)*(zell/3000)**(ncib) &
+        /Lfac
+        X_f(l - lminX(4) + npt(4) ) = &
+        r_ps*dsqrt(A_ps_143*A_ps_217)*1.d-6/9.d0 + r_cib*zCIB &
+        +A_ksz*ksz_temp(l)/Lfac  &
+        -sqrt(cib_bandpass217_nom217*A_cib_217*sz_bandpass143_nom143*A_sz)*xi*tszxcib_temp(l)/Lfac
+        X_data(l - lminX(4) + npt(4)) =  X(l - lminX(4) + npt(4))
+        X_theory(l-lminX(4) + npt(4)) = cell_cmb(l)
+        X_beam_corr_model(l-lminX(4)+npt(4)) = &
+        ( X_theory(l - lminX(4) + npt(4))+ X_f(l - lminX(4) + npt(4)))* &
+        corrected_beam(4,l)/dsqrt(cal1*cal2)
     end do
+
 
     do i = 1, nX
-       Y(i) = X_data(i) - X_beam_corr_model(i)
+        Y(i) = X_data(i) - X_beam_corr_model(i)
     end do
 
-    zlike = 0.d+00
+    zlike = 0
+    !$OMP parallel do private(j,i,ztemp) reduction(+:zlike) schedule(static,16)
     do  j = 1, nX
-       ztemp=0.d0
-       do  i = 1, nX
-          ztemp = ztemp + Y(i)*c_inv(i, j)
-       end do
-       zlike=zlike+ztemp*Y(j)
+        ztemp= dot_product(Y(j+1:nX), c_inv(j+1:nX, j))
+        zlike=zlike+ (ztemp*2 +c_inv(j, j)*Y(j))*Y(j)
     end do
-
+    !    zlike = 0
+    !    do  j = 1, nX
+    !       ztemp= 0
+    !       do  i = 1, nX
+    !          ztemp = ztemp + Y(i)*c_inv(i, j)
+    !       end do
+    !       zlike=zlike+ztemp*Y(j)
+    !    end do
+    !   zlike = CAMSpec_Quad(c_inv, Y)
 
     do if2=1,beam_Nspec
-       do if1=1,beam_Nspec
-          do ie2=1,num_modes_per_beam
-             do ie1=1,num_modes_per_beam
-                ii=ie1+num_modes_per_beam*(if1-1)
-                jj=ie2+num_modes_per_beam*(if2-1)
-                zlike=zlike+beam_coeffs(if1,ie1)*beam_cov_inv(ii,jj)*beam_coeffs(if2,ie2)
-             enddo
-          enddo
-       enddo
+        do if1=1,beam_Nspec
+            do ie2=1,num_modes_per_beam
+                do ie1=1,num_modes_per_beam
+                    ii=ie1+num_modes_per_beam*(if1-1)
+                    jj=ie2+num_modes_per_beam*(if2-1)
+                    zlike=zlike+beam_coeffs(if1,ie1)*beam_cov_inv(ii,jj)*beam_coeffs(if2,ie2)
+                enddo
+            enddo
+        enddo
     enddo
 
+    zlike=zlike+((cal2/cal1-0.9966d0)/0.0015d0)**2  +((cal0/cal1-1.0006d0)/0.0004d0)**2
 
-    zlike=zlike+((cal2/cal1-0.9966d0)/0.0015d0)**2 &
-         +((cal0/cal1-1.0006d0)/0.0004d0)**2
+    ! print *,'CAMspec time:',  MPI_Wtime() - atime
 
     ! WARNING; weakening prior...
     !    zlike=zlike+((cal2/cal1-1.0056d0)/0.0063d0)**2 &
@@ -403,43 +445,69 @@ contains
     !-2.d0*(lmaxX(1)-lminX(1)+1)*log(cal0) &
     !-2.d0*(lmaxX(2)-lminX(2)+1)*log(cal1) &
     !-2.d0*(lmaxX(3)-lminX(3)+1)*log(cal2) &
-    !-2.d0*(lmaxX(4)-lminX(4)+1)*.5d0*(log(cal1)+log(cal2)) 
+    !-2.d0*(lmaxX(4)-lminX(4)+1)*.5d0*(log(cal1)+log(cal2))
 
 
+    !    if(writebest) then
+    !    if(zlike.lt.bestlike) then
+    !       open(49,file=bestname,form='formatted',status='unknown')
+    !       !do if1=1,beam_Nspec
+    !       !write(49,101) (beam_coeffs(if1,ie1),ie1=1,num_modes_per_beam)
+    !       !enddo
+    !101    format(5(e12.4))
+    !       do l = 0,2500
+    !          write(49,*) l, l*(l+1)*cell_cmb(l)
+    !       enddo
+    !       close(49)
+    !       bestlike=zlike
+    !    endif
+    !    endif
 
-!!    if(zlike.lt.bestlike) then
-!!       open(49,file=bestname,form='formatted',status='unknown')
-!!       !do if1=1,beam_Nspec
-!!       !write(49,101) (beam_coeffs(if1,ie1),ie1=1,num_modes_per_beam)
-!!       !enddo
-!!101    format(5(e12.4)) 
-!!       do l = 0,2500
-!!          write(49,*) l, l*(l+1)*cell_cmb(l)
-!!       enddo
-!!       close(49)
-!!       bestlike=zlike
-!!    endif
+    !if(storeall) then
+    !countnum=countnum+1
+    !write(storenumstring,*) countnum
+    !storename=trim(storeroot)//'_'//trim(adjustl(bestnum))//'_' &
+    !     //trim(adjustl(storenumstring))//'.txt'
+    !   open(49,file=storename,form='formatted',status='unknown')
+    !   do l=0,2500
+    !   write(49,*) l,l*(l+1)*cell_cmb(l)
+    !   enddo
+    !   write(49,*)
+    !   write(49,*) 'A_ps_100=',A_ps_100
+    !   write(49,*) 'A_ps_143=',A_ps_143
+    !   write(49,*) 'A_ps_217=',A_ps_217
+    !   write(49,*) 'A_cib_143=',A_cib_143
+    !   write(49,*) 'A_cib_217=',A_cib_217
+    !   write(49,*) 'A_sz=',A_sz
+    !   write(49,*) 'r_ps=',r_ps
+    !   write(49,*) 'r_cib=',r_cib
+    !   write(49,*) 'xi=',xi
+    !   write(49,*) 'A_ksz=',A_ksz
+    !   write(49,*) 'cal0=',cal0
+    !   write(49,*) 'cal1=',cal1
+    !   write(49,*) 'cal2=',cal2
+    !   do i=1,4
+    !   do j=1,num_modes_per_beam
+    !      write(49,*) 'beam_coeffs(',i,',',j,')=',beam_coeffs(i,j)
+    !      enddo
+    !      enddo
+    !      write(49,*)
+    !      write(49,*) 'zlike(=chi^2)=',zlike
+    !
+    !
+    !endif
+    contains
 
-    deallocate(X_theory)
-    deallocate(X_data)     
-    deallocate(X_f)      
-    deallocate(X_beam_corr_model)
-    deallocate(Y)
+    real(8) function corrected_beam(spec_num,l)
+    integer, intent(in) :: spec_num,l
+    integer :: i
 
-
-  contains
-
-    real*8 function corrected_beam(spec_num,l)
-      integer, intent(in) :: spec_num,l
-      integer :: i
-      corrected_beam=1.d0
-      do i=1,num_modes_per_beam   
-         corrected_beam=corrected_beam+beam_coeffs(spec_num,i)*beam_modes(i,l,spec_num)
-      enddo
+    corrected_beam=1.d0
+    do i=1,num_modes_per_beam
+        corrected_beam=corrected_beam+beam_coeffs(spec_num,i)*beam_modes(i,l,spec_num)
+    enddo
     end function corrected_beam
 
-  end subroutine calc_like
-
-
+    end subroutine calc_like
 
 end module temp_like

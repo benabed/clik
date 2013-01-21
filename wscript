@@ -3,7 +3,7 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "5.2b3"
+clik_version = "6.0b"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
@@ -49,7 +49,8 @@ def options(ctx):
   options_cython(ctx)
   
   grp=optparse.OptionGroup(ctx.parser,"Plugins options")
-  grp.add_option("--no_bopix",action="store_true",default=False,help="do not build bopix")
+  grp.add_option("--no_bopix",action="store_true",default=True,help="do not build bopix")
+  grp.add_option("--bopix",action="store_true",default=False,help="do not build bopix")
   grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_7_install",action="store_true",default=False,help="download wmap 7 likelihood for me")
@@ -143,13 +144,13 @@ def configure(ctx):
   ctx.env.has_lenslike = not (ctx.options.no_lenslike or not osp.exists("src/lenslike"))
   
   #bopix
-  ctx.env.has_bopix = not (ctx.options.no_bopix or not osp.exists("src/bopix"))
+  ctx.env.has_bopix = not ((not ctx.env.bopix) or ctx.options.no_bopix or not osp.exists("src/bopix"))
   
   #lowlike
   ctx.env.has_lowlike =   not (ctx.options.no_lowlike or not osp.exists("src/lowlike"))
 
   #configure chealpix
-  if ctx.env.has_bopix or ctx.env.has_lowlike:
+  if ctx.env.has_bopix:
     ctx.env.has_chealpix = ctx.env.has_bopix
     ctx.load("chealpix","waf_tools")
   
@@ -332,7 +333,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  dist_list =  "svnversion waf wscript **/wscript src/minipmc/* src/fakedf/* waf_tools/*.py clik.pdf "
+  dist_list =  "svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
   dist_list += "examples/*.par examples/*.dat "
   dist_list += "src/component_plugin/** "

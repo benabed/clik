@@ -31,7 +31,7 @@ SUBROUTINE ACTSPT_EXTRA_LKL(LKL,CL)
 	REAL(8),INTENT(OUT)::LKL
 	REAL(8),INTENT(IN),DIMENSION(0:CLIK_LMAX+1+21-CLIK_LMIN)::CL
 	INTEGER::i,cur
-	real(8)::amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot,ags,age
+	real(8)::amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,ncib,rps0,rps1,rps,rcib,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot,ags,age
 
 	!TT
 	cur = 0
@@ -64,6 +64,8 @@ SUBROUTINE ACTSPT_EXTRA_LKL(LKL,CL)
 	cur = cur + 1
 	acib220  = CL(cur)
 	cur = cur + 1
+	ncib  = CL(cur)
+	cur = cur + 1
 	rps0     = CL(cur)
 	cur = cur + 1
 	rps1     = CL(cur)
@@ -90,8 +92,8 @@ SUBROUTINE ACTSPT_EXTRA_LKL(LKL,CL)
 	cur = cur + 1
 	cal_3    = CL(cur)
 	cur = cur + 1
-		
-	CALL highell_likelihood_compute(cltt,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,rps0,rps1,rps,rcib,ags,age,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot)
+	
+	CALL highell_likelihood_compute(cltt,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,ncib,rps0,rps1,rps,rcib,ags,age,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot)
 	
 	LKL = -like_tot
 
