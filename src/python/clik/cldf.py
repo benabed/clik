@@ -53,15 +53,15 @@ class File(object):
       if type(v)==str:
         typ="str"
         modi = "%s"
-      elif type(v) in (bool,int,long):
-        typ = "int"
+      elif type(v) in (bool,int,long,nm.int32,nm.int64):
+        typ = "int" 
         v = int(v)
         modi = "%d"
-      elif type(v) == (float):
+      elif type(v) in (float,nm.float32,nm.float64):
         typ="float"
         modi = "%.10g"
       else:
-        raise TypeError("bad type")
+        raise TypeError("bad type %s"%type(v))
       f.write(("%s %s "+modi+"\n")%(k,typ,v))
     f.close()
 
@@ -113,12 +113,14 @@ class File(object):
       return
     if type(value) in (list,tuple,nm.ndarray):    
       value = nm.array(value)
-      if value.dtype==nm.int:
-        value = value.astype(nm.long)
-
+      if value.dtype==nm.int32:
+        value = value.astype(nm.int64)
+      #print key,fkey,value.dtype
       pf.PrimaryHDU(value).writeto(fkey)
       return
     if type(value) == str and ("\n" in value or "\0" in value or len(value)>50):
+      #print key,len(value)
+
       f=open(fkey,"w")
       f.write(value)
       f.close()
@@ -172,7 +174,14 @@ try:
   def hdf2cldf_grp(hdf,fdf):
     # first the metadata
     for kk in hdf.attrs.keys():
-      fdf[kk] = hdf.attrs[kk]
+      vl = hdf.attrs[kk]
+      #print kk,type(vl)
+      if type(vl) == str:
+        sz = h5py.h5a.get_info(hdf.id,kk).data_size
+        rr = vl.ljust(sz,'\0')
+        fdf[kk] = rr
+      else:  
+        fdf[kk] = vl
     # then the group/data
     for kk in hdf.keys():
       god = hdf[kk]
@@ -181,7 +190,11 @@ try:
           fdf.create_group(kk)
         hdf2cldf_grp(god,fdf[kk])
       else:
-        fdf[kk] = god[:]
+        r = god[:]
+        #print r
+        if len(r)==1:
+          r=r[0]
+        fdf[kk] = r
 
   def hdf2cldf(ffin, ffout):
     hdf = h5py.File(ffin,"r")

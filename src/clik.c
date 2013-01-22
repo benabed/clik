@@ -52,51 +52,54 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   int hk;
 
   _dealwitherr;
+
+  //_DEBUGHERE_("","");
   
   df  = cldf_open(hdffilepath,err);
   _forwardError(*err,__LINE__,NULL);
+
+  //_DEBUGHERE_("","");
   
   n_lkl = cldf_readint(df,"clik/n_lkl_object",err);
   _forwardError(*err,__LINE__,NULL);
   
+  //_DEBUGHERE_("","");
   sz = 6;
   lmax = cldf_readintarray(df,"clik/lmax",&sz,err);
   _forwardError(*err,__LINE__,NULL);
   
 
-  //file_id = H5Fopen( hdffilepath, H5F_ACC_RDONLY, H5P_DEFAULT);
-  //_testErrorRetVA(file_id<0,hdf5_base,"cannot open  file %s (got %d)",*err,__LINE__,NULL,hdffilepath,file_id);
-  //
-  //hstat = H5LTget_attribute_int( file_id, "/clik", "n_lkl_object",  &n_lkl);
-  //_testErrorRetVA(hstat<0,hdf5_base,"cannot read /clik/n_lkl_object in file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);
-  //
-  //hstat = H5LTget_attribute_int( file_id, "/clik", "lmax",  lmax);
-  //_testErrorRetVA(hstat<0,hdf5_base,"cannot read /clik/lmax in file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);
-    
+  //_DEBUGHERE_("","");
+
   clkl = malloc_err(sizeof(cmblkl*)*n_lkl,err);
   _forwardError(*err,__LINE__,NULL);
   
   for (i_lkl=0;i_lkl<n_lkl;i_lkl++) {
     sprintf(cur_lkl,"clik/lkl_%d",i_lkl);
   
+    //_DEBUGHERE_("","");
     cdf = cldf_openchild(df,cur_lkl,err);
     _forwardError(*err,__LINE__,NULL);
 
     //group_id = H5Gopen(file_id, cur_lkl, H5P_DEFAULT );
     //_testErrorRetVA(group_id<0,hdf5_base,"cannot read lkl %s in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);
 
+    //_DEBUGHERE_("","");
     clkl[i_lkl] = clik_lklobject_init(cdf,err);
     _forwardError(*err,__LINE__,NULL);
     
+    //_DEBUGHERE_("","");
     cmblkl_check_lmax(clkl[i_lkl],lmax,err);
     _forwardError(*err,__LINE__,NULL);
     
+    //_DEBUGHERE_("","");
     cldf_close(&cdf);
     //hstat = H5Gclose(group_id);
     //_testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);    
   }
   
     
+  //_DEBUGHERE_("","");
   n_cl = 0;
   for(cli=0;cli<6;cli++) {
     n_cl += lmax[cli]+1;

@@ -18,7 +18,7 @@ void _read_meta(cldf *df,error **err) {
   
   ff = fopen_err(cuf,"r",err);
   forwardError(*err,__LINE__,);
-  nmax = 10;
+  nmax = 1;
 
   df->metakey = malloc_err(sizeof(kv)*nmax,err);
   forwardError(*err,__LINE__,);
@@ -27,7 +27,7 @@ void _read_meta(cldf *df,error **err) {
   df->metavalue = malloc_err(sizeof(kv)*nmax,err);
   forwardError(*err,__LINE__,);
   df->nmeta = 0;
-    
+  //_DEBUGHERE_("","");  
   while(1) {
     int wh;
     ls = read_line(ff, li, 8192, err);
@@ -37,11 +37,12 @@ void _read_meta(cldf *df,error **err) {
     }
     
     if (df->nmeta==nmax) {
-      resize_err(df->metakey, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
+      //_DEBUGHERE_("","");  
+      df->metakey=resize_err(df->metakey, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
       forwardError(*err,__LINE__,);
-      resize_err(df->metavalue, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
+      df->metavalue = resize_err(df->metavalue, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
       forwardError(*err,__LINE__,);
-      resize_err(df->metatype, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
+      df->metatype = resize_err(df->metatype, sizeof(kv)*nmax, sizeof(kv)*nmax*2, 1, err);
       forwardError(*err,__LINE__,);
       nmax*=2;
     }
@@ -520,6 +521,7 @@ char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
       if (nsz<0 && sz !=NULL) {
         *sz = size;
       }
+      //_DEBUGHERE_("%s %d",key,size);
       return res; 
     }
   }
@@ -561,7 +563,7 @@ void cldf_close(cldf** pdf) {
   int i;
 
   df = *pdf;
-  
+  //_DEBUGHERE_("","");
 #ifdef HDF5_COMPAT_MODE
   if(df->hid!=0) {
     if (df->isgroup==1) {
@@ -574,17 +576,23 @@ void cldf_close(cldf** pdf) {
     return;
   }
 #endif
+  //_DEBUGHERE_("","");
   df = *pdf;
   if (df->root[0] == '\0') {
+    //_DEBUGHERE_("","");
     free(df->metavalue);
     free(df->metakey);
     free(df->metatype);
     free(df->datakey);
+    //_DEBUGHERE_("","");
     for(i=0;i<df->nchild;i++) {
+      //_DEBUGHERE_("","");
       cdf = df->child[i];
       cdf->root[0] = '\0';
       cldf_close(&cdf);
+      //_DEBUGHERE_("","");
     } 
+    //_DEBUGHERE_("","");
   }
   *pdf = NULL;
 }
@@ -600,42 +608,56 @@ void* cldf_readanyfits(char* path, int *sz, int typ, error **err) {
   char ferrchar[80];
   int datatype;
 
+  //_DEBUGHERE_("","");
   fitserr = 0;
-  fits_open_data(&fitsptr, path, READONLY, &fitserr);
-  fits_get_errstatus(fitserr,ferrchar);
-  testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s) while opening %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
+  //_DEBUGHERE_("%s %d",path,strlen(path));
 
+  fits_open_data(&fitsptr, path, READONLY, &fitserr);
+  //_DEBUGHERE_("","");
+  fits_get_errstatus(fitserr,ferrchar);
+  //_DEBUGHERE_("","");
+  testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s) while opening %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
+  //_DEBUGHERE_("","");
+
+  //_DEBUGHERE_("","");
   fitserr = 0;
   fits_get_img_type(fitsptr, &bitpix, &fitserr);
   fits_get_errstatus(fitserr,ferrchar);
   testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s)  while reading %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
   testErrorRetVA(bitpix!=typ ,-1234,"bad type for file  %s",*err,__LINE__,NULL,path);
 
+  //_DEBUGHERE_("","");
   fitserr = 0;
   fits_get_img_size(fitsptr, 1, &fsz, &fitserr);
   fits_get_errstatus(fitserr,ferrchar);
   testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s)  while reading %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
   testErrorRetVA(fsz!=*sz && *sz>0 ,-1234,"bad size for file  %s (expected %d got %d)",*err,__LINE__,NULL,path,*sz,fsz);
 
+  //_DEBUGHERE_("","");
   *sz = fsz;
 
+  //_DEBUGHERE_("","");
   res = malloc_err((abs(typ)/8)*fsz,err);
   forwardError(*err,__LINE__,NULL);
 
+  //_DEBUGHERE_("","");
   dzero = 0;
   fitserr = 0;
   datatype= TDOUBLE;
   if (typ>0) {
     datatype = TLONG;
   }
+  //_DEBUGHERE_("","");
   fits_read_img(fitsptr, datatype, 1, fsz, &dzero, res, &ploc, &fitserr);
   fits_get_errstatus(fitserr,ferrchar);
   testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s)  while reading %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
+  //_DEBUGHERE_("","");
 
   fitserr = 0;
   fits_close_file(fitsptr, &fitserr);
   fits_get_errstatus(fitserr,ferrchar);
   testErrorRetVA(fitserr!=0,-1234,"Fits error (%d : %s)  while closing %s",*err,__LINE__,NULL,fitserr,ferrchar,path);
+  //_DEBUGHERE_("","");
 
   return res;
  
@@ -739,10 +761,15 @@ int* cldf_readintarray(cldf *df, char *key, int* sz, error **err) {
   if (sz !=NULL) {
     nsz = *sz;
   }
+  //_DEBUGHERE_("","");
+
   res = cldf_readlongarray(df,key,&nsz,err);
   forwardError(*err,__LINE__,NULL);
+  //_DEBUGHERE_("","");
+
   ires = malloc_err(sizeof(int)*(nsz),err);
   forwardError(*err,__LINE__,NULL);
+  //_DEBUGHERE_("","");
   
   for(j=0;j<nsz;j++) {
     ires[j] = res[j];
@@ -751,6 +778,8 @@ int* cldf_readintarray(cldf *df, char *key, int* sz, error **err) {
   if (sz !=NULL) {
     *sz = nsz;
   }
+  //_DEBUGHERE_("","");
+
   return ires;
 }
 
@@ -771,6 +800,7 @@ long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err) {
   if (sz!=NULL) {
     nsz = *sz;
   }
+  //_DEBUGHERE_("","");
 
   #ifdef HDF5_COMPAT_MODE
   if (df->hid!=0) {
@@ -827,9 +857,11 @@ long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err) {
 
   }
   #endif
+  //_DEBUGHERE_("","");
 
   cdf = cldf_tolast(df,key,kp,err);
   forwardError(*err,__LINE__,0);
+  //_DEBUGHERE_("","");
 
   for(i=0;i<cdf->ndata;i++) {
     if (strcmp(kp,cdf->datakey[i])==0) {
@@ -843,12 +875,12 @@ long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err) {
 
       res = cldf_readanyfits(pth,&nsz,64,err);
       forwardError(*err,__LINE__,NULL);
- 
+
       if (sz !=NULL) {
         *sz = nsz;
       }
-  
-      return res;
+
+    return res;
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
@@ -930,7 +962,7 @@ void cldf_external_cleanup(char *dirname,char *pwd,error **err) {
   if (dirname[0]!='\0') {
     // remove files
     sprintf(command,"rm -rf %s",dirname); 
-    _DEBUGHERE_("%s",dirname);
+    //_DEBUGHERE_("%s",dirname);
     status = system(command);
     testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
   }

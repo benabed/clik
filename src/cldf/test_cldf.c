@@ -1,7 +1,7 @@
-#include "fakedf.h"
+#include "cldf.h"
 
 int main(int argc, char **argv) {
-  fdf *df;
+  cldf *df;
   error *_err,**err;
   int a;
   double b;
@@ -14,32 +14,32 @@ int main(int argc, char **argv) {
   _err = NULL;
   err = &_err;
 _DEBUGHERE_("",""); 
-  df = fdf_open("test_fdf.clik",err);
+  df = cldf_open("test_cldf.clik",err);
   quitOnError(*err,__LINE__,stderr);
 _DEBUGHERE_("%p",df);
 
-  a = fdf_readint(df,"d/a",err);
+  a = cldf_readint(df,"d/a",err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("a %d",a);
 
-  b = fdf_readfloat(df,"b",err);
+  b = cldf_readfloat(df,"b",err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("b %g",b);
   
-  c = fdf_readstr(df,"c",err);
+  c = cldf_readstr(df,"c",err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("c '%s'",c);
   
-  c = fdf_readstr(df,"d/b",err);
+  c = cldf_readstr(df,"d/b",err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("d/b '%s'",c);
   
   sz = 0;
-  cr = fdf_readfloatarray(df,"d/c",&sz,err);
+  cr = cldf_readfloatarray(df,"d/c",&sz,err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("d/c size %d",sz);
@@ -48,7 +48,7 @@ _DEBUGHERE_("%p",df);
   }
 
   sz = 0;
-  er = fdf_readintarray(df,"g/e",&sz,err);
+  er = cldf_readintarray(df,"g/e",&sz,err);
   quitOnError(*err,__LINE__,stderr);
 
   _DEBUGHERE_("g/e size %d",sz);
@@ -56,7 +56,7 @@ _DEBUGHERE_("%p",df);
     _DEBUGHERE_("g/e[%d] %ld",i,er[i]);
   }
 
-  fdf_close(&df);
+  cldf_close(&df);
 
   _DEBUGHERE_("","");
 }
