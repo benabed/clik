@@ -120,3 +120,18 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
 
 END SUBROUTINE CAMSPEC_EXTRA_LKL
 
+SUBROUTINE CAMSPEC_EXTRA_FG(rCL_FG,NUIS,lm)
+    USE CAMSPEC_EXTRA
+    use temp_like
+    implicit none
+    REAL(8),DIMENSION(1:14+beam_Nspec*num_modes_per_beam)::NUIS
+    REAL(8),dimension(4,0:lm)::rCL_FG
+    integer::lm
+
+
+
+    call COMPUTE_FG(rCL_FG,NUIS)
+    
+END SUBROUTINE
+
+

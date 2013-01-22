@@ -144,6 +144,31 @@ cdef class clik:
     def __get__(self):
       return self.get_extra_parameter_names()
 
+cdef extern:
+  double*   c_camspec_get_fg "camspec_get_fg" (void* camclik,double *par,int lmax,error **err) 
+
+def camspec_get_fg(nuis,lmax=3000):
+  cdef double *res
+  cdef error **err,*_err
+
+  _err = NULL
+  err = &_err
+
+  pars_proxy=nm.PyArray_ContiguousFromAny(nuis,nm.NPY_DOUBLE,1,1)
+  res = c_camspec_get_fg(NULL,<double*> nm.PyArray_DATA(pars_proxy),3000,err)
+  er=doError(err)
+  if er:
+    raise er
+  nes = nm.zeros((4,lmax))
+  for i from 0<=i<4:
+    for j from 0<=j<lmax:
+      nes[i,j] = res[j*4+i]
+  stdlib.free(res)
+  return nes
+
+
+
+
 ##cdef extern from "fowly.h":
 ##  ctypedef struct powly:
 ##    double *H

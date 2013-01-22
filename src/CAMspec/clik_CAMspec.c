@@ -160,3 +160,14 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
 
   return cing;
 }
+
+double* camspec_get_fg(void* camclik,double *par,int lmax,error **err) {
+  double *res;
+
+  res = malloc_err(sizeof(double)*(lmax+1)*4,err);
+  forwardError(*err,__LINE__,NULL);
+
+  camspec_extra_fg_(res,par,&lmax);
+
+  return res;
+}
