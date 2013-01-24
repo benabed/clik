@@ -7,7 +7,7 @@ import numpy as nm
 
 _metadata = "_mdb"
 class File(object):
-  def __init__(self,name,mode):
+  def __init__(self,name,mode="r"):
     self._mode = '+'
     if mode=="w":
       self._create(name)
@@ -85,6 +85,14 @@ class File(object):
     f.write("")
     f.close()
     self._name = name
+
+  def __contains__(self,key):
+    try:
+      self[key]
+    except Exception:
+      return False
+    return True
+
 
   def __getitem__(self,key):
     fkey = osp.join(self._name,key)
@@ -168,6 +176,8 @@ class File(object):
     ks = self.keys()
     return [(k,self[k]) for k in ks]
   
+  def close(self):
+    pass #nothing to do
 
 try:
   import h5py
@@ -184,6 +194,17 @@ try:
         fdf[kk] = vl
     # then the group/data
     for kk in hdf.keys():
+      if kk=="external_data":
+        dts = hdf[kk][:]
+        install_path = osp.join(fdf._name,"_external")
+        os.mkdir(install_path)
+        f=open(osp.join(install_path,"data.tar"),"w")
+        f.write(dts.tostring())
+        f.close()
+        assert os.system("cd %s;tar xvf data.tar"%install_path)==0
+        assert os.system("cd %s;rm -f data.tar"%install_path)==0
+        fdf["external_dir"]="."
+        continue
       god = hdf[kk]
       if isinstance(god,h5py.Group):
         if not hasattr(fdf,kk):

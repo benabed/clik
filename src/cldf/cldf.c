@@ -127,7 +127,7 @@ cldf * cldf_open_sub(char *path, char* sub,error **err) {
     if (dc==NULL) {
       break;
     }
-    if (dc->d_type==DT_DIR && dc->d_name[0]!='.') {
+    if (dc->d_type==DT_DIR && dc->d_name[0]!='.' && dc->d_name[0]!='_') {
       if (df->nchild==maxchild) {
         resize_err(df->child, sizeof(void*)*maxchild, sizeof(void*)*maxchild*2, 1, err);
         forwardError(*err,__LINE__,NULL);
@@ -491,7 +491,7 @@ char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
   for(i=0;i<cdf->nmeta;i++) {
     if (strcmp(kp,cdf->metakey[i])==0) {
       testErrorRetVA(strcmp(cdf->metatype[i],"str")!=0,-1234,"bad type for element '%s'",*err,__LINE__,0,key);
-      res = malloc_err(sizeof(char)*(strlen(cdf->metavalue[i]+1)),err);
+      res = malloc_err(sizeof(char)*(strlen(cdf->metavalue[i])+1),err);
       forwardError(*err,__LINE__,NULL);
       strcpy(res,cdf->metavalue[i]);
       return res;
@@ -947,6 +947,12 @@ void cldf_external(cldf* df, char *dirname, char* pwd, error **err) {
 #endif
   fpix_data_name = cldf_readstr(df,"external_dir",NULL,err);
   forwardError(*err,__LINE__,);
+  if (strlen(fpix_data_name)==1 && fpix_data_name[0]=='.') {
+    free(fpix_data_name);
+    fpix_data_name = malloc_err(sizeof(char)*(strlen(df->root)+strlen(df->name)+2+9+1),err);
+    forwardError(*err,__LINE__,);
+    sprintf(fpix_data_name,"%s/%s/_external",df->root,df->name);
+  }
   testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
   dirname[0]='\0';
   free(fpix_data_name);

@@ -4,7 +4,7 @@ sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
 import clik
-import clik.hpy as h5py
+import clik.hpy as hpy
 import clik.parobject as php
 
 
@@ -18,11 +18,12 @@ def main(argv):
       print "clik_join doesn't work yet with lensing likelihood, sorry"
       sys.exit(1)
   
-  lkls = [h5py.File(ll)["clik"] for ll in sys.argv[1:-1]]
-  reslkl = h5py.File(sys.argv[-1],"w")
+  
+  lkls = [hpy.File(ll)["clik"] for ll in sys.argv[1:-1]]
+  reslkl = hpy.File(sys.argv[-1],"w")
   
   nlkl = 0
-  lmax = -nm.ones(6)
+  lmax = -nm.ones(6,dtype=nm.int)
   resclik = reslkl.create_group("clik")
   name = []
   loc = []
