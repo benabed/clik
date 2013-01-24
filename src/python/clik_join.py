@@ -20,7 +20,7 @@ def main(argv):
   
   
   lkls = [hpy.File(ll)["clik"] for ll in sys.argv[1:-1]]
-  reslkl = hpy.File(sys.argv[-1],"w")
+  reslkl = hpy.File(sys.argv[-1],"w",ty=lkls[0])
   
   nlkl = 0
   lmax = -nm.ones(6,dtype=nm.int)

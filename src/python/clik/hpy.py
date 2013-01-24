@@ -7,8 +7,8 @@ except Exception, e:
 	
 import cldf
 
-def File(path,mode="r"):
-	if _has_h5py:
+def File(path,mode="r",ty=None):
+	if _has_h5py and type(ty) in dir(h5py):
 		try:
 			return h5py.File(path,mode)
 		except:
