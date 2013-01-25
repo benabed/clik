@@ -2467,6 +2467,108 @@ parametric *pointsource_bydet_init(int ndet, double *detlist, int ndef, char** d
 
   return egl;
 }
+
+
+#define GPE_DUST_DEFS double gpe_dust_freqlist[2] = {143,217}; \
+  int nfreqs_gpe_dust = 2; \
+  double A=28.2846, alpha=0.538389, B=657.4222, beta=2.96484, dellc=2029.09, gamma=1.68974, delta=42.1039; \
+  double r_gpe_dust[2][2]; \
+  double color = 3.16; \
+  r_gpe_dust[0][0] = 0.; \
+  r_gpe_dust[1][0] = color; \
+  r_gpe_dust[0][1] = color; \
+  r_gpe_dust[1][1] = color*color;
+
+
+// Dust component 'a la GPE'
+void gpe_dust_compute(parametric *egl, double *Rq, error **err);
+
+parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  double fac;
+  int ell, m1, m2;
+  double dell;
+  template_payload *payload;
+  GPE_DUST_DEFS;
+
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,);
+
+  // Declare payload, allocate it and fill it
+  parametric_check_freq(egl, gpe_dust_freqlist, nfreqs_gpe_dust,err);
+  forwardError(*err,__LINE__,);
+
+  egl->payload = malloc_err(sizeof(template_payload),err);
+  forwardError(*err,__LINE__,);
+  payload = egl->payload;
+
+  // Get mapping between input frequencies and {143,217}
+  payload->ind_freq = malloc_err(sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,);
+  for (m1=0;m1<egl->nfreq;m1++) {
+    payload->ind_freq[m1]=-1; //Init 
+    for (m2=0;m2<egl->nfreq;m2++) {
+      if (fabs(egl->freqlist[m1]-gpe_dust_freqlist[m2])<1e-6) {
+	payload->ind_freq[m1]=m2;
+      }
+    }
+  }
+  
+  // Allocate template and precompute it (value at 143 GHz)
+  payload->template = malloc_err(sizeof(double)*(lmax-lmin+1),err);
+  forwardError(*err,__LINE__,);
+  for (ell=lmin;ell<=lmax;ell++) {
+    dell = (double) ell;
+    payload->template[ell-lmin] = 1./(color*color-1.) * ( A*pow(100./dell,alpha) + B* pow(dell/1000.,beta)/pow(1.+pow(dell/dellc,gamma),delta) );
+  //payload->template[ell-lmin] = 1./(color*color-1.) * ( A*exp(alpha*log(100./dell)) + B* exp(beta*log(dell/1000.))/exp(delta*log(1.+exp(gamma*log(dell/dellc)))) );
+  }
+  
+  egl->eg_compute = &gpe_dust_compute;
+  egl->eg_free = &parametric_template_payload_free;
+  
+  parametric_set_default(egl,"gpe_dust_norm",1.0,err);
+  forwardError(*err,__LINE__,);
+  parametric_add_derivative_function(egl,"gpe_dust_norm",&parametric_norm_derivative,err);
+  forwardError(*err,__LINE__,);
+
+  return egl;
+}
+
+void gpe_dust_compute(parametric *egl, double *Rq, error **err) {
+
+  int ell, m1, m2, m2ll, nfreq;
+  int *ind_freq;
+  int ind1, ind2;
+  double *template;
+  template_payload *payload;
+  double dell;
+  double gpe_dust_norm;
+  GPE_DUST_DEFS;
+
+  nfreq = egl->nfreq;
+  gpe_dust_norm = parametric_get_value(egl,"gpe_dust_norm",err);
+  forwardError(*err,__LINE__,);
+  payload = egl->payload;
+  template = payload->template;
+
+  ind_freq = payload->ind_freq;
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for (m1=0;m1<nfreq;m1++) {
+      ind1 = ind_freq[m1];
+      for (m2=m1;m2<nfreq;m2++) {
+	ind2 = ind_freq[m2];
+	if ((ind1 >=0) && (ind2 >=0)) { //143 or 217
+	  Rq[IDX_R(egl,ell,m1,m2)] = gpe_dust_norm * r_gpe_dust[ind1][ind2] * template[ell-egl->lmin];
+	  Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+	}
+      }
+    }
+  }
+  return;
+}
+
+
 CREATE_PARAMETRIC_FILE_INIT(radiogal,radiogal_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_clustered,ir_clustered_init);
 CREATE_PARAMETRIC_FILE_INIT(ir_poisson,ir_poisson_init);
@@ -2485,3 +2587,4 @@ CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ksz,ksz_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_cib,sz_cib_init);
 CREATE_PARAMETRIC_FILE_INIT(pointsource,pointsource_init);
 CREATE_PARAMETRIC_FILE_INIT(pointsource_bydet,pointsource_bydet_init);
+CREATE_PARAMETRIC_FILE_INIT(gpe_dust,gpe_dust_init);
