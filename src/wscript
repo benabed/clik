@@ -57,7 +57,7 @@ def build(bld):
     includes = '.'+" minipmc/"*(not bld.env.has_pmc)
     )
   
-  if 1:
+  if 0:
     bld(
       features = 'c cprogram',
       source = 'cldf/test_cldf2.c',
