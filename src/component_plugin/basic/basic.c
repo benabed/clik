@@ -2469,15 +2469,20 @@ parametric *pointsource_bydet_init(int ndet, double *detlist, int ndef, char** d
 }
 
 
-#define GPE_DUST_DEFS double gpe_dust_freqlist[2] = {143,217}; \
-  int nfreqs_gpe_dust = 2; \
+#define GPE_DUST_DEFS double gpe_dust_freqlist[3] = {100,143,217}; \
+  int nfreqs_gpe_dust = 3; \
   double A=28.2846, alpha=0.538389, B=657.4222, beta=2.96484, dellc=2029.09, gamma=1.68974, delta=42.1039; \
-  double r_gpe_dust[2][2]; \
+  double r_gpe_dust[3][3]; \
   double color = 3.16; \
   r_gpe_dust[0][0] = 0.; \
-  r_gpe_dust[1][0] = color; \
-  r_gpe_dust[0][1] = color; \
-  r_gpe_dust[1][1] = color*color;
+  r_gpe_dust[1][0] = 0.; \
+  r_gpe_dust[0][1] = 0.; \
+  r_gpe_dust[1][1] = 0.; \
+  r_gpe_dust[2][0] = 0.; \
+  r_gpe_dust[0][2] = 0.; \
+  r_gpe_dust[2][1] = color; \
+  r_gpe_dust[1][2] = color; \
+  r_gpe_dust[2][2] = color*color;
 
 
 // Dust component 'a la GPE'
@@ -2514,6 +2519,7 @@ parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, ch
     }
   }
   
+
   // Allocate template and precompute it (value at 143 GHz)
   payload->template = malloc_err(sizeof(double)*(lmax-lmin+1),err);
   forwardError(*err,__LINE__,);
@@ -2557,11 +2563,14 @@ void gpe_dust_compute(parametric *egl, double *Rq, error **err) {
     for (m1=0;m1<nfreq;m1++) {
       ind1 = ind_freq[m1];
       for (m2=m1;m2<nfreq;m2++) {
-	ind2 = ind_freq[m2];
-	if ((ind1 >=0) && (ind2 >=0)) { //143 or 217
-	  Rq[IDX_R(egl,ell,m1,m2)] = gpe_dust_norm * r_gpe_dust[ind1][ind2] * template[ell-egl->lmin];
-	  Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
-	}
+        ind2 = ind_freq[m2];
+        if ((ind1 >=0) && (ind2 >=0)) { //100, 143 or 217
+          Rq[IDX_R(egl,ell,m1,m2)] = gpe_dust_norm * r_gpe_dust[ind1][ind2] * template[ell-egl->lmin];
+          Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+        } else {
+          Rq[IDX_R(egl,ell,m1,m2)] = 0.0;
+          Rq[IDX_R(egl,ell,m2,m1)] = 0.0;
+        }
       }
     }
   }
