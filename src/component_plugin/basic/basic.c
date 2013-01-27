@@ -2469,7 +2469,7 @@ parametric *pointsource_bydet_init(int ndet, double *detlist, int ndef, char** d
 }
 
 
-#define GPE_DUST_DEFS double gpe_dust_freqlist[3] = {100,143,217}; \
+#define GPE_DUST_DEFS double gpe_dust_freqlist[3] = {100.,143.,217.}; \
   int nfreqs_gpe_dust = 3; \
   double A=28.2846, alpha=0.538389, B=657.4222, beta=2.96484, dellc=2029.09, gamma=1.68974, delta=42.1039; \
   double r_gpe_dust[3][3]; \
@@ -2500,8 +2500,10 @@ parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, ch
   forwardError(*err,__LINE__,);
 
   // Declare payload, allocate it and fill it
+
   parametric_check_freq(egl, gpe_dust_freqlist, nfreqs_gpe_dust,err);
   forwardError(*err,__LINE__,);
+
 
   egl->payload = malloc_err(sizeof(template_payload),err);
   forwardError(*err,__LINE__,);
@@ -2512,7 +2514,7 @@ parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, ch
   forwardError(*err,__LINE__,);
   for (m1=0;m1<egl->nfreq;m1++) {
     payload->ind_freq[m1]=-1; //Init 
-    for (m2=0;m2<egl->nfreq;m2++) {
+    for (m2=0;m2<nfreqs_gpe_dust;m2++) {
       if (fabs(egl->freqlist[m1]-gpe_dust_freqlist[m2])<1e-6) {
 	payload->ind_freq[m1]=m2;
       }
