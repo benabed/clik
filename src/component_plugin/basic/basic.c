@@ -1424,6 +1424,7 @@ void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dR
 
 #define SZ_CIB_DEFS  double cib_freqlist[3]={100,143,217}; \
   double r_cib[3][3]={{1.0,0.0,0.0},{0.0,1.0,0.0},{0.0,0.0,1.0}}; \
+  double sz_color[3]; \
   int nfreqs_cib=3; \
   double a_sz, a_cib_100, a_cib_143, a_cib_217, r_cib_100_143, r_cib_100_217, r_cib_143_217, xi_sz_cib; \
   int lmin_sz_template = 2; \
@@ -1467,12 +1468,15 @@ void sz_cib_cib_index_derivative(parametric *egl, int iv, double *Rq, double *dR
   for (m1=0;m1<nfreq;m1++) { \
     fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0); \
   } \
-  a_cib_100  *= 1.122; \
-  a_cib_143  *= 1.134; \
-  a_cib_217  *= 1.33; \
-  fnu[0]     *= sqrt(0.9619); \
-  fnu[1]     *= sqrt(0.95); \
-  fnu[2]      = 0.0; \
+  a_cib_100  *= 1.122;						\
+  a_cib_143  *= 1.134;						\
+  a_cib_217  *= 1.33;						\
+  sz_color[0] = sqrt(0.9619);					\
+  sz_color[1] = sqrt(0.95);					\
+  sz_color[2] = 0.0;						\
+  for (m1=0;m1<nfreq;m1++) {					\
+    fnu[m1] *= sz_color[ind_freq[m1]] ;				\
+  };								\
   a_cib[0]    = a_cib_100; \
   a_cib[1]    = a_cib_143; \
   a_cib[2]    = a_cib_217; \
