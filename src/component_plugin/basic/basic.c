@@ -2529,6 +2529,7 @@ parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, ch
     dell = (double) ell;
     payload->template[ell-lmin] = 1./(color*color-1.) * ( A*pow(100./dell,alpha) + B* pow(dell/1000.,beta)/pow(1.+pow(dell/dellc,gamma),delta) );
   //payload->template[ell-lmin] = 1./(color*color-1.) * ( A*exp(alpha*log(100./dell)) + B* exp(beta*log(dell/1000.))/exp(delta*log(1.+exp(gamma*log(dell/dellc)))) );
+    payload->template[ell-lmin] *= 2.0*M_PI/dell/(dell+1.0); // Converts to C_ell
   }
   
   egl->eg_compute = &gpe_dust_compute;
