@@ -46,6 +46,7 @@ def options(ctx):
   ctx.add_option_group(grp)
   options_numpy(ctx)
   options_h5py(ctx)
+  options_pyfits(ctx)
   options_cython(ctx)
   
   grp=optparse.OptionGroup(ctx.parser,"Plugins options")
@@ -201,6 +202,7 @@ def configure(ctx):
     try:
       configure_numpy(ctx)
       configure_h5py(ctx)
+      configure_pyfits(ctx)
       configure_cython(ctx)
       
     except Exception,e:
@@ -459,6 +461,9 @@ def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
 def options_h5py(ctx):
   import autoinstall_lib as atl
   atl.add_python_option(ctx,"h5py")
+def options_pyfits(ctx):
+  import autoinstall_lib as atl
+  atl.add_python_option(ctx,"pyfits")
 def options_numpy(ctx):
   atl.add_python_option(ctx,"numpy")
 def options_cython(ctx):
@@ -482,6 +487,10 @@ def configure_numpy(ctx):
   atl.configure_python_module(ctx,"numpy","http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz","numpy-1.6.0")
   import numpy
   ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
+
+def configure_pyfits(ctx):
+  import autoinstall_lib as atl
+  atl.configure_python_module(ctx,"pyfits","http://pypi.python.org/packages/source/p/pyfits/pyfits-2.4.0.tar.gz","pyfits-2.4.0.tar.gz","pyfits-2.4.0")
   
 def configure_cython(ctx):
   import autoinstall_lib as atl
