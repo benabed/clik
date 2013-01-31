@@ -61,7 +61,6 @@ def main(argv):
       nlkl+=1
       lklin.copy(lklin[grpin],resclik,grpout)
     
-    print lklin
     if "default" in lklin:
       prid = lklin["default"]
       pname = [n.strip() for n in prid.attrs["name"].split('\0') if n]
@@ -86,8 +85,6 @@ def main(argv):
     prid.create_dataset("loc", data=loc.flat[:])
     prid.create_dataset("var", data=var.flat[:])
   if len(defn):
-    print defn
-    print defloc
     prid = resclik.create_group("default")
     prid.attrs["name"] = php.pack256(*defn)
     prid.create_dataset("loc", data=nm.array(defloc).flat[:])

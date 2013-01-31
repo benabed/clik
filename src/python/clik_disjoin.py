@@ -22,7 +22,7 @@ def main(argv):
     fname = f_tmpl%lkln
     lkl = lkls[lkln]
     print "  "+fname
-    hf = h5py.File(fname,"w")
+    hf = h5py.File(fname,"w",lkls)
     if "lmax" in lkl.attrs:
       lmax = lkl.attrs["lmax"]
     else:

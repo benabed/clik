@@ -1,7 +1,11 @@
 import os
 import os.path as osp
 import shutil as shu
-import pyfits as pf
+try:
+  import pyfits as pf
+except Exception,e:
+  pass
+  
 import re
 import numpy as nm
 

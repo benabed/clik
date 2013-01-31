@@ -5,13 +5,30 @@ try:
 except Exception, e:
 	print e
 	pass
-	
-import cldf
+
+_has_cldf = False
+try:
+	import cldf
+	_has_cldf = True
+except Exception,e:
+	pass
+
+import os.path as osp
+
+def is_h5py_object(oo):
+	if not _has_h5py:
+		return False
+	if not _has_cldf:
+		return True
+	return not(type(oo) == cldf.File)
 
 def File(path,mode="r",ty=None):
-	if _has_h5py and (type(ty) in dir(h5py) or ty==None):
+	if _has_h5py and (is_h5py_object(ty) or ty==None):
 		try:
-			return h5py.File(path,mode)
+			if osp.exists(path) and osp.isdir(path):
+				pass
+			else:
+				return h5py.File(path,mode)
 		except Exception,e:
 			print e
 	return cldf.File(path,mode)
