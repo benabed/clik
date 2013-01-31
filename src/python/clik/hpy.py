@@ -30,5 +30,6 @@ def File(path,mode="r",ty=None):
 			else:
 				return h5py.File(path,mode)
 		except Exception,e:
+			pass
 			#print e
 	return cldf.File(path,mode)
