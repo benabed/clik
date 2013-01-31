@@ -5,7 +5,7 @@ try:
   import pyfits as pf
 except Exception,e:
   pass
-  
+
 import re
 import numpy as nm
 
@@ -189,6 +189,7 @@ try:
     # first the metadata
     for kk in hdf.attrs.keys():
       vl = hdf.attrs[kk]
+        
       #print kk,type(vl)
       if type(vl) == str:
         sz = h5py.h5a.get_info(hdf.id,kk).data_size

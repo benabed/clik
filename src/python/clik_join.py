@@ -89,7 +89,7 @@ def main(argv):
     prid.attrs["name"] = php.pack256(*defn)
     prid.create_dataset("loc", data=nm.array(defloc).flat[:])
     
-  resclik.attrs["lmax"] = lmax
+  resclik.attrs["lmax"] = lmax.astype(nm.int)
   resclik.attrs["n_lkl_object"] = nlkl
   
   reslkl.close()
