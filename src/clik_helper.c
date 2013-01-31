@@ -14,7 +14,7 @@
 
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}
 #define _testErrorRetVA(A,B,C,D,E,F,...) if(_err!=NULL) {testErrorRetVA(A,B,C,D,E,F,__VA_ARGS__);} else {testErrorExitVA(A,B,C,D,E,__VA_ARGS__);}
-
+#if 0
 double* hdf5_double_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err) {
   hsize_t ndum;
   H5T_class_t dum;
@@ -118,7 +118,7 @@ char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error
   }
   return res;
 }
-
+#endif
 int clik_getenviron_integer(char* name, int sfg, error **err) {
   int res;
   char *cres;
