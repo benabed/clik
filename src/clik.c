@@ -37,8 +37,6 @@ char* clik_get_version(clik_object *clikid,error **_err) {
 }
 
 clik_object* clik_init(char* hdffilepath, error **_err) {
-  hid_t file_id,group_id,prior_id,def_id;
-  herr_t hstat;
   int n_lkl,i_lkl;
   int *lmax;
   int sz;

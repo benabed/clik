@@ -1,5 +1,4 @@
 #include "clik.h"
-#include "hdf5.h"
 #include "lklbs.h"
 #include "smica.h"
 #include <dlfcn.h>

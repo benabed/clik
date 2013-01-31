@@ -182,7 +182,6 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   cmblkl *clkl;
   parname lkl_type;
   char *version;
-  herr_t hstat;
   int has_cl[6];
   int nell, *ell,nbins,i,cli;
   double *wl,*bins;
@@ -195,7 +194,6 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   char cur_addon[256];
   char *addon_type;
   int i_add,n_addons;
-  hid_t add_group_id;
   int sz;
   char *dm;
   int *dmi;
@@ -272,10 +270,6 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   if (nbins!=0) {
     int nd;
     int ncl;
-    hsize_t nn;
-    H5T_class_t dum;
-    size_t ddum;
-    hid_t dataset_id;
     
     nd = 0;
     ncl = 0;
