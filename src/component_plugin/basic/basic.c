@@ -1575,7 +1575,7 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
   parametric_add_derivative_function(egl,"cib_index",&sz_cib_cib_index_derivative,err);
   forwardError(*err,__LINE__,NULL);
 
-  remove_100 = 1;
+  remove_100 = 0;
   remove_100 = pflist_get_int_value(egl->pf,"no_szxcib_100",&remove_100,err);
   forwardError(*err,__LINE__,NULL);
 
