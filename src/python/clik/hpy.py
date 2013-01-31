@@ -3,7 +3,7 @@ try:
 	import h5py
 	_has_h5py = True
 except Exception, e:
-	print e
+	#print e
 	pass
 
 _has_cldf = False
@@ -30,5 +30,5 @@ def File(path,mode="r",ty=None):
 			else:
 				return h5py.File(path,mode)
 		except Exception,e:
-			print e
+			#print e
 	return cldf.File(path,mode)
