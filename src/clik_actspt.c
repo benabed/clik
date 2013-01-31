@@ -21,13 +21,11 @@ double actspt_lkl(void* none, double* pars, error **err) {
 }
 
 cmblkl* clik_actspt_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
-  hsize_t ndum;
   char directory_name[4096],pwd[4096],pwd2[4096];
   int status;
   int bok;
   cmblkl *cing;
   int mlmax;
-  herr_t hstat;
   int ilmin11,ilmin12,ilmin22,ilmax11,ilmax12,ilmax22,itt_lmax_mc,iuse_act_south  , iuse_act_equa   , iuse_spt_lowell , iuse_spt_highell;
   char dir_data[2048];
   int ldd;

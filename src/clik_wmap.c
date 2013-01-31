@@ -20,15 +20,12 @@ double wmap_lkl(void* none, double* pars, error **err) {
 }
 
 cmblkl* clik_wmap_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
-  hsize_t ndum;
   char directory_name[4096],pwd[4096];
   int status;
   int bok;
   cmblkl *cing;
   int mlmax;
-  herr_t hstat;
   int ttmin,ttmax,temin,temax,use_gibbs,use_lowl_pol;
-  hid_t group_id;
   char* cur_lkl;
 
   wmap_extra_only_one_(&bok);

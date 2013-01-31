@@ -188,7 +188,6 @@ void apply_rename(int nkey, char* keys, int nrename, char* rename_from, char* re
 void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
   int dz,i;
   char *keyvartable,*deftable,*valtable;
-  herr_t hstat;
   int nrename;
   char *rename_from, *rename_to;
   int hk;
@@ -294,7 +293,6 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   char **xnames;
   SmicaComp *SC;
   int lmin,lmax;
-  herr_t hstat;
   double *color;
   int dz;
   int nrename;

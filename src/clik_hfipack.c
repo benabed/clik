@@ -248,10 +248,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   double *A_cmb;
   Smica *smic;
   int ncl,icl,nb;
-  hsize_t ndum;
-  H5T_class_t dum;
   size_t ddum;
-  herr_t hstat;
   int cnt,xdim;
   char **xnames;
   parname *xnames_buf;
@@ -338,7 +335,6 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     dlhandle = NULL;
 #endif
     parname comp_type;
-    hid_t comp_id;
     cldf *comp_df;
 
     SCs[ic] = NULL;
@@ -519,7 +515,6 @@ SmicaComp * clik_smica_comp_1d_init(cldf *df,int nb, int m,int nell, int* ell, i
   double *someA;
   int nA;
   SmicaComp *SC;
-  herr_t hstat;
   int hk;
 
   // try to read A
@@ -580,7 +575,6 @@ SmicaComp * clik_smica_comp_nd_init(cldf *df,int nb, int m,int nell, int* ell, i
 
 SmicaComp * clik_smica_comp_diag_init(cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   SmicaComp *SC; 
-  herr_t hstat;
   // try to read A
 
   SC = comp_diag_init(nb, m, err);
@@ -590,7 +584,6 @@ SmicaComp * clik_smica_comp_diag_init(cldf *df,int nb, int m, int nell, int* ell
 
 SmicaComp * clik_smica_comp_cst_init(cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   SmicaComp *SC; 
-  herr_t hstat;
   double *rq_0;
   int tt;
   tt = -1;
@@ -610,7 +603,6 @@ SmicaComp * clik_smica_comp_gcal_log_init(cldf *df,int nb, int m,int nell, int* 
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
-  herr_t hstat;
   int mm,im,tt,ig,to;
   char **xnames,*bnames;
   int binned;
@@ -684,7 +676,6 @@ SmicaComp * clik_smica_comp_gcal_lin_init(cldf *df,int nb, int m,int nell, int* 
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
-  herr_t hstat;
   int mm,im,tt,ig,to;
   char **xnames,*bnames;
   int binned;
@@ -760,7 +751,6 @@ SmicaComp * clik_smica_comp_amp_diag_init(cldf *df,int nb, int m,int nell, int* 
   SmicaComp *SC;
   char *bnames;
   char **xnames;
-  herr_t hstat;
   int im,ii;
   int hk;
   

@@ -27,13 +27,11 @@ double gibbs_lkl(void* none, double* pars, error **err) {
 }
 
 cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
-  hsize_t ndum;
   char directory_name[4096],pwd[4096],pwd2[4096];
   int status;
   int bok;
   cmblkl *cing;
   int mlmax;
-  herr_t hstat;
   char dir_data[2048];
   int ldd;
   int lmin,lmax;

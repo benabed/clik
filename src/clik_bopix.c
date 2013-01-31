@@ -26,7 +26,6 @@ cmblkl* clik_bopix_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   int bok;
   cmblkl *cing;
   int mlmax;
-  herr_t hstat;
   
   bopix_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"Bopix already initialized",*err,__LINE__,NULL);
