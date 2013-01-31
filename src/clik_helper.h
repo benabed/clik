@@ -24,11 +24,13 @@
 #define _testErrorRetVA(A,B,C,D,E,F,...) if(_err!=NULL) {testErrorRetVA(A,B,C,D,E,F,__VA_ARGS__);} else {testErrorExitVA(A,B,C,D,E,__VA_ARGS__);}
 
 // hdf helpers
+#if 0
 double* hdf5_double_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 int* hdf5_int_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 int* hdf5_int_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 double* hdf5_double_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
 char* hdf5_char_attarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err);
+# endif
 
 // get environ parameter
 int clik_getenviron_integer(char* name, int sfg, error **err);
