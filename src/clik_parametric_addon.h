@@ -13,7 +13,6 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf * df,int nb, int m, int nell, int
   double *detlist;  \
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
-  herr_t hstat;  \
   double *template;  \
   int dz;  \
   \
@@ -57,7 +56,6 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int m, int nell, int*
   double *detlist;  \
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
-  herr_t hstat;  \
   double *template;  \
   int dz;  \
   \

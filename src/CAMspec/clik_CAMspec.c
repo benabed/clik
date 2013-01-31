@@ -18,10 +18,8 @@ void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,do
 //CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
 
 cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
-  hsize_t ndum;
   int bok;
   cmblkl *cing;
-  herr_t hstat;
   char likefile[2048],szfile[2048];
   int xcase;
   double xdim;
