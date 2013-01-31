@@ -82,7 +82,9 @@ cldf * cldf_open_sub(char *path, char* sub,error **err) {
   struct dirent *dc;
   char *mpath;
   char mmpath[8192];
+  char lpath[8192];
   int maxchild,maxdata;
+  struct stat m;
 
   df = malloc_err(sizeof(cldf),err);
   forwardError(*err,__LINE__,NULL);
@@ -127,7 +129,14 @@ cldf * cldf_open_sub(char *path, char* sub,error **err) {
     if (dc==NULL) {
       break;
     }
-    if (dc->d_type==DT_DIR && dc->d_name[0]!='.' && dc->d_name[0]!='_') {
+    
+    sprintf(lpath,"%s/%s",mpath,dc->d_name);
+    
+    if (dc->d_name[0]=='.' || dc->d_name[0]=='_') {
+      continue;
+    }
+    testErrorRetVA(stat(lpath,&m)==-1,-1234,"Can't stat %s (%s)",*err,__LINE__,NULL,strerror(errno));
+    if (S_ISDIR(m.st_mode)) {
       if (df->nchild==maxchild) {
         resize_err(df->child, sizeof(void*)*maxchild, sizeof(void*)*maxchild*2, 1, err);
         forwardError(*err,__LINE__,NULL);
@@ -136,18 +145,15 @@ cldf * cldf_open_sub(char *path, char* sub,error **err) {
       df->child[df->nchild] = cldf_open_sub(dc->d_name,mpath,err);
       forwardError(*err,__LINE__,NULL);      
       df->nchild++;
-    } else {
-      if (dc->d_name[0]=='_') {
-        continue;
-      }
-      if (df->ndata==maxdata) {
-        resize_err(df->datakey, sizeof(void*)*maxdata, sizeof(void*)*maxdata*2, 1, err);
-        forwardError(*err,__LINE__,NULL);
-        maxdata*=2;
-      }
-      strcpy(df->datakey[df->ndata],dc->d_name);
-      df->ndata++;
+      continue;
     }
+    if (df->ndata==maxdata) {
+      resize_err(df->datakey, sizeof(void*)*maxdata, sizeof(void*)*maxdata*2, 1, err);
+      forwardError(*err,__LINE__,NULL);
+      maxdata*=2;
+    }
+    strcpy(df->datakey[df->ndata],dc->d_name);
+    df->ndata++;
   }
   return df;
 }
