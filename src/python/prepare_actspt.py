@@ -61,7 +61,9 @@ def main(argv):
   lkl_grp.attrs["use_act_equa"] = pars.int(default=1).use_act_equa
   lkl_grp.attrs["use_spt_highell"] = pars.int(default=1).use_spt_highell
   
-  lkl_grp.attrs["external_dir"] = osp.realpath(pars.actspt_data)
+  php.add_external_data(osp.realpath(pars.actspt_data),lkl_grp,tar=bool(pars.int(default=1).include))
+
+  #lkl_grp.attrs["external_dir"] = osp.realpath(pars.actspt_data)
   hf.close()
   
   #if hasattr(clik,"clik"):

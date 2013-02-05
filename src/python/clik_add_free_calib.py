@@ -4,18 +4,17 @@ sys.path = ["$REPLACEPATH"]+sys.path
 
 import clik
 import clik.hpy as hpy
-
+import clik.parobject as php
 
 
 def main(argv):
   pars = clik.miniparse(argv[1])
-  hpy.copyfile(pars.input_object,pars.res_object)
-  outhf = hpy.File(pars.res_object,"r+")
-  lkli = pars.int(default=0).lkl_id
-  outhf["clik/lkl_%d"%lkli].attrs["free_calib"] = pars.str.parname
-  if "check_param" in outhf["clik"]:
-    del(outhf["clik/check_param"])
-    del(outhf["clik/check_value"])
+
+  outhf,lkl_grp = php.copy_and_get_0(pars)
+  php.add_free_calib(lkl_grp,pars.str.parname)
+
+  php.remove_selfcheck(root_grp=outhf["clik"])
+
     
   outhf.close()
 

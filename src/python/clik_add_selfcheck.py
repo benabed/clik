@@ -5,11 +5,6 @@ sys.path = ["$REPLACEPATH"]+sys.path
 import numpy as nm
 import clik.parobject as php
 import clik
-import re
-import os.path as osp
-import os
-import shutil
-import clik.hpy as h5py
 
 
 

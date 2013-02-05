@@ -1,6 +1,6 @@
 import numpy as nm
-import hpy as h5py 
-
+import hpy
+import shutil
 
 def pack256(*li):
   rr=""
@@ -10,7 +10,7 @@ def pack256(*li):
 
 def baseCreateParobject(parobject):
   # init file
-  hf = h5py.File(parobject, 'w')
+  hf = hpy.File(parobject, 'w')
   root_grp = hf.create_group("clik")
   
   # fill general info
@@ -21,22 +21,32 @@ def baseCreateParobject(parobject):
   
 def add_external_data(directory,lkl_grp,tar=False):
   import os.path as osp
+  import os
   import tempfile
   import tarfile
   import numpy as nm
   if not tar:
     lkl_grp.attrs["external_dir"] = osp.realpath(directory)
   else:
-    tmp = tempfile.TemporaryFile()
-    tartmp = tarfile.TarFile(mode = "w", fileobj=tmp)
-    tartmp.add(directory)
-    tartmp.close()
-    tmp.seek(0)
-    dat = nm.frombuffer(tmp.read(),dtype=nm.uint8)
-    lkl_grp.create_dataset("external_data",data=dat.flat[:])
-    tmp.close()
-    
-    
+    if hpy.is_h5py_object(lkl_grp):
+      tmp = tempfile.TemporaryFile()
+      tartmp = tarfile.TarFile(mode = "w", fileobj=tmp)
+      cd = os.getcwd()
+      os.chdir(directory)
+      for d in os.listdir("."):
+        if d not in [".",".."]:
+          tartmp.add(d) 
+      tartmp.close()
+      tmp.seek(0)
+      dat = nm.frombuffer(tmp.read(),dtype=nm.uint8)
+      lkl_grp.create_dataset("external_data",data=dat.flat[:])
+      tmp.close()
+      os.chdir(cd)
+    else:
+      #os.mkdir(lkl_grp._name+"/_external")
+      shutil.copytree(directory,lkl_grp._name+"/_external")    
+      lkl_grp.attrs["external_dir"] = "."
+      
 def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=None,nbins=0,bins=None,compress_bns=True):
   ilkl = root_grp.attrs["n_lkl_object"]
   lmaxs = root_grp.attrs["lmax"]
@@ -140,15 +150,16 @@ def add_selfcheck(fname,pars):
   del(mlkl)
   
   # add check pars
-  hf = h5py.File(fname, 'r+')
+  hf = hpy.File(fname, 'r+')
   root_grp = hf["clik"]
   root_grp.create_dataset("check_param",data=pars)
-  root_grp.create_dataset("check_value",data=res)
+  root_grp.attrs["check_value"] = float(res)
   hf.close()
   return res
+
 def remove_selfcheck(fname=None,root_grp=None):
   if fname!=None:
-    hf = h5py.File(fname, 'r+')
+    hf = hpy.File(fname, 'r+')
     root_grp = hf["clik"]
   if "check_param" in root_grp:
     del root_grp["check_param"]
@@ -167,9 +178,9 @@ def read_somearray(somepath):
 
 def copy_and_get_0(pars):
   if "input_object" in pars:
-    shutil.copyfile(pars.input_object,pars.res_object)
-  outhf = h5py.File(pars.res_object,"r+")
-  return outhf["clik/lkl_0"]
+    hpy.copyfile(pars.input_object,pars.res_object)
+  outhf = hpy.File(pars.res_object,"r+")
+  return outhf,outhf["clik/lkl_%d"%pars.int(default=0).lkl_id]
 
 def add_pid(lkl_grp,pid=""):
   if not pid:
@@ -220,6 +231,9 @@ def add_prior(root_grp,name,loc,var):
     lo = [pred[k] for k in nam]
     add_default(root_grp,nam,lo)
 
+def add_free_calib(root_grp,name):
+  root_grp.attrs["free_calib"] = pars.str.parname
+  
 def add_default(root_grp,name,loc,extn=None):
 
   if "default" in root_grp:
@@ -246,11 +260,7 @@ def add_default(root_grp,name,loc,extn=None):
     del(prid["loc"])
   prid["loc"]=floc.flat[:]
 
-  print "1"
-  print root_grp
-  print root_grp.items()
   if "prior" in root_grp:
-    print "2"
     prid = root_grp["prior"]
     pname = [n.strip() for n in prid.attrs["name"].split('\0') if n.strip()]
     ploc = prid["loc"][:]

@@ -3,11 +3,7 @@ import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
-import numpy.random as ra
-import numpy.linalg as la
 import clik
-import re
-import os.path as osp
 
 def main(argv):
   pars = clik.miniparse(argv[1])

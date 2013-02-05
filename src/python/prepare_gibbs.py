@@ -3,11 +3,8 @@ import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
-import numpy.random as ra
-import numpy.linalg as la
 import clik.parobject as php
 import clik
-import re
 import os.path as osp
 
 def main(argv):
@@ -38,6 +35,7 @@ def main(argv):
   lkl_grp.attrs["firstchain"] = firstchain
   lkl_grp.attrs["lastchain"] = lastchain
   lkl_grp.attrs["step"] = step
+  php.add_pid(lkl_grp,pars.str(default="").pid)
 
   import tempfile
   dr = tempfile.mkdtemp()
@@ -47,13 +45,14 @@ def main(argv):
   import shutil
   shutil.copy(pars.sigma_file.strip(),dr+"/data/sigma.fits")
   shutil.copy(pars.cl_file.strip(),dr+"/data/cl.dat")
-  assert os.system("cd %s;tar cvf data.tar *"%dr)==0
-  f=open(osp.join(dr,"data.tar"),"r")
-  dts = f.read()
-  f.close()
-  php.add_pid(lkl_grp,pars.str(default="").pid)
-  
-  lkl_grp.create_dataset("external_data",data=nm.fromstring(dts,dtype=nm.uint8))
+
+  php.add_external_data(dr,lkl_grp,tar=True)
+
+  #assert os.system("cd %s;tar cvf data.tar *"%dr)==0
+  #f=open(osp.join(dr,"data.tar"),"r")
+  #dts = f.read()
+  #f.close()
+  #lkl_grp.create_dataset("external_data",data=nm.fromstring(dts,dtype=nm.uint8))
   hf.close()
 
   shutil.rmtree(dr)

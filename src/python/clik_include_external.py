@@ -2,32 +2,34 @@
 import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
-import numpy as nm
-import numpy.random as ra
-import numpy.linalg as la
 import clik.parobject as php
 import clik
-import re
 import os.path as osp
 import os
-import shutil
-import clik.hpy as h5py
+import clik.hpy as hpy
 
 def main(argv):
   pars = clik.miniparse(argv[1])
   
-  inhf = h5py.File(pars.input_object)
-  install_path = inhf["clik/lkl_0"].attrs["external_dir"]
-  assert os.system("cd %s;tar cvf data.tar *"%install_path)==0
-  f=open(osp.join(install_path,"data.tar"),"r")
-  dts = f.read()
-  f.close()
+  inhf = hpy.File(pars.input_object)
+  install_path = inhf["clik/lkl_%d"%pars.int(default=0).lkl_id].attrs["external_dir"]
   
-  shutil.copyfile(pars.input_object,pars.res_object)
-  
-  outhf = h5py.File(pars.res_object,"r+")
-  del outhf["clik/lkl_0"].attrs["external_dir"]
-  outhf["clik/lkl_0"].create_dataset("external_data",data=nm.fromstring(dts,dtype=nm.uint8))
+  hpy.copyfile(pars.input_object,pars.res_object)
+  outhf = hpy.File(pars.res_object,"r+")
+  lkl_grp = outhf["clik/lkl_%d"%pars.int(default=0).lkl_id]
+  if hpy.is_h5py_object(inhf):
+    assert os.system("cd %s;tar cvf data.tar *"%install_path)==0
+    f=open(osp.join(install_path,"data.tar"),"r")
+    dts = f.read()
+    f.close()
+    del lkl_grp.attrs["external_dir"]
+    lkl_grp.create_dataset("external_data",data=nm.fromstring(dts,dtype=nm.uint8))
+  else:
+    local_path = osp.join(lkl_grp._name,"_external")
+    os.mkdir(local_path)
+    shutil.copytree(install_path,local_path)
+    lkl_grp["external_dir"]="."    
+
   outhf.close()
   
 

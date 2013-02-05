@@ -3,8 +3,6 @@ import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
-import numpy.random as ra
-import numpy.linalg as la
 import clik.parobject as php
 import clik
 import re
@@ -62,7 +60,9 @@ def main(argv):
   lkl_grp.attrs["use_gibbs"] = pars.int.use_gibbs
   lkl_grp.attrs["use_lowl_pol"] = pars.int.use_lowl_pol
   
-  lkl_grp.attrs["external_dir"] = osp.realpath(pars.wmap_data)
+  #lkl_grp.attrs["external_dir"] = osp.realpath(pars.wmap_data)
+  php.add_external_data(osp.realpath(pars.wmap_data),lkl_grp,tar=bool(pars.int(default=1).include))
+
   hf.close()
   
   if hasattr(clik,"clik"):

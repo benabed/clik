@@ -95,9 +95,38 @@ def build(ctx):
   )
   
   # python execs
-  
-  for cde in ["clik_add_free_calib","clik_hdf2cldf","prepare_gibbs","clik_smica_changelmax","clik_smica_change_criterion","clik_explore_1d","prepare_actspt","clik_add_selfcheck","clik_get_selfcheck","clik_add_default","synthetic_smica","clik_example_py","clik_join","clik_disjoin","clik_print","create_lowl_problem","clik_add_prior",
-              "prepare_lowl","prepare_wmap","prepare_lowlike","prepare_bopix","clik_include_external","clik_extract_external","clik_add_egfs","prepare_CAMspec","clik_smica_add_gcal","clik_add_plugin_component","clik_remove_smica_component"]:  
+
+  execlist = ["clik_add_free_calib",
+              "clik_hdf2cldf",
+              "prepare_gibbs",
+              "clik_smica_changelmax",
+              "clik_smica_change_criterion",
+              "clik_explore_1d",
+              "prepare_actspt",
+              "clik_add_selfcheck",
+              "clik_get_selfcheck",
+              "clik_add_default",
+              "clik_example_py",
+              "clik_join",
+              "clik_disjoin",
+              "clik_print",
+              "clik_add_prior",
+              "prepare_wmap",
+              "prepare_lowlike",
+              "clik_include_external",
+              "clik_extract_external",
+              "prepare_CAMspec",
+              "clik_smica_add_gcal",
+              "clik_remove_smica_component"]
+  old =   [
+              "synthetic_smica",
+              "create_lowl_problem",
+              "prepare_lowl",
+              "prepare_bopix",
+              "clik_add_egfs",
+              "clik_add_plugin_component",
+  ]
+  for cde in execlist:
     ctx(
       execrule = injectpath,
       source = cde+".py",

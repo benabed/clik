@@ -2,11 +2,10 @@
 import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
-import h5py
+import clik.hpy as hpy
 import clik.smicahlp as hlp
 import clik.parobject as php
 import numpy as nm
-import shutil
 
 
 def cutlminlmax(nlmin, nlmax, infile, outfile):
@@ -22,8 +21,8 @@ def cutlminlmax(nlmin, nlmax, infile, outfile):
            multipole range lmin <= l <= lmax, where lmin, lmax is
            adapted to the binning scheme of the file.
     """
-    shutil.copy(infile,outfile)
-    ff     = h5py.File(outfile,"r+")
+    hpy.copy(infile,outfile)
+    ff     = hpy.File(outfile,"r+")
     lmaxs  = ff["clik"].attrs["lmax"]
     lmin   = ff["clik/lkl_0"].attrs["lmin"]
     blmins = ff["clik/lkl_0/bin_lmin"][:]

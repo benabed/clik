@@ -8,8 +8,6 @@ import clik
 import re
 import os.path as osp
 import os
-import shutil
-import clik.hpy as h5py
 
 class forfile:
   def __init__(self,fi):

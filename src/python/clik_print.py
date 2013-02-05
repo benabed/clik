@@ -4,7 +4,7 @@ sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
 import clik
-import clik.hpy as h5py
+import clik.hpy as hpy
 
 def main(argv):
   if len(sys.argv)!=2:
@@ -21,7 +21,7 @@ def main_CMB(argv):
 
   extn = clikl.extra_parameter_names
   
-  lkl = h5py.File(sys.argv[1],"r")["clik"]
+  lkl = hpy.File(sys.argv[1],"r")["clik"]
   
   print "clik lkl file =  %s"%sys.argv[1]
   print "  number of likelihoods = %d"%lkl.attrs["n_lkl_object"]

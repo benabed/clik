@@ -3,11 +3,8 @@ import sys
 sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
-import numpy.random as ra
-import numpy.linalg as la
 import clik.parobject as php
 import clik
-import re
 import os.path as osp
 
 def main(argv):
@@ -44,7 +41,8 @@ def main(argv):
   
   lkl_grp.attrs["use_wmap_pol"] = pars.int(default=0).use_wmap_pol
   
-  lkl_grp.attrs["external_dir"] = osp.realpath(pars.lowlike_data)
+  #lkl_grp.attrs["external_dir"] = osp.realpath(pars.lowlike_data)
+  php.add_external_data(osp.realpath(pars.lowlike_data),lkl_grp,tar=bool(pars.int(default=1).include))
 
   php.add_pid(lkl_grp,pars.str(default="").pid)
 

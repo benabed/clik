@@ -5,14 +5,14 @@ sys.path = ["$REPLACEPATH"]+sys.path
 
 import numpy as nm
 import clik
-import clik.hpy as h5py
+import clik.hpy as hpy
 
 def main(argv):
   if len(sys.argv)!=2:
     print "usage : %s lkl_file"
     sys.exit(1)
     
-  lkls = h5py.File(sys.argv[1])["clik"]
+  lkls = hpy.File(sys.argv[1])["clik"]
   print "found %d likelihoods"%lkls.attrs["n_lkl_object"]
   f0 = sys.argv[1]
   f_tmpl = f0.split(".")
@@ -22,7 +22,7 @@ def main(argv):
     fname = f_tmpl%lkln
     lkl = lkls[lkln]
     print "  "+fname
-    hf = h5py.File(fname,"w",lkls)
+    hf = hpy.File(fname,"w",lkls)
     if "lmax" in lkl.attrs:
       lmax = lkl.attrs["lmax"]
     else:

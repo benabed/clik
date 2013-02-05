@@ -421,7 +421,7 @@ double cldf_readfloat(cldf *df, char *key, error **err) {
   forwardError(*err,__LINE__,0);
 
   for(i=0;i<cdf->nmeta;i++) {
-    if (strcmp(kp,cdf->metakey[i])==0) {
+  if (strcmp(kp,cdf->metakey[i])==0) {
       testErrorRetVA(strcmp(cdf->metatype[i],"str")==0,-1234,"bad type for element '%s'",*err,__LINE__,0,key);
       testErrorRet(sscanf(cdf->metavalue[i],"%lg",&res)!=1,-1234,"gloups",*err,__LINE__,0);      
       return res;
