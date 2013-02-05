@@ -14,6 +14,7 @@
 
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}
 #define _testErrorRetVA(A,B,C,D,E,F,...) if(_err!=NULL) {testErrorRetVA(A,B,C,D,E,F,__VA_ARGS__);} else {testErrorExitVA(A,B,C,D,E,__VA_ARGS__);}
+
 #ifdef HDF5_COMPAT_MODE
 double* hdf5_double_datarray(hid_t group_id,char*  cur_lkl,char* name,int* sz, error **err) {
   hsize_t ndum;
@@ -225,7 +226,6 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   free(dmi);
 
   // get ells
-  //hstat = H5LTfind_attribute (group_id, "lmax");
   hk = cldf_haskey(df,"lmax",err);
   forwardError(*err,__LINE__,NULL);
   if (hk==1) {
@@ -345,6 +345,43 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
     cmblkl_set_version(clkl,lkl_type);
   }
 
+  hk = cldf_haskey(df,"free_calib",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    char *free_cal_name;
+    char **xnames;
+    parname *xnames_buf;
+    int xdim;
+
+    free_cal_name = cldf_readstr(df,"free_calib",NULL,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    xdim = clkl->xdim;
+    xdim +=1;
+
+    xnames = malloc_err(sizeof(char*)*xdim,err);
+    forwardError(*err,__LINE__,NULL);
+  
+    xnames_buf = malloc_err(sizeof(parname)*xdim,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    for(i=0;i<xdim-1;i++) {
+      sprintf(xnames_buf[i],"%s",clkl->xnames[i]);
+      xnames[i] = &(xnames_buf[i]);
+    }
+    xnames[xdim-1] = free_cal_name;
+
+    clkl->xdim = xdim;
+    cmblkl_set_names(clkl, xnames,err);
+    forwardError(*err,__LINE__,NULL);
+
+    free(xnames);
+    free(xnames_buf);
+    free(free_cal_name);
+    clkl->free_calib_id = clkl->xdim-1;
+
+  }
+
   // cleanups
   if(wl!=NULL) {
     free(wl);    
@@ -383,167 +420,5 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   return clkl;
 }
 
-//void clik_external_data_init(char *pwd,char *dirname,hid_t group_id, char* cur_lkl,error **err) {
-//  herr_t hstat;
-//  char dirtmpl[2048*4];
-//  char *drn;
-//  hsize_t ndum;
-//  char fpix_data_name[2048*4];
-//  FILE *fpix_data;
-//  char command[4096*4];
-//  int status;
-//   
-//  testErrorRetVA(getcwd(pwd,4096)==NULL,-101010,"can't get cwd name (cause = '%s')",*err,__LINE__,,strerror(errno));
-//  
-//  // do we need to extract the data ?
-//  hstat = H5LTfind_dataset (group_id, "external_data");
-//  if (hstat==1) {
-//    char *data;
-//    
-//    // yes !
-//    sprintf(dirtmpl,"/tmp/clik_XXXXXX");
-//    drn = mkdtemp(dirtmpl);
-//    testErrorRetVA(drn==NULL,-100,"cannot create temporary dir (cause = '%s')",*err,__LINE__,,strerror(errno));
-//
-//    // read tarfile from hdffile
-//    hstat = H5LTget_dataset_info( group_id, "external_data", &ndum, NULL,NULL);
-//    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
-//    data = malloc_err(sizeof(char)*ndum,err);
-//    forwardError(*err,__LINE__,);
-//    hstat = H5LTread_dataset(group_id,"external_data",H5T_NATIVE_UINT8,data);
-//    testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,,"tardata",cur_lkl,hstat);
-//
-//    // save to file !
-//    sprintf(fpix_data_name,"%s/data.tar",drn);
-//    fpix_data = fopen_err(fpix_data_name,"w",err);
-//    forwardError(*err,__LINE__,);
-//    testErrorRetVA(fwrite(data,1,ndum,fpix_data)<ndum,-100,"Cannot write to file %s",*err,__LINE__,,fpix_data_name);
-//    fclose(fpix_data);
-//    free(data);
-//
-//    // change dir
-//    testErrorRetVA(chdir(drn)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,drn,strerror(errno));
-//
-//    // call tar to recreate the files  
-//    sprintf(command,"tar xf %s",fpix_data_name);
-//    status = system(command);
-//    testErrorRetVA(status!=0,-100,"cannot untar, command '%s' got status %d",*err,__LINE__,,command,status);
-//    sprintf(dirname,"%s",drn);
-//    
-//  }  else {
-//    memset( fpix_data_name,0,2048*4);
-//    hstat = H5LTget_attribute_string( group_id, ".", "external_dir",   fpix_data_name);
-//    testErrorRetVA(hstat<0,hdf5_base,"cannot read external_dir in %s (got %d)",*err,__LINE__,,cur_lkl,hstat);
-//    testErrorRetVA(chdir(fpix_data_name)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,fpix_data_name,strerror(errno));
-//    dirname[0]='\0';
-//  }
-//
-//}
-
-//void clik_external_data_cleanup(char* pwd,char *dirname,error **err) {
-//  char command[4096*4];
-//  int status;
-//  
-//   // delete all files (like a macho !)
-//  testErrorRetVA(chdir(pwd)!=0,-100,"Cannot change dir to %s (cause = '%s')",*err,__LINE__,,pwd,strerror(errno));
-//  
-//  if (dirname[0]!='\0') {
-//    // remove files
-//    sprintf(command,"rm -rf %s",dirname); 
-//    status = system(command);
-//    testErrorRetVA(status!=0,-100,"cannot delete files, command '%s' got status %d",*err,__LINE__,,command,status);    
-//  }
-//}
 
 
-/*
-cmblkl* clik_multi_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
-  wcmblkl *wc;
-  int ic;
-  herr_t hstat;
-  double w0;
-  void* dlhandle;   
-  char **xnames;
-
-#ifdef HAS_RTLD_DEFAULT 
-  dlhandle = RTLD_DEFAULT;
-#else
-  dlhandle = NULL;
-#endif
-
-  wc = malloc_err(sizeof(wcmblkl),*err);
-  forwardError(*err,__LINE__,NULL);
-
-  hstat = H5LTget_attribute_int(group_id, ".", "nc",&(wc->nc));
-  testErrorRetVA(hstat<0,hdf5_base,"cannot read nc in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-    
-  wc->clkl = malloc_err(sizeof(cmblkl*)*wc->nc,err);
-  forwardError(*err,__LINE__,NULL);
-
-  w0 = 0;
-  wc->w = hdf5_int_attarray(group_id,cur_lkl,"w",&(wc->nc),err);
-  forwardError(*err,__LINE__,NULL);
-
-  for(ic=0;ic<wc->nc;ic++) {
-    char mname[256],nur_lkl[256];
-    hid_t multi_id;
-    parname lkl_type;
-    char init_func_name[2048];
-    clik_lkl_init_func *clik_dl_init;
-  
-
-    wc-w[ic] += w0;
-    w0 = wc->w[ic];
-
-    sprintf(mname,"multi_%d",ic);
-    sprintf(nur_lkl,"%s/%s",cur_lkl,mname);
-    
-    multi_id = H5Gopen(group_id, mname, H5P_DEFAULT );
-    testErrorRetVA(group_id<0,hdf5_base,"cannot read multi lkl %s in %s (got %d)",*err,__LINE__,NULL,mname,cur_lkl,hstat);
-
-    // get the lkl type
-    memset(lkl_type,0,_pn_size*sizeof(char));
-
-    hstat = H5LTget_attribute_string( multi_id, ".", "lkl_type",  lkl_type);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot read lkl_type in %s (got %d)",*err,__LINE__,NULL,nur_lkl,hstat);
-    
-    sprintf(init_func_name,"clik_%s_init",lkl_type);
-    clik_dl_init = dlsym(dlhandle,init_func_name);
-    testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,nur_lkl,dlerror()); 
-
-    wc->clkl[ic] = clik_dl_init(multi_id,nur_lkl,nell,ell,has_cl,unit,wl,bins,nbins,err);
-    forwardError(*err,__LINE__,NULL); 
-
-    hstat = H5Gclose(multi_id);
-    testErrorRetVA(hstat<0,hdf5_base,"cannot close %s (got %d)",*err,__LINE__,NULL,mname,hstat);
-  }
-
-  xnames = malloc_err(sizeof(char*)*wc->clkl[0]->xdim,err);
-  forwardError(*err,__LINE__,NULL); 
-
-  for(ic=0;ic<wc->clkl[0]->xdim;ic++) {
-    xnames[ic] = wc->clkl[0]->xnames[ic];
-  }  
-  
-
-}
-
-double* wcmblkl_lkl(void* data, double *pars, error **err) {
-  wcmblkl *wc;
-  double res;
-
-  wc = data;
-  wc->cw++;
-  if (wc->cw>wc->w[wc->ic]) {
-    wc->ic++;
-    if(wc->ic==wc->nc) {
-      wc->ic=0;
-      wc->cw=0;
-    }
-  }
-  res = wc->clkl[wc->ic]->lkl_func(wc->clkl[wc->ic]->lkl_data,pars,err);
-  forwardError(*err,__LINE__,0);
-  return res;
-}
-
-*/

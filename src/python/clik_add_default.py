@@ -10,8 +10,7 @@ import clik
 import re
 import os.path as osp
 import os
-import shutil
-import clik.hpy as h5py
+import clik.hpy as hpy
 
 
 
@@ -20,8 +19,8 @@ def main(argv):
   name = pars.str_array.name
   clikl = clik.clik(pars.input_object)
   extn = clikl.extra_parameter_names
-  shutil.copyfile(pars.input_object,pars.res_object)
-  outhf = h5py.File(pars.res_object,"r+")
+  hpy.copyfile(pars.input_object,pars.res_object)
+  outhf = hpy.File(pars.res_object,"r+")
   loc = pars.float_array.loc
   
   assert len(name)==len(loc),"name and loc have different sizes"

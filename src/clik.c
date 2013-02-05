@@ -51,23 +51,16 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
 
   _dealwitherr;
 
-  //_DEBUGHERE_("","");
-  
   df  = cldf_open(hdffilepath,err);
   _forwardError(*err,__LINE__,NULL);
-
-  //_DEBUGHERE_("","");
   
   n_lkl = cldf_readint(df,"clik/n_lkl_object",err);
   _forwardError(*err,__LINE__,NULL);
   
-  //_DEBUGHERE_("","");
   sz = 6;
   lmax = cldf_readintarray(df,"clik/lmax",&sz,err);
   _forwardError(*err,__LINE__,NULL);
   
-
-  //_DEBUGHERE_("","");
 
   clkl = malloc_err(sizeof(cmblkl*)*n_lkl,err);
   _forwardError(*err,__LINE__,NULL);
@@ -75,29 +68,19 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   for (i_lkl=0;i_lkl<n_lkl;i_lkl++) {
     sprintf(cur_lkl,"clik/lkl_%d",i_lkl);
   
-    //_DEBUGHERE_("","");
     cdf = cldf_openchild(df,cur_lkl,err);
     _forwardError(*err,__LINE__,NULL);
 
-    //group_id = H5Gopen(file_id, cur_lkl, H5P_DEFAULT );
-    //_testErrorRetVA(group_id<0,hdf5_base,"cannot read lkl %s in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);
-
-    //_DEBUGHERE_("","");
     clkl[i_lkl] = clik_lklobject_init(cdf,err);
     _forwardError(*err,__LINE__,NULL);
     
-    //_DEBUGHERE_("","");
     cmblkl_check_lmax(clkl[i_lkl],lmax,err);
     _forwardError(*err,__LINE__,NULL);
     
-    //_DEBUGHERE_("","");
     cldf_close(&cdf);
-    //hstat = H5Gclose(group_id);
-    //_testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,cur_lkl,hdffilepath,hstat);    
   }
   
     
-  //_DEBUGHERE_("","");
   n_cl = 0;
   for(cli=0;cli<6;cli++) {
     n_cl += lmax[cli]+1;
@@ -113,9 +96,6 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   cdf = cldf_openchild(df,"clik",err);
   _forwardError(*err,__LINE__,NULL);
   
-  //group_id = H5Gopen(file_id,"clik", H5P_DEFAULT );
-  
-  //hstat = H5Lexists(group_id, "default", H5P_DEFAULT);
   hk = cldf_haskey(cdf,"default",err);
   _forwardError(*err,__LINE__,NULL);
   if (hk==1) {
@@ -129,13 +109,11 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     def_df = cldf_openchild(cdf,"default",err);
     _forwardError(*err,__LINE__,NULL);
     
-    //def_id = H5Gopen(group_id, "default", H5P_DEFAULT );
-    
     nepar = clik_get_extra_parameter_names(target,&pn,err);
     _forwardError(*err,__LINE__,NULL);
     _testErrorRetVA(nepar==0,hdf5_base,"cannot add defaults without extra parameters",*err,__LINE__,NULL,"");    
     ndef = -1;
-    //defname = hdf5_char_attarray(def_id,cur_lkl,"name",&ndef, err);
+
     defname = cldf_readstr(def_df,"name",&ndef, err);
     _forwardError(*err,__LINE__,NULL);
     ndef = ndef/256;
@@ -156,17 +134,14 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     }
     free(defname);
     free(pn);
-    //loc = hdf5_double_datarray(def_id, cur_lkl,"loc",&ndef,err);
+
     loc = cldf_readfloatarray(def_df,"loc",&ndef,err);
     _forwardError(*err,__LINE__,NULL);  
     distribution_set_default(target, ndef, ldef, loc,err);
     _forwardError(*err,__LINE__,NULL);  
-    //hstat = H5Gclose(def_id);
-    //_testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/default",hdffilepath,hstat);    
     cldf_close(&def_df);
   }
   
-  //hstat = H5Lexists(group_id, "prior", H5P_DEFAULT);
   hk = cldf_haskey(cdf,"prior",err);
   _forwardError(*err,__LINE__,NULL); 
   if (hk==1) {
@@ -179,7 +154,6 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     double *loc,*var;
     cldf * prior_df;
 
-    //prior_id = H5Gopen(group_id, "prior", H5P_DEFAULT );
     prior_df = cldf_openchild(cdf,"prior",err);
     _forwardError(*err,__LINE__,NULL);
     
@@ -188,7 +162,6 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     _testErrorRetVA(nepar==0,hdf5_base,"cannot add a prior without extra parameters",*err,__LINE__,NULL,"");    
     
     nprior = -1;
-    //priorname = hdf5_char_attarray(prior_id,cur_lkl,"name",&nprior, err);
     priorname = cldf_readstr(prior_df,"name",&nprior, err);
     _forwardError(*err,__LINE__,NULL);
     nprior = nprior/256;
@@ -211,12 +184,10 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     free(priorname);
     free(pn);
       
-    //loc = hdf5_double_datarray(prior_id, cur_lkl,"loc",&nprior,err);
     loc = cldf_readfloatarray(prior_df,"loc",&nprior,err);
     _forwardError(*err,__LINE__,NULL);  
         
     nvar=-1;
-    //var = hdf5_double_datarray(prior_id, cur_lkl,"var",&nvar,err);
     var = cldf_readfloatarray(prior_df,"var",&nvar,err);
     _forwardError(*err,__LINE__,NULL);  
     
@@ -233,8 +204,6 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     free(var);
     free(lprior);
   
-    //hstat = H5Gclose(prior_id);
-    //_testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik/prior",hdffilepath,hstat);    
     cldf_close(&prior_df);
   }
   
@@ -248,7 +217,6 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     free(version);
   }
 
-  //hstat = H5LTfind_dataset(group_id, "check_param");
   hk = cldf_haskey(cdf,"check_param",err);
   _forwardError(*err,__LINE__,NULL);
     
@@ -259,12 +227,9 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     npar = clik_get_extra_parameter_names(target,NULL,err) + n_cl;
     _forwardError(*err,__LINE__,NULL);
     
-    //chkp = hdf5_double_datarray(group_id, "clik","check_param",&npar,err);
     chkp = cldf_readfloatarray(cdf, "check_param",&npar,err);
     _forwardError(*err,__LINE__,NULL);
     
-    //hstat = H5LTread_dataset_double(group_id, "check_value",&res);
-    //_testErrorRetVA(hstat<0,hdf5_base,"cannot read %s in %s (got %d)",*err,__LINE__,NULL,"check_value","/clik",hstat);
     res = cldf_readfloat(cdf,"check_value",err);
     _forwardError(*err,__LINE__,NULL);
     
@@ -277,11 +242,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
   printf("----\n");
   
   cldf_close(&cdf);
-  //hstat = H5Gclose(group_id);
-  //_testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in file %s (got %d)",*err,__LINE__,NULL,"clik",hdffilepath,hstat);    
-  
-  //hstat = H5Fclose(file_id);
-  //_testErrorRetVA(hstat<0,hdf5_base,"cannot close file %s (got %d)",*err,__LINE__,NULL,hdffilepath,hstat);    
+
   cldf_close(&df);
   free(lmax);
   
@@ -298,7 +259,6 @@ void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **_err) {
   lbs = _clik_dig(clikid,err);
   _forwardError(*err,__LINE__,);
   for(cli=0;cli<6;cli++) {
-    //fprintf(stderr," %d %d ",cli,lbs->offset_lmax[cli]);
     if (lbs->offset_lmax[cli]!=-1) {
       has_cl[cli]=1;
     } else {

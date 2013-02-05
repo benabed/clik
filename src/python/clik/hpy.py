@@ -33,3 +33,10 @@ def File(path,mode="r",ty=None):
 			pass
 			#print e
 	return cldf.File(path,mode)
+
+def copyfile(pathfrom, pathto):
+	import shutil
+	if osp.exists(pathfrom) and osp.isdir(pathfrom):
+		shutil.copytree(pathfrom,pathto)
+	else:
+		shutil.copy(pathfrom,pathto)
