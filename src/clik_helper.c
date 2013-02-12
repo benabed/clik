@@ -367,7 +367,7 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
     
     for(i=0;i<xdim-1;i++) {
       sprintf(xnames_buf[i],"%s",clkl->xnames[i]);
-      xnames[i] = &(xnames_buf[i]);
+      xnames[i] = (char*) &(xnames_buf[i]);
     }
     xnames[xdim-1] = free_cal_name;
 

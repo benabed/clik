@@ -65,9 +65,10 @@ SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 		clte(i)=CL(cur+i)*(i*(i+1.))/TWOPI
 	END DO	
 	cur = cur+clik_lmax+1
-	
+	!print *,cltt
+	!print *,clte
 	CALL wmap_likelihood_compute(cltt,clte,clee,clbb,like)
-	
+	!print *,like
 	LKL = -sum(like(1:num_WMAP))
 END SUBROUTINE 	WMAP_EXTRA_LKL
 
@@ -117,6 +118,8 @@ SUBROUTINE WMAP_EXTRA_PARAMETER_INIT(tt_min,tt_max,te_min,te_max,m_use_gibbs,m_u
 		clik_lmin = te_min
 	endif
 	
+	print *,temin,temax,ttmin,ttmax,use_TE,use_TT,use_lowl_pol
+
 	allocate( cltt(2:clik_lmax) )
 	allocate( clte(2:clik_lmax) )
 	allocate( clee(2:clik_lmax) )

@@ -48,19 +48,6 @@ cmblkl* clik_wmap_init(cldf *df, int nell, int* ell, int* has_cl, double unit,do
   use_lowl_pol = cldf_readint(df,"use_lowl_pol",err);
   forwardError(*err,__LINE__,NULL);
   
-  //hstat = H5LTget_attribute_int( group_id, ".", "ttmin",  &ttmin);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read ttmin in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //hstat = H5LTget_attribute_int( group_id, ".", "ttmax",  &ttmax);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read ttmax in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //hstat = H5LTget_attribute_int( group_id, ".", "temin",  &temin);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read temin in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //hstat = H5LTget_attribute_int( group_id, ".", "temax",  &temax);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read temax in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //hstat = H5LTget_attribute_int( group_id, ".", "use_gibbs",  &use_gibbs);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read use_gibbs in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-  //hstat = H5LTget_attribute_int( group_id, ".", "use_lowl_pol",  &use_lowl_pol);
-  //testErrorRetVA(hstat<0,hdf5_base,"cannot read use_lowl_pol in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
-
   mlmax = ell[nell-1];
   testErrorRet(mlmax<ttmax || mlmax<temax,-101011,"Bad parameters for wmap likelihood",*err,__LINE__,NULL);
 

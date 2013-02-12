@@ -321,7 +321,7 @@ contains
   subroutine calc_like(zlike,  cell_cmb, freq_params)
     real(8), intent(in)  :: freq_params(:)
     real(8), dimension(0:) :: cell_cmb
-    integer :: j
+    integer :: i,j
     real(8) zlike,ztemp
     integer :: ofs,ispec 
     real(8) logprior

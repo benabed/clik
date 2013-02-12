@@ -232,7 +232,7 @@ def add_prior(root_grp,name,loc,var):
     add_default(root_grp,nam,lo)
 
 def add_free_calib(root_grp,name):
-  root_grp.attrs["free_calib"] = pars.str.parname
+  root_grp.attrs["free_calib"] = name
   
 def add_default(root_grp,name,loc,extn=None):
 

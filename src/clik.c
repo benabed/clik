@@ -27,7 +27,7 @@ char* clik_get_version(clik_object *clikid,error **_err) {
 
   if (clikid!=NULL) {
     lbs = _clik_dig(clikid,err);
-    _forwardError(*err,__LINE__,-1);
+    _forwardError(*err,__LINE__,NULL);
     for(ilkl=0;ilkl<lbs->nlkl;ilkl++) {
       sprintf(version_str,"%s\n  %s",version_str,lbs->lkls[ilkl]->version);
     }
@@ -363,7 +363,7 @@ int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname 
 }
 
 void clik_cleanup(clik_object** pclikid) {
-  free_distribution(pclikid);
+  free_distribution((distribution **)pclikid);
 }
 
 double clik_compute(clik_object* clikid, double* cl_and_pars,error **_err) {
@@ -378,7 +378,7 @@ double clik_compute(clik_object* clikid, double* cl_and_pars,error **_err) {
 void* _clik_dig(clik_object* clikid, error **err) {
   distribution *target;
   target = clikid;
-  if (target->log_pdf == &combine_lkl) { 
+  if ((void*)target->log_pdf == (void*)&combine_lkl) { 
     // return the first clik likelihood
     int i;
     comb_dist_data* cbd;
@@ -398,7 +398,7 @@ void* _clik_dig(clik_object* clikid, error **err) {
 void* _clik_dig2(clik_object* clikid, error **err) {
   distribution *target;
   target = clikid;
-  if (target->log_pdf == &combine_lkl) { 
+  if ((void*)target->log_pdf == (void*)&combine_lkl) { 
     // return the first clik likelihood
     int i;
     comb_dist_data* cbd;
