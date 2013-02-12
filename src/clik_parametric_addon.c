@@ -160,7 +160,7 @@ void free_comp_parametric(void** data) {
   free(p_pay->bo);
   free(p_pay->wbins);
   
-  parametric_free(&(p_pay->p_model));
+  parametric_free((void**)&(p_pay->p_model));
   free(p_pay->A);
 
   free(SC->data);

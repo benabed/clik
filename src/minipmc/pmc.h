@@ -31,7 +31,7 @@ struct _distribution_struct_;
 typedef double posterior_log_pdf_func(void *, double *, error **);
 typedef posterior_log_pdf_func log_pdf_func;
 
-typedef void retrieve_ded_func(const void *, double *, error **);
+typedef void retrieve_ded_func( void *, double *, error **);
 typedef void (posterior_log_free)(void**);
 typedef posterior_log_free free_func;
 
@@ -39,8 +39,8 @@ typedef long simulate_func(struct _pmc_simu_struct_ *, void *, void *, void *, e
 typedef void filter_func(struct _pmc_simu_struct_* , void *, error **);
 typedef void update_func(void *, struct _pmc_simu_struct_ *, error **);
 typedef void* mpi_exchange_func(void *, error **);
-typedef double first_derivative_func(void*, int , const double*, error **err);
-typedef double second_derivative_func(void*, int ,int, const double*, error **err);
+typedef double first_derivative_func(void*, int ,  double*, error **err);
+typedef double second_derivative_func(void*, int ,int, double*, error **err);
  
 typedef char _char_name[1024];
 
@@ -92,10 +92,10 @@ void distribution_set_names(distribution *dist,char** name, error **err);
 void distribution_set_broadcast(distribution* dist, mpi_exchange_func* broadcast, error **err);
 
 
-double distribution_lkl(void* pdist, const double* pars, error **err);
+double distribution_lkl(void* pdist,  double* pars, error **err);
 #define distribution_log_pdf distribution_lkl
 
-void distribution_retrieve(const void* pdist, double* pars, error **err);
+void distribution_retrieve( void* pdist, double* pars, error **err);
 
 void distribution_set_default(distribution *dist, int ndef, int* idef, double* vdef,error **err);
 void distribution_set_default_name(distribution *dist, int ndef, char** idef, double* vdef,error **err);
@@ -103,8 +103,8 @@ void distribution_set_default_name(distribution *dist, int ndef, char** idef, do
 void distribution_set_default(distribution *dist, int ndef, int* idef, double* vdef,error **err);
 
 distribution * combine_distribution_init(int ndim, int nded, error **err);
-double combine_lkl(void *pcbd, const double* pars, error **err);
-void combine_retrieve(const void *pcbd, double* pded, error **err);
+double combine_lkl(void *pcbd,  double* pars, error **err);
+void combine_retrieve( void *pcbd, double* pded, error **err);
 void add_to_combine_distribution(distribution *comb, distribution *addon, int *dim_idx, int *ded_idx, error **err);
 void add_to_combine_distribution_name(distribution *comb, distribution *addon, error **err);
 void combine_free(void **pcbd);

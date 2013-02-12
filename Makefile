@@ -23,12 +23,17 @@ endif
 
 #macos
 SOMACOS = dylib
+LIBPATHNAMEMACOS = DYLD_LIBRARY_PATH
 #linux
 SOLINUS = so
+LIBPATHNAMELINUX = LD_LIBRARY_PATH
+
 ifeq ($(OS),macos)
 SO = $(SOMACOS)
+LIBPATHNAME = $(LIBPATHNAMEMACOS)
 else
-SO = $(SOMACOS)
+SO = $(SOLINUX)
+LIBPATHNAME = $(LIBPATHNAMELINUX)
 endif
 
 #ifort
@@ -47,9 +52,11 @@ GFORTRANMODULEPATH = -J
 
 # this picks either ifort or gfortran, change those lines to set FRUNTIME and FMODULEPATH for your special case
 ifeq ($(FC),ifort)
+FLIBPATH = $(IFORTLIBPATH)
 FRUNTIME = $(IFORTRUNTIME)
 FMODULEPATH = $(IFORTMODULEPATH)
 else
+FLIBPATH = $(GFORTRANLIBPATH)
 FRUNTIME = $(GFORTRANRUNTIME)
 FMODULEPATH = $(GFORTRANMODULEPATH)
 endif
@@ -93,22 +100,26 @@ endif
 # Lapack section
 
 #macos I advise you to use the builtin blas lapack that are reasonnably efficient
-LAPACKMACOS = -L/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Versions/Current -lBLAS -lLAPACK
+LAPACKLIBPATHMACOS = /System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Versions/Current
+LAPACKMACOS = -L$(LAPACKLIBPATHMACOS) -lBLAS -lLAPACK
 
 # mkl I am assuming that the env variable MKLROOT contains the MKL root path
 # if not define it here
 #MKLROOT = /opt/intel/mkl
-LAPACKMKL_PATH = $(MKLROOT)
 
 #mkl 10.3
-LAPACKMKL103 = -L$(LAPACKMKL_PATH)/lib/intel64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
+LAPACKLIBPATHMKL103 = -L$(MKLROOT)/lib/intel64
+LAPACKMKL103 = -L$(LAPACKLIBPATHMKL103) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
 #mkl 10.2
-LAPACKMKL102 = -L$(LAPACKMKL_PATH)/lib/emt64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
+LAPACKLIBPATHMKL102 = -L$(MKLROOT)/lib/emt64
+LAPACKMKL102 = -L$(LAPACKLIBPATHMKL102) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
 #mkl 10.1
-LAPACKMKL101 = -L$(LAPACKMKL_PATH)/lib/emt64 -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
+LAPACKLIBPATHMKL101 = -L$(MKLROOT)/lib/emt64
+LAPACKMKL101 = -L$(LAPACKLIBPATHMKL101) -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core   -liomp5 -lpthread -lm
 
 #set LAPACKMKL to the correct link incantation, here I am assuming that you are using LAPACK 10.3
 LAPACKMKL = $(LAPACKMKL103)
+LAPACKLIBPATHMKL = $(LAPACKLIBPATHMKL103)
 
 
 LAPACK_FUNC := dtrsv  dpotrf  dpotrs  dpotri  dtrtri  dtrmm  dtrmv  dgeqrf  dormqr  dsyev  dgesvd  dsymv  dgemv  dgemm  dsyrk  dsyr2k  daxpy  dtrsm  dsymm  dsyr  ddot
@@ -119,16 +130,18 @@ MKL_LIB_FULLPATH := $(filter $(addsuffix .a,$(addprefix %/lib,$(subst -l,,$(filt
 ifeq ($(OS),macos)
 #macos lapack
 LAPACK = $(LAPACKMACOS)
+LAPACKLIBPATH = $(LAPACKLIBPATHMACOS)
 LAPACKDEP =
 else
 #mkl !
 LAPACK = $(LAPACKMKL) 
+LAPACKLIBPATH = $(LAPACKLIBPATHMKL)
 LAPACKDEP = $(BIDR)/lapack_clik.$(SO)
 endif
 
 CFITSIO = -L/usr/local/lib -lcfitsio
 
-LDFLAG = $(CM64) $(SHARED) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
+LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
 vpath %.c %f90 %.F90 src src/minipmc src/cldf src/CAMspec src/component_plugin/basic src/lenslike/plenslike
 vpath %f90  src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
@@ -156,11 +169,27 @@ CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CLIKLKL) $(CLIKLKL_F90) $(LENSLKL) $(LAPACKDEP
 
 all: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90
 
-install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP)
-	@$(ECHO) "install libs $(BLUE_COLOR)libclik.$(SO) libclik_f90.$(SO) $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/lib $(NO_COLOR)"
+install_dir: 
+	@mkdir -p $(PREFIX)/bin
+	@mkdir -p $(PREFIX)/lib
+	@mkdir -p $(PREFIX)/include
+	@mkdir -p $(PREFIX)/share/clik
+
+install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh | install_dir
+	@$(ECHO) "install libs $(BLUE_COLOR)libclik.$(SO) libclik_f90.$(SO)$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/lib $(NO_COLOR)"
 	$(INSTALL) -C $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(LAPACKDEP) $(PREFIX)/lib
-	@$(ECHO) "install includes $(BLUE_COLOR)clik.h clik.mod $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/include $(NO_COLOR)"
+	@$(ECHO) "install includes $(BLUE_COLOR)clik.h clik.mod$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/include $(NO_COLOR)"
 	$(INSTALL) -C src/clik.h src/minipmc/errorlist.h src/minipmc/io.h src/lapack_clik.h src/minipmc/pmc.h $(ODIR)/clik.mod $(PREFIX)/include
+	@$(ECHO) "install clik_profile $(BLUE_COLOR)clik_profile.sh clik_profile.csh$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
+	$(INSTALL) -C $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(PREFIX)/bin
+	@$(ECHO) "install exec tools $(BLUE_COLOR)clik_example_C clik_example_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
+	$(INSTALL) -C $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(PREFIX)/bin
+
+
+$(BDIR)/clik_profile.sh: src/clik_profile.sh.template |$(BDIR)
+	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g" <$< >$@
+$(BDIR)/clik_profile.csh: src/clik_profile.csh.template |$(BDIR)
+	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g" <$< >$@
 	
 $(BDIR):
 	mkdir $(BDIR)
@@ -172,23 +201,23 @@ $(CLIKLIB): | $(ODIR)
 
 $(BDIR)/libclik.$(SO): $(CLIKLIB)
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
-	@$(LD) $(LDFLAG) $^ -o $@
+	@$(LD)  $(SHARED)  $(LDFLAG) $^ -o $@
 
 $(BDIR)/libclik_f90.$(SO): $(BDIR)/libclik.$(SO) $(addprefix $(ODIR)/,clik_fortran.o clik.f90.o)
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
-	@$(LD) $(LDFLAG) -L$(BDIR) -lclik $> -o $@
+	@$(LD) $(SHARED)  $(LDFLAG) -L$(BDIR) -lclik $^ -o $@
 
 $(BDIR)/clik_example_C: $(ODIR)/clik_example_c.o $(BDIR)/libclik.$(SO)
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
-	@$(CC) $(LDFLAG) -L$(BDIR) -lclik $> -o $@
+	@$(CC) $(LDFLAG) -L$(BDIR) -lclik $< -o $@
 
 $(BDIR)/clik_example_f90: $(ODIR)/clik_example_f90.f90.o $(BDIR)/libclik_f90.$(SO)
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
-	@$(CC) $(LDFLAG) -L$(BDIR) -lclik $> -o $@
+	@$(FC) $(LDFLAG) -L$(BDIR) -lclik_f90 -lclik $< -o $@
 
 $(BIDR)/lapack_clik.$(SO): |$(BDIR)
 	gcc $(shared)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group $(FRUNTIME) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
-	
+
 $(ODIR)/%.o : %.c 
 	@$(ECHO) "$(BLUE_COLOR)$< $(NO_COLOR) -> $(BLUE_COLOR) $(@) $(NO_COLOR)"
 	@$(CC) -c $(CFLAGS) $< -o$(@)

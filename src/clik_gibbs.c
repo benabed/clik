@@ -70,7 +70,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
 
   //call
   gibbs_extra_parameter_init_(&(gb->handle),dir_data,&ldd,&lmin,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
-  testErrorRetVA(gb->handle<=0,-4325325432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
+  testErrorRetVA(gb->handle<=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);

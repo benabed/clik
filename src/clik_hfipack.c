@@ -387,10 +387,10 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
       int ix;
       for(ix=0;ix<SCs[ic]->ndim;ix++) {
         if (SCs[ic]->names!=NULL) {
-          xnames[cnt]=&(SCs[ic]->names[ix]);
+          xnames[cnt]=(char*)&(SCs[ic]->names[ix]);
         } else {
           sprintf(xnames_buf[cnt],"SMICA_COMP_%d_%d",ic,ix);
-          xnames[cnt]=&(xnames_buf[cnt]);
+          xnames[cnt]=(char*)&(xnames_buf[cnt]);
         }
         cnt++;
       }

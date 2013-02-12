@@ -426,8 +426,8 @@ void parametric_free(void** pegl) {
   free(egl->color);
   free(egl->sdRq);
   free(egl->sRq);
-  pflist_free(&(egl->pf));
-  pflist_free(&(egl->default_settings));
+  pflist_free((void**)&(egl->pf));
+  pflist_free((void**)&(egl->default_settings));
   if (egl->nderiv!=0) {
     free(egl->eg_deriv);
     free(egl->deriv_key);

@@ -34,7 +34,7 @@ void fortran_clik_init_(long* pself,char* hdffilepath,int* fpathlen) {
   }
   tmpchain[ln-1]='\0';
   self = clik_init(tmpchain,NULL);
-  *pself = self; 
+  *pself = (long) self; 
   free(tmpchain);
 }
 
@@ -51,7 +51,7 @@ void fortran_clik_get_has_cl__(long* pself, int* has_cl) {
 void fortran_clik_get_has_cl_(long* pself, int* has_cl) {
 #endif
   clik_object* self;
-  self = *pself;
+  self = (clik_object*) *pself;
   clik_get_has_cl(self,has_cl,NULL);
 
 }
@@ -69,7 +69,7 @@ void fortran_clik_get_extra_parameter_number_(long* pself, int* numnames) {
 
   clik_object* self;
   parname* names;
-  self = *pself;
+  self = (clik_object*) *pself;
   *numnames = clik_get_extra_parameter_names(self,&names,NULL);
 
 }
@@ -86,7 +86,7 @@ void fortran_clik_get_extra_parameter_names_(long* pself, char* names) {
   int i,ii;
   int numnames;
   parname *pnames;
-  self = *pself;
+  self = (clik_object*) *pself;
   numnames = clik_get_extra_parameter_names(self,&pnames,NULL);
 
   // Copy parameter names in fortran character array
@@ -109,7 +109,7 @@ void fortran_clik_get_version_(long* pself, char* names) {
   clik_object* self;
   char *version;
   
-  self = *pself;
+  self = (clik_object*) *pself;
   
   version = clik_get_version(self,NULL);
   sprintf(names,"%s",version);
@@ -131,7 +131,7 @@ void fortran_get_lmax__(long *pself, int* lmax) {
 void fortran_get_lmax_(long *pself, int* lmax) {
 #endif
   clik_object* self;
-  self = *pself;
+  self = (clik_object *)*pself;
   clik_get_lmax(self,lmax,NULL);
 
 }
@@ -155,7 +155,7 @@ void fortran_clik_compute__(long* pself, double* cl_and_pars, double* lkl) {
 void fortran_clik_compute_(long* pself, double* cl_and_pars, double* lkl) {
 #endif
   clik_object* self;
-  self = *pself;
+  self = (clik_object*) *pself;
   error *_err;
   error **err;
   _err = NULL;
@@ -176,7 +176,7 @@ void fortran_clik_compute_with_error__(long* pself, double* cl_and_pars, double*
 void fortran_clik_compute_with_error_(long* pself, double* cl_and_pars, double* lkl,int *ier) {
 #endif
   clik_object* self;
-  self = *pself;
+  self = (clik_object*) *pself;
   error *_err;
   error **err;
   _err = NULL;
@@ -201,9 +201,9 @@ void fortran_clik_cleanup__(long* pself) {
 void fortran_clik_cleanup_(long* pself) {
 #endif
   clik_object* self;
-  self = *pself;
+  self = (clik_object*) *pself;
   clik_cleanup(&self);
-  *pself = self;
+  *pself = (long) self;
 
 }
 
@@ -219,7 +219,7 @@ void fortran_clik_lensing_init_(long *pself,char *fpath, int* fpathlen) {
   clik_lensing_object* self;
   fpath[*fpathlen]='\0';
   self = clik_lensing_init(fpath,NULL);
-  *pself = self; 
+  *pself = (long) self; 
 }
 
 #ifdef ADD0US
@@ -242,7 +242,7 @@ void fortran_clik_lensing_get_lmax__(int* lmax,long* *pself) {
 void fortran_clik_lensing_get_lmax_(int* lmax,long* *pself) {
 #endif
   clik_lensing_object* self;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   *lmax = clik_lensing_get_lmax(self,NULL);
 }
 
@@ -255,7 +255,7 @@ void fortran_clik_lensing_compute_(double* res, long *pself, double *pars) {
 #endif
   clik_lensing_object* self;
     
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   error *_err;
   error **err;
   _err = NULL;
@@ -283,7 +283,7 @@ void fortran_clik_lensing_get_extra_parameter_names_(long* pself, char* names) {
   int i,ii;
   int numnames;
   parname *pnames;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   numnames = clik_lensing_get_extra_parameter_names(self,&pnames,NULL);
 
   // Copy parameter names in fortran character array
@@ -305,7 +305,7 @@ void fortran_clik_lensing_get_extra_parameter_number_(long* pself, int* numnames
 
   clik_object* self;
   parname* names;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   *numnames = clik_lensing_get_extra_parameter_names(self,&names,NULL);
 
 }
@@ -318,9 +318,9 @@ void fortran_clik_lensing_cleanup__(long* pself) {
 void fortran_clik_lensing_cleanup_(long* pself) {
 #endif
   clik_lensing_object* self;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   clik_lensing_cleanup(&self);
-  *pself = self;
+  *pself = (long) self;
 }
 
 #ifdef ADD0US
@@ -333,7 +333,7 @@ void fortran_clik_lensing_cltt_fid_(long* pself, double *cltt) {
   double *tmp;
   int lmax;
   clik_lensing_object* self;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   tmp = clik_lensing_cltt_fid(self, NULL);
   lmax = clik_lensing_get_lmax(self,NULL);
   memcpy(cltt,tmp,sizeof(double)*(lmax+1));
@@ -350,7 +350,7 @@ void fortran_clik_lensing_clpp_fid_(long* pself, double *cltt) {
   double *tmp;
   int lmax;
   clik_lensing_object* self;
-  self = *pself;
+  self = (clik_lensing_object*) *pself;
   tmp = clik_lensing_clpp_fid(self, NULL);
   lmax = clik_lensing_get_lmax(self,NULL);
   memcpy(cltt,tmp,sizeof(double)*(lmax+1));

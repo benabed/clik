@@ -186,8 +186,8 @@ void distribution_set_names(distribution *dist,char** name, error **err) {
   return;
 }
 
-const double * distribution_fill_pars(distribution *dist, const double* pars, error **err) {
-  const double *_pars;
+ double * distribution_fill_pars(distribution *dist,  double* pars, error **err) {
+   double *_pars;
   _pars = pars;
   if (dist->ndef!=0) {
     // i need to reset the parameters !
@@ -204,10 +204,10 @@ const double * distribution_fill_pars(distribution *dist, const double* pars, er
   return _pars;
 }
 
-double distribution_lkl(void* pdist, const double* pars, error **err) {
+double distribution_lkl(void* pdist, double* pars, error **err) {
   distribution *dist;
   double res;
-  const double *_pars;
+  double *_pars;
   
   dist = pdist;
   testErrorRet(dist->log_pdf==NULL,dist_undef,"undefined log pdf function for distribution",*err,__LINE__,0);
@@ -220,8 +220,8 @@ double distribution_lkl(void* pdist, const double* pars, error **err) {
   return res;
 }
 
-void distribution_retrieve(const void* pdist, double* pars, error **err) {
-  const distribution *dist;
+void distribution_retrieve( void* pdist, double* pars, error **err) {
+   distribution *dist;
   
   dist = pdist;
   testErrorRet(dist->retrieve==NULL && dist->n_ded!=0,dist_undef,
@@ -343,7 +343,7 @@ void combine_free(void **pcbd) {
 }
 
 
-double combine_lkl(void *pcbd, const double* pars, error **err) {
+double combine_lkl(void *pcbd,  double* pars, error **err) {
   comb_dist_data *cbd;
   double res;
   int id;
@@ -392,8 +392,8 @@ double combine_lkl(void *pcbd, const double* pars, error **err) {
   return res;
 }
  
-void combine_retrieve(const void *pcbd, double* pded, error **err) {
-  const comb_dist_data *cbd;
+void combine_retrieve( void *pcbd, double* pded, error **err) {
+   comb_dist_data *cbd;
   
   cbd = pcbd;
   memcpy(pded,cbd->pded,cbd->nded);
@@ -725,7 +725,7 @@ double distribution_first_derivative(distribution *dist, int idir, double* pars,
   
   
   if (dist->f_der != NULL) {
-    const double *_pars;
+     double *_pars;
     int _idir;
     int ik;
     _pars = distribution_fill_pars(dist, pars, err);
@@ -763,7 +763,7 @@ typedef struct {
   distribution *target;
 } along_struct;
 
-double along_lkl(void* val, const double *pars, error **err) {
+double along_lkl(void* val,  double *pars, error **err) {
   along_struct *al;
   int i;
   double r;
@@ -847,7 +847,7 @@ double distribution_second_derivative(distribution *dist, int idir,int jdir, dou
   
   
   if (dist->d_der != NULL) {
-    const double *_pars;
+     double *_pars;
     int _idir,_jdir;
     int ik;
     _pars = distribution_fill_pars(dist, pars, err);
