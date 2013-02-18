@@ -35,6 +35,10 @@ def main(argv):
   lkl_grp.attrs["firstchain"] = firstchain
   lkl_grp.attrs["lastchain"] = lastchain
   lkl_grp.attrs["step"] = step
+  
+  if "ltrans" in pars:
+    lkl_grp.attrs["ltrans"] = pars.int.ltrans
+    print pars.ltrans
   php.add_pid(lkl_grp,pars.str(default="").pid)
 
   import tempfile

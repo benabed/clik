@@ -5,6 +5,8 @@
 
 typedef struct {
   int handle;
+  int handle_transition;
+  int ltrans,lmin;
   } gibbs;
 
 
@@ -14,7 +16,9 @@ void free_gibbs(void **none) {
   
   gb = *none;
   gibbs_extra_free_(&(gb->handle));
-  
+  if (gb->handle_transition!=-1) {
+    gibbs_extra_free_(&(gb->handle_transition));
+  }
 }
 
 double gibbs_lkl(void* none, double* pars, error **err) {
@@ -23,6 +27,14 @@ double gibbs_lkl(void* none, double* pars, error **err) {
 
   gb = none;
   gibbs_extra_lkl_(&lkl,&gb->handle,pars);
+  
+  if (gb->handle_transition!=-1) {
+    double lkl_trans;
+    gibbs_extra_lkl_(&lkl_trans,&gb->handle_transition,&(pars[gb->ltrans-gb->lmin]));
+    
+    lkl -= lkl_trans;
+  }
+
   return lkl;
 }
 
@@ -36,6 +48,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   int ldd;
   int lmin,lmax;
   int firstchain,lastchain,firstsample,lastsample,step;
+  int hk;
   gibbs *gb;
 
   lmin = ell[0];
@@ -65,12 +78,29 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   gb = malloc_err(sizeof(gibbs),err);
   forwardError(*err,__LINE__,NULL);
   
-  gb->handle=0;
+  gb->handle = 0;
+  gb->handle_transition = -1;
 
 
   //call
   gibbs_extra_parameter_init_(&(gb->handle),dir_data,&ldd,&lmin,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
   testErrorRetVA(gb->handle<=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
+
+  hk = cldf_haskey(df,"ltrans",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk == 1) {
+    int ltrans;
+  
+    gb->handle_transition = 1;
+    ltrans = cldf_readint(df,"ltrans",err);
+    forwardError(*err,__LINE__,NULL);
+    gb->lmin = lmin;
+    gb->ltrans = ltrans;
+    
+    gibbs_extra_parameter_init_(&(gb->handle_transition),dir_data,&ldd,&ltrans,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
+    testErrorRetVA(gb->handle<=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
+
+  }
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
