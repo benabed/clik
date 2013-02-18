@@ -370,7 +370,7 @@ def dist_public(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/*.c src/*.h src/component_plugin/** src/*.f90 src/minipmc/* waf_tools/*.py clik.pdf" )
+  ctx.files = ctx.path.ant_glob("Makefile svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/*.c src/*.h src/component_plugin/** src/*.f90 src/minipmc/* waf_tools/*.py clik.pdf" )
   
 def post(ctx):
   import shutil

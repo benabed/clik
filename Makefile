@@ -1,3 +1,5 @@
+#WORK IN PRODRESS USE AT YOUR OWN RISK. NOT TESTED YET ON OTHER INFRASTRUCTURE THAN MACOS YOU HAVE BEEN WARNED !
+
 # set your prefix to where you want to install clik.
 # default is to let it in the current directory
 PREFIX := $(shell pwd)
