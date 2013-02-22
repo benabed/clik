@@ -137,7 +137,10 @@ def main(argv):
     lkl_grp.create_dataset('beam_modes', data=bm.flat[:])
 
   php.add_pid(lkl_grp,pars.str(default="").pid)
-  
+
+  lkl_grp.attrs["has_dust"] = pars.int(default=0).has_dust
+  lkl_grp.attrs["has_calib_prior"] = pars.int(default=1).has_calib_prior
+
   hf.close()
   
 import sys

@@ -14,7 +14,7 @@ double CAMspec_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*);
+void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*,int*,int*);
 //CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
 
 cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
@@ -24,7 +24,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   int xcase;
   double xdim;
   char *xnames_def[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
-                      "r_ps", "r_cib","n_Dl_cib","cal_100", "cal_143", "cal_217","xi_sz_cib","A_ksz"};
+                      "r_ps", "r_cib","n_Dl_cib","cal_100", "cal_143", "cal_217","xi_sz_cib","A_ksz","A_dust"};
   
   char *xnames_1[] = {"A_ps_100","A_ps_143", "A_ps_217", "A_cib_143", "A_cib_217", "A_sz",  
                       "r_ps", "r_cib","cal0", "cal1", "cal2"};
@@ -41,6 +41,8 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   double *beam_cov_inv,*beam_modes;
   int beam_cov_inv_sz,beam_modes_sz;
   int i,j,cnt;
+  int has_dust, has_calib_prior;
+  int hk;
   //int frq[] = {100,143,217};
   
   camspec_extra_only_one_(&bok);
@@ -111,17 +113,23 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
     forwardError(*err,__LINE__,NULL);
     
   }
-  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes);    
-  
+
+
+  has_dust =  cldf_readint_default(df, "has_dust",0,err);
+  forwardError(*err,__LINE__,NULL);
+
+  has_calib_prior = cldf_readint_default(df, "has_calib_prior",1,err);
+    
+  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior);    
   
   //camspec_extra_getcase_(&xcase);
-  xdim = 14 + beam_Nspec*num_modes_per_beam;
+  xdim = 14 + has_dust + beam_Nspec*num_modes_per_beam;
   
-  for(i=0;i<14;i++) {
+  for(i=0;i<14+ has_dust;i++) {
     xnames_tot[i] = xnames_def[i];
   }
 
-  cnt = 14;
+  cnt = 14+ has_dust;
   
   for(i=0;i<beam_Nspec;i++) {
     for(j=0;j<num_modes_per_beam;j++) {
@@ -152,7 +160,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   free(tszXcib);
   free(beam_modes);
   free(beam_cov_inv);
-  for(i=14;i<xdim;i++) {
+  for(i=14 + has_dust;i<xdim;i++) {
     free(xnames_tot[i]);
   }
 

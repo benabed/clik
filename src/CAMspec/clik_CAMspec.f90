@@ -23,11 +23,11 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
+SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib)
     USE CAMSPEC_EXTRA
     USE temp_like
     implicit none
-    integer,intent(in)::iNspec,inX,inum_modes_per_beam,ibeam_lmax,ibeam_Nspec,icov_dim,ilmax_sz
+    integer,intent(in)::iNspec,inX,inum_modes_per_beam,ibeam_lmax,ibeam_Nspec,icov_dim,ilmax_sz,ihas_dust,ihas_calib
     integer,dimension(1:iNspec)::ilminX,ilmaxX,inp,inpt
     real*8, dimension(1:iNx) :: iX
     real*8,  dimension(1:iNx,1:iNx) ::ic_inv
@@ -38,7 +38,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
 
     integer::i
     
-    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
+    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib)
     
     lmax = ilmaxX(1)
     DO i=2,iNspec
@@ -53,8 +53,8 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     !IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
-    allocate(nuisance(14+beam_Nspec*num_modes_per_beam))
-    npar = lmax+1-lmin+14+ beam_Nspec * num_modes_per_beam
+    allocate(nuisance(num_non_beam+beam_Nspec*num_modes_per_beam))
+    npar = lmax+1-lmin+num_non_beam+ beam_Nspec * num_modes_per_beam
     
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
@@ -85,7 +85,7 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
         cltt(l)=CL(l-lmin)/2./3.141592653589793
     ENDDO
 
-    do i=1,14
+    do i=1,num_non_beam
         nuisance(i) = CL(lmax+1-lmin + i-1)
     enddo
     !A_ps_100  = CL(lmax+1-lmin + 0)
@@ -107,7 +107,7 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     cnt = 1
     DO i=1,beam_Nspec
         DO j=1,num_modes_per_beam
-            nuisance(cnt+14) = CL(lmax+1-lmin+14+cnt-1)
+            nuisance(cnt+num_non_beam) = CL(lmax+1-lmin+num_non_beam+cnt-1)
             cnt = cnt + 1
         ENDDO
     ENDDO
@@ -124,7 +124,7 @@ SUBROUTINE CAMSPEC_EXTRA_FG(rCL_FG,NUIS,lm)
     USE CAMSPEC_EXTRA
     use temp_like
     implicit none
-    REAL(8),DIMENSION(1:14+beam_Nspec*num_modes_per_beam)::NUIS
+    REAL(8),DIMENSION(1:num_non_beam+beam_Nspec*num_modes_per_beam)::NUIS
     REAL(8),dimension(4,0:lm)::rCL_FG
     integer::lm
 

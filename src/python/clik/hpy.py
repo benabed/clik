@@ -30,7 +30,7 @@ def File(path,mode="r",ty=None):
 	if osp.exists(path):
 		return h5py.File(path,mode)
 		
-	if (_has_h5py and (is_h5py_object(ty))):
+	if (_has_h5py and (is_h5py_object(ty) or ty==None)):
 		try:
 			if osp.exists(path) and osp.isdir(path):
 				pass

@@ -14,9 +14,9 @@ module temp_like
   integer :: num_modes_per_beam,beam_lmax,beam_Nspec,cov_dim
   real*8,dimension(:,:),allocatable :: Cl_fg
   real(8),dimension(:,:),allocatable::gcal
-  integer,parameter:: num_non_beam=14
+  integer:: num_non_beam=14
   real(8), dimension(:),  allocatable::  X_beam_corr_model, Y
-    
+  logical:: has_dust, has_calib_prior
   logical :: needinit=.true.
 
   real(8), parameter :: sz_bandpass100_nom143 = 2.022d0
@@ -104,7 +104,7 @@ contains
     read(48) ! skipping beam_cov
     read(48) ((beam_cov_inv(i,j),j=1,cov_dim),i=1,cov_dim)
     close(48)
-    call like_init_frommem(Nspec, nX,lminX,lmaxX,np,npt, c_inv,X,lmax_sz,sz_143_temp,ksz_temp,tszxcib_temp,beam_Nspec,num_modes_per_beam,beam_lmax,cov_dim,beam_cov_inv,beam_modes)
+    call like_init_frommem(Nspec, nX,lminX,lmaxX,np,npt, c_inv,X,lmax_sz,sz_143_temp,ksz_temp,tszxcib_temp,beam_Nspec,num_modes_per_beam,beam_lmax,cov_dim,beam_cov_inv,beam_modes,0,1)
 
     deallocate(lminX)
     deallocate(lmaxX)
@@ -118,7 +118,7 @@ contains
     return
   end subroutine like_init
 
-  subroutine like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
+  subroutine like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,dust_flag,calib_flag)
     integer,intent(in)::iNspec,inX,inum_modes_per_beam,ibeam_lmax,ibeam_Nspec,icov_dim,ilmax_sz
     integer,dimension(:)::ilminX,ilmaxX,inp,inpt
     real*8, dimension(:) :: iX
@@ -128,6 +128,7 @@ contains
     real*8, dimension(:,:) :: ibeam_cov_inv
     real*8, dimension(:,:,:) :: ibeam_modes ! mode#, l, spec#
     real(8)::renorm    
+    integer,intent(in)::dust_flag,calib_flag
     
     Nspec = iNspec
     nX = inX
@@ -176,6 +177,16 @@ contains
     allocate(X_beam_corr_model(1:nX))
     allocate(Y(1:nX))
 
+    num_non_beam=14
+    if (dust_flag .eq. 1) then
+      num_non_beam = 15
+      has_dust = .true.
+    endif
+    has_calib_prior = .true.
+    if (calib_flag .eq. 0) then
+      has_calib_prior = .false.
+    endif
+
     needinit=.false.
 
   end subroutine like_init_frommem
@@ -185,7 +196,7 @@ contains
     real(8), intent(in)  :: freq_params(:)
     real(8), intent(inout)  :: Cl_fg(1:,0:)
     integer :: i, j, l, ii,jj
-    real(8):: A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, xi, A_ksz, ncib
+    real(8):: A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, xi, A_ksz, ncib,A_dust
     real(8):: zell, zCIB
     real(8):: Lfac
     integer::lmax
@@ -208,6 +219,10 @@ contains
     xi=freq_params(13)
     A_ksz=freq_params(14)
     
+    if(has_dust) then
+      A_dust = freq_params(15)
+    endif
+
     lmax = ubound(Cl_fg,2)
     !100x100
     
@@ -239,6 +254,10 @@ contains
         +A_ksz*ksz_temp(l)/Lfac  &
         -sqrt(cib_bandpass217_nom217*A_cib_217*sz_bandpass143_nom143*A_sz)*xi*tszxcib_temp(l)/Lfac
     end do    
+    if(has_dust) then
+      A_dust = freq_params(15)
+      call add_dust(Cl_fg(1,:), Cl_fg(2,:), Cl_fg(3,:), Cl_fg(4,:), 1,lmax,A_dust)
+    endif
   end subroutine
       
   subroutine beams_and_cal_prior(logprior, freq_params)
@@ -280,9 +299,83 @@ contains
 
     ! add prior on the calibration coefs
 
-    logprior = logprior + ((cal2/cal1-0.9966d0)/0.0015d0)**2  + ((cal0/cal1-1.0006d0)/0.0004d0)**2
+    if (has_calib_prior) then
+      logprior = logprior + ((cal2/cal1-0.9966d0)/0.0015d0)**2  + ((cal0/cal1-1.0006d0)/0.0004d0)**2
+    endif
 
   end subroutine
+
+   subroutine plik_dust_template(dust_template__l, lmin, lmax)
+
+    integer,                                intent(in)    :: lmin
+    integer,                                intent(in)    :: lmax
+    real(8),      dimension(lmin:),         intent(out)   :: dust_template__l
+
+    integer                                               :: i
+    real(8)                                               :: l_pivot
+    real(8)                                               :: gal_index
+    real(8),                                parameter     :: twopi = 6.283185307179586476925286766559005768394
+
+    l_pivot   = 500.0
+    gal_index = -2.6
+
+    do i = lmin,lmax
+       dust_template__l(i) = (dble(i)/l_pivot)**gal_index / twopi
+    enddo
+
+
+  end subroutine plik_dust_template
+
+
+
+  subroutine add_dust(cl100, cl143, cl217, cl143x217, lmin,lmax, amplitude)
+
+    integer,                                intent(in)    :: lmin
+    integer,                                intent(in)    :: lmax
+    real(8),                                intent(in)    :: amplitude
+    real(8),      dimension(lmin:),      intent(inout) :: cl100
+    real(8),      dimension(lmin:),      intent(inout) :: cl143
+    real(8),      dimension(lmin:),      intent(inout) :: cl217
+    real(8),      dimension(lmin:),  intent(inout) :: cl143x217
+
+    real(8)                                               :: cc_100
+    real(8)                                               :: cc_143
+    real(8)                                               :: cc_217
+    real(8)                                               :: rescaling_143_to_100
+    real(8)                                               :: rescaling_143_to_217
+    real(8),      dimension(:),             allocatable   :: dust_template__l
+
+! frequency averaged color corrections
+    cc_100 = 1.090
+    cc_143 = 1.023
+    cc_217 = 1.130
+
+! amplitude rescalings between nominal frequencies
+! include mask 1 -> mask 3 conversion factor for 100 ghz
+    rescaling_143_to_100 = 0.466 * 1.66
+    rescaling_143_to_217 = 3.170
+
+    allocate(dust_template__l(lmin:lmax))
+    dust_template__l = 0.0
+
+    call plik_dust_template(dust_template__l, lmin, lmax)
+
+    cl100 = cl100 + amplitude * cc_100**2 * rescaling_143_to_100**2&
+         & * dust_template__l(lmin:lmax)
+
+    cl143 = cl143 + amplitude * cc_143**2&
+         & * dust_template__l(lmin:lmax)
+
+    cl217 = cl217 + amplitude * cc_217**2 * rescaling_143_to_217**2&
+         & * dust_template__l(lmin:lmax)
+
+    cl143x217 = cl143x217 + amplitude * cc_143 * cc_217 * rescaling_143_to_217&
+         & * dust_template__l(lmin:lmax)
+
+    deallocate(dust_template__l)
+
+
+  end subroutine add_dust
 
   subroutine compute_beams_and_cal(gcal,freq_params)
     real(8),dimension(1:Nspec,0:beam_lmax)::gcal
