@@ -14,8 +14,8 @@ double CAMspec_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*,int*,int*);
-//CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes)
+void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*,int*,int*,int*,double*,int*,int*);
+//SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,imarge_flag, imarge_mode,imarge_num, ikeep_num)
 
 cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int bok;
@@ -43,6 +43,11 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   int i,j,cnt;
   int has_dust, has_calib_prior;
   int hk;
+  int marge_num,keep_num;
+  int *marge_flag;
+  double *marge_mode;
+  int sz;
+
   //int frq[] = {100,143,217};
   
   camspec_extra_only_one_(&bok);
@@ -111,7 +116,6 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
     beam_modes_sz = -1;
     beam_modes = cldf_readfloatarray(df,"beam_modes",&beam_modes_sz, err);
     forwardError(*err,__LINE__,NULL);
-    
   }
 
 
@@ -119,11 +123,40 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   forwardError(*err,__LINE__,NULL);
 
   has_calib_prior = cldf_readint_default(df, "has_calib_prior",1,err);
-    
-  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior);    
+
+  hk = cldf_haskey(df,"marge_flag",err);
+  forwardError(*err,__LINE__,NULL);
+  marge_num = 0;
+  if (hk==0) {
+    marge_flag = malloc_err(sizeof(int)*cov_dim,err);
+    forwardError(*err,__LINE__,NULL);
+    for(i=0;i<cov_dim;i++) {
+      marge_flag[i] = 0;
+    }  
+  } else {
+    sz = cov_dim;
+    marge_flag = cldf_readintarray(df,"marge_flag",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    for(i=0;i<cov_dim;i++) {
+      marge_num += marge_flag[i];  
+    }
+  }
+  keep_num = cov_dim - marge_num;
+
+  if (marge_num>0) {
+    sz = keep_num * marge_num;
+    marge_mode = cldf_readfloatarray(df,"marge_mode",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+    marge_num = 1;
+    marge_mode = malloc_err(sizeof(double)*keep_num,err);
+    forwardError(*err,__LINE__,NULL);
+  }
+
+  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior,marge_flag,marge_mode,&marge_num,&keep_num);    
   
   //camspec_extra_getcase_(&xcase);
-  xdim = 14 + has_dust + beam_Nspec*num_modes_per_beam;
+  xdim = 14 + has_dust + keep_num;
   
   for(i=0;i<14+ has_dust;i++) {
     xnames_tot[i] = xnames_def[i];
@@ -133,10 +166,13 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   
   for(i=0;i<beam_Nspec;i++) {
     for(j=0;j<num_modes_per_beam;j++) {
+      if (marge_flag[cnt-14-has_dust]==0) {
       xnames_tot[cnt] = malloc_err(sizeof(char)*50,err);
       forwardError(*err,__LINE__,NULL);
+
       sprintf(xnames_tot[cnt],"Bm_%d_%d",i+1,j+1);
-      cnt++;
+      cnt++;        
+      }
     }
   }
 
@@ -160,6 +196,8 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   free(tszXcib);
   free(beam_modes);
   free(beam_cov_inv);
+  free(marge_flag);
+  free(marge_mode);
   for(i=14 + has_dust;i<xdim;i++) {
     free(xnames_tot[i]);
   }

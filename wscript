@@ -3,7 +3,7 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "7.3"
+clik_version = "7.4"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
@@ -59,7 +59,7 @@ def options(ctx):
   grp.add_option("--wmap_install",action="store_true",default=False,help="download latest wmap likelihood for me")
   #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
   grp.add_option("--no_lenslike",action="store_true",default=False,help="do not build the lensing likelihood")
-  grp.add_option("--no_hdf5",action="store_true",default=False,help="do not use hdf5")
+  grp.add_option("--hdf5",action="store_true",default=False,help="use hdf5")
   
   ctx.add_option_group(grp)
   
@@ -124,7 +124,7 @@ def configure(ctx):
   ctx.load("pmclib","waf_tools")
 
   ctx.env.has_hdf5 = False
-  if not ctx.options.no_hdf5:
+  if ctx.options.hdf5:
     if (not ctx.env.has_pmc) or ("hdf5" not in ctx.env.LIB_pmc):
       #configure hdf5
       ctx.env.has_hdf5 = True

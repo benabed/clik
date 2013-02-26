@@ -23,7 +23,7 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib)
+SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,imarge_flag, imarge_mode,imarge_num, ikeep_num)
     USE CAMSPEC_EXTRA
     USE temp_like
     implicit none
@@ -35,10 +35,18 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     real*8,intent(in) :: isz_143_temp(0:ilmax_sz)
     real*8, dimension(1:icov_dim,1:icov_dim) :: ibeam_cov_inv
     real*8, dimension(1:inum_modes_per_beam,0:ibeam_lmax,1:ibeam_Nspec) :: ibeam_modes ! mode#, l, spec#
+    integer, dimension(1:icov_dim)::imarge_flag
+    logical,dimension(1:icov_dim)::marge_flag
+    integer::imarge_num,ikeep_num
+    real*8,dimension(1:imarge_num, 1:ikeep_num)::imarge_mode
 
     integer::i
     
-    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib)
+    do i=1,icov_dim
+        marge_flag(i) = (imarge_flag(i).eq.1)
+    enddo
+
+    call like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,marge_flag,imarge_mode)
     
     lmax = ilmaxX(1)
     DO i=2,iNspec
@@ -56,6 +64,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     allocate(nuisance(num_non_beam+beam_Nspec*num_modes_per_beam))
     npar = lmax+1-lmin+num_non_beam+ beam_Nspec * num_modes_per_beam
     
+
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
 SUBROUTINE CAMSPEC_EXTRA_GETCASE(xc)

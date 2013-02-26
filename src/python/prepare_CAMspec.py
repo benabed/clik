@@ -141,6 +141,14 @@ def main(argv):
   lkl_grp.attrs["has_dust"] = pars.int(default=0).has_dust
   lkl_grp.attrs["has_calib_prior"] = pars.int(default=1).has_calib_prior
 
+  if beam_mode in pars:
+    beam_mode = nm.loadtxt(pars.str.beam_mode)
+    beam_flag = [int(v in ("1","t")) for v in pars.str.free_beam_flag.ljust(cov_dim,"0")]
+    marge_flag = [1-v for v in beam_flag]
+    print marge_flag
+    lkl_grp.attrs["marge_mode"] = beam_mode.flat[:]
+    lkl_grp.attrs["marge_flag"] = nm.array(marge_flag).flat[:]
+
   hf.close()
   
 import sys

@@ -9,7 +9,7 @@ module temp_like
   real*8 :: sz_143_temp(0:5000)
   real*8 :: ksz_temp(0:5000), tszxcib_temp(0:5000)
   integer :: lmax_sz
-  real*8, dimension(:,:), allocatable :: beam_cov_inv
+  real*8, dimension(:,:), allocatable :: beam_cov_inv,beam_cov_full
   real*8, dimension(:,:,:), allocatable :: beam_modes ! mode#, l, spec#
   integer :: num_modes_per_beam,beam_lmax,beam_Nspec,cov_dim
   real*8,dimension(:,:),allocatable :: Cl_fg
@@ -24,101 +24,110 @@ module temp_like
   real(8), parameter :: sz_bandpass143_nom143 = 0.95d0
   real(8), parameter :: cib_bandpass217_nom217 = 1.33d0
 
+
+  integer, allocatable :: marge_indices(:),marge_indices_reverse(:)
+  integer, allocatable :: keep_indices(:),keep_indices_reverse(:)
+  real(8), allocatable :: beam_conditional_mean(:,:)
+  logical, allocatable :: want_marge(:)
+  integer marge_num, keep_num
+  real(8) :: beam_factor = 1 !new beam modes are already scaled (2.7_campc)
+  logical :: make_cov_marged = .false.
+
 contains
 
 
 
-  subroutine like_init(like_file, sz143_file, tszxcib_file, ksz_file, beam_file)
+!!  subroutine like_init(like_file, sz143_file, tszxcib_file, ksz_file, beam_file)
+!!
+!!    real*8, dimension(:), allocatable :: X
+!!    real*8,  dimension(:,:), allocatable :: c_inv
+!!    integer :: Nspec,nX,num_ells,nXfromdiff
+!!    integer, dimension(:), allocatable  :: lminX, lmaxX, np, npt
+!!    real*8 :: sz_143_temp(0:5000)
+!!    real*8 :: ksz_temp(0:5000), tszxcib_temp(0:5000)
+!!    integer :: lmax_sz
+!!    real*8, dimension(:,:), allocatable :: beam_cov_inv
+!!    real*8, dimension(:,:,:), allocatable :: beam_modes ! mode#, l, spec#
+!!    integer :: num_modes_per_beam,beam_lmax,beam_Nspec,cov_dim
+!!  
+!!    integer :: i, j, l,dummy
+!!
+!!    character*100 like_file, sz143_file, ksz_file, tszxcib_file, beam_file
+!!
+!!    ! cl_ksz_148_tbo.dat file is in D_l, format l D_l, from l=2 to 10000
+!!    ! tsz_x_cib_template.txt is is (l D_l), from l=2 to 9999, normalized to unity 
+!!    !    at l=3000 
+!!
+!!    if(needinit .eqv. .false.) then
+!!       return
+!!    endif
+!!
+!!    open(48, file=like_file, form='unformatted', status='unknown')
+!!
+!!    read(48) Nspec,nX
+!!    allocate(lminX(Nspec))
+!!    allocate(lmaxX(Nspec))
+!!    allocate(np(Nspec))
+!!    allocate(npt(Nspec))
+!!    allocate(X(nX))
+!!    allocate(c_inv(nX,nX))
+!!
+!!    read(48) (lminX(i), lmaxX(i), np(i), npt(i), i = 1, Nspec)
+!!    read(48) (X(i), i=1, nX)
+!!    read(48) 
+!!    read(48) ((c_inv(i, j), j = 1, nX), i = 1,  nX)
+!!    close(48)
+!!
+!!    !  open(48, file=sz100_file, form='unformatted', status='unknown')
+!!    !  read(48) lmax_sz
+!!    !  read(48) (sz_100_temp(l), l = 0, lmax_sz)
+!!    !  close(48)
+!!
+!!    lmax_sz=5000
+!!
+!!    open(48, file=sz143_file, form='formatted', status='unknown')
+!!    do i=2,lmax_sz
+!!       read(48,*) dummy,sz_143_temp(i)
+!!    enddo
+!!    close(48)
+!!
+!!    open(48, file=ksz_file, form='formatted',status='unknown')
+!!    do i=2,lmax_sz
+!!       read(48,*) dummy,ksz_temp(i)
+!!    enddo
+!!    close(48)
+!!
+!!    open(48, file=tszxcib_file,form='formatted',status='unknown')
+!!    do i=2,lmax_sz
+!!       read(48,*) dummy,tszxcib_temp(i)
+!!    enddo
+!!    close(48)
+!!
+!!    open(48, file=beam_file, form='unformatted', status='unknown')
+!!    read(48) beam_Nspec,num_modes_per_beam,beam_lmax
+!!    if(beam_Nspec.ne.Nspec) stop 'Problem: beam_Nspec != Nspec'
+!!    allocate(beam_modes(num_modes_per_beam,0:beam_lmax,beam_Nspec))
+!!    cov_dim=beam_Nspec*num_modes_per_beam
+!!    allocate(beam_cov_inv(cov_dim,cov_dim))
+!!    read(48) (((beam_modes(i,l,j),j=1,Nspec),l=0,beam_lmax),i=1,num_modes_per_beam)
+!!    read(48) ! skipping beam_cov
+!!    read(48) ((beam_cov_inv(i,j),j=1,cov_dim),i=1,cov_dim)
+!!    close(48)
+!!    call like_init_frommem(Nspec, nX,lminX,lmaxX,np,npt, c_inv,X,lmax_sz,sz_143_temp,ksz_temp,tszxcib_temp,beam_Nspec,num_modes_per_beam,beam_lmax,cov_dim,beam_cov_inv,beam_modes,0,1)
+!!
+!!    deallocate(lminX)
+!!    deallocate(lmaxX)
+!!    deallocate(np)
+!!    deallocate(npt)
+!!    deallocate(X)
+!!    deallocate(c_inv)
+!!    deallocate(beam_cov_inv)
+!!    deallocate(beam_modes)
+!!
+!!    return
+!!  end subroutine like_init
 
-    real*8, dimension(:), allocatable :: X
-    real*8,  dimension(:,:), allocatable :: c_inv
-    integer :: Nspec,nX,num_ells,nXfromdiff
-    integer, dimension(:), allocatable  :: lminX, lmaxX, np, npt
-    real*8 :: sz_143_temp(0:5000)
-    real*8 :: ksz_temp(0:5000), tszxcib_temp(0:5000)
-    integer :: lmax_sz
-    real*8, dimension(:,:), allocatable :: beam_cov_inv
-    real*8, dimension(:,:,:), allocatable :: beam_modes ! mode#, l, spec#
-    integer :: num_modes_per_beam,beam_lmax,beam_Nspec,cov_dim
-  
-    integer :: i, j, l,dummy
-
-    character*100 like_file, sz143_file, ksz_file, tszxcib_file, beam_file
-
-    ! cl_ksz_148_tbo.dat file is in D_l, format l D_l, from l=2 to 10000
-    ! tsz_x_cib_template.txt is is (l D_l), from l=2 to 9999, normalized to unity 
-    !    at l=3000 
-
-    if(needinit .eqv. .false.) then
-       return
-    endif
-
-    open(48, file=like_file, form='unformatted', status='unknown')
-
-    read(48) Nspec,nX
-    allocate(lminX(Nspec))
-    allocate(lmaxX(Nspec))
-    allocate(np(Nspec))
-    allocate(npt(Nspec))
-    allocate(X(nX))
-    allocate(c_inv(nX,nX))
-
-    read(48) (lminX(i), lmaxX(i), np(i), npt(i), i = 1, Nspec)
-    read(48) (X(i), i=1, nX)
-    read(48) 
-    read(48) ((c_inv(i, j), j = 1, nX), i = 1,  nX)
-    close(48)
-
-    !  open(48, file=sz100_file, form='unformatted', status='unknown')
-    !  read(48) lmax_sz
-    !  read(48) (sz_100_temp(l), l = 0, lmax_sz)
-    !  close(48)
-
-    lmax_sz=5000
-
-    open(48, file=sz143_file, form='formatted', status='unknown')
-    do i=2,lmax_sz
-       read(48,*) dummy,sz_143_temp(i)
-    enddo
-    close(48)
-
-    open(48, file=ksz_file, form='formatted',status='unknown')
-    do i=2,lmax_sz
-       read(48,*) dummy,ksz_temp(i)
-    enddo
-    close(48)
-
-    open(48, file=tszxcib_file,form='formatted',status='unknown')
-    do i=2,lmax_sz
-       read(48,*) dummy,tszxcib_temp(i)
-    enddo
-    close(48)
-
-    open(48, file=beam_file, form='unformatted', status='unknown')
-    read(48) beam_Nspec,num_modes_per_beam,beam_lmax
-    if(beam_Nspec.ne.Nspec) stop 'Problem: beam_Nspec != Nspec'
-    allocate(beam_modes(num_modes_per_beam,0:beam_lmax,beam_Nspec))
-    cov_dim=beam_Nspec*num_modes_per_beam
-    allocate(beam_cov_inv(cov_dim,cov_dim))
-    read(48) (((beam_modes(i,l,j),j=1,Nspec),l=0,beam_lmax),i=1,num_modes_per_beam)
-    read(48) ! skipping beam_cov
-    read(48) ((beam_cov_inv(i,j),j=1,cov_dim),i=1,cov_dim)
-    close(48)
-    call like_init_frommem(Nspec, nX,lminX,lmaxX,np,npt, c_inv,X,lmax_sz,sz_143_temp,ksz_temp,tszxcib_temp,beam_Nspec,num_modes_per_beam,beam_lmax,cov_dim,beam_cov_inv,beam_modes,0,1)
-
-    deallocate(lminX)
-    deallocate(lmaxX)
-    deallocate(np)
-    deallocate(npt)
-    deallocate(X)
-    deallocate(c_inv)
-    deallocate(beam_cov_inv)
-    deallocate(beam_modes)
-
-    return
-  end subroutine like_init
-
-  subroutine like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,dust_flag,calib_flag)
+  subroutine like_init_frommem(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,dust_flag,calib_flag,marge_flags,marge_mode)
     integer,intent(in)::iNspec,inX,inum_modes_per_beam,ibeam_lmax,ibeam_Nspec,icov_dim,ilmax_sz
     integer,dimension(:)::ilminX,ilmaxX,inp,inpt
     real*8, dimension(:) :: iX
@@ -129,7 +138,10 @@ contains
     real*8, dimension(:,:,:) :: ibeam_modes ! mode#, l, spec#
     real(8)::renorm    
     integer,intent(in)::dust_flag,calib_flag
-    
+    logical,intent(in),dimension(:)::marge_flags
+    real(8),intent(in),dimension(:,:)::marge_mode
+    integer::i,j,k
+
     Nspec = iNspec
     nX = inX
 
@@ -185,6 +197,53 @@ contains
     has_calib_prior = .true.
     if (calib_flag .eq. 0) then
       has_calib_prior = .false.
+    endif
+
+    allocate(want_marge(cov_dim))
+    do i=1,cov_dim
+      want_marge(i) =  marge_flags(i)
+    enddo
+    
+    marge_num=count(want_marge)
+    keep_num=cov_dim-marge_num
+
+    
+    allocate(marge_indices(marge_num))
+    allocate(marge_indices_reverse(cov_dim))
+    allocate(keep_indices(keep_num))
+    allocate(keep_indices_reverse(cov_dim))
+
+    j=0
+    k=0
+    do i=1,cov_dim
+        if (want_marge(i)) then
+            j=j+1
+            marge_indices(j) = i
+        else
+            k=k+1
+            keep_indices(k)=i
+        end if
+        marge_indices_reverse(i)=j
+        keep_indices_reverse(i)=k
+    end do
+
+    
+    if (marge_num.ne.0) then
+      allocate(beam_conditional_mean(marge_num, keep_num))
+      do i=1, marge_num
+        beam_conditional_mean(i,:) = marge_mode(i,:)
+      end do
+      if (keep_num>0) then
+        allocate(beam_cov_full(cov_dim,cov_dim))
+        beam_cov_full = beam_cov_inv
+        call Matrix_inverse_internal(beam_cov_full)
+        deallocate(beam_cov_inv)
+        allocate(beam_cov_inv(keep_num,keep_num))
+        beam_cov_inv = beam_cov_full(keep_indices,keep_indices)
+        call Matrix_inverse_internal(beam_cov_inv)
+        deallocate(beam_cov_full)
+      end if
+
     endif
 
     needinit=.false.
@@ -266,36 +325,48 @@ contains
     real(8)::cal0,cal1,cal2
     integer::i,j,k,l,ii,jj
     real(8) beam_coeffs(Nspec,num_modes_per_beam)
-    
+    real(8) beam_params(cov_dim)
+
     if(needinit .eqv. .true.) then
        stop "initialize first"
     endif
 
-    if (size(freq_params) < num_non_beam +  beam_Nspec*num_modes_per_beam) stop 'CAMspec: not enough parameters'
+    if (size(freq_params) < num_non_beam +  keep_num) stop 'CAMspec: not enough parameters'
 
     cal0=freq_params(10)
     cal1=freq_params(11) 
     cal2=freq_params(12)
+    
+    call fill_beam_params(freq_params,beam_params)
+
     do ii=1,beam_Nspec
       do jj=1,num_modes_per_beam
-        beam_coeffs(ii,jj)=freq_params(num_non_beam+jj+num_modes_per_beam*(ii-1))
+          beam_coeffs(ii,jj)=beam_params(jj+num_modes_per_beam*(ii-1))
       enddo
     enddo
 
     logprior = 0
 
     ! add prior on the beam coefs
-    do i=1,beam_Nspec
-      do j=1,beam_Nspec
-        do k=1,num_modes_per_beam
-          do l=1,num_modes_per_beam
-            ii = l+num_modes_per_beam*(j-1)
+    if (keep_num>0) then
+      do i=1,beam_Nspec
+        do j=1,beam_Nspec
+          do k=1,num_modes_per_beam
             jj = k+num_modes_per_beam*(i-1)
-            logprior = logprior + beam_coeffs(j,l)*beam_cov_inv(ii,jj)*beam_coeffs(i,k)
+            if (.not. want_marge(jj)) then
+              do l=1,num_modes_per_beam
+                ii = l+num_modes_per_beam*(j-1)
+                if (.not. want_marge(ii)) then
+                  logprior = logprior + beam_coeffs(j,l)*beam_cov_inv(keep_indices_reverse(ii),keep_indices_reverse(jj))*beam_coeffs(i,k)
+                endif
+              enddo
+            endif
           enddo
         enddo
       enddo
-    enddo
+    endif
+
+  
 
     ! add prior on the calibration coefs
 
@@ -377,6 +448,21 @@ contains
 
   end subroutine add_dust
 
+  subroutine fill_beam_params(freq_params,beam_params)
+    real(8),intent(in),dimension(:)::freq_params
+    real(8),intent(out),dimension(:)::beam_params
+    integer::i
+
+    do i=1,keep_num
+      beam_params(keep_indices(i)) = freq_params(num_non_beam+i)
+    enddo
+
+    if (marge_num>0) then
+      beam_params(marge_indices) = matmul(beam_conditional_mean, freq_params(num_non_beam:))
+    endif
+
+  end subroutine  
+
   subroutine compute_beams_and_cal(gcal,freq_params)
     real(8),dimension(1:Nspec,0:beam_lmax)::gcal
     real(8), intent(in)  :: freq_params(:)
@@ -384,6 +470,7 @@ contains
     real(8),dimension(Nspec)::cal
     real(8)::corrected_beam
     integer::i,ispec,l
+    real(8),dimension(cov_dim)::beam_params
 
     if(needinit .eqv. .true.) then
        stop "initialize first"
@@ -398,12 +485,12 @@ contains
     cal(3) = cal2
     cal(4) = dsqrt(cal1*cal2)
 
-    
+    call fill_beam_params(freq_params,beam_params)
     do ispec=1,Nspec
       do l = 0, beam_lmax
         corrected_beam=1.d0
         do i=1,num_modes_per_beam
-          corrected_beam=corrected_beam + freq_params(num_non_beam+i+num_modes_per_beam*(ispec-1)) * beam_modes(i,l,ispec)
+          corrected_beam=corrected_beam + beam_params(i+num_modes_per_beam*(ispec-1)) * beam_modes(i,l,ispec) * beam_factor
         enddo
         gcal(ispec,l) = corrected_beam/cal(ispec)
       enddo
@@ -466,5 +553,23 @@ contains
     zlike = zlike + logprior
 
     end subroutine calc_like
+
+    subroutine Matrix_inverse_internal(M)
+      !Inverse of symmetric matrix
+      real(8), intent(inout):: M(:,:)
+      integer i,j,n
+      integer info
+
+      n=Size(M,DIM=1)
+      call dpotrf ('L', n, M, n, info)
+      if (info/=0)  stop 'Matrix_Cholesky: not positive definite '
+      call dpotri ('L', n, M, n, info)
+      if (info/=0) stop 'Matrix_inverse: error '
+      do i=1,n
+          do j=1,i-1
+              M(j,i) = M(i,j)
+          end do
+      end do
+    end subroutine Matrix_inverse_internal
 
 end module temp_like
