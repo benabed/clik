@@ -15,7 +15,8 @@ def main(argv):
   
   inhf = hpy.File(pars.input_object)
   
-  if "external_dir" in inhf["clik/lkl_%d%"%pars.int(default=0).lkl_id].attrs and inhf["clik/lkl_%d%"%pars.int(default=0).lkl_id].attrs["external_dir"]==".":
+  if "external_dir" in inhf["clik/lkl_%d"%pars.int(default=0).lkl_id].attrs and inhf["clik/lkl_%d"%pars.int(default=0).lkl_id].attrs["external_dir"]==".":
+    import shutil
     shutil.copytree(pars.input_object+"/clik/lkl_%d/_external"%pars.int(default=0).lkl_id,pars.install_path)
   else:
     dts = inhf["clik/lkl_%d/external_data"%pars.int(default=0).lkl_id][:]
