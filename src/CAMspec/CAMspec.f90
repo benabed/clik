@@ -458,7 +458,7 @@ contains
     enddo
 
     if (marge_num>0) then
-      beam_params(marge_indices) = matmul(beam_conditional_mean, freq_params(num_non_beam:))
+      beam_params(marge_indices) = matmul(beam_conditional_mean, freq_params(num_non_beam+1:))
     endif
 
   end subroutine  

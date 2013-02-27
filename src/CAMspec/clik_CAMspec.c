@@ -14,7 +14,7 @@ double CAMspec_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
-void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*,int*,int*,int*,double*,int*,int*);
+void camspec_extra_init_(int*, int*,int*,int*,int*,int*, double*,double*,int*,double*,double*,double*,int*,int*,int*,int*,double*,double*,int*,int*,int*,double*,int*,int*,double*);
 //SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,imarge_flag, imarge_mode,imarge_num, ikeep_num)
 
 cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
@@ -47,6 +47,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   int *marge_flag;
   double *marge_mode;
   int sz;
+  double bs_factor;
 
   //int frq[] = {100,143,217};
   
@@ -153,7 +154,10 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
     forwardError(*err,__LINE__,NULL);
   }
 
-  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior,marge_flag,marge_mode,&marge_num,&keep_num);    
+  bs_factor = cldf_readfloat_default(df,"bs_factor",1,err);
+  forwardError(*err,__LINE__,NULL);
+
+  camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior,marge_flag,marge_mode,&marge_num,&keep_num,&bs_factor);    
   
   //camspec_extra_getcase_(&xcase);
   xdim = 14 + has_dust + keep_num;

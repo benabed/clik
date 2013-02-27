@@ -23,7 +23,7 @@ SUBROUTINE CAMSPEC_EXTRA_FREE()
     BOK =0
 END SUBROUTINE  CAMSPEC_EXTRA_FREE
 
-SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,imarge_flag, imarge_mode,imarge_num, ikeep_num)
+SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilmax_sz,isz_143_temp,iksz_temp,itszxcib_temp,ibeam_Nspec,inum_modes_per_beam,ibeam_lmax,icov_dim,ibeam_cov_inv,ibeam_modes,ihas_dust,ihas_calib,imarge_flag, imarge_mode,imarge_num, ikeep_num,bs_factor)
     USE CAMSPEC_EXTRA
     USE temp_like
     implicit none
@@ -39,6 +39,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     logical,dimension(1:icov_dim)::marge_flag
     integer::imarge_num,ikeep_num
     real*8,dimension(1:imarge_num, 1:ikeep_num)::imarge_mode
+    real*8::bs_factor
 
     integer::i
     
@@ -63,7 +64,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     ALLOCATE(cltt(0:lmax+1))
     allocate(nuisance(num_non_beam+beam_Nspec*num_modes_per_beam))
     npar = lmax+1-lmin+num_non_beam+ beam_Nspec * num_modes_per_beam
-    
+    beam_factor = bs_factor
 
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 

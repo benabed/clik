@@ -149,6 +149,9 @@ def main(argv):
     lkl_grp.attrs["marge_mode"] = beam_mode.flat[:]
     lkl_grp.attrs["marge_flag"] = nm.array(marge_flag).flat[:]
 
+  if "bs_factor" in pars:
+    lkl_grp.attrs["bs_factor"] = pars.float.bs_factor
+
   hf.close()
   
 import sys
