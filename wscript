@@ -339,7 +339,7 @@ def dist(ctx):
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  dist_list =  "svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
+  dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
   dist_list += "examples/*.par examples/*.dat "
   dist_list += "src/component_plugin/** "
