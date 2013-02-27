@@ -44,7 +44,7 @@ SUBROUTINE planck_lowlike_init
 ! initialise low l codes
 !-----------------------------------------------
   if(use_lowl_pol)then
-        !write(*,*) use_lowl_pol, 'using low ell'
+!        write(*,*) use_lowl_pol, 'using low ell'
         call teeebb_lowl_like_setup
  endif
 

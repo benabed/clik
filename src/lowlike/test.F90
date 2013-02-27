@@ -60,7 +60,6 @@ call planck_lowlike_init
 
 CALL SYSTEM_CLOCK(COUNT_RATE=clock_rate) ! Find the rate
 CALL SYSTEM_CLOCK(COUNT=clock_start) ! Start timing
-
 do i=1,100
 call planck_lowlike_compute(cl_tt,cl_te,cl_ee,cl_bb,like)
 enddo
@@ -86,8 +85,7 @@ like_tot = sum(like(1:num_pl))
   print 4, 'TOTAL -2ln(L)           ', 2*like_tot
   print 1
 
-!  expected_like_tot = 2014.086141d0
-  expected_like_tot = 1929.400163d0
+  expected_like_tot = 1925.697629d0
  
   print '(A,F13.6)', "Expected -2ln(L)         = ", expected_like_tot
   print '(A,F13.6)', "      Difference         = ", 2*like_tot-expected_like_tot

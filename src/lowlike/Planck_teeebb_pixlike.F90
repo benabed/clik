@@ -101,12 +101,12 @@ endif
   allocate(N(0:np-1))
   allocate(inmap(0:np-1,1))
 
-
-  maskfile=trim(Planck_data_dir)//'lowlP/mask_r3_p06_jarosik.fits'
+  maskfile=trim(Planck_data_dir)//'lowlP/mask_r3.fits'
   inquire(file= maskfile,exist = yes)
   if(.not.yes)then
      write(*,*)"teeebb maskfile not found",trim(maskfile)
   endif
+
   CALL READ_ARCHIVE_MAP(maskfile,T,Mask_R3,dum,ReadStatus)
   if (ReadStatus/=0) then
      print*,'unable to read in mask',trim(maskfile)
@@ -148,7 +148,6 @@ endif
     Print *, 'Error ', stat, ' while reading ', trim(filename(0))
     Stop
   End If
-
 	k = 1
 ! --- original
 !	do i = 0,2*mp-1
