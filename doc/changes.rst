@@ -1,5 +1,10 @@
 Changes
 =======
+7.4
+^^^
+
+A lot, actually !
+
 3.0
 ^^^
 

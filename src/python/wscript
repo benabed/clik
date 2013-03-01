@@ -57,15 +57,16 @@ def build(ctx):
         install_path = "${PYTHONDIR}/clik",
         defines = ["CLIK_LENSING"]
       ) 
-    ctx(
-      features = "c cshlib pyext",
-      source = "clik/parametric.pyx",
-      target  = "parametric",
-      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
-      use = "clik",
-      cflags = "-fopenmp",
-      install_path = "${PYTHONDIR}/clik"
-    )
+    if (ctx.env.has_plik):
+      ctx(
+        features = "c cshlib pyext",
+        source = "clik/parametric.pyx",
+        target  = "parametric",
+        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+        use = "clik",
+        cflags = "-fopenmp",
+        install_path = "${PYTHONDIR}/clik"
+      )
     if (ctx.env.has_f90 and ctx.env.has_egfs):
       ctx(
         features = "c cshlib pyext",
@@ -126,6 +127,8 @@ def build(ctx):
               "clik_add_egfs",
               "clik_add_plugin_component",
   ]
+  tls = os.listdir("src/python")
+  execlist = [ex for ex in execlist if ex+".py" in tls]
   for cde in execlist:
     ctx(
       execrule = injectpath,

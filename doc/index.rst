@@ -19,8 +19,8 @@ Wrappers are provided so that the functions can also be called from python and f
    interfacingc
    interfacingf90
    interfacingpy
-   fakesmica
    usingwmap
+   usingactspt
    utils
    changes
 

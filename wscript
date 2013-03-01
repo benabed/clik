@@ -216,32 +216,36 @@ def configure(ctx):
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
       allgood = False
   
+  ctx.env.has_plik = False
+  if osp.exists("src/smica.c"):
+    ctx.env.has_plik = True
   # go through the component plugins
-  for plg in os.listdir("src/component_plugin"):
-    if plg[0]==".":
-      continue
-    pth = osp.join("src/component_plugin",plg)
-    if not osp.isdir(pth):
-      continue
-    ctx.start_msg("Add plugin : '%s'"%plg)
-    try:
-      f = open(osp.join(pth,"plugin.txt"))
-      txt = f.read()
-      decr = {"source":"","data":"","python":""}
-      decr.update(dict(re.findall("(.+?)\s+(?::|=)\s+(.+)",txt)))
-      for k in decr:
-        decr[k] = [l.strip() for l in re.split("(?:\s|,|;)+",decr[k]) if l.strip()]
-        for f in decr[k]:
-          if not osp.exists(osp.join(pth,f)):
-            raise Exception((osp.join(pth,f))+" does not exists")
-    except Exception,e:
-      ctx.end_msg("Ignored (%s)"%e,"YELLOW")
-      continue
-    ctx.end_msg("ok")
-    ctx.env.append_unique("PLG",[plg])
-    ctx.env.append_unique("PLG_%s_SRC"%plg,decr["source"])
-    ctx.env.append_unique("PLG_%s_DATA"%plg,decr["data"])
-    ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
+  if osp.exists("src/component_plugin"):
+    for plg in os.listdir("src/component_plugin"):
+      if plg[0]==".":
+        continue
+      pth = osp.join("src/component_plugin",plg)
+      if not osp.isdir(pth):
+        continue
+      ctx.start_msg("Add plugin : '%s'"%plg)
+      try:
+        f = open(osp.join(pth,"plugin.txt"))
+        txt = f.read()
+        decr = {"source":"","data":"","python":""}
+        decr.update(dict(re.findall("(.+?)\s+(?::|=)\s+(.+)",txt)))
+        for k in decr:
+          decr[k] = [l.strip() for l in re.split("(?:\s|,|;)+",decr[k]) if l.strip()]
+          for f in decr[k]:
+            if not osp.exists(osp.join(pth,f)):
+              raise Exception((osp.join(pth,f))+" does not exists")
+      except Exception,e:
+        ctx.end_msg("Ignored (%s)"%e,"YELLOW")
+        continue
+      ctx.end_msg("ok")
+      ctx.env.append_unique("PLG",[plg])
+      ctx.env.append_unique("PLG_%s_SRC"%plg,decr["source"])
+      ctx.env.append_unique("PLG_%s_DATA"%plg,decr["data"])
+      ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
 
 
   f=open("svnversion")
@@ -364,13 +368,42 @@ def dist_public(ctx):
     _prepare_src(ctx)
   except Exception,e:
     pass
-  ctx.base_name = 'clik-'+clik_version+'.public'
+  ctx.base_name = 'plc-'+clik_version
   res = ctx.cmd_and_log("svnversion")
   svnversion = res
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
-  ctx.files = ctx.path.ant_glob("Makefile svnversion waf wscript examples/*.par examples/*.dat **/wscript src/python/**/*.py src/python/**/*.pyx src/*.c src/*.h src/component_plugin/** src/*.f90 src/minipmc/* waf_tools/*.py clik.pdf" )
+  
+  dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
+  dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
+  dist_list += "src/* src/CAMspec/* "
+  dist_list += "src/act_spt/* "
+  dist_list += "src/lowlike/* "
+  dist_list += "src/gibbs/* "
+  dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
+  exclude_list = " src/".join('src/smica.c clik_hfipack.* clik_parametric.* clik_parametric_addon.* clik_bopix.c'.split())
+  dist_list+=" src/python/".join(["src/python/clik_add_free_calib.py",
+              "clik_explore_1d.py",
+              "prepare_actspt.py",
+              "clik_get_selfcheck.py",
+              "clik_example_py.py",
+              "clik_join.py",
+              "clik_disjoin.py",
+              "clik_print.py",
+              "prepare_wmap.py",
+              "clik_extract_external.py"])
+  print exclude_list
+  
+  excl_list = ctx.path.ant_glob(exclude_list)
+  files = ctx.path.ant_glob(dist_list)
+  giles = []
+  print excl_list
+  for f in files:
+    if f in excl_list:
+      continue
+    giles +=[f]
+  ctx.files = giles
   
 def post(ctx):
   import shutil

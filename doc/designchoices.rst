@@ -1,26 +1,22 @@
 Design choices
 ==============
 
-The idea was to build an interface so that people interested into testing their prefered cosmological model against the Planck likelihood will be able to do so in a relatively easy way. This is the reason why the library has **no user serviceable part**. If you start playing around with the code, you are on your own!
-
-That being said, here are a few key ideas on the library.
-
 A likelihood is entirely defined by a likelihood file. 
 ------------------------------------------------------
 
 Along with the code, likelihood files will be distributed. They contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood (maps, cl, whatnot),but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood. 
 
 This means that a likelihood file containing the some of different likelihood approximation will have to contain the data for each of those approximation. This will translate into possibly huge file. And variations of those likelihoods will contains yet more copy of this huge data.
-To solve partially this problem, it is possible for the likelihoods that need a lot of data to optionally refer to external files. This will be the case in particular for the WMAP7, PLow and lowlike likelihoods.
+To solve partially this problem, it is possible for the likelihoods that need a lot of data to optionally refer to external files. This will be the case in particular for the WMAP and lowlike likelihoods.
 In those cases, the data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory. The latter case improve the efficiency of the initialization of clik when using this kind of likelihood files.
 
-In order to use the library, the first step is thus to initialize it with such a file. Functions or subroutine to perform this initialization are available in each language. Another function is provided to cleanup the memory at the end of the use of a given likelihood. Several likelihoods can be initialized within the same session, allowing to perform comparison between different likelihood approximation whithin the same run.
+In order to use the library, the first step is thus to initialize it with such a file. Functions or subroutine to perform this initialization are available in each language. Another function is provided to cleanup the memory at the end of the use of a given likelihood. Some likelihoods can be initialized within the same session, allowing to perform comparison between different likelihood approximation whithin the same run.
 
 
 The library computes an approximation of the log likelihood
 -----------------------------------------------------------
 
-Nothing to add here. The library does not compute minus the log likelihood or a chi2 like thingy. Just the log likelihood.
+Nothing to add here. The library does not compute minus the log likelihood or a chi2 like value. Just the log likelihood.
 A function is provided in each language to compute the log likelihood, given a set of parameters.
 
 .. _querying:
@@ -51,3 +47,8 @@ Definitly, the library expect power spectra and not l(l+1)Cl/2pi or other combin
 
 The library really wants power spectra in microK^2.
 
+
+Lensing likelihood
+------------------
+
+The behaviour of the lensing likelihood is similar to the one of the CMB likelihoods except that it does not have nuisance parameters and expected the phiphi Cl as well as the TT Cl.

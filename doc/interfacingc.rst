@@ -8,7 +8,7 @@ Compiling and linking
 
 The program `clik-config` (installed in PREFIX/bin) spits out on the standard output the barbaric option and link line to give to your prefered c compiler when compiling and linking against the clik lib.
 
-The file ``click_example_c.c`` gives a simple example of the use of the c API. It is compiled and installed as :program:`clik_example_c`.
+The file ``click_example_c.c`` gives a simple example of the use of the c API. It is compiled and installed as :program:`clik_example_C`.
 
 API - CMB likelihood
 --------------------

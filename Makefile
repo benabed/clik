@@ -145,7 +145,7 @@ CFITSIO = -L/usr/local/lib -lcfitsio
 
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
-vpath %.c %f90 %.F90 src src/minipmc src/cldf src/CAMspec src/component_plugin/basic src/lenslike/plenslike
+vpath %.c %f90 %.F90 src src/minipmc src/cldf src/CAMspec  src/lenslike/plenslike
 vpath %f90  src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
 vpath  %.F90 src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
 
@@ -157,8 +157,8 @@ BLUE_COLOR=\x1b[32;11m
 
 
 TOOLS := $(addprefix $(ODIR)/,errorlist.o io.o distribution.o cldf.o)
-CLIKMAIN := $(addprefix $(ODIR)/,clik.o lklbs.o lowly_common.o smica.o clik_helper.o)
-CLIKLKL := $(addprefix $(ODIR)/,clik_lowlike.o clik_actspt.o clik_gibbs.o clik_CAMspec.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o basic.o)
+CLIKMAIN := $(addprefix $(ODIR)/,clik.o lklbs.o lowly_common.o clik_helper.o)
+CLIKLKL := $(addprefix $(ODIR)/,clik_lowlike.o clik_actspt.o clik_gibbs.o clik_CAMspec.o)
 LENSLKL := $(addprefix $(ODIR)/,plenslike_dat_mono.o plenslike_dat_quad.o qest.o wignerd.o)
 ACTSPTLKL := $(addprefix $(ODIR)/,Highell_options.f90.o Highell_subroutines.f90.o  Foregrounds_loading.f90.o ACT_equa_likelihood.f90.o SPT_reichardt_likelihood.f90.o ACT_south_likelihood.f90.o  SPT_keisler_likelihood.f90.o  Highell_likelihood.f90.o clik_actspt.f90.o)
 CAMSPECLKL := $(addprefix $(ODIR)/,CAMspec.f90.o clik_CAMspec.f90.o)

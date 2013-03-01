@@ -1,11 +1,11 @@
 Installing
 ==========
 
-The library has many external dependencies. We are striving at reducing the number of dependency, but many of them will remain given the current set of likelihood codes we are including.
+The library has a few external dependencies. 
 
-Only a few packages or tools must be installed before installing clik. All the other can be downloaded and installed automatically by the clik installer.
+Only a few packages or tools must be installed before installing clik. All the other can be downloaded and installed automatically by the clik installer when using waf. When using Makefile, you are on your own.
 
-Furthermore some of the dependency can be absent, and will only reduce the number of extra functionalities provided by clik (like merging likelihood, or simulating them).
+Furthermore some of the dependency can be absent, and will only reduce the number of extra functionalities provided by clik (like merging likelihood, building the actspt or wmap one).
 
 Requisites
 ----------
@@ -16,16 +16,18 @@ Mandatory requisites that cannot be installed automatically
 `Python <http://python.org>`_ (>=2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
 Gcc version must be >= 4.2 and gfortran version must be >=4.3.
 Having a full python installation (i.e. including the library and header, often called *python-devel* or *python-dev* in package managers) is very strongly advised.
+People using the Makefile install and not planning to use the python tools can do without python.
+
 
 Mandatory requisites that will be installed automatically if absent
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The `hdf5 <http://www.hdfgroup.org/HDF5>`_ (version>1.8), `cfitsio`_, `healpix c and f90 <http://healpix.jpl.nasa.gov/>`_ (version>2.20a shared) libraries with their dependency (i.e. cfitsio) as well as blas and lapack distribution (preferably intel MKL) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using the options described below.
+`cfitsio`_,  as well as blas and lapack distribution (preferably intel MKL on linux machine. Macos computers already have a reasonnable parallelized blas/lapack that clik can use) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using the options described below.
 
 Optional requisites 
 ^^^^^^^^^^^^^^^^^^^
 
-A python distribution including the header and library (if absent, this will not be installed automatically), and the `h5py <http://alfven.org/wp/hdf5-for-python/>`_ (1.3<=version<2),  `numpy <http://numpy.scipy.org/>`_ (version>1.1) and `cython <http://cython.org/>`_ python package (version>1.12) are needed to provide the (optional) clik python wrapper and the simulation, merging , splitting and printing tools. The three python package will only be installed automatically if the python header and library are available on the system.
+A python distribution including the header and library (if absent, this will not be installed automatically), and the `pyfits <http://http://www.stsci.edu/institute/software_hardware/pyfits/>`_ (2.4<=version),  `numpy <http://numpy.scipy.org/>`_ (version>1.1) and `cython <http://cython.org/>`_ python package (version>1.12) are needed to provide the (optional) clik python wrapper and the simulation, merging , splitting and printing tools. The three python package will only be installed automatically if the python header and library are available on the system.
 
 Special dependency : pmclib
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -88,7 +90,7 @@ I am installing on magique3
 Use this::
 
     $> /softs/python/2.7.2/bin/python waf configure \
-          --install_all_deps --gsl_prefix=/softs/gsl/1.15/ \
+          --install_all_deps --cfitsio_prefix=/softs/cfitsio/3.24/
           --lapack_mkl=/softs/intel/mkl/10.2.6.038 --lapack_mkl_version=10.2 
 
 and then::
@@ -197,16 +199,8 @@ On a MacOS X computer, one can use Apple provided lapack by setting ``--lapack_a
 Special case: WMAP likelihood
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Clik can provide a wrapper to the wmap7 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`. The ``--install_all_deps`` and ``--forceinstall_all_deps`` options will automatically download the sources, as if ``-wmap_install`` was set.
+Clik can provide a wrapper to the wmap9 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`. The ``--install_all_deps`` and ``--forceinstall_all_deps`` options will automatically download the sources, as if ``-wmap_install`` was set.
 
-
-Special case: Healpix
-^^^^^^^^^^^^^^^^^^^^^
-
-Clik requires a specialy build healpix library. Namely, it must link with a repositionable (or better shared) version of the healpix library. 
-This option is currently not available for the fortran version of the lib (as of version 2.20a). The configuration script knows how to produce this special version
-of healpix for you. Thus except if you really know what you are doing, and even if you already have healpix installed on your system, 
-using the option ``--healpix_install`` is very strongly recommanded.
 
 Putting it all together
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -220,9 +214,9 @@ will tell the clik install system to install all the possible external dependenc
 The following command::
 
     $> ./waf configure --lapack_mkl=/opt/intel/mkl \ --lapack_mkl_version=10.2
-       --healpix_install --hdf5_install --h5py_install --gsl_prefix=/usr/local/gsl
+       --cfistio_prefix=/usr/local/cfitsio --cython_install
 
-will tell the clik install system to install healpix, hdf5 and h5py. The gsl library will be looked for in the unusual dir ``/usr/loca/gsl``. /All the other dependency will be looked up in the classical locations. The blas/lapack library 
+will tell the clik install system to install cython. The cfitsio library will be looked for in the unusual dir ``/usr/local/cfitsio``. /All the other dependency will be looked up in the classical locations. The blas/lapack library 
 will be the one from an mkl install located at --lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.
 
  

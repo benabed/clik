@@ -22,17 +22,38 @@ The tool  :program:`clik_print` displays some information on the content of a li
 
 .. code-block:: none
 
-    Checking likelihood 'fake_smica_TE_2_1700_b10_143.clik' on test data. got -244.097 expected -244.097 (diff 0)
-    clik lkl file =  fake_smica_TE_2_1700_b10_143.clik
+    $> clik_print ../release/clik_7.4/CAMspec_v6.2TN_2013_02_26.clik/
+    ----
+    clik version 5869
+      CAMspec e61cec87-3a37-43ca-8ed1-edcfcaf5c00a
+    Checking likelihood '../release/clik_7.4/CAMspec_v6.2TN_2013_02_26.clik/' on test data. got -3910.03 expected -3910.03 (diff -2.09184e-10)
+    ----
+    clik lkl file =  ../release/clik_7.4/CAMspec_v6.2TN_2013_02_26.clik/
       number of likelihoods = 1
-      lmax ( TT = 1700 EE = 1700 TE = 1700 )
-      number of extra parameters = 0 ()
+      lmax ( TT = 2500 )
+      number of varying extra parameters 15
+        A_ps_100
+        A_ps_143
+        A_ps_217
+        A_cib_143
+        A_cib_217
+        A_sz
+        r_ps
+        r_cib
+        n_Dl_cib
+        cal_100
+        cal_143
+        cal_217
+        xi_sz_cib
+        A_ksz
+        Bm_1_1
+
       lkl_0
-        lkl_type = smica
+        lkl_type = CAMspec
         unit = 1
-        TT = [2 , 1700] EE = [2 , 1700] TE = [2 , 1700]
-        nbins = 507
-        number of extra parameters = 0 ()
+        TT = [50 , 2500]
+        number of extra parameters = 15 ('A_ps_100', 'A_ps_143', 'A_ps_217', 'A_cib_143', 'A_cib_217', 'A_sz', 'r_ps', 'r_cib', 'n_Dl_cib', 'cal_100', 'cal_143', 'cal_217', 'xi_sz_cib', 'A_ksz', 'Bm_1_1')
+
 
 
 Modifying the content of a likelihood file
@@ -97,3 +118,66 @@ This is only valid for likelihood files containing only one component and when t
     input_object = wmap_7_full.external.clik   # input likelihood file. Data is installed somewhere
     res_object = wmap_7_full.clik              # output likelihood file. Data is included
 
+Computing a log likelihood from the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The example codes, :program:`clik_example_C`, :program:`clik_example_f90` and :program:`clik_example_py` allow to compute a 
+the log likelihoods for any numbers of files containing Cls andforeground parameters. 
+
+:program:`clik_example_C` *usage:*
+
+.. code-block:: none
+
+    clik_example_C lkl_file.clik [clfile1 ...]
+
+``lkl_file.clik`` is the likelihood file. The ``clfile1 ...`` files must be ascii and contains 
+Cls from 0 to the lmax (included) of the likelihood file, followed by the nuisance parameter values in the order shown when 
+using :program:`clik_print` or using of the the query function (for example, in c :cfunction:`clik_get_extra_parameter_names`). 
+
+Extracting the test Cl from a likelihood file
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:program:`clik_get_selfcheck` *usage:*
+
+.. code-block:: none
+
+    clik_get_selfcheck lkl_file.clik clfile
+
+``lkl_file.clik`` is the likelihood file. ``clfile`` is the cl+nuisance parameter array used to compute the selfchek displayed at each initialization of the likelihood. Same format as the one needed for :program:`clik_example_C`
+
+
+Computing a slice through a log likelihood from the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One can quickly compute conditionals through a likelihood along the direction of one of the nuisance parameter using :program:`clik_explore_1d`.
+
+:program:`clik_explore_1d` *usage:*
+
+.. code-block:: none
+
+    clik_explore_1d parfile
+
+``parfile`` is a parameter file similar to:
+
+.. code-block:: python
+
+    # slice 
+
+    #lkl
+    input_object = CAMspec_v6.2TN_2013_02_26.clik
+    
+    #data for the other dimensions. Same format as for clik_example_C. 
+    initdata = bestfilcl.camspec
+    
+    #name of the varying parameter
+    parameter = r_cib
+
+    #begin and end values
+    beg = -1
+    end = 1.5
+
+    #number of computations
+    step = 300
+
+    #ascii file that will hold the result as a 2d array, parameter value, lkl value
+    res = myresult.txt
