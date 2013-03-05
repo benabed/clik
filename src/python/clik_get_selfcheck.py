@@ -1,6 +1,6 @@
-#! $PYTHONEXE
+#! PYTHONEXE
 import sys
-sys.path = ["$REPLACEPATH"]+sys.path
+sys.path = ["REPLACEPATH"]+sys.path
 
 import clik.parobject as php
 import clik

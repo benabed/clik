@@ -1,11 +1,11 @@
-#! $PYTHONEXE
+#! PYTHONEXE
 
 import numpy as nm
 import healpy as hp
 
 import sys
 if __name__ == "__main__":
-  sys.path = ["$REPLACEPATH"]+sys.path
+  sys.path = ["REPLACEPATH"]+sys.path
 
 def mode(l,m,nside,field,ordering="ring",all=False):
   if m==0:

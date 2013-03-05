@@ -1,6 +1,6 @@
-#! $PYTHONEXE
+#! PYTHONEXE
 import sys
-sys.path = ["$REPLACEPATH"]+sys.path
+sys.path = ["REPLACEPATH"]+sys.path
 
 import clik.hpy as hpy
 import clik.smicahlp as hlp

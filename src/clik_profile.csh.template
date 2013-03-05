@@ -14,12 +14,12 @@ set newvar=PREFIX/bin:${newvar}
 setenv PATH PREFIX/bin:${newvar} 
 endif
 if !($?PYTHONPATH) then
-setenv PYTHONPATH PREFIX/lib/python2.7/site-packages
+setenv PYTHONPATH MPYTHONPATH
 else
 set newvar=$PYTHONPATH
-set newvar=`echo ${newvar} | sed s@:PREFIX/lib/python2.7/site-packages:@:@g`
-set newvar=`echo ${newvar} | sed s@:PREFIX/lib/python2.7/site-packages\$@@` 
-set newvar=`echo ${newvar} | sed s@^PREFIX/lib/python2.7/site-packages:@@`  
+set newvar=`echo ${newvar} | sed s@:MPYTHONPATH:@:@g`
+set newvar=`echo ${newvar} | sed s@:MPYTHONPATH\$@@` 
+set newvar=`echo ${newvar} | sed s@^MPYTHONPATH:@@`  
 set newvar=PREFIX/lib/python2.7/site-packages:${newvar}                     
 setenv PYTHONPATH PREFIX/lib/python2.7/site-packages:${newvar} 
 endif
@@ -50,6 +50,16 @@ set newvar=$DYLD_LIBRARY_PATH
 set newvar=`echo ${newvar} | sed s@:LAPACKLIBPATH:@:@g`
 set newvar=`echo ${newvar} | sed s@:LAPACKLIBPATH\$@@` 
 set newvar=`echo ${newvar} | sed s@^LAPACKLIBPATH:@@`  
+set newvar=LAPACKLIBPATH:${newvar}                     
+setenv DYLD_LIBRARY_PATH LAPACKLIBPATH:${newvar} 
+endif
+if !($?DYLD_LIBRARY_PATH) then
+setenv DYLD_LIBRARY_PATH CFITSIOLIBPATH
+else
+set newvar=$DYLD_LIBRARY_PATH
+set newvar=`echo ${newvar} | sed s@:CFITSIOLIBPATH:@:@g`
+set newvar=`echo ${newvar} | sed s@:CFITSIOLIBPATH\$@@` 
+set newvar=`echo ${newvar} | sed s@^CFITSIOLIBPATH:@@`  
 set newvar=LAPACKLIBPATH:${newvar}                     
 setenv DYLD_LIBRARY_PATH LAPACKLIBPATH:${newvar} 
 endif

@@ -1,7 +1,7 @@
-#! $PYTHONEXE
+#! PYTHONEXE
 
 import sys
-sys.path = ["$REPLACEPATH"]+sys.path
+sys.path = ["REPLACEPATH"]+sys.path
 
 import healpy as hp
 import numpy as nm

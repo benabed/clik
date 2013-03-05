@@ -29,8 +29,8 @@ def build(ctx):
     tgt = task.outputs[0].abspath() 
     f=open(src)
     txt = f.read()
-    txt = re.sub("\$REPLACEPATH",ctx.env.PYTHONDIR,txt)
-    txt = re.sub("\$PYTHONEXE",ctx.env.PYTHON[0],txt)
+    txt = re.sub("REPLACEPATH",ctx.env.PYTHONDIR,txt)
+    txt = re.sub("PYTHONEXE",ctx.env.PYTHON[0],txt)
     f=open(tgt,"w")
     print >>f,txt,
     f.close()
