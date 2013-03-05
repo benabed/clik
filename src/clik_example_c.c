@@ -69,6 +69,11 @@ int main(int argc, char **argv) {
   _err = initError();
   err = &_err;
   
+  if (argc<2) {
+    fprintf(stderr, "usage: %s clikfile [clfile ...]\n  Prints some info on the likelihood clikfile \n  and compute log likelihoods for each clfile\n",argv[0]);
+    return -1;
+  }
+
   //testErrorExitVA(argc<3,-1,"Bad number of command line args!\nusage : %s clikidfile clfile [clfile ...]",*err,__LINE__,argv[0]);
   
   isl  = clik_try_lensing(argv[1],err);

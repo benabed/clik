@@ -13,7 +13,6 @@ Wrappers are provided so that the functions can also be called from python and f
 .. toctree::
    :maxdepth: 2
    
-   contribution
    designchoices
    installing
    interfacingc
@@ -22,8 +21,7 @@ Wrappers are provided so that the functions can also be called from python and f
    usingwmap
    usingactspt
    utils
-   changes
-
+   
 Indices and tables
 ==================
 

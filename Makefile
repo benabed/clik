@@ -1,5 +1,3 @@
-#WORK IN PRODRESS USE AT YOUR OWN RISK. NOT TESTED YET ON OTHER INFRASTRUCTURE THAN MACOS YOU HAVE BEEN WARNED !
-
 # here are the thing that you should modify 
 
 ################################################################################################
@@ -43,6 +41,21 @@ LAPACKLIBPATHMKL = -L$(MKLROOT)/lib/em64t
 
 # pretty colors (comment to remove pretty colors)
 COLORS = 1
+
+# what is the openmp option for your C compiler (leave empty to cmpile without openmp)
+COPENMP = -fopenmp
+# what is the openmp option for your F90 compiler (leave empty to cmpile without openmp)
+FOPENMP = -openmp
+
+# what is the 32/64 bit option for your C compiler (leave empty if you don't want to know)
+CM64 =
+#CM64 = -arch x86_64 #macos
+#CM64 = -m64 #linux
+
+# what is the 32/64 bit option for your F90 compiler (leave empty if you don't want to know)
+FM64 = 
+#FM64 = -arch x86_64 #macos
+#FM64 = -m64
 
 # set the variable to the python cli to compile and install the python tools
 PYTHON = python
@@ -96,19 +109,18 @@ ifeq ($(FC),ifort)
 FLIBPATH = $(IFORTLIBPATH)
 FRUNTIME = $(IFORTRUNTIME)
 FMODULEPATH = $(IFORTMODULEPATH)
+FFLAGS =
 else
 FLIBPATH = $(GFORTRANLIBPATH)
 FRUNTIME = $(GFORTRANRUNTIME)
 FMODULEPATH = $(GFORTRANMODULEPATH)
+FFLAGS = -ffree-line-length-0
 endif
 
 
 # some defines (shared, relocatable openmp, etc)
 CFPIC = -fPIC
-COPENMP = -fopenmp
-
 FFPIC = -fPIC
-FOPENMP = -openmp
 
 # check here that the SHARED variable contain the correct invocation for your CC
 ifeq ($(OS),macos)
@@ -131,19 +143,27 @@ DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CL
 
 ifeq ($(OS),macos)
 DEFINES = $(DEFINESMACOS) $(DEFINESCOMMON)
+ifndef (CM64)
 CM64 = -arch x86_64
+endif
+ifndef (FM64)
 FM64 = -arch x86_64
+endif
 else
 DEFINES = $(DEFINESLINUX) $(DEFINESCOMMON)
+ifndef (CM64)
 CM64 = -m64
+endif
+ifndef (FM64)
 FM64 = -m64
+endif
 endif
 
 INCLUDES = -I$(CFITSIOPATH)/include
 
 # final CFLAG and FFLAGS
 CFLAGS = $(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I src -I src/cldf -I src/minipmc -I src/lenslike/plenslike $(INCLUDES)
-FFLAGS = $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
+FFLAGS += $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
 
 
 # Lapack section
@@ -173,6 +193,7 @@ else
 LAPACK = -L$(BDIR) -llapack_clik
 LAPACKLIBPATH = $(LAPACKLIBPATHMKL)
 LAPACKDEP = $(BDIR)/liblapack_clik.$(SO)
+LAPACK_INSTALL =-L$(PREFIX)/lib -llapack_clik
 endif
 
 #if you want to point to your own version of lapack set the following variables
@@ -188,8 +209,8 @@ CFITSIO =  -L$(CFITSIOPATH)/lib -lcfitsio
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
 # define some path to find the codes
-vpath %.c %f90 %.F90 src src/minipmc src/cldf src/CAMspec src/component_plugin/basic src/lenslike/plenslike
-vpath %f90  src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
+vpath %.c src src/minipmc src/cldf src/CAMspec src/component_plugin/basic src/lenslike/plenslike
+vpath %.f90  src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
 vpath  %.F90 src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
 
 # define color output if needed
@@ -222,13 +243,13 @@ install_dir:
 	@mkdir -p $(PREFIX)/include
 	@mkdir -p $(PREFIX)/share/clik
 
-install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh | install_dir
+install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 | install_dir
 	@$(ECHO) "install libs $(BLUE_COLOR)libclik.$(SO) libclik_f90.$(SO)$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/lib $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(LAPACKDEP) $(PREFIX)/lib
 	@$(ECHO) "install includes $(BLUE_COLOR)clik.h clik.mod$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/include $(NO_COLOR)"
 	@$(INSTALL)  src/clik.h src/minipmc/maths_base.h src/minipmc/errorlist.h src/minipmc/io.h src/lapack_clik.h src/minipmc/pmc.h $(ODIR)/clik.mod $(PREFIX)/include
-	@$(ECHO) "install clik_profile $(BLUE_COLOR)clik_profile.sh clik_profile.csh$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
-	@$(INSTALL)  $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(PREFIX)/bin
+	@$(ECHO) "install clik_profile & clik-config$(BLUE_COLOR)clik_profile.sh clik_profile.csh clik-config clik-config_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
+	@$(INSTALL)  $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 $(PREFIX)/bin
 	@$(ECHO) "install exec tools $(BLUE_COLOR)clik_example_C clik_example_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(PREFIX)/bin
 
@@ -246,14 +267,13 @@ $(BDIR)/clik_profile.sh: src/clik_profile.sh.template |$(BDIR)
 $(BDIR)/clik_profile.csh: src/clik_profile.csh.template |$(BDIR)
 	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIOPATH)/lib@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
 
-	
 $(BDIR):
 	@mkdir $(BDIR)
 
 $(ODIR): | $(BDIR)
 	@mkdir $(ODIR)
 
-$(CLIKLIB): | $(ODIR) $(ODIR)/.print_info
+$(CLIKLIB): | $(ODIR) $(ODIR)/.print_info test_cfitsio
 
 $(BDIR)/libclik.$(SO): $(CLIKLIB) 
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
@@ -272,6 +292,9 @@ $(BDIR)/clik_example_f90: $(ODIR)/clik_example_f90.f90.o $(BDIR)/libclik_f90.$(S
 	@$(FC) $(LDFLAG) $(LAPACK)  -L$(BDIR) -lclik_f90 -lclik $< -o $@
 
 $(BDIR)/liblapack_clik.$(SO): |$(BDIR)
+ifndef $(MKL_LIB_FULLPATH)
+	@$(ECHO) "$(RED_COLOR)I suspect an error with your MKLROOT, or MKL_LIB_FULLPATH, please check$(NO_COLOR)"
+endif
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR),\n(see chapter 5 in http://software.intel.com/sites/products/documentation/hpc/mkl/lin/)\nusing the following command line:"
 	gcc $(SHARED)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group -L$(IFORTLIBPATH) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
 	
@@ -302,13 +325,44 @@ $(ODIR)/.print_info: |$(ODIR)
 	@$(ECHO) "$(BLUE_COLOR)Using the following fortran runtime link line:$(NO_COLOR) $(FRUNTIME)"
 	@$(ECHO) "$(BLUE_COLOR)Build dir:$(NO_COLOR) $(BDIR)"
 	@$(ECHO)
-	@touch $(ODIR)/.print_info
+	@touch $(@)
 
 install_python: install $(addprefix $(ODIR)/, clik_add_free_calib.py clik_explore_1d.py prepare_actspt.py clik_get_selfcheck.py clik_example_py.py clik_join.py clik_disjoin.py clik_print.py prepare_wmap.py clik_extract_external.py) |$(ODIR)
 	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
 
+HAS_CFITSIO_INC := $(shell [ -f $(CFITSIOPATH)/include/fitsio.h ] && echo OK)
+HAS_CFITSIO_LIB := $(shell [ -f $(CFITSIOPATH)/lib/libcfitsio.$(SO) ] && echo OK)
+$(ODIR)/.test_cfistio: |$(ODIR)
+ifneq ($(HAS_CFITSIO_INC),OK)
+	@$(ECHO) "\n$(RED_COLOR)Cannot find cfisio includes ($(CFITSIOPATH)/include/fitsio.h)$(NO_COLOR)"
+	@false
+endif
+ifneq ($(HAS_CFITSIO_LIB),OK)
+	@$(ECHO) "\n$(RED_COLOR)Cannot find cfisio lib ($(CFITSIOPATH)/lib/libcfitsio.$(SO))$(NO_COLOR)"
+	@false
+endif
+	@touch $(@)
 
 
+INSTALL_CFLAG = $(subst ",\",$(subst ',\',$(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I $(PREFIX)/include $(INCLUDES)))
+INSTALL_FFLAG = $(subst ",\",$(subst ',\',$(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(PREFIX)/include))
+INSTALL_CLIB = $(CM64) $(CFITSIO) $(FRUNTIME) -ldl -lm -lpthread $(CFITSIO) $(FRUNTIME) 
+INSTALL_FLIB = $(CM64) $(CFITSIO) $(FRUNTIME) -ldl -lm -lpthread $(CFITSIO) $(FRUNTIME) 
+ifdef LAPACK_INSTALL
+INSTALL_CLIB += $(LAPACK_INSTALL)
+INSTALL_FLIB += $(LAPACK_INSTALL)
+else
+INSTALL_CLIB += $(LAPACK)
+INSTALL_FLIB += $(LAPACK)
+endif
+INSTALL_CLIB += -L$(PREFIX)/lib -lclik
+INSTALL_FLIB += -L$(PREFIX)/lib -lclik -lclik_f90
+
+$(BDIR)/clik-config: src/clik-config.template |$(BDIR)
+	@sed "s@CFLAG@$(INSTALL_CFLAG)@g;s@LIB@$(INSTALL_CLIB)@g" <$< >$@
+
+$(BDIR)/clik-config_f90: src/clik-config.template |$(BDIR)
+	@sed "s@CFLAG@$(INSTALL_FFLAG)@g;s@LIB@$(INSTALL_FLIB)@g" <$< >$@
 
 
 clean:

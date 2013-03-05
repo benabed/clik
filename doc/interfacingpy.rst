@@ -1,6 +1,8 @@
 Interfacing the library with python
 ===================================
 
+This python library is only available when the optional python tools are installed either by make or waf.
+
 API - CMB
 ---------
 

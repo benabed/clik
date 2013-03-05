@@ -1,42 +1,44 @@
 Installing
 ==========
 
-The library has a few external dependencies. 
+The package can be installed using two different tools, `waf <http://waf.googlecode.com>`_ or `make <http://http://www.gnu.org/software/make/>`_.
+Using waf, the installer will test for the different dependencies and try to install them if they are missing. Using make, one would have to
+modify the ``Makefile`` file for your particular computer and install the dependencies. Besides, when using make, no test of the availability of the requisite will be made.
 
-Only a few packages or tools must be installed before installing clik. All the other can be downloaded and installed automatically by the clik installer when using waf. When using Makefile, you are on your own.
+The package has a set of core utilities, consisting in the ``clik`` library with a C and F90 API, as well as the programs :program:`clik_example_C` and :program:`clik_example_F90` which allows to compute a log likelihood for a Cl and nuisance parameter file, and also doubles as example of how to interface with the library in this two languages.
 
-Furthermore some of the dependency can be absent, and will only reduce the number of extra functionalities provided by clik (like merging likelihood, building the actspt or wmap one).
+The package also have a set of optional utilities, consisting in a python wrapper of the library, along with a few python scripts allowing to explore the content of likelihood files, 
+and to manipulate them. Those tools will have a few more requirements to be built.
+
+Finally, when using waf, and provided that the optional python utilities can be installed, a wrapper to the wmap9 likelihood will also be installed.
 
 Requisites
 ----------
 
-Mandatory requisites that cannot be installed automatically
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Mandatory requisites 
+^^^^^^^^^^^^^^^^^^^^
 
-`Python <http://python.org>`_ (>=2.5) to run the installer (waf), **modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
+**modern c and fortran compilers** (icc, gcc, ifort anf gfortran are ok) are absolute requisites. 
 Gcc version must be >= 4.2 and gfortran version must be >=4.3.
-Having a full python installation (i.e. including the library and header, often called *python-devel* or *python-dev* in package managers) is very strongly advised.
-People using the Makefile install and not planning to use the python tools can do without python.
+
+To use the waf tool, one also need `Python <http://python.org>`_ (>=2.5).
+
+Mandatory requisites that can be installed when using waf
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Those requisites will not be installed automatically when using make, and must be manually installed. 
+`cfitsio <http://heasarc.gsfc.nasa.gov/fitsio/>`_,  as well as blas and lapack distribution (preferably intel MKL on linux machine. Macos computers already have a reasonnable parallelized blas/lapack that clik can use) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using waf and the options described below.
+Beware that the shared version of the cfitsio library must be available. This can be obtained using ``make shared`` when building the cfisio library.
 
 
-Mandatory requisites that will be installed automatically if absent
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-`cfitsio`_,  as well as blas and lapack distribution (preferably intel MKL on linux machine. Macos computers already have a reasonnable parallelized blas/lapack that clik can use) are needed for the core functionalities of clik. If absent (or not available in the correct flavor), they can be installed automatically using the options described below.
 
 Optional requisites 
 ^^^^^^^^^^^^^^^^^^^
 
-A python distribution including the header and library (if absent, this will not be installed automatically), and the `pyfits <http://http://www.stsci.edu/institute/software_hardware/pyfits/>`_ (2.4<=version),  `numpy <http://numpy.scipy.org/>`_ (version>1.1) and `cython <http://cython.org/>`_ python package (version>1.12) are needed to provide the (optional) clik python wrapper and the simulation, merging , splitting and printing tools. The three python package will only be installed automatically if the python header and library are available on the system.
+A python distribution including the header and library (if absent, this will not be installed automatically by waf), and the `pyfits <http://http://www.stsci.edu/institute/software_hardware/pyfits/>`_ (2.4<=version),  `numpy <http://numpy.scipy.org/>`_ (version>1.1) and `cython <http://cython.org/>`_ python package (version>1.12) are needed to provide the (optional) clik python wrapper and tools. The three python package will only be installed automatically when using waf if the python header and library are available on the system.
 
-Special dependency : pmclib
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Clik uses some of the facilities available in pmclib. Instead of requiring pmclib, those facilities are included in the clik distribution. This prevents a stock clik install to be linked with pmclib. An option is available to point the installer to a pmclib install, resolving this issue.
-
-
-Install tool
-------------
+Install with waf
+----------------
 
 The library and executables must be installed with the 'waf' tool. It is distributed in the package. Please have a look at `the waf webpage <http://waf.googlecode.com>`_.
 
@@ -84,8 +86,8 @@ To do so the configuration line has to be changed into::
 
     $> ./waf configure --install_all_deps --lapack_apple
 
-I am installing on magique3
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(planck insider) I am installing on magique3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use this::
 
@@ -99,8 +101,8 @@ and then::
 
 See below for the other otions used here.
 
-I am installing on ccin2p3
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+(planck insider) I am installing on ccin2p3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use this::
 
@@ -113,11 +115,9 @@ and then::
 
 
 
-Advanced configuration options
-------------------------------
 
-Installing with a particular Python executable
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Installing with a particular Python executable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is possible to install clik with a python install different from the default one. For example if the default python installation does not contains the required header and libraries. To do so, call waf this way::
 
@@ -128,8 +128,8 @@ and then::
     $> /path/to/special/python waf install 
 
 
-Bypassing the default compilers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Bypassing the default compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To bypass the c compiler detection, set the ``CC`` environment variable. 
 To bypass the fortran compiler detection, set the ``FC`` environment variable. Beware, you can only set the ``FC`` environment variable to either an intel fortran compiler or a gfortran compiler. 
@@ -142,19 +142,19 @@ Shortcuts for some classical cases are provided:
     * ``--gfortran`` causes the installer to use gfortran as fortran compiler.
 
 
-Setting the architecture
-^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Setting the architecture
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The architecture (32 or 64bits) can be set using the ``--m32`` or ``--m64`` flags. 64bits is the default.
 
-Setting installation path
-^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Setting installation path
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The installation path can be set using the ``--prefix=SOMEPATH`` option. Default is to install in the current directory.
 
 
-More on the automatic installation of dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: More on the automatic installation of dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are three levels of automatic installation. If one wants to *always* install the dependencies, one can use the ``--force_install_all_deps``::
 
@@ -167,7 +167,7 @@ Finally, each dependency can be installed on a dependency by dependency basis, u
 One should also note that ``--forceinstall_all_deps`` and ``--install_all_deps`` are also unactivated on a dependency by dependency basis if any of the ``--XXX_prefix``, ``--XXX_lib``, ``--XXX_include``, or other dependency specific options are present. In that case, the the ``XXX`` dependency, the configuration script will look in the locations described by those option and if the package is not found will report an error.
 
 
-Setting the location of a library
+ADVANCED: Setting the location of a library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The location of the library dependencies (gsl, hdf5, healpix, blas/lapack) must be known to the installer. By default, it will look for them in the classical system 
@@ -184,7 +184,7 @@ Finally, if the name of the library files differs from the usual ones one can se
 Using these options allow to point the installer to a pmclib install in order to allow the linking of clik with pmclib.
 
 
-Special case: the mkl library
+ADVANCED: Special case: the mkl library
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This option is only for advanced users.
@@ -196,14 +196,14 @@ Setting this option will cancel the ``--install_all_deps`` option for the lapack
 On a MacOS X computer, one can use Apple provided lapack by setting ``--lapack_apple``.
 
 
-Special case: WMAP likelihood
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Special case: WMAP likelihood
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Clik can provide a wrapper to the wmap9 likelihood. It need to now where the sources of the likelihood are located to compile against them. One must set the option ``--wmap_src=WMAP7SRCPATH`` or let the install system download it for you by setting the option ``--wmap_install``. Note that to actually use this likelihood, one must also download the data files and prepare clik likelihood files from them. Look at :ref:`WMAP`. The ``--install_all_deps`` and ``--forceinstall_all_deps`` options will automatically download the sources, as if ``-wmap_install`` was set.
 
 
-Putting it all together
-^^^^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Putting it all together
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following command::
 
@@ -220,8 +220,8 @@ will tell the clik install system to install cython. The cfitsio library will be
 will be the one from an mkl install located at --lapack_mkl=/opt/intel/mkl. Clik will be compiled in 64bit and installed in the current directory.
 
  
-Best advanced choice 
-^^^^^^^^^^^^^^^^^^^^
+ADVANCED: Best advanced choice 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use a mkl lapack install and let the other dependencies on auto install::
 
@@ -231,9 +231,26 @@ Use a mkl lapack install and let the other dependencies on auto install::
 This will use your mkl libraries from ``/opt/intel/mkl``, test if numpy, cython and gsl are installed on your computer (often the case) if not install them, 
 and finally install all the other requirements (helpaix, hdf5 and its python wrapper).
 
+Installing with make
+--------------------
+
+The first lines of the ``Makfile`` file must be checked and modified before compiling.
+In particular, one must set, 
+ * the location of the cfitsio library
+ * the location and version of the mkl library (or other lapack library)
+ * the location and list of library needed to link c with fortran
+ 
+To build and install the core utilities, use the following command::
+
+  $> make install
+
+To build and install the optional utilities, use the following command::
+
+  $> make install_python
+
 Environment variables
 ---------------------
 
-Depending of your shell, a configuration file named ``clik_profile.sh`` of ``clik_profile.csh`` will be installed in the ``bin`` directory at the install location of clik. One can source it on the command line, or include it in its startup configuration file to set the environment variable needed by clik.
+Depending of your shell, a configuration file named ``clik_profile.sh`` of ``clik_profile.csh`` will be installed in the ``bin`` directory at the install location of clik. One can source it on the command line, or include it in its startup configuration file to set the environment variable needed by clik. This tool is installed both bty waf and make.
 
 

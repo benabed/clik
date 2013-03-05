@@ -13,7 +13,9 @@ program clik_example_f90
 
   nargc = iargc()
   if (nargc < 1) then
-     print*,'usage: clik_example_f90 hdffile [clfile1 clfile2 ...]'
+     print *,'usage: clik_example_f90 clikfile [clfile ...]'
+     print *,'  Prints some info on the likelihood clikfile '
+     print *,'  and compute log likelihoods for each clfile'
      stop
   end if
   call getarg(1,hdffilename)

@@ -4,11 +4,12 @@ Design choices
 A likelihood is entirely defined by a likelihood file. 
 ------------------------------------------------------
 
-Along with the code, likelihood files will be distributed. They contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood (maps, cl, whatnot),but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood. 
+The likelihood files (in fact directories, containing data as fits files and metadata as ascii files) contain all the info needed to define the likelihood. This encompass both the data needed to compute the likelihood,but also parameters describing the type of mathematical approximation used to compute this particular likelihood, and parameters describing the expected input of the likelihood. 
 
+A likelihood file can also be the combinaison of various underlying likelihoods, the computation from the top likelihood will be the product of each of the underlying one. A tool is distributed to allow joining and disjoining likelihoods.
 This means that a likelihood file containing the some of different likelihood approximation will have to contain the data for each of those approximation. This will translate into possibly huge file. And variations of those likelihoods will contains yet more copy of this huge data.
 To solve partially this problem, it is possible for the likelihoods that need a lot of data to optionally refer to external files. This will be the case in particular for the WMAP and lowlike likelihoods.
-In those cases, the data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory. The latter case improve the efficiency of the initialization of clik when using this kind of likelihood files.
+In those cases, the data can either be included in the file (as described above) or installed in some directory, in which case the likelihood file simply refers to the path of this directory.The latter case improve the efficiency of the initialization of clik when using this kind of likelihood files.
 
 In order to use the library, the first step is thus to initialize it with such a file. Functions or subroutine to perform this initialization are available in each language. Another function is provided to cleanup the memory at the end of the use of a given likelihood. Some likelihoods can be initialized within the same session, allowing to perform comparison between different likelihood approximation whithin the same run.
 
@@ -16,7 +17,7 @@ In order to use the library, the first step is thus to initialize it with such a
 The library computes an approximation of the log likelihood
 -----------------------------------------------------------
 
-Nothing to add here. The library does not compute minus the log likelihood or a chi2 like value. Just the log likelihood.
+And nothing else. The library does not compute minus the log likelihood or a chi2 like value. Just the log likelihood.
 A function is provided in each language to compute the log likelihood, given a set of parameters.
 
 .. _querying:
@@ -39,11 +40,11 @@ To sumarize, the input vector of the compute function must be an array of N = Nc
 Pitfalls
 --------
 
-Did I said that the function computes the log likelihood ?
+The function computes the log likelihood ?
 
-You correctly read that the Cls must be given in that order TT, EE, BB, TE, TB, EB. And, yes, the library expects C0 and C1 for each power spectra. Put them to zero if you want, but provide something.
+The Cls must be given in that order TT, EE, BB, TE, TB, EB. And, yes, the library expects C0 and C1 for each power spectra. 
 
-Definitly, the library expect power spectra and not l(l+1)Cl/2pi or other combination.
+The library expect power spectra and not l(l+1)Cl/2pi or other combination.
 
 The library really wants power spectra in microK^2.
 

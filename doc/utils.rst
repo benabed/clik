@@ -1,10 +1,29 @@
 Playing around with likelihood files
 ====================================
 
-Here is a list of utilities to manipulate the likelihood files.
+Computing a log likelihood from the command line
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The example codes, :program:`clik_example_C`, :program:`clik_example_f90` and :program:`clik_example_py` allow to compute a 
+the log likelihoods for any numbers of files containing Cls andforeground parameters. 
+
+:program:`clik_example_C` *usage:*
+
+.. code-block:: none
+
+    clik_example_C lkl_file.clik [clfile1 ...]
+
+``lkl_file.clik`` is the likelihood file. The ``clfile1 ...`` files must be ascii and contains 
+Cls from 0 to the lmax (included) of the likelihood file, followed by the nuisance parameter values in the order shown when 
+using :program:`clik_print` or using of the the query function (for example, in c :cfunction:`clik_get_extra_parameter_names`). 
+
+The program :program:`clik_example_py` is only available when the optional python tools are installed either by make or waf.
+
 
 Printing info about a file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This utility is only available when the optional python tools are installed either by make or waf.
 
 .. program:: clik_print
 
@@ -59,6 +78,8 @@ The tool  :program:`clik_print` displays some information on the content of a li
 Modifying the content of a likelihood file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+This utility is only available when the optional python tools are installed either by make or waf.
+
 The tools :program:`clik_join` and  :program:`clik_disjoin` allow to either join toghether one or more likelihood files in a single one, or cut a likelihood files into as many files as it has components.
 
 .. program:: clik_join
@@ -84,6 +105,9 @@ The input file is ``lkl_file.clik`` is split in as many likelihood as it has com
 
 Dealing with likelihood files with external data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This utility is only available when the optional python tools are installed either by make or waf.
+
 
 This is only valid for likelihood files containing only one component and when this component is either a BOPIX or WMAP likelihood. In both cases, the likelihood relies on external data. This data is either included in the file (as a big tarfile) or install somewhere in the file system. the tools :program:`clik_extract_external` and :program:`clik_include_external` allows to go from one choice to the other. It is either, when distribution, to include the external data whithin the file, and more efficient to run with the external data installed somewhere in the file system.
 
@@ -118,24 +142,12 @@ This is only valid for likelihood files containing only one component and when t
     input_object = wmap_7_full.external.clik   # input likelihood file. Data is installed somewhere
     res_object = wmap_7_full.clik              # output likelihood file. Data is included
 
-Computing a log likelihood from the command line
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The example codes, :program:`clik_example_C`, :program:`clik_example_f90` and :program:`clik_example_py` allow to compute a 
-the log likelihoods for any numbers of files containing Cls andforeground parameters. 
-
-:program:`clik_example_C` *usage:*
-
-.. code-block:: none
-
-    clik_example_C lkl_file.clik [clfile1 ...]
-
-``lkl_file.clik`` is the likelihood file. The ``clfile1 ...`` files must be ascii and contains 
-Cls from 0 to the lmax (included) of the likelihood file, followed by the nuisance parameter values in the order shown when 
-using :program:`clik_print` or using of the the query function (for example, in c :cfunction:`clik_get_extra_parameter_names`). 
 
 Extracting the test Cl from a likelihood file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This utility is only available when the optional python tools are installed either by make or waf.
+
 
 :program:`clik_get_selfcheck` *usage:*
 
@@ -148,6 +160,8 @@ Extracting the test Cl from a likelihood file
 
 Computing a slice through a log likelihood from the command line
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This utility is only available when the optional python tools are installed either by make or waf.
 
 One can quickly compute conditionals through a likelihood along the direction of one of the nuisance parameter using :program:`clik_explore_1d`.
 
