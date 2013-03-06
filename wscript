@@ -3,7 +3,7 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "7.4.4"
+clik_version = "7.4.4b"
 plc_version = "1.0b3"
 
 sys.path+=["waf_tools"]
