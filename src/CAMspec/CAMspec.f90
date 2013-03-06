@@ -264,7 +264,6 @@ contains
     if(needinit .eqv. .true.) then
        stop "initialize first"
     endif
-
     if (size(freq_params) < num_non_beam) stop 'CAMspec: not enough parameters'
     A_ps_100=freq_params(1)
     A_ps_143 = freq_params(2)
@@ -476,7 +475,7 @@ contains
        stop "initialize first"
     endif
 
-    if (size(freq_params) < num_non_beam +  beam_Nspec*num_modes_per_beam) stop 'CAMspec: not enough parameters'
+    if (size(freq_params) < num_non_beam +  keep_num) stop 'CAMspec: not enough parameters'
     cal0=freq_params(10)
     cal1=freq_params(11) 
     cal2=freq_params(12)

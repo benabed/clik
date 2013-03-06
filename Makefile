@@ -203,7 +203,7 @@ endif
 #LAPACKDEP = 
 
 #CFITSIO link
-CFITSIO =  -L$(CFITSIOPATH)/lib -lcfitsio
+CFITSIO =  -L$(CFITSIOPATH)/lib -L$(CFITSIOPATH)/lib64 -lcfitsio
 
 #final LDFLAG
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
@@ -262,10 +262,10 @@ PYTHONPATH :=
 endif
 
 $(BDIR)/clik_profile.sh: src/clik_profile.sh.template |$(BDIR)
-	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIOPATH)/lib@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
+	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIOPATH)/lib:$(CFITSIOPATH)/lib64@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
 
 $(BDIR)/clik_profile.csh: src/clik_profile.csh.template |$(BDIR)
-	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIOPATH)/lib@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
+	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIOPATH)/lib:$(CFITSIOPATH)/lib64@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
 
 $(BDIR):
 	@mkdir $(BDIR)
@@ -273,7 +273,7 @@ $(BDIR):
 $(ODIR): | $(BDIR)
 	@mkdir $(ODIR)
 
-$(CLIKLIB): | $(ODIR) $(ODIR)/.print_info test_cfitsio
+$(CLIKLIB): | $(ODIR) $(ODIR)/.print_info $(ODIR)/.test_cfitsio
 
 $(BDIR)/libclik.$(SO): $(CLIKLIB) 
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
@@ -297,7 +297,7 @@ ifndef $(MKL_LIB_FULLPATH)
 endif
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR),\n(see chapter 5 in http://software.intel.com/sites/products/documentation/hpc/mkl/lin/)\nusing the following command line:"
 	gcc $(SHARED)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group -L$(IFORTLIBPATH) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
-	
+
 $(ODIR)/%.o : %.c 
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(CC) -c $(CFLAGS) $< -o$(@)
@@ -331,14 +331,22 @@ install_python: install $(addprefix $(ODIR)/, clik_add_free_calib.py clik_explor
 	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
 
 HAS_CFITSIO_INC := $(shell [ -f $(CFITSIOPATH)/include/fitsio.h ] && echo OK)
-HAS_CFITSIO_LIB := $(shell [ -f $(CFITSIOPATH)/lib/libcfitsio.$(SO) ] && echo OK)
-$(ODIR)/.test_cfistio: |$(ODIR)
+HAS_CFITSIO_LIB32 := $(shell [ -f $(CFITSIOPATH)/lib/libcfitsio.$(SO) ] && echo OK)
+HAS_CFITSIO_LIB64 := $(shell [ -f $(CFITSIOPATH)/lib64/libcfitsio.$(SO) ] && echo OK)
+ifdef HAS_CFITSIO_LIB32
+HAS_CFITSIO_LIB = OK
+endif
+ifdef HAS_CFITSIO_LIB64
+HAS_CFITSIO_LIB = OK
+endif
+
+$(ODIR)/.test_cfitsio: |$(ODIR)
 ifneq ($(HAS_CFITSIO_INC),OK)
 	@$(ECHO) "\n$(RED_COLOR)Cannot find cfisio includes ($(CFITSIOPATH)/include/fitsio.h)$(NO_COLOR)"
 	@false
 endif
 ifneq ($(HAS_CFITSIO_LIB),OK)
-	@$(ECHO) "\n$(RED_COLOR)Cannot find cfisio lib ($(CFITSIOPATH)/lib/libcfitsio.$(SO))$(NO_COLOR)"
+	@$(ECHO) "\n$(RED_COLOR)Cannot find cfisio lib ($(CFITSIOPATH)/lib/libcfitsio.$(SO) and $(CFITSIOPATH)/lib64/libcfitsio.$(SO) are absent)$(NO_COLOR)"
 	@false
 endif
 	@touch $(@)

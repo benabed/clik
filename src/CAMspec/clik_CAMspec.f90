@@ -62,8 +62,9 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
     !IF (mlmax2.ne.0) xcase = 1
 
     ALLOCATE(cltt(0:lmax+1))
-    allocate(nuisance(num_non_beam+beam_Nspec*num_modes_per_beam))
-    npar = lmax+1-lmin+num_non_beam+ beam_Nspec * num_modes_per_beam
+
+    allocate(nuisance(num_non_beam+ihas_dust+beam_Nspec*num_modes_per_beam - marge_num))
+    npar = lmax+1-lmin+num_non_beam+ beam_Nspec * num_modes_per_beam +ihas_dust - marge_num
     beam_factor = bs_factor
 
 END SUBROUTINE CAMSPEC_EXTRA_INIT
@@ -115,11 +116,9 @@ SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
     !print *,CL(lmax+1-lmin+14)
 
     cnt = 1
-    DO i=1,beam_Nspec
-        DO j=1,num_modes_per_beam
+    DO i=1,keep_num
             nuisance(cnt+num_non_beam) = CL(lmax+1-lmin+num_non_beam+cnt-1)
             cnt = cnt + 1
-        ENDDO
     ENDDO
 
 
