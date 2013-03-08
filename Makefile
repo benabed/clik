@@ -325,7 +325,9 @@ $(BDIR)/liblapack_clik.$(SO): |$(BDIR)
 ifndef MKL_LIB_FULLPATH
 	@$(ECHO) "$(RED_COLOR)I suspect an error with your MKLROOT, or MKL_LIB_FULLPATH, please check$(NO_COLOR)"
 endif
-	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR),\n(see chapter 5 in http://software.intel.com/sites/products/documentation/hpc/mkl/lin/)\nusing the following command line:"
+	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR),"
+	@$(ECHO) "(see chapter 5 in http://software.intel.com/sites/products/documentation/hpc/mkl/lin/)"
+	@$(ECHO) "using the following command line:"
 	gcc $(SHARED)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group -L$(IFORTLIBPATH) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
 
 $(ODIR)/%.o : %.c 
