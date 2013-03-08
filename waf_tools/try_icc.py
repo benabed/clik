@@ -20,8 +20,7 @@ def show_linkline(ctx):
   ctx.end_msg(" ".join(["-L%s"%vv for vv in ctx.env.LIBPATH_cc_runtime])+" "+" ".join(["-l%s"%vv for vv in ctx.env.LIB_cc_runtime]))
 
 def do_icc(ctx):
-  ctx.env.CC=[]
-  ctx.env.LINK_CC=[]
+  ctx.env.CC=[]  ctx.env.LINK_CC=[]
   ctx.load('icc')
   ctx.check_cc(
       errmsg="failed",msg="Compile a test code with icc",
@@ -53,6 +52,9 @@ def do_icc(ctx):
   ctx.env.append_value("LIB",list(rl)+["pthread"])
   ctx.end_msg(True)
   show_linkline(ctx)
+  ctx.env.SHLIB_MARKER = ""
+  ctx.env.STLIB_MARKER = ""
+
   ctx.env.has_icc = True
 
 def do_gcc(ctx):
