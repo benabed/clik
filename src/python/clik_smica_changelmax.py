@@ -21,7 +21,7 @@ def cutlminlmax(nlmin, nlmax, infile, outfile):
            multipole range lmin <= l <= lmax, where lmin, lmax is
            adapted to the binning scheme of the file.
     """
-    hpy.copy(infile,outfile)
+    hpy.copyfile(infile,outfile)
     ff     = hpy.File(outfile,"r+")
     lmaxs  = ff["clik"].attrs["lmax"]
     lmin   = ff["clik/lkl_0"].attrs["lmin"]
