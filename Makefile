@@ -166,18 +166,18 @@ DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CL
 
 ifeq ($(OS),macos)
 DEFINES = $(DEFINESMACOS) $(DEFINESCOMMON)
-ifndef (CM64)
+ifndef CM64
 CM64 = -arch x86_64
 endif
-ifndef (FM64)
+ifndef FM64
 FM64 = -arch x86_64
 endif
 else
 DEFINES = $(DEFINESLINUX) $(DEFINESCOMMON)
-ifndef (CM64)
+ifndef CM64
 CM64 = -m64
 endif
-ifndef (FM64)
+ifndef FM64
 FM64 = -m64
 endif
 endif
@@ -322,7 +322,7 @@ $(BDIR)/clik_example_f90: $(ODIR)/clik_example_f90.f90.o $(BDIR)/libclik_f90.$(S
 	@$(FC) $(LDFLAG) $(LAPACK)  -L$(BDIR) -lclik_f90 -lclik $< -o $@
 
 $(BDIR)/liblapack_clik.$(SO): |$(BDIR)
-ifndef (MKL_LIB_FULLPATH)
+ifndef MKL_LIB_FULLPATH
 	@$(ECHO) "$(RED_COLOR)I suspect an error with your MKLROOT, or MKL_LIB_FULLPATH, please check$(NO_COLOR)"
 endif
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR),\n(see chapter 5 in http://software.intel.com/sites/products/documentation/hpc/mkl/lin/)\nusing the following command line:"
