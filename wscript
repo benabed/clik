@@ -64,6 +64,8 @@ def options(ctx):
   
   ctx.add_option_group(grp)
   
+  ctx.add_option("--extra_libpath",action="store",default="",help="libpath for extra lib to be linked")
+  ctx.add_option("--extra_lib",action="store",default="",help="extra lib to be linked")
   
 def configure(ctx):
   import os
@@ -253,6 +255,12 @@ def configure(ctx):
   ctx.env.svnversion = f.read()
   f.close()
 
+  # extra libs
+  if ctx.options.extra_lib:
+    libpath = ctx.options.extra_libpath.split(":")
+    lib = ctx.options.extra_lib.split(",")
+    ctx.env.LIBPATH_extra = libpath
+    ctx.env.LIB_extra = lib
     
   if allgood==False:
     print "\nConfigure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"

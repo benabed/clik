@@ -9,6 +9,12 @@ except Exception,e:
 import re
 import numpy as nm
 
+def pack256(*li):
+  rr=""
+  for l in li:
+    rr += l+'\0'*(256-len(l))
+  return rr
+
 _metadata = "_mdb"
 class File(object):
   def __init__(self,name,mode="r"):
@@ -108,7 +114,20 @@ class File(object):
       try:
         return pf.open(fkey)[0].data
       except Exception:
-        return open(fkey).read()
+        value = open(fkey).read()
+        if key+"__type__" in self and self[key+"__type__"] == "str_array":
+          rvalue = []
+          p0 = value.find("\n")
+          nv = int(value[:p0])
+          value = value[p0+1:]
+          for i in range(nv):
+            p1 = value.find("\n")
+            nc = int(value[:p1])
+            rvalue += [value[p1+1:p1+1+nc]]
+            value=value[p1+1+nc+1:]
+          return rvalue
+        return value
+
 
     dct = self._parsemetadata(osp.split(fkey)[0])
     return dct[osp.split(fkey)[1]]
@@ -123,7 +142,16 @@ class File(object):
       
       shu.copytree(value._name,fkey)
       return
-    if type(value) in (list,tuple,nm.ndarray):    
+    if type(value) in (list,tuple,nm.ndarray):
+      if isinstance(value[0],str):
+        tvalue = "%d\n"%len(value)
+        for v in value:
+          tvalue += "%d\n"%len(v)+v+"\n"
+        f=open(fkey,"w")
+        f.write(tvalue)
+        f.close()
+        self[key+"__type__"] = "str_array"
+        return
       value = nm.array(value)
       if value.dtype==nm.int32:
         value = value.astype(nm.int64)

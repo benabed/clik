@@ -21,7 +21,7 @@ def build(bld):
   source_clik = [src for src in source_clik if src]
   
   #uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]
-  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio' ).split() if ff]
+  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra' ).split() if ff]
   uselib_bopix = []
   uselib_wmap = []
   uselib_lowlike = []
