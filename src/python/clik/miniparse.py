@@ -53,9 +53,9 @@ class miniparse(object):
     self.pf.update(kk)
     self._access_list = {}
   
-  def keys(prefix=""):
-    return [k for k in pf.keys() if k[:len(prefix)]==prefix]
-      
+  def keys(self,prefix=""):
+    return [k for k in self.pf.keys() if k[:len(prefix)]==prefix]
+    
   def __repr__(self):
     rr = []
     for v in self._access_list:
