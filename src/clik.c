@@ -316,12 +316,14 @@ int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error *
     } else {
       
       pn = malloc_err(lbs->xdim*sizeof(parname),err);
+      //_DEBUGHERE_("%d %d",lbs->xdim,sizeof(parname));
       _forwardError(*err,__LINE__,-1);
     }
 
     for(i=0;i<lbs->xdim;i++) {
       if  (target->ndef==0 || target->def[i+n_cl]==0) {
         sprintf(pn[ii],"%s",lbs->xnames[i]);
+        //_DEBUGHERE_("%d %s %d %s",ii,pn[ii],i,lbs->xnames[i])
         ii++;
       }
     }

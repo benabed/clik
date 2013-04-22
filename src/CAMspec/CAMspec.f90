@@ -277,6 +277,7 @@ contains
     xi=freq_params(13)
     A_ksz=freq_params(14)
     
+
     if(has_dust) then
       A_dust = freq_params(15)
     endif
@@ -524,10 +525,12 @@ contains
     !   100 foreground
     ofs = 1
     do ispec=1,Nspec
+      !print *,nX,ispec,npt(ispec),ofs,lmaxX(ispec),lminX(ispec),npt(ispec)-ofs+lmaxX(ispec)-lminX(ispec)+1
       X_beam_corr_model(npt(ispec):npt(ispec)-ofs+lmaxX(ispec)-lminX(ispec)+1) = (cell_cmb(lminX(ispec):lmaxX(ispec)) + Cl_fg(ispec,lminX(ispec):lmaxX(ispec))) * gcal(ispec,lminX(ispec):lmaxX(ispec))
-      ofs = 0
+      ofs = 1
     enddo
 
+    !X_beam_corr_model = X
     Y = X - X_beam_corr_model
     
     zlike = 0

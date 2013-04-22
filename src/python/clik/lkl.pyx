@@ -129,6 +129,7 @@ cdef class clik:
     
     n_names = clik_get_extra_parameter_names(self.celf, &names, self.err)    
     res = ["%s"%names[i] for i in range(n_names)]
+    res = tuple(res)
     stdlib.free(names)
     return tuple(res)
 

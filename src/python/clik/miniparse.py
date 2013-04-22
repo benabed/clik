@@ -16,7 +16,11 @@ class transformme:
     self.scal=False
     
   def __getattr__(self,val):
+    val = val.replace("_DOT_",".")
+    val = val.replace("_dot_",".")
+    
     try:
+
       vl = self.pf.pf[val]
     except Exception,e:
       if self.df==None:
@@ -47,7 +51,7 @@ class miniparse(object):
       print "read parameter file %s"%pfn
       pff =open(pfn)
       txt = "\n".join([to.split("#")[0] for to in pff])+"\n"
-      pf = dict(re.findall("(?<!#)(\w+)\s*=\s*(.+?)\n",txt))
+      pf = dict(re.findall("(?<!#)((?:\w|\.)+)\s*=\s*(.+?)\n",txt))
       self.pf.update(pf)
     
     self.pf.update(kk)
