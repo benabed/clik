@@ -118,7 +118,7 @@ def build(ctx):
               "clik_extract_external",
               "prepare_CAMspec",
               "clik_smica_add_gcal",
-              "clik_remove_smica_component"]
+              "clik_remove_smica_component","prepare_plig"]
   old =   [
               "synthetic_smica",
               "create_lowl_problem",

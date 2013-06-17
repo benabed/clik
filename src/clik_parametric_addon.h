@@ -2,7 +2,7 @@
 #define _CPADN_
 #include "clik_helper.h"
 
-void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
+int base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
 SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
 #define CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(NAME,INIT_FUNC) \
@@ -14,19 +14,19 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf * df,int nb, int m, int nell, int
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
   double *template;  \
-  int dz;  \
+  int dz,ndet;  \
   \
   lmin = ell[0];  \
   lmax = ell[nell-1];  \
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);  \
   \
-  base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
+  ndet = base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   dz = -1;  \
   template = cldf_readfloatarray(df,"template",&dz, err);  \
   forwardError(*err,__LINE__,);  \
-  p_model = INIT_FUNC(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err);  \
+  p_model = INIT_FUNC(ndet, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   free(detlist);  \
@@ -57,16 +57,16 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int m, int nell, int*
   int ndef,nvar;  \
   char **defkeys,**defvalues,**varkeys;  \
   double *template;  \
-  int dz;  \
+  int dz,ndet;  \
   \
   lmin = ell[0];  \
   lmax = ell[nell-1];  \
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);  \
   \
-  base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
+  ndet = base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
-  p_model = INIT_FUNC(m, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax, err);  \
+  p_model = INIT_FUNC(ndet, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax, err);  \
   forwardError(*err,__LINE__,NULL);  \
     \
   free(detlist);  \

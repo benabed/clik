@@ -416,14 +416,25 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
       //nothing to do here, we are fine
     } else if(strcmp(crit_name,"gauss")==0) {
       double *quad_crit;
+      int *mask;
       int nqu;
 
-      nqu = (nb*m*(m+1))/2;
-      //quad_crit = hdf5_double_datarray(group_id, cur_lkl,"criterion_gauss_mat",&nqu,err);
+      nqu = -1;
       quad_crit = cldf_readfloatarray(df,"criterion_gauss_mat",&nqu,err);
       forwardError(*err,__LINE__,NULL);
-      smica_set_crit_gauss(smic, quad_crit,err);
+      mask = NULL;
+      hk = cldf_haskey(df,"criterion_gauss_mask",err);
       forwardError(*err,__LINE__,NULL);
+      if (hk == 1) { 
+        int i;
+        nqu = nb*m*m;
+        //mask = hdf5_int_datarray(group_id, cur_lkl,"criterion_quad_mask",&nqu,err);
+        mask = cldf_readintarray(df,"criterion_gauss_mask",&nqu,err);
+        forwardError(*err,__LINE__,NULL);
+      }
+      smica_set_crit_gauss(smic, quad_crit,mask,err);
+      forwardError(*err,__LINE__,NULL);
+      free(mask);
       free(quad_crit);
     } else if(strcmp(crit_name,"eig")==0) {
       double *nrm;

@@ -2520,7 +2520,7 @@ parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, ch
     payload->ind_freq[m1]=-1; //Init 
     for (m2=0;m2<nfreqs_gpe_dust;m2++) {
       if (fabs(egl->freqlist[m1]-gpe_dust_freqlist[m2])<1e-6) {
-	payload->ind_freq[m1]=m2;
+        payload->ind_freq[m1]=m2;
       }
     }
   }

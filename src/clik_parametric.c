@@ -236,6 +236,12 @@ void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** 
   int nfreq;
   int mdet;
 
+  if (ndet==0) {
+    *pnfreq = 0;
+    *pfreqlist = NULL;
+    *pdet2freq = NULL;
+    return;
+  }
   mdet = ndet;
   if (ndet<0) {
     mdet=-ndet;
@@ -278,8 +284,21 @@ void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** 
   *pdet2freq = det2freq;
 }
 
+parametric *parametric_init(int ndet,double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *epl;
+  int has_TEB[3];
 
-parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  has_TEB[0] = 1;
+  has_TEB[1] = 0;
+  has_TEB[2] = 0;
+
+  epl = parametric_pol_init(ndet,0,has_TEB,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return epl;
+}
+
+parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric *epl;
   int i,jj,mnvar;
   char *nop;
@@ -305,23 +324,78 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
   epl->nvar = nvar;
   epl->ndef = epl->pf->nkey - nvar;
 
-  epl->ndet = ndet;
-  if (ndet<0) {
-    epl->ndet = -ndet;
+  epl->ndet_T = ndet_T;
+  if (ndet_T<0) {
+    epl->ndet_T = -ndet_T;
   }
-  get_freq(ndet, detlist, &(epl->nfreq), &(epl->freqlist), &(epl->det2freq),err);
+  get_freq(ndet_T, detlist, &(epl->nfreq_T), &(epl->freqlist_T), &(epl->det2freq_T),err);
   forwardError(*err,__LINE__,NULL);
   
-  epl->detlist = malloc_err(sizeof(double)*epl->ndet,err);
+  epl->ndet_P = ndet_P;
+  if (ndet_P<0) {
+    epl->ndet_P = -ndet_P;
+  }
+  get_freq(ndet_P, detlist + epl->ndet_T, &(epl->nfreq_P), &(epl->freqlist_P), &(epl->det2freq_P),err);
   forwardError(*err,__LINE__,NULL);
-  memcpy(epl->detlist,detlist,sizeof(double)*epl->ndet);
 
+  epl->detlist_T = NULL;
+  if (epl->ndet_T!=0) {
+    epl->detlist_T = malloc_err(sizeof(double)*epl->ndet_T,err);
+    forwardError(*err,__LINE__,NULL);
+    memcpy(epl->detlist_T,detlist,sizeof(double)*epl->ndet_T);
+  }
+  
+  epl->detlist_P = NULL;
+  if (epl->ndet_P!=0) {
+    epl->detlist_P = malloc_err(sizeof(double)*epl->ndet_P,err);
+    forwardError(*err,__LINE__,NULL);
+    memcpy(epl->detlist_P,detlist+epl->ndet_T,sizeof(double)*epl->ndet_P);
+  }
+  
   epl->payload = NULL;
   epl->eg_compute = NULL;
   epl->eg_free = NULL;
 
   epl->lmin = lmin;
   epl->lmax = lmax;
+
+  epl->has_TEB[0] =  has_TEB[0];
+  epl->has_TEB[1] =  has_TEB[1];
+  epl->has_TEB[2] =  has_TEB[2];
+
+  epl->ndet = epl->ndet_T + epl->ndet_P * (epl->has_TEB[1]+epl->has_TEB[2]);
+  epl->nfreq = epl->nfreq_T + epl->nfreq_P * (epl->has_TEB[1]+epl->has_TEB[2]);
+
+  epl->detlist = malloc_err(sizeof(double)*epl->ndet,err);
+  forwardError(*err,__LINE__,NULL);
+  epl->freqlist = malloc_err(sizeof(double)*epl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+  epl->det2freq = malloc_err(sizeof(double)*epl->ndet,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(i=0;i<epl->ndet_T;i++) {
+    epl->detlist[i] = epl->detlist_T[i];
+    epl->det2freq[i] = epl->det2freq_T[i];
+  }
+  for(i=0;i<epl->nfreq_T;i++) {
+    epl->freqlist[i] = epl->freqlist_T[i];
+  }
+
+  for(i=0;i<epl->ndet_P*epl->has_TEB[1];i++) {
+    epl->detlist[i+epl->ndet_T] = epl->detlist_P[i];
+    epl->det2freq[i+epl->ndet_T] = epl->det2freq_P[i]+epl->ndet_T;
+  }
+  for(i=0;i<epl->nfreq_P*epl->has_TEB[1];i++) {
+    epl->freqlist[i+epl->ndet_T] = epl->freqlist_P[i];
+  }
+
+  for(i=0;i<epl->ndet_P*epl->has_TEB[2];i++) {
+    epl->detlist[i+epl->ndet_T+epl->ndet_P*epl->has_TEB[1]] = epl->detlist_P[i];
+    epl->det2freq[i+epl->ndet_T+epl->ndet_P*epl->has_TEB[1]] = epl->det2freq_P[i]+epl->ndet_T+epl->ndet_P*epl->has_TEB[1];
+  }
+  for(i=0;i<epl->nfreq_P*epl->has_TEB[2];i++) {
+    epl->freqlist[i+epl->ndet_T+epl->ndet_P*epl->has_TEB[1]] = epl->freqlist_P[i];
+  }
 
   epl->sRq = malloc_err(sizeof(double)*(lmax+1-lmin)*epl->nfreq*epl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
@@ -377,6 +451,15 @@ parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, 
 }
 
 
+parametric *parametric_bydet_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric * egl;
+
+  egl = parametric_pol_init(-ndet_T, -ndet_P,has_TEB,detlist,ndef,defkey,defvalue, nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return egl;
+}
+
 parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
   parametric * egl;
 
@@ -420,6 +503,16 @@ void parametric_free(void** pegl) {
     
   free(egl->varkey); 
   free(egl->ikey); 
+  if (egl->ndet_T!=0) {
+    free(egl->det2freq_T);  
+    free(egl->freqlist_T);
+    free(egl->detlist_T);
+  }
+  if (egl->ndet_P!=0) {
+    free(egl->det2freq_P);
+    free(egl->freqlist_P);
+    free(egl->detlist_P);
+  }
   free(egl->det2freq);
   free(egl->freqlist);
   free(egl->detlist);
@@ -1157,6 +1250,34 @@ void parametric_check_freq(parametric *egl, double* freqlist, int nfreq, error *
     ok = 0;
     for(m2=0;m2<nfreq;m2++) {
       if (fabs(egl->freqlist[m1]-freqlist[m2])<1e-6) {
+        ok=1;
+        break;
+      }
+    }
+    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,,egl->freqlist[m1]);
+  }
+}
+void parametric_check_freq_T(parametric *egl, double* freqlist, int nfreq, error **err) {
+  int m1,m2, ok;
+
+  for(m1=0;m1<egl->nfreq_T;m1++) {
+    ok = 0;
+    for(m2=0;m2<nfreq;m2++) {
+      if (fabs(egl->freqlist_T[m1]-freqlist[m2])<1e-6) {
+        ok=1;
+        break;
+      }
+    }
+    testErrorRetVA(ok==0,-1234,"Cannot compute prediction for %g Ghz channel",*err,__LINE__,,egl->freqlist[m1]);
+  }
+}
+void parametric_check_freq_P(parametric *egl, double* freqlist, int nfreq, error **err) {
+  int m1,m2, ok;
+
+  for(m1=0;m1<egl->nfreq_P;m1++) {
+    ok = 0;
+    for(m2=0;m2<nfreq;m2++) {
+      if (fabs(egl->freqlist_P[m1]-freqlist[m2])<1e-6) {
         ok=1;
         break;
       }

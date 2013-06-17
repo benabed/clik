@@ -1,11 +1,20 @@
 import re
 import numpy as nm
+import os.path as osp
 
 def scarray(li,scal=False):
   if len(li)==1 and scal:
     return li[0]
   else:
     return nm.array(li)
+
+def read_array(fname,dirname):
+  fname = lookupfile(fname,dirname)
+  
+  try:
+    return pf.open(fname)[0].data
+  except Exception:
+    return nm.loadtxt(fname)
     
 class transformme:
   def __init__(self,tfunc,pf,isar=False):
@@ -18,16 +27,20 @@ class transformme:
   def __getattr__(self,val):
     val = val.replace("_DOT_",".")
     val = val.replace("_dot_",".")
+    if self.isar and val+".file" in self.pf.pf:
+      vl = read_array(self.pf.pf[val+".file"],self.pf.localdir).flat[:]
+      self.pf._access_list += [val+".file"]
+    else:
+      try:
+        vl = self.pf.pf[val]
+        self.pf._access_list += [val]
+      except Exception,e:
+        if self.df==None:
+          raise e
+        else:
+          vl = self.df
+          self.pf._access_list += [val+".file"]
     
-    try:
-
-      vl = self.pf.pf[val]
-    except Exception,e:
-      if self.df==None:
-        raise e
-      else:
-        vl = self.df
-    self.pf._access_list[val] = vl
     if self.isar:
       if isinstance(vl,str):
         vvl = vl.split()
@@ -43,33 +56,118 @@ class transformme:
       self.scal = True
     return self
 
+def getnextline(txtit):
+  l = txtit.next()
+  l = re.split("#|!",l)[0]
+  if len(l.strip())==0:
+    return getnextline(txtit)
+  return l
+
+def cleantxtit(txtit):
+  while(1) :
+    yield getnextline(txtit)
+
+def parse_text(txtit):
+  ctxtit = cleantxtit(txtit)
+  cont = ""
+  pf = {}
+  for l in ctxtit:
+    k = cont
+    if not cont:
+      k,v = re.findall("(?<!#)((?:\w|\.)+)\s*=\s*(.+)",l)[0]
+      v = v.strip()
+    else:
+      v = l.strip()
+      v = pf[k]+ " "+ v
+    cont = "" 
+    if v[-1]=="&": #continuation
+        v = v[:-1]
+        cont = k
+    pf[k] = v
+  return pf
+
+def lookupfile(fi,dirs):
+  dirs = list(dirs) + ["."]
+  if osp.exists(fi):
+    return osp.realpath(fi)
+  for d in dirs:
+    if osp.exists(osp.join(dd,fi)):
+      return osp.realpath(osp.join(dd,fi))
+  raise IOError("cannot find %s in any of the following directories %s"%(fi,dirs))
+
+
 class miniparse(object):
+  def _parse(self,txtit):
+    cont = ""
+    for l in txtit:
+      
+      # include 
+      mtch = re.search("\s*#\s*include\s*[\"|\'](.+?)[\"|\']",l)
+      if mtch:
+        rfn = lookupfile(mtch.group(1),self.localdir)
+        self.localdir += [osp.dirname(rfn)]
+        self._parse(open(rfn))
+
+      #undef 
+      mtch = re.search("\s*#\s*undef\s*(.+)",l)
+      if mtch:
+        name = mtch.group(1).strip()
+        if name in self.pf:
+          del(self.pf[name])
+
+      
+      # deal with comments
+      l = re.split("#|!",l)[0]
+      if len(l.strip())==0:
+        continue
+
+      k = cont
+      if not cont:
+        k,v = re.findall("(?<!#)((?:\w|\.)+)\s*=\s*(.+)",l)[0]
+        v = v.strip()
+      else:
+        v = l.strip()
+        v = self.pf[k]+ " "+ v
+      
+      cont = "" 
+      if v[-1]=="&": #continuation
+        v = v[:-1]
+        cont = k
+      
+      self.pf[k] = v
+
   def __init__(self, pfn,**kk):
     self.pf = {}
-    
+
+    self.localdir = [osp.dirname(osp.abspath(pfn or "."))]
+
     if pfn!=None:
       print "read parameter file %s"%pfn
-      pff =open(pfn)
-      txt = "\n".join([to.split("#")[0] for to in pff])+"\n"
-      pf = dict(re.findall("(?<!#)((?:\w|\.)+)\s*=\s*(.+?)\n",txt))
-      self.pf.update(pf)
+      self._parse(open(pfn))  
+      #pff =open(pfn)
+      #txt = "\n".join([to.split("#")[0] for to in pff])+"\n"
+      #pf = dict(re.findall("(?<!#)((?:\w|\.)+)\s*=\s*(.+?)\n",txt))
+      #pf = parse_text(pff)
+      #self.pf.update(pf)
     
     self.pf.update(kk)
-    self._access_list = {}
-  
+    self._access_list = []
+
   def keys(self,prefix=""):
     return [k for k in self.pf.keys() if k[:len(prefix)]==prefix]
     
   def __repr__(self):
     rr = []
+    print self._access_list
     for v in self._access_list:
-      rr += ["%s = %s"%(v,self._access_list[v])]
+      print v #ICICICICI
+      rr += ["%s = %s"%(v,getattr(self,v))]
     return "\n".join(rr)
     
   def __contains__(self,val):
     res = val in self.pf
     if res:
-      self._access_list[val] = getattr(self,val)
+      self._access_list += [val]
     return res
 
   @property

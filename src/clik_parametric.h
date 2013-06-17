@@ -46,11 +46,23 @@ typedef void (exg_freepayload)(void** data);
 typedef struct parametric_struct {
   void *payload;
   pflist *pf;
+
   double *freqlist;
   double *detlist;
-  int *det2freq;
-  int ndet;
-  int nfreq;
+  double *det2freq;
+  
+  double *freqlist_T;
+  double *freqlist_P;
+  double *detlist_T;
+  double *detlist_P;
+  int *det2freq_T;
+  int *det2freq_P;
+  int ndet_T;
+  int nfreq_T;
+  int nfreq_P;
+  int ndet_P;
+  int ndet,nfreq;
+  int has_TEB[3];
   exg_compute *eg_compute;
   exg_compute_and_deriv *eg_compute_and_deriv;
   exg_deriv **eg_deriv;
@@ -74,7 +86,9 @@ typedef struct parametric_struct {
   int *voidlist;
 } parametric;
 
+parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 parametric *parametric_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
+parametric *parametric_bydet_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err);
 void parametric_free(void** pegl);
 void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, error **err);
@@ -92,6 +106,8 @@ void parametric_set_void(parametric *egl, int nvoid, int *voidlist,error **err);
 void parametric_set_color(parametric *egl,double *color, error **err);
 
 void parametric_check_freq(parametric *egl, double* frq, int nfreq, error **err);
+void parametric_check_freq_T(parametric *egl, double* frq, int nfreq, error **err);
+void parametric_check_freq_P(parametric *egl, double* frq, int nfreq, error **err);
 
 double dBdT(double nu, double nu0);
 double sz_spectrum(double nu, double nu0);

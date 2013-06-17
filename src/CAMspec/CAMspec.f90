@@ -552,6 +552,8 @@ contains
     ! compute prior on beams and calibration
     call beams_and_cal_prior(logprior,freq_params)
 
+    PRINT *,zlike/2,logprior/2,(zlike+logprior)/2
+
     zlike = zlike + logprior
 
     end subroutine calc_like

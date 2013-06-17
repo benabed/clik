@@ -40,7 +40,7 @@ To sumarize, the input vector of the compute function must be an array of N = Nc
 Pitfalls
 --------
 
-The function computes the log likelihood ?
+The function computes the log likelihood.
 
 The Cls must be given in that order TT, EE, BB, TE, TB, EB. And, yes, the library expects C0 and C1 for each power spectra. 
 

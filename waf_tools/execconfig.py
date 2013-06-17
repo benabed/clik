@@ -36,7 +36,7 @@ def build_pkgconfig(self):
   #USELIB_VARS['cprogram']
   self.process_use()
   self.propagate_uselib_vars()
-  vrs = dict([(v,list(set(self.env[v]))) for v in USELIB_VARS['build_pkgconfig']])
+  vrs = dict([(v,list((self.env[v]))) for v in USELIB_VARS['build_pkgconfig']])
   includepath = ptrquote(" ".join([self.env.CPPPATH_ST%v for v in uniqify(vrs["INCLUDES"])]))
   libpath = ptrquote(" ".join([self.env.LIBPATH_ST%v for v in uniqify(vrs["LIBPATH"])]))
   rlibpath = ptrquote(" ".join([self.env.RPATH_ST%v for v in uniqify(vrs["RPATH"])]))
@@ -45,10 +45,14 @@ def build_pkgconfig(self):
   stlibs = ptrquote(" ".join([self.env.STLIB_ST%v for v in uniqify(vrs["STLIB"])]))
   defines = ptrquote(" ".join([self.env.DEFINES_ST%v for v in uniqify(vrs["DEFINES"])]))
   cfs = []
+  print cf
   for tt in cf+["LINKFLAGS"]:
+    print tt,vrs[tt]
     cfs += vrs[tt]
+  print cfs
   cflags = ptrquote(" ".join(uniqify(cfs)))
 
+  #print "YEAH:"
   #print includepath
   #print libpath
   #print rlibpath

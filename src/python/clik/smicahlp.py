@@ -191,12 +191,10 @@ def set_criterion(lkl_grp,typ,**extra):
   if typ.lower()=="gauss":
     import numpy.linalg as la
     import numpy as nm
-    rqh = lkl_grp["Rq_hat"][:]
-    nq = len(lkl_grp["wq"][:])
-    m = lkl_grp.attrs["m_channel_T"] + lkl_grp.attrs["m_channel_P"] 
-    rqh.shape=(nq,m,m)
-    nrm = nm.array([.5*(nm.log(nm.abs(la.det(rqh[i])))+m) for i in range(nq)])
-    lkl_grp["criterion_eig_norm"] = nrm
+    if "mask" in extra:
+        lkl_grp["criterion_gauss_mask"] = extra["mask"].flat[:]
+    lkl_grp["criterion_gauss_mat"]=extra["mat"].flat[:]
+    lkl_grp.attrs["criterion"]="gauss"
     return 
   if typ.lower()=="quad":
     import numpy as nm
@@ -295,3 +293,18 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     else:
       prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color,data=data)]
   return prms  
+
+def create_gauss_mask(nq,qmins,qmaxs):
+  """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored
+  mask is 1 for q in qmins<=q<qmaxs
+  only the upper part (j>=i) of qmins and qmaxs is used"""
+  qmins = nm.array(qmins)
+  qmaxs = nm.array(qmaxs)
+  ndet = qmins.shape[0]
+  mask = nm.zeros((nq,ndet,ndet))
+  for i in range(ndet):
+    for j in range(i,ndet):
+      mask[qmins[i,j]:qmaxs[i,j],i,j]=1
+      mask[qmins[i,j]:qmaxs[i,j],j,i]=1
+  return mask
+

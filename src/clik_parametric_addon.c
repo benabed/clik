@@ -20,6 +20,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   double *wl,*wl0,one;
   int inc,il,im;
   double res;
+  int m, ndet;
   //double r10[16];
 
   SC = data;
@@ -30,7 +31,9 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   parametric_compute(p_pay->p_model, locpars, p_pay->rq, NULL, err);
   forwardError(*err,__LINE__,);
   
-  
+  m = p_pay->m;
+  ndet = p_pay->p_model->ndet;
+
   // apply wl and binning
   one=1;
   if (p_pay->wl==NULL) {
@@ -46,11 +49,11 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   for(il=0;il<p_pay->nell;il++) {
     int ip;
     int im1,im2;
-    ip = il*p_pay->m*p_pay->m;
+    ip = il * ndet * ndet;
 
-    for(im1=0;im1<p_pay->m;im1++) {
-      for(im2=0;im2<p_pay->m;im2++) {
-        p_pay->rq[il*p_pay->m*p_pay->m+im1*p_pay->m+im2] = p_pay->rq[il*p_pay->m*p_pay->m+im1*p_pay->m+im2] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
+    for(im1=0;im1<ndet;im1++) {
+      for(im2=0;im2<ndet;im2++) {
+        p_pay->rq[il*ndet*ndet+im1*ndet+im2] = p_pay->rq[il*ndet*ndet+im1*ndet+im2] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
       }
     }
     wl+=inc;
@@ -71,7 +74,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
 
     transa='N';
     transb='N';
-    ndim = p_pay->m*p_pay->m;
+    ndim = m*m;
     one = 1;
     done = 1.;
     dzero = 0;
@@ -110,9 +113,9 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         for(il=p_pay->bi[iq];il<p_pay->bo[iq];il++) {
           w = p_pay->wbins[bb];
           bb++;
-          for(if1=0;if1<p_pay->m;if1++) {
-            for(if2=0;if2<p_pay->m;if2++) {
-              rq[iq*ndim+if1*p_pay->m+if2] += w * p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
+          for(if1=0;if1<ndet;if1++) {
+            for(if2=0;if2<ndet;if2++) {
+              rq[iq*ndim+if1*m+if2] += w * p_pay->rq[il*ndet*ndet+if1*ndet+if2];
               /*if (iq==10)
                   r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
             }  
@@ -134,9 +137,9 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   } else {
     int if1,if2;
     for(il=0;il<p_pay->nell;il++) {
-      for(if1=0;if1<p_pay->m;if1++) {
-        for(if2=0;if2<p_pay->m;if2++) {
-          rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2] += p_pay->rq[il*p_pay->m*p_pay->m+if1*p_pay->m+if2];
+      for(if1=0;if1<ndet;if1++) {
+        for(if2=0;if2<ndet;if2++) {
+          rq[il*m*m+if1*m+if2] += p_pay->rq[il*ndet*ndet+if1*ndet+if2];
         }
       }
     }
@@ -185,7 +188,7 @@ void apply_rename(int nkey, char* keys, int nrename, char* rename_from, char* re
   }
 }
 
-void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
+int base_parametric_cldf_init(cldf *df,int m, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err) {
   int dz,i;
   char *keyvartable,*deftable,*valtable;
   int nrename;
@@ -261,7 +264,7 @@ void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, ch
     (*defvalues)[i] = &(valtable[i*256]);
   }  
   
-  dz = ndet;
+  dz = -1;
   hk = cldf_haskey(df,"dfreq",err);
   forwardError(*err,__LINE__,);
   if (hk ==1) {
@@ -271,19 +274,20 @@ void base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, ch
     int * ietlist;
     ietlist = cldf_readintarray(df,"freq",&dz, err);
     forwardError(*err,__LINE__,);
-    *detlist = malloc_err(sizeof(double)*ndet,err);
+    *detlist = malloc_err(sizeof(double)*dz,err);
     forwardError(*err,__LINE__,);
     
-    for(i=0;i<ndet;i++) {
+    for(i=0;i<dz;i++) {
       (*detlist)[i]=ietlist[i];
     }
     free(ietlist);
   }
   
+
   free(rename_from);
   free(rename_to);
 
-  return;
+  return dz;
 
 }
 
@@ -348,12 +352,13 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   lmax = ell[nell-1];
   testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);
 
-  eb = 0;
+  /*eb = 0;
   for(i=1;i<6;i++) {
     eb +=has_cl[i];
   }
   testErrorRet(eb!=0,-7693,"parametric does not work with polarized data yet",*err,__LINE__,NULL);
-  
+  */
+
   p_pay = malloc_err(sizeof(parametric_smica),err);
   forwardError(*err,__LINE__,NULL);
     
