@@ -253,6 +253,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   char **xnames;
   parname *xnames_buf;
   int hk;
+  int mT_plus_mP;
 
   zero = 0;
   testErrorRet(nbins==0,-101010,"no binning matrix. Argl",*err,__LINE__,NULL);
@@ -265,7 +266,6 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   
   nb = nbins/ncl;
   testErrorRet(nbins!=nb*ncl,-101010,"bad binning matrix. Argl",*err,__LINE__,NULL);
-  
   
   // try to read the bin weights
   wq = NULL;
@@ -283,8 +283,9 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   mP = cldf_readint(df,"m_channel_P",err);
   forwardError(*err,__LINE__,NULL);
   
-  m = mT + mP;
-  
+  m = mT + mP * (has_cl[1]+has_cl[2]);
+  mT_plus_mP = mT+mP;
+
   // read rq_hat
   int nrq;
   
@@ -311,7 +312,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   
   // now deal with the CMB component
   // read A_cmb
-  A_cmb = cldf_readfloatarray(df,"A_cmb",&m,err);
+  A_cmb = cldf_readfloatarray(df,"A_cmb",&mT_plus_mP,err);
   forwardError(*err,__LINE__,NULL);    
 
   // init cmb comp
@@ -340,18 +341,10 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     SCs[ic] = NULL;
     
     sprintf(cur_cmp,"component_%d",ic);
-    //sprintf(cur_cmp_tot,"%s/component_%d",cur_lkl,ic);
-    
-
-    //comp_id = H5Gopen(group_id, cur_cmp, H5P_DEFAULT);
-    //testErrorRetVA(comp_id<0,hdf5_base,"cannot read component %s in %s (got %d)",*err,__LINE__,NULL,cur_cmp,cur_lkl,hstat);
     comp_df = cldf_openchild(df,cur_cmp,err);
     forwardError(*err,__LINE__,NULL);
 
     // get type
-    //memset(comp_type,0,_pn_size*sizeof(char));
-    //hstat = H5LTget_attribute_string(comp_id, ".", "component_type",  comp_type);
-    //testErrorRetVA(hstat<0,hdf5_base,"cannot read component_type in %s/%s (got %d)",*err,__LINE__,NULL,cur_lkl,cur_cmp,hstat);
     char * cmt;
 
     cmt = cldf_readstr(comp_df,"component_type",NULL,err);
@@ -359,17 +352,14 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     sprintf(comp_type,"%s",cmt);
     free(cmt);
 
-    //_DEBUGHERE_("%s",comp_type);
     sprintf(init_func_name,"clik_smica_comp_%s_init",comp_type);
     smica_dl_init = dlsym(dlhandle,init_func_name);
     testErrorRetVA(smica_dl_init==NULL,-1111,"Cannot initialize smica component type %s from %s dl error : %s",*err,__LINE__,NULL,comp_type,df->root,dlerror()); 
 
-    SCs[ic] = smica_dl_init(comp_df,nb,m, nell, ell, has_cl, unit, wl, bins,nbins,err);
+    SCs[ic] = smica_dl_init(comp_df,nb,mT,mP, nell, ell, has_cl, unit, wl, bins,nb,err);
     forwardError(*err,__LINE__,NULL);
     
     cldf_close(&comp_df);
-    //hstat = H5Gclose(comp_id);
-    //testErrorRetVA(hstat<0,hdf5_base,"cannot close %s in  %s (got %d)",*err,__LINE__,NULL,cur_cmp,cur_lkl,hstat);    
     
     xdim += SCs[ic]->ndim;
     
@@ -404,12 +394,9 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   hk = cldf_haskey(df,"criterion",err);
   forwardError(*err,__LINE__,NULL);
   
-  //hstat = H5LTfind_attribute(group_id, "criterion");
   if (hk == 1) {
     char *crit_name;
     
-    //hstat = H5LTget_attribute_string(group_id, ".", "criterion",  crit_name);
-    //testErrorRetVA(hstat<0,hdf5_base,"cannot read criterion in %s (got %d)",*err,__LINE__,NULL,cur_lkl,hstat);
     crit_name = cldf_readstr(df,"criterion",NULL,err);
     forwardError(*err,__LINE__,NULL);
     if(strcmp(crit_name,"classic")==0) {
@@ -428,7 +415,6 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
       if (hk == 1) { 
         int i;
         nqu = nb*m*m;
-        //mask = hdf5_int_datarray(group_id, cur_lkl,"criterion_quad_mask",&nqu,err);
         mask = cldf_readintarray(df,"criterion_gauss_mask",&nqu,err);
         forwardError(*err,__LINE__,NULL);
       }
@@ -521,13 +507,18 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   
   return cing;  
 }
+int mtot(int mT,int mP,int *has_cl) {
+  return mT*has_cl[0]+mP*(has_cl[1]+has_cl[2]);
+}
 
-SmicaComp * clik_smica_comp_1d_init(cldf *df,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_1d_init(cldf *df,int nb, int mT, int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   double *someA;
   int nA;
   SmicaComp *SC;
   int hk;
+  int m;
 
+  m = mtot(mT,mP,has_cl);
   // try to read A
 
   someA = NULL;
@@ -550,14 +541,17 @@ SmicaComp * clik_smica_comp_1d_init(cldf *df,int nb, int m,int nell, int* ell, i
   return SC;
 }
 
-SmicaComp * clik_smica_comp_nd_init(cldf *df,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_nd_init(cldf *df,int nb, int mT,int mP,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   double *someA;
   int nA;
   int nd;
   SmicaComp *SC;
   int hk;
   // try to read A
+  int m;
 
+  m = mtot(mT,mP,has_cl);
+  
   nd = cldf_readint(df,"nd",err);
   forwardError(*err,__LINE__,NULL);    
   
@@ -584,8 +578,11 @@ SmicaComp * clik_smica_comp_nd_init(cldf *df,int nb, int m,int nell, int* ell, i
   return SC;
 }
 
-SmicaComp * clik_smica_comp_diag_init(cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+SmicaComp * clik_smica_comp_diag_init(cldf *df,int nb, int mT, int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   SmicaComp *SC; 
+  int m;
+
+  m = mtot(mT,mP,has_cl);
   // try to read A
 
   SC = comp_diag_init(nb, m, err);
@@ -593,10 +590,14 @@ SmicaComp * clik_smica_comp_diag_init(cldf *df,int nb, int m, int nell, int* ell
   return SC;
 }
 
-SmicaComp * clik_smica_comp_cst_init(cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+SmicaComp * clik_smica_comp_cst_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   SmicaComp *SC; 
   double *rq_0;
   int tt;
+  int m;
+
+  m = mtot(mT,mP,has_cl);
+  
   tt = -1;
   //rq_0 =  hdf5_double_datarray(comp_id,cur_lkl,"Rq_0",&tt,err);
   rq_0 =  cldf_readfloatarray(df,"Rq_0",&tt,err);
@@ -610,7 +611,84 @@ SmicaComp * clik_smica_comp_cst_init(cldf *df,int nb, int m, int nell, int* ell,
   return SC;
 }
 
-SmicaComp * clik_smica_comp_gcal_log_init(cldf *df,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+
+SmicaComp * clik_smica_comp_gcal2_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  SmicaComp *SC; 
+  int npar,i;
+  int *im,*jm;
+  double *tpl;
+  int tot_tpl;
+  char *bnames, **xnames;
+  int m;
+
+  m = mtot(mT,mP,has_cl);
+  
+  npar = -1;
+  im =  cldf_readintarray(df,"im",&npar,err);
+  forwardError(*err,__LINE__,NULL);    
+  jm =  cldf_readintarray(df,"jm",&npar,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  tot_tpl = npar * nb;
+  tpl = cldf_readfloatarray(df,"tpl",&tot_tpl,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  SC = comp_gcal2_init(nb, m, npar, im, jm,  tpl, err);
+  forwardError(*err,__LINE__,NULL);    
+
+  free(im);
+  free(jm);
+  free(tpl);
+
+  bnames = cldf_readstr(df,"names",&npar, err);
+  forwardError(*err,__LINE__,NULL); 
+  xnames = malloc_err(sizeof(char*)*npar,err);
+  for(i=0;i<npar;i++) {
+    xnames[i] =&(bnames[i*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  free(xnames); 
+  free(bnames); 
+  
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_calTP_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  SmicaComp *SC; 
+  int npar,i;
+  int *im,*jm;
+  double *tpl;
+  int tot_tpl;
+  char *bnames, **xnames;
+  int m;
+
+  m = mtot(mT,mP,has_cl);
+  
+  npar = -1;
+  im =  cldf_readintarray(df,"im",&npar,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  SC = comp_calTP_init(nb, mT,mP,has_cl, npar, im,  err);
+  forwardError(*err,__LINE__,NULL);    
+
+  free(im);
+
+  bnames = cldf_readstr(df,"names",&npar, err);
+  forwardError(*err,__LINE__,NULL); 
+  xnames = malloc_err(sizeof(char*)*npar,err);
+  for(i=0;i<npar;i++) {
+    xnames[i] =&(bnames[i*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  free(xnames); 
+  free(bnames); 
+  
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_gcal_log_init(cldf *df,int nb, int mT,int mP,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
@@ -618,7 +696,10 @@ SmicaComp * clik_smica_comp_gcal_log_init(cldf *df,int nb, int m,int nell, int* 
   char **xnames,*bnames;
   int binned;
   int hk;
+  int m;
 
+  m = mtot(mT,mP,has_cl);
+  
   mm = m;
   //ngcal = hdf5_int_attarray(comp_id,cur_lkl,"ngcal",&mm,err);
   ngcal = cldf_readintarray(df,"ngcal",&mm,err);
@@ -683,7 +764,7 @@ SmicaComp * clik_smica_comp_gcal_log_init(cldf *df,int nb, int m,int nell, int* 
   return SC;
 }
 
-SmicaComp * clik_smica_comp_gcal_lin_init(cldf *df,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_gcal_lin_init(cldf *df,int nb, int mT,int mP,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int *ngcal;
   double *gcaltpl;
   SmicaComp *SC;
@@ -691,7 +772,10 @@ SmicaComp * clik_smica_comp_gcal_lin_init(cldf *df,int nb, int m,int nell, int* 
   char **xnames,*bnames;
   int binned;
   int hk;
+  int m;
 
+  m = mtot(mT,mP,has_cl);
+  
   //ngcal = hdf5_int_attarray(comp_id,cur_lkl,"ngcal",&mm,err);
   ngcal = cldf_readintarray(df,"ngcal",&mm,err);
   forwardError(*err,__LINE__,NULL);    
@@ -756,7 +840,7 @@ SmicaComp * clik_smica_comp_gcal_lin_init(cldf *df,int nb, int m,int nell, int* 
   return SC;
 }
 
-SmicaComp * clik_smica_comp_amp_diag_init(cldf *df,int nb, int m,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+SmicaComp * clik_smica_comp_amp_diag_init(cldf *df,int nb, int mT,int mP,int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int zz;
   double *tmpl;
   SmicaComp *SC;
@@ -764,6 +848,9 @@ SmicaComp * clik_smica_comp_amp_diag_init(cldf *df,int nb, int m,int nell, int* 
   char **xnames;
   int im,ii;
   int hk;
+  int m;
+
+  m = mtot(mT,mP,has_cl);
   
   zz = m*nb;
   tmpl =  cldf_readfloatarray(df,"diag",&zz,err); 

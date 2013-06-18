@@ -61,6 +61,50 @@ def add_gcal_component(lkl_grp,typ,ngcal,gcaltpl,binned=False,names=[],position=
     setnames(agrp,names)
   return agrp
 
+def get_dnames(lkl_grp):
+  if "dnames" in lkl_grp.attrs:
+    dnames = [v for v in lkl_grp.attrs["dnames"].split('\0') if v]
+  else:
+    raise Exception("argl")
+
+def add_calTP_component(lkl_grp,names,position=-1):
+  typ = "calTP"
+  im = []
+  dnames = get_dnames(lkl_grp)
+  for i,n in enumerate(names):
+    if "calib" in n:
+      det = re.findall("calib_(.+)",n)[0]
+      idx = dnames.index(det)
+      im += [idx]
+  if len(im):
+    agrp = add_component(lkl_grp,typ,position)
+    agrp.create_dataset("im",data=nm.array(im,dtype=nm.int))
+    setnames(agrp,names)
+    return agrp
+  return None
+
+def add_gcal2_component(lkl_grp,names, tpl,position=-1):
+  typ = "gcal2"
+  agrp = add_component(lkl_grp,typ,position)
+  im = []
+  jm = []
+  tpls = []
+  dnames = get_dnames(lkl_grp)
+  #compute nq here
+  for i,n in enumerate(names):
+    if "beammode_" in n:
+      det1,det2,mode = re.findall("beammode_(.+)_(.+)_(\d+)",n)[0]
+      idx1 = dnames.index(det1)
+      idx2 = dnames.index(det2)
+      im += [idx1]
+      jm += [idx2]
+      tpls += [tpl[i]]
+  agrp.create_dataset("im",data=nm.array(im,dtype=nm.int))
+  agrp.create_dataset("jm",data=nm.array(jm,dtype=nm.int))
+  agrp.create_dataset("tpl",data=nm.array(nm.concatenate(tpls),dtype=nm.double))
+  setnames(agrp,names)
+  return agrp
+
 def read_gcal_data(pars,lkl_grp):
   return read_gcal_data_(pars.str_array.datacal,pars.float_array.ngcal,pars.int_array(default=[-1]).lmax_tpl,lkl_grp)
 

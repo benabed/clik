@@ -41,7 +41,7 @@ int clik_getenviron_numthread(char* name, int sfg, error **err);
 cmblkl * clik_lklobject_init(cldf *df,error **err);
 typedef cmblkl* clik_lkl_init_func(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err);
 //typedef cmblkl* clik_addon_init_func(cmblkl* base, hid_t group_id, char* cur_lkl, error **err);
-typedef SmicaComp * clik_smica_comp_init_func(cldf * df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
+typedef SmicaComp * clik_smica_comp_init_func(cldf * df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
 //void clik_external_data_init(char *pwd,char * dirname,hid_t group_id, char* cur_lkl,error **err);
 //void clik_external_data_cleanup(char *pwd,char* dirname,error **err);

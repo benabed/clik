@@ -23,17 +23,12 @@ def main(argv):
   pars = clik.miniparse(argv[1])
 
   frq = pars.float_array.freq
-  channel = frq
 
-  lmin = pars.int.lmin
-  lmax = pars.int.lmax
-
-  nq = lmax+1-lmin
-  nell = nq
-
+  
   nT = pars.int.nT
   nP = pars.int.nP
 
+  channel = pars.str_array.channel
   has_cl = pars.int_array.has_cl
 
   ncls = nm.sum(has_cl)
@@ -41,6 +36,9 @@ def main(argv):
   
   if "bins.limit" in pars:
     blims = pars.int_array.bins_dot_limit
+    lmin = pars.int(default=blims[0]).lmin
+    lmax = pars.int(default=blims[-1]-1).lmax
+    nell = lmax+1-lmin
     nq = len(blims)-1
     qwgh = pars.float_array.bins_dot_weight
     bins = nm.zeros(nq,nell)
@@ -53,10 +51,11 @@ def main(argv):
       nb = bM - bm
       bins[i,bm-lmin:bM-lmin] = qwgh[wi:wi+nb]
       wi+=nb
-    bins = nm.tile(bins,(ncl,ncl))
+    bins = nm.tile(bins,(ncl,1))
   else:
     lmin = pars.int.lmin
     lmax = pars.int.lmax
+    nell = lmax+1-lmin
     nq = lmax+1-lmin
     bins = None
 
@@ -84,20 +83,12 @@ def main(argv):
 
   rqhat = read_array(pars.str.rqhat)
 
-  Acmb = pars.float_array(default=nm.ones(len(channel))).Acmb
+  Acmb = pars.float_array(default=nm.ones(len(frq))).Acmb
 
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   lkl_grp = smh.base_smica(root_grp,has_cl,lmin,lmax,nT,nP,wq,rqhat,Acmb,None,bins)
   smh.set_criterion(lkl_grp,"gauss",mat=read_array(pars.str.mat),mask=mask)
-
-
-  # Some noise ?
-  if "rq_noise" in pars:
-    for rqn in pars.str_array.rq_noise:
-      smh.add_cst_component(lkl_grp,read_array(rqn))
-
-  # a gcal component ?
-  #TBD
+  lkl_grp.attrs["dnames"] =  php.pack256(*channel) 
 
   # parametric components ?
   if "parametric" in pars:
@@ -114,17 +105,34 @@ def main(argv):
       colors = []
       for cl in pars.str_array.parameteric_dot_color:
         if cl.lower()=="none":
-          colors += [nm.ones(len(channel))]
+          colors += [nm.ones(len(frq))]
         else:
           colors += [read_array(cl)]
     for ip,pname in enumerate(pars.str_array.parametric):
       smh.add_parametric_component(lkl_grp,pname,frq,keys,lmin,lmax,defaults=defaults,color=colors[i],rename=rename)
 
+  # Some fix contribution (affected by beam and calib) ?
+  if "rq_fix" in pars:
+    for rqn in pars.str_array.rq_fix:
+      smh.add_cst_component(lkl_grp,read_array(rqn))
 
+
+  # a gcal component ?
+  if "calib" in pars:
+    names = ["calib_"+v for v in pars.str_array.calib]
+    smh.add_calTP_component(lkl_grp,names)
+  if "beammode.select" in pars:
+    names = ["beammode_"+v for v in pars.str_array.beammode_dot_select]
+    tpl = [read_array(v) for v in pars.str_array.beammode_dot_data]
+    smh.add_gcal2_component(lkl_grp,names,tpl)
+
+  # Some noise ?
+  if "rq_noise" in pars:
+    for rqn in pars.str_array.rq_noise:
+      smh.add_cst_component(lkl_grp,read_array(rqn))
+  
   hf.close()
   
-
-
 
 
 

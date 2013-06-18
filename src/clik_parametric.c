@@ -1,5 +1,19 @@
 #include "clik_parametric.h"
 
+#if 0
+long pflist_hash(char* key) {
+  long res;
+  int i;
+  res = 0;
+  //_DEBUGHERE_("%s %d",key,strlen(key));
+  for(i=0;key[i]!='\0';i++) {
+    //_DEBUGHERE_("%d",i);
+    res = res * 31 + key[i];
+  } 
+  //_DEBUGHERE_("%s -> %d",key,res);
+  return res;
+}
+
 
 pflist* pflist_init(error **err) {
   pflist *pf;
@@ -13,12 +27,8 @@ pflist* pflist_init(error **err) {
   forwardError(*err,__LINE__,NULL);
   pf->value = malloc_err(sizeof(pfchar)*pf->nmax,err);
   forwardError(*err,__LINE__,NULL);
-  pf->dvalue = malloc_err(sizeof(double)*pf->nmax,err);
-  forwardError(*err,__LINE__,NULL);    
-
-  pf->ncommon = 0;
-
-  
+  pf->hash = malloc_err(sizeof(long)*pf->nmax,err);
+  forwardError(*err,__LINE__,NULL);
   return pf;
 }
 
@@ -29,7 +39,6 @@ void pflist_free(void **ppf) {
   if (pf->nmax !=0) {
     free(pf->key);
     free(pf->value);
-    free(pf->dvalue);
   }
   free(pf);
   *ppf = NULL;
@@ -48,7 +57,7 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     forwardError(*err,__LINE__,);
     pf->value=resize_err(pf->value, sizeof(pfchar)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
     forwardError(*err,__LINE__,);
-    pf->dvalue=resize_err(pf->dvalue, sizeof(double)*pf->nmax, sizeof(pfchar)*nnmax, 1, err);
+    pf->hash=resize_err(pf->hash, sizeof(long)*pf->nmax, sizeof(long)*nnmax, 1, err);
     forwardError(*err,__LINE__,);
     pf->nmax =  nnmax;
   }
@@ -66,82 +75,34 @@ void pflist_add_item(pflist* pf,int nit, char** key, char **value,error **err) {
     //_DEBUGHERE_("cur %d idx %d",cur,idx)
     //_DEBUGHERE_("%p",value);
     //_DEBUGHERE_("%p",value[0]);
+    pf->hash[idx] = pflist_hash(key[i]);
     strcpy(pf->key[idx],key[i]);
     if (value[i] !=NULL) {
       strcpy(pf->value[idx],value[i]);  
     } else {
       pf->value[idx][0] = '\0';
-      pf->dvalue[idx] = M_NAN;
+      
     }
     //_DEBUGHERE_("added %d '%s' : '%s'",idx,pf->key[idx],pf->value[idx]);
   }
   pf->nkey = cur;  
-  pflist_compute_ncommon(pf,err);
-  forwardError(*err,__LINE__,);
-
+  
   //_DEBUGHERE_("-> %p %d %d %d",pf,pf->nmax, pf->nkey, nit);
 }
 
-void pflist_compute_ncommon(pflist *pf, error **err) {
-  int i,j;
-  char k0,k;
-
-
-
-  j = 0;
-  for(;;) {
-    //_DEBUGHERE_("%s",pf->key[0]);
-    k0 = pf->key[0][j];
-    if (k0 == '\0') {
-      pf->ncommon = j;
-      //_DEBUGHERE_("%d",pf->ncommon);
-      return;
-    }
-    for(i=1;i<pf->nkey;i++) {
-      //_DEBUGHERE_("%d %s",i,pf->key[i]);
-      k = pf->key[i][j];
-      //_DEBUGHERE_("%d %c %c",j,k,k0);
-      if (k == '\0' || k!=k0) {
-        pf->ncommon = j;
-        return;
-      }
-      
-    }
-    j++;
-    //_DEBUGHERE_("%c %d",k0,j);  
-  }
-}
-
-int pflist_key_index_(pflist *pf, char *key, error **err) {
-  int i;
-  int j;
-
-  //_DEBUGHERE_("%s %d %d",key,strlen(key),pf->ncommon);
-  if (strlen(key)<pf->ncommon) {
-    return -1;
-  }
-
-  for(i=0;i<pf->nkey;i++) {
-    for(j = pf->ncommon;;j++) {
-      if (key[j]!=pf->key[i][j]) {
-        break;
-      }
-      if (key[j] == '\0') {
-        //_DEBUGHERE_("FOUND %s %s %d",key,pf->key[i],i);
-        return i;
-      }
-    }
-  }
-  return -1;
-}
 
 
 int pflist_key_index(pflist *pf, char *key, error **err) {
   int i;
+  long hash;
+
+  hash = pflist_hash(key);
 
   for(i=0;i<pf->nkey;i++) {
-    if (strcmp(key,pf->key[i])==0) {
-      return i;
+    if (hash==pf->hash[i]) {
+      if (strcmp(key,pf->key[i])==0) {
+        return i;
+      }
     }
   }
   return -1;
@@ -172,18 +133,6 @@ long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err) {
   return atol(res);
 }
 
-double pflist_get_double_value_(pflist *pf, char *key,double *safeguard, error **err) {
-  char *res;
-
-  res = pflist_get_value(pf,key,(char*)safeguard,err);
-  forwardError(*err,__LINE__,0);
-  
-  if (res==(char*)safeguard) {
-    return *safeguard;
-  }
-
-  return atof(res);
-}
 
 void pflist_remove_item(pflist* pf, int index,error **err) {
   int i;
@@ -191,6 +140,7 @@ void pflist_remove_item(pflist* pf, int index,error **err) {
   for(i=index;i<pf->nkey-1;i++) {
     strcpy(pf->key[i],pf->key[i+1]);
     strcpy(pf->value[i],pf->value[i+1]);
+    pf->hash[i] = pf->hash[i+1];
   }
   pf->nkey--;
 }
@@ -207,28 +157,18 @@ double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **
   }
 
   return atof(pf->value[ps]);
-  //_DEBUGHERE_("%s",key);
-  if m_isnan(pf->dvalue[ps]) {
-    //_DEBUGHERE_("","");
-    pf->dvalue[ps] = atof(pf->value[ps]);
-  }
-  return pf->dvalue[ps];
-}
-
-void pflist_remove_item_(pflist* pf, int index,error **err) {
-  int i;
-
-  for(i=index;i<pf->nkey-1;i++) {
-    strcpy(pf->key[i],pf->key[i+1]);
-    strcpy(pf->value[i],pf->value[i+1]);
-    pf->dvalue[i] = pf->dvalue[i+1];
-  }
-  pf->nkey--;
-  pflist_compute_ncommon(pf,err);
-  forwardError(*err,__LINE__,);
   
 }
 
+void pflist_dump(pflist *pf, FILE* strm, error **err) {
+  int i;
+
+  for(i=0;i<pf->nkey;i++) {
+    fprintf(strm, "%s = %s\n", pf->key[i],pf->value[i]);
+  }
+}
+
+#endif
 void get_freq(int ndet, double *detlist, int* pnfreq, double** pfreqlist, int** pdet2freq, error **err) {
   int i,j;
   double *freqlist;
@@ -426,7 +366,7 @@ parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *de
     forwardError(*err,__LINE__,NULL);
     testErrorRet(ps==-1,-10010,"Fatal",*err,__LINE__,NULL);
     epl->ikey[jj]=ps;
-    //_DEBUGHERE_("%d %s",jj,epl->varkey[jj]);
+    //dumpHERE_("%d %s",jj,epl->varkey[jj]);
   }
 
 
@@ -558,10 +498,10 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   
   for(ivar=0;ivar<egl->nvar;ivar++) {
     int ps;
+    //_DEBUGHERE_("%s %d %g",egl->pf->key[egl->ikey[ivar]],egl->ikey[ivar],pars[ivar]);
     sprintf(egl->pf->value[egl->ikey[ivar]],"%40g",pars[ivar]);
-    egl->pf->dvalue[egl->ikey[ivar]]=pars[ivar];
-
   }
+  
   
   if (egl->ndet!=egl->nfreq) {  
     sRq = NULL;
@@ -717,21 +657,6 @@ double parametric_get_default(parametric* egl,char *key, error **err) {
   return vres;
 }
 
-double parametric_get_default_(parametric* egl,char *key, error **err) {
-  int ps;
-
-  //_DEBUGHERE_("%s %d",key,egl->default_settings->ncommon);
-  ps=pflist_key_index(egl->default_settings,key,err);
-  forwardError(*err,__LINE__,M_NAN);
-  testErrorRetVA(ps==-1,-123432,"unknown default setting '%s'",*err,__LINE__,-1,key);
-
-  //_DEBUGHERE_("%s",key);
-  if m_isnan(egl->default_settings->dvalue[ps]) {
-    //_DEBUGHERE_("","");
-    egl->default_settings->dvalue[ps] = atof(egl->default_settings->value[ps]);
-  }
-  return egl->default_settings->dvalue[ps];
-}
 
 void parametric_set_default(parametric* egl,char *key, double value,error **err) {
   char calue[200];

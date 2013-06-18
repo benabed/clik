@@ -1,6 +1,7 @@
 #include "errorlist.h"
 #include "io.h"
 #include <math.h>
+#include "clik_dic.h"
 
 #ifndef CLIK_PARAMETRIC
 #define CLIK_PARAMETRIC
@@ -17,13 +18,15 @@
 
 typedef char pfchar[pfcharsize];
 
+#if 0
+
 typedef struct {
   pfchar *key;
   pfchar *value;
-  double *dvalue;
   int nkey;
   int nmax;
-  int ncommon;
+  long *hash;
+
 } pflist;
 
 pflist* pflist_init(error **err);
@@ -35,6 +38,20 @@ void pflist_remove_item(pflist* pf, int index,error **err);
 long pflist_get_int_value(pflist *pf, char *key,long* safeguard, error **err);
 double pflist_get_double_value(pflist *pf, char *key,double *safeguard, error **err);
 void pflist_compute_ncommon(pflist *pf, error **err);
+long pflist_hash(char* key);
+#endif
+
+#if 1
+#define pflist_init  cdic_init
+#define pflist_add_item cdic_add_item
+#define pflist_key_index cdic_key_index
+#define pflist_free cdic_free
+#define pflist_get_value cdic_get
+#define pflist_get_double_value cdic_get_double
+#define pflist_get_int_value cdic_get_int
+#define pflist_dump cdic_dump
+#define pflist cdic
+#endif
 
 struct parametric_struct;
 
