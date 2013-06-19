@@ -12,7 +12,7 @@ import re
 import clik.hpy as h5py
 import clik.smicahlp as smh
 import pyfits as pf
-    
+
 def read_array(fname):
   try:
     pfits = pf.open(fname)
@@ -23,21 +23,204 @@ def read_array(fname):
   except Exception:
     return nm.loadtxt(fname)
 
-def main(argv):
-  pars = clik.miniparse(argv[1])
+def test_cov_mat_format(fname):
+  hdulist = pf.open(fname)
+  try:
+    dump = hdulist[0].header['DMC_PID']
+    full = True
+  except:
+    full = False
+  hdulist.close()
+  return full
+
+def read_full_cov_mat(fname):
+  l_info    = {}
+  hdulist = pf.open(fname)
+  cov_mat = hdulist['ICOV'].data
+  bin_TT  = hdulist['BIN_TT'].data
+  bin_EE  = hdulist['BIN_EE'].data
+  bin_TE  = hdulist['BIN_TE'].data
+  header  = hdulist[0].header
+  hdulist.close()
+  for key in header.keys():
+    if ('LMIN_' in key or 'LMAX_' in key):
+      l_info[key] = int(header[key])
+  return l_info, bin_TT, bin_TE, bin_EE, cov_mat
+
+def select_channels(l_info, nr_freq, frequencies):
+  mask_TP = nm.zeros([2*nr_freq, 2*nr_freq], dtype='int')
+  for i, freq1 in enumerate(frequencies):
+    for j, freq2 in enumerate(frequencies):
+      if i > j:
+        continue
+      mask_TP[i,j] \
+              = (l_info['LMAX_TT_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j,i] = mask_TP[i,j]
+      mask_TP[i+nr_freq,j+nr_freq] \
+              = (l_info['LMAX_EE_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j+nr_freq,i+nr_freq] = mask_TP[i+nr_freq,j+nr_freq]
+      mask_TP[i+nr_freq,j] \
+              = (l_info['LMAX_TE_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j+nr_freq,i] = mask_TP[i+nr_freq,j]
+      mask_TP[i,j+nr_freq] = mask_TP[i+nr_freq,j]
+      mask_TP[j,i+nr_freq] = mask_TP[i+nr_freq,j]
+  nTT = int(sum(nm.diag(mask_TP[:nr_freq,:nr_freq])))
+  nEE = int(sum(nm.diag(mask_TP[nr_freq:,nr_freq:])))
+  nTE = int(sum(nm.diag(mask_TP[nr_freq:,:nr_freq])))
+  diag_EE = nm.diag(mask_TP[nr_freq:,nr_freq:]).astype('int')
+  diag_TE = nm.diag(mask_TP[:nr_freq,nr_freq:]).astype('int')
+  nP      = nEE + nTE - int(sum(diag_EE & diag_TE))
+  has_cl  = [1*(nTT > 0), 1*(nEE > 0), 0, 1*(nTE > 0), 0, 0]
+
+  channel = []
+  for i, freq in enumerate(frequencies):
+    if mask_TP[i,i] > 0:
+      channel.append(freq)
+  for i, freq in enumerate(frequencies):
+    if (mask_TP[i+nr_freq,i+nr_freq] + mask_TP[i+nr_freq,i] > 0):
+      channel.append(freq)
+  return nTT, nP, has_cl, channel, mask_TP
+
+def get_l_range(l_info, mask_TP, nr_freq, frequencies):
+  lmin_TP = -1*nm.ones(mask_TP.shape, dtype='int')
+  lmax_TP = -1*nm.ones(mask_TP.shape, dtype='int')
+  for i, freq1 in enumerate(frequencies):
+    for j, freq2 in enumerate(frequencies):
+      if i > j:
+        continue
+      if mask_TP[i,j] != 0:
+        lmin_TP[i,j] = l_info['LMIN_TT_' + freq1 + 'X' + freq2]
+        lmin_TP[j,i] = lmin_TP[i,j]
+        lmax_TP[i,j] = l_info['LMAX_TT_' + freq1 + 'X' + freq2]
+        lmax_TP[j,i] = lmax_TP[i,j]
+      if mask_TP[i+nr_freq,j+nr_freq] != 0:
+        lmin_TP[i+nr_freq,j+nr_freq] = l_info['LMIN_EE_' + freq1 + 'X' + freq2]
+        lmin_TP[j+nr_freq,i+nr_freq] = lmin_TP[i+nr_freq,j+nr_freq]
+        lmax_TP[i+nr_freq,j+nr_freq] = l_info['LMAX_EE_' + freq1 + 'X' + freq2]
+        lmax_TP[j+nr_freq,i+nr_freq] = lmax_TP[i+nr_freq,j+nr_freq]
+      if mask_TP[i+nr_freq,j+nr_freq] != 0:
+        lmin_TP[i+nr_freq,j] = l_info['LMIN_TE_' + freq1 + 'X' + freq2]
+        lmin_TP[j+nr_freq,i] = lmin_TP[i+nr_freq,j]
+        lmin_TP[i,j+nr_freq] = lmin_TP[i+nr_freq,j]
+        lmin_TP[j,i+nr_freq] = lmin_TP[i+nr_freq,j]
+        lmax_TP[i+nr_freq,j] = l_info['LMAX_TE_' + freq1 + 'X' + freq2]
+        lmax_TP[j+nr_freq,i] = lmax_TP[i+nr_freq,j]
+        lmax_TP[i,j+nr_freq] = lmax_TP[i+nr_freq,j]
+        lmax_TP[j,i+nr_freq] = lmax_TP[i+nr_freq,j]
+  submatrix     = lmin_TP[:nr_freq,:nr_freq]
+  try:
+    min_lmin_TT = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_TT = -1
+  submatrix     = lmax_TP[:nr_freq,:nr_freq]
+  max_lmax_TT   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+  submatrix     = lmin_TP[nr_freq:,nr_freq:]
+  try:
+    min_lmin_EE = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_EE = -1
+  submatrix     = lmax_TP[nr_freq:,nr_freq:]
+  max_lmax_EE   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+  submatrix     = lmin_TP[:nr_freq,nr_freq:]
+  try:
+    min_lmin_TE = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_TE = -1
+  submatrix     = lmax_TP[:nr_freq,nr_freq:]
+  max_lmax_TE   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+  lmin          = min(lmin_TP[lmax_TP >= 0])
+  lmax          = max(lmax_TP[lmax_TP >= 0])
+
+  l_info['min_lmin_TT'] = min_lmin_TT
+  l_info['max_lmax_TT'] = max_lmax_TT
+  l_info['min_lmin_EE'] = min_lmin_EE
+  l_info['max_lmax_EE'] = max_lmax_EE
+  l_info['min_lmin_TE'] = min_lmin_TE
+  l_info['max_lmax_TE'] = max_lmax_TE
+  l_info['lmin']        = lmin
+  l_info['lmax']        = lmax
+  return lmin, lmax, lmin_TP, lmax_TP, l_info
+
+def get_l_binning(nT, nP, mask_TP, lmin_TP, lmax_TP, l_info, \
+                  bin_TT, bin_TE, bin_EE):
+  nr_channels = nT + nP
+  qmins       = nm.zeros([nr_channels, nr_channels], dtype='int')
+  qmaxs       = nm.zeros([nr_channels, nr_channels], dtype='int')
+  if (l_info['min_lmin_TT'] == l_info['lmin']) \
+     and (l_info['max_lmax_TT'] == l_info['lmax']):
+    bins = bin_TT
+  elif (l_info['min_lmin_EE'] == l_info['lmin']) \
+     and (l_info['max_lmax_EE'] == l_info['lmax']):
+    bins = bin_EE
+  elif (l_info['min_lmin_TE'] == l_info['lmin']) \
+     and (l_info['max_lmax_TE'] == l_info['lmax']):
+    bins = bin_TE
+  else:
+    print "Error: Using combined binning matrices not implemented"
+    quit()
+  nr_bins = bins.shape[0]
+  lcuts   = nm.zeros(nr_bins+1, dtype='int')
+  for i in range(nr_bins):
+    lcuts[i] = min(nm.where(bins[i,:] > 0)[0]) + l_info['lmin']
+  lcuts[-1] = l_info['lmax'] + 1
+  for i in range(nr_channels):
+    for j in range(nr_channels):
+      if mask_TP[i,j] == 0:
+        continue
+      qmins[i,j] = nm.where(lcuts == lmin_TP[i,j])[0]
+      qmaxs[i,j] = nm.where(lcuts == lmax_TP[i,j]+1)[0]
+  return qmins, qmaxs, nr_bins, bins
+
+def get_power_spectra(fname, nT, nP, nr_freq, l_info, nr_bins, bins):
+  nr_channels  = nT + nP
+  cl_raw       = read_array(fname)
+  cl_raw.shape = [-1, 2*nr_freq, 2*nr_freq]
+  if cl_raw.shape[0] != 3001:
+    print "Error: Power spectrum input file format mismatch"
+    quit()
+  rqhat = nm.zeros([nr_bins, nr_channels, nr_channels])
+  for i in range(nr_channels):
+    for j in range(nr_channels):
+      rqhat[:,i,j] = nm.dot(bins, cl_raw[l_info['lmin']:l_info['lmax']+1,i,j])
+  return rqhat
+
+def input_from_cov_mat(pars):
+  frequencies = ['100', '143', '217']
+  nr_freq     = len(frequencies)
+
+  l_info, bin_TT, bin_TE, bin_EE, cov_mat \
+        = read_full_cov_mat(pars.str.mat)
+
+  nT, nP, has_cl, channel, mask_TP \
+       = select_channels(l_info, nr_freq, frequencies)
+
+  lmin, lmax, lmin_TP, lmax_TP, l_info \
+        = get_l_range(l_info, mask_TP, nr_freq, frequencies)
+
+  qmins, qmaxs, nr_bins, bins \
+         = get_l_binning(nT, nP, mask_TP, lmin_TP, lmax_TP, l_info, \
+                         bin_TT, bin_TE, bin_EE)
+
+  rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, l_info, nr_bins, bins)
+
+  bins = nm.tile(bins, [sum(has_cl), 1])
+  Acmb = ones(nT + nP)
+  return nT, nP, has_cl, channel, lmin, lmax, nr_bins, bins, \
+         qmins, qmaxs, Acmb, rqhat, cov_mat
+
+def input_from_config_file(pars):
+  nT = pars.int.nT
+  nP = pars.int.nP
 
   frq = pars.float_array.freq
 
-  
-  nT = pars.int.nT
-  nP = pars.int.nP
 
   channel = pars.str_array.channel
   has_cl = pars.int_array.has_cl
 
   ncl = nm.sum(has_cl)
 
-  
+
   if "bins.limit" in pars:
     blims = pars.int_array.bins_dot_limit
     lmin = pars.int(default=blims[0]).lmin
@@ -69,7 +252,26 @@ def main(argv):
 
   qmins.shape=((len(channel),len(channel)))
   qmaxs.shape=((len(channel),len(channel)))
-  
+
+  cov_mat = read_array(pars.str.mat)
+
+  rqhat = read_array(pars.str.rqhat)
+
+  Acmb = pars.float_array(default=nm.ones(len(frq))).Acmb
+  return nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
+         rqhat, cov_mat
+
+def main(argv):
+  pars = clik.miniparse(argv[1])
+
+  if test_cov_mat_format(pars.str.mat):
+    nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
+        rqhat, cov_mat = input_from_cov_mat(pars)
+
+  else:
+    nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
+        rqhat, cov_mat = input_from_config_file(pars)
+
   mask = smh.create_gauss_mask(nq,qmins,qmaxs)
 
   wq = nm.ones(nq) *1.
@@ -86,14 +288,10 @@ def main(argv):
   #    rqhat[qmins[o[0],o[1]]:qmaxs[o[0],o[1]],o[0],o[1]] = cls
   #    rqhat[qmins[o[0],o[1]]:qmaxs[o[0],o[1]],o[1],o[0]] = cls
 
-  rqhat = read_array(pars.str.rqhat)
-
-  Acmb = pars.float_array(default=nm.ones(len(frq))).Acmb
-
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   lkl_grp = smh.base_smica(root_grp,has_cl,lmin,lmax,nT,nP,wq,rqhat,Acmb,None,bins)
-  smh.set_criterion(lkl_grp,"gauss",mat=read_array(pars.str.mat),mask=mask)
-  lkl_grp.attrs["dnames"] =  php.pack256(*channel) 
+  smh.set_criterion(lkl_grp,"gauss",mat=cov_mat,mask=mask)
+  lkl_grp.attrs["dnames"] =  php.pack256(*channel)
 
   # parametric components ?
   if "parametric" in pars:
