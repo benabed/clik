@@ -256,7 +256,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   int mT_plus_mP;
 
   zero = 0;
-  testErrorRet(nbins==0,-101010,"no binning matrix. Argl",*err,__LINE__,NULL);
+
   ncl = 0;
   for(icl=0;icl<6;icl++) {
     if (has_cl[icl]==1) {
@@ -264,9 +264,11 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     }
   }
   
-  nb = nbins/ncl;
-  testErrorRet(nbins!=nb*ncl,-101010,"bad binning matrix. Argl",*err,__LINE__,NULL);
-  
+  nb = nell;
+  if (nbins!=0) {
+    nb = nbins/ncl;  
+  }  
+    
   // try to read the bin weights
   wq = NULL;
   hk = cldf_haskey(df,"wq",err);

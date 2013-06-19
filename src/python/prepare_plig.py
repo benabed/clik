@@ -11,11 +11,15 @@ import clik
 import re
 import clik.hpy as h5py
 import clik.smicahlp as smh
-
+import pyfits as pf
     
 def read_array(fname):
   try:
-    return pf.open(fname)[0].data
+    pfits = pf.open(fname)
+    ii=0
+    while pfits[ii].data == None:
+      ii+=1
+    return pfits[ii].data
   except Exception:
     return nm.loadtxt(fname)
 
@@ -31,7 +35,7 @@ def main(argv):
   channel = pars.str_array.channel
   has_cl = pars.int_array.has_cl
 
-  ncls = nm.sum(has_cl)
+  ncl = nm.sum(has_cl)
 
   
   if "bins.limit" in pars:
@@ -40,8 +44,8 @@ def main(argv):
     lmax = pars.int(default=blims[-1]-1).lmax
     nell = lmax+1-lmin
     nq = len(blims)-1
-    qwgh = pars.float_array.bins_dot_weight
-    bins = nm.zeros(nq,nell)
+    qwgh = pars.float_array.bins_dot_weights
+    bins = nm.zeros((nq,nell),dtype=nm.double)
     bm = blims[0]
     wi = 0
     lmin = pars.int(default=blims[0]).lmin
@@ -51,6 +55,7 @@ def main(argv):
       nb = bM - bm
       bins[i,bm-lmin:bM-lmin] = qwgh[wi:wi+nb]
       wi+=nb
+      bm=bM
     bins = nm.tile(bins,(ncl,1))
   else:
     lmin = pars.int.lmin
@@ -64,7 +69,7 @@ def main(argv):
 
   qmins.shape=((len(channel),len(channel)))
   qmaxs.shape=((len(channel),len(channel)))
-
+  
   mask = smh.create_gauss_mask(nq,qmins,qmaxs)
 
   wq = nm.ones(nq) *1.
@@ -94,22 +99,22 @@ def main(argv):
   if "parametric" in pars:
     defaults = {}
     if "parametric.default.parameter" in pars:
-      defaults = dict(zip(pars.str_array.parameteric_dot_default_dot_parameter,pars.str_array.parameteric_dot_default_dot_value))
+      defaults = dict(zip(pars.str_array.parametric_dot_default_dot_parameter,pars.str_array.parametric_dot_default_dot_value))
     rename = {}
-    if "parametric.rename_dot_from" in pars:
-      rename = dict(zip(pars.str_array.parameteric_dot_rename_dot_from,pars.str_array.parameteric_dot_rename_dot_to))
+    if "parametric.rename.from" in pars:
+      rename = dict(zip(pars.str_array.parametric_dot_rename_dot_from,pars.str_array.parametric_dot_rename_dot_to))
     
-    keys = pars.parameteric_dot_parameter
-    colors = [none]*1000
+    keys = pars.str_array.parametric_dot_parameter
+    colors = [None]*1000
     if "parametric.color" in pars:
       colors = []
-      for cl in pars.str_array.parameteric_dot_color:
+      for cl in pars.str_array.parametric_dot_color:
         if cl.lower()=="none":
           colors += [nm.ones(len(frq))]
         else:
           colors += [read_array(cl)]
     for ip,pname in enumerate(pars.str_array.parametric):
-      smh.add_parametric_component(lkl_grp,pname,frq,keys,lmin,lmax,defaults=defaults,color=colors[i],rename=rename)
+      smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename)
 
   # Some fix contribution (affected by beam and calib) ?
   if "rq_fix" in pars:

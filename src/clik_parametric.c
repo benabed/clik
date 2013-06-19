@@ -360,7 +360,6 @@ parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *de
   
   for(jj=0;jj<epl->nvar;jj++) {
     int ps;
-    //_DEBUGHERE_("","");
     sprintf(epl->varkey[jj],"%s",varkey[jj]);
     ps = pflist_key_index(epl->pf,varkey[jj],err);
     forwardError(*err,__LINE__,NULL);

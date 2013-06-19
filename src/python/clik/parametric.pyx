@@ -313,25 +313,27 @@ cdef class parametric_template(parametric):
 component_list = ["powerlaw","powerlaw_free_emissivity"]
 simple_parametric_list = component_list
 
-def register_plugin(plg,gl):
+def register_plugin(plg,gl,verb):
   import sys
-  print plg
+  if verb:
+    print plg
   mlg =__import__("clik."+plg,fromlist=[plg])
   global component_list
   component_list += mlg.component_list
   for cp in mlg.component_list:
     gl[cp]=getattr(mlg,cp)
-    print "add %s"%cp
+    if verb:
+      print "add %s"%cp
 
 
-def register_all(gl=globals()):
+def register_all(gl=globals(),verb=False):
   #print gl
   import os  
   plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]
 
   for plg in plgs:
     try:
-      register_plugin(plg,gl)
+      register_plugin(plg,gl,verb)
     except Exception,e:
       print "cannot register %s (%s)"%(plg,e)
       #print e

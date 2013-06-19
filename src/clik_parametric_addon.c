@@ -371,10 +371,11 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
 
   p_pay->nell = nell;
 
-  p_pay->nbins = nbins;
+  p_pay->nbins = 0;
   p_pay->bins = NULL;
-  if (nbins !=0) {
+  if (bins !=NULL) {
     int li,bi,bn;
+    p_pay->nbins = nbins;
     p_pay->bins = malloc_err(sizeof(double)*(nell*nbins),err);
     forwardError(*err,__LINE__,NULL);
     memcpy(p_pay->bins,bins,sizeof(double)*nbins*nell);    

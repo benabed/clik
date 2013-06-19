@@ -8,7 +8,8 @@ def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   else:
     bins.shape=(-1,(lmax+1-lmin)*nm.sum(hascl))
     nbins = bins.shape[0]
-  lkl_grp = php.add_lkl_generic(root_grp,"smica",1,hascl,lmax,lmin,nbins = nbins,bins = bins.flat[:])
+    bins=bins.flat[:]
+  lkl_grp = php.add_lkl_generic(root_grp,"smica",1,hascl,lmax,lmin,nbins = nbins,bins = bins)
 
   lkl_grp.attrs["m_channel_T"] = nT
   lkl_grp.attrs["m_channel_P"] = nP
@@ -162,8 +163,8 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   import os
   import parametric
   import os.path as osp
-  parametric.register_all(parametric.__dict__)
-
+  parametric.register_all(parametric.__dict__,False)
+  
   # initialize parameters
   pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
   #filter them out
@@ -345,7 +346,7 @@ def create_gauss_mask(nq,qmins,qmaxs):
   qmins = nm.array(qmins)
   qmaxs = nm.array(qmaxs)
   ndet = qmins.shape[0]
-  mask = nm.zeros((nq,ndet,ndet))
+  mask = nm.zeros((nq,ndet,ndet),dtype=nm.int )
   for i in range(ndet):
     for j in range(i,ndet):
       mask[qmins[i,j]:qmaxs[i,j],i,j]=1

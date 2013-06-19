@@ -1,18 +1,25 @@
 import re
 import numpy as nm
 import os.path as osp
+import pyfits as pf
 
 def scarray(li,scal=False):
   if len(li)==1 and scal:
     return li[0]
   else:
-    return nm.array(li)
+    if type(li[0])!=str:
+      return nm.array(li)
+    return li
 
 def read_array(fname,dirname):
   fname = lookupfile(fname,dirname)
   
   try:
-    return pf.open(fname)[0].data
+    pfits = pf.open(fname)
+    ii=0
+    while pfits[ii].data == None:
+      ii+=1
+    return pfits[ii].data
   except Exception:
     return nm.loadtxt(fname)
     
@@ -165,7 +172,7 @@ class miniparse(object):
     return "\n".join(rr)
     
   def __contains__(self,val):
-    res = val in self.pf
+    res = val in self.pf or val+".file" in self.pf
     if res:
       self._access_list += [val]
     return res
