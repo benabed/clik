@@ -3,8 +3,8 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "7.4.5"
-plc_version = "1.0"
+clik_version = "8.0b1"
+plc_version = "1.1b1"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
@@ -401,7 +401,7 @@ def dist_public(ctx):
               "clik_disjoin.py",
               "clik_print.py",
               "prepare_wmap.py",
-              "clik_extract_external.py"])
+              "clik_extract_external.py","prepare_plig.py"])
   print exclude_list
   
   excl_list = ctx.path.ant_glob(exclude_list)

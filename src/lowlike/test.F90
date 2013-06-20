@@ -60,9 +60,10 @@ call planck_lowlike_init
 
 CALL SYSTEM_CLOCK(COUNT_RATE=clock_rate) ! Find the rate
 CALL SYSTEM_CLOCK(COUNT=clock_start) ! Start timing
-do i=1,100
+do i=1,1!00
 call planck_lowlike_compute(cl_tt,cl_te,cl_ee,cl_bb,like)
 enddo
+
 CALL SYSTEM_CLOCK(COUNT=clock_end) ! Stop timing
   ! Calculate the elapsed time in seconds:
   elapsed_time=REAL((clock_end-clock_start)/clock_rate)

@@ -85,6 +85,7 @@ SUBROUTINE planck_lowlike_compute(cltt,clte,clee,clbb,like)
       correlation_coefficient_cl = abs(clte(il))/sqrt(cltt(il)*clee(il))
       if( correlation_coefficient_cl-1d0 > tol ) then
       write(*,*) 'TE inconsistent'
+         Like(lowllike)=1d30	
          return
       end if
     end if
