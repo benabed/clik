@@ -310,6 +310,11 @@ cdef class parametric_template(parametric):
       tmp = nm.array(data)
     return tmp
 
+cdef class parametric_pol(parametric):
+  pass
+cdef class parametric_pol_template(parametric_pol):
+  pass
+
 component_list = ["powerlaw","powerlaw_free_emissivity"]
 simple_parametric_list = component_list
 

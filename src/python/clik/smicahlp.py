@@ -160,13 +160,22 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
-def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",data=None,position=-1):
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",nT=-1,data=None,position=-1):
   import os
   import parametric
   import os.path as osp
   parametric.register_all(parametric.__dict__,False)
   
   # initialize parameters
+  prclass = getattr(parametric,name)
+  if nT!=-1 and nT<len(dets):
+    if isinstance(prclass,parametric.parametric_pol):
+      pass
+    else:
+      print "cutme !"
+      dets = dets[:nT]
+      if color!=None:
+        color = color[:nT]
   pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]

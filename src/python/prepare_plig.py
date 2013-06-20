@@ -312,7 +312,7 @@ def main(argv):
         else:
           colors += [read_array(cl)]
     for ip,pname in enumerate(pars.str_array.parametric):
-      smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename)
+      smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename,nT=nT)
 
   # Some fix contribution (affected by beam and calib) ?
   if "rq_fix" in pars:

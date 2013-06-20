@@ -21,3 +21,9 @@ cdef class parametric:
 cdef class parametric_template(parametric):
   cdef object template_name
   cdef object plugin_name
+
+cdef class parametric_pol(parametric):
+  pass
+cdef class parametric_pol_template(parametric_pol):
+  pass
+
