@@ -347,11 +347,11 @@ def dist(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'clik-'+clik_version
-  res = ctx.cmd_and_log("svnversion")
-  svnversion = res
-  f=open("svnversion","w")
-  print >>f,svnversion
-  f.close()
+  #res = ctx.cmd_and_log("svnversion")
+  #svnversion = res
+  #f=open("svnversion","w")
+  #print >>f,svnversion
+  #f.close()
   dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
   dist_list += "examples/*.par examples/*.dat "

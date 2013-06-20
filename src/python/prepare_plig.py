@@ -260,7 +260,7 @@ def input_from_config_file(pars):
       bins[i,bm-lmin:bM-lmin] = qwgh[wi:wi+nb]
       wi+=nb
       bm=bM
-    bins = nm.tile(bins,(ncl,1))
+    bins = nm.tile(bins,(ncl,ncl))
   else:
     lmin = pars.int.lmin
     lmax = pars.int.lmax
@@ -285,10 +285,11 @@ def input_from_config_file(pars):
 def main(argv):
   pars = clik.miniparse(argv[1])
 
-  if test_cov_mat_format(pars.str.mat):
-    nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
+  try:
+    if test_cov_mat_format(pars.str.mat):
+      nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_cov_mat(pars)
-  else:
+  except Exception:
     nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_config_file(pars)
 
