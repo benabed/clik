@@ -33,8 +33,15 @@ def test_cov_mat_format(fname):
   hdulist.close()
   return full
 
+def remove_zero_rowcol(matrix_in, mask):
+  idx        = list(set(list(nm.nonzero(mask)[0])))
+  matrix_out = nm.zeros([len(idx), len(idx)])
+  for i in range(len(idx)):
+    matrix_out[i,:] = matrix_in[idx[i],idx]
+  return matrix_out
+
 def read_full_cov_mat(fname):
-  l_info    = {}
+  l_info  = {}
   hdulist = pf.open(fname)
   cov_mat = hdulist['ICOV'].data
   bin_TT  = hdulist['BIN_TT'].data
@@ -45,7 +52,8 @@ def read_full_cov_mat(fname):
   for key in header.keys():
     if ('LMIN_' in key or 'LMAX_' in key):
       l_info[key] = int(header[key])
-  return l_info, bin_TT, bin_TE, bin_EE, cov_mat
+  cov_mat /= (1.0E6)**4
+  return l_info, bin_TT, bin_EE, bin_TE, cov_mat
 
 def select_channels(l_info, nr_freq, frequencies):
   mask_TP = nm.zeros([2*nr_freq, 2*nr_freq], dtype='int')
@@ -72,14 +80,20 @@ def select_channels(l_info, nr_freq, frequencies):
   nP      = nEE + nTE - int(sum(diag_EE & diag_TE))
   has_cl  = [1*(nTT > 0), 1*(nEE > 0), 0, 1*(nTE > 0), 0, 0]
 
+  frq     = []
   channel = []
   for i, freq in enumerate(frequencies):
     if mask_TP[i,i] > 0:
-      channel.append(freq)
+      frq.append(float(freq))
   for i, freq in enumerate(frequencies):
     if (mask_TP[i+nr_freq,i+nr_freq] + mask_TP[i+nr_freq,i] > 0):
-      channel.append(freq)
-  return nTT, nP, has_cl, channel, mask_TP
+      frq.append(float(freq))
+  for i, freq in enumerate(frq):
+    if i < nTT:
+      channel.append(str(freq) + 'T')
+    else:
+      channel.append(str(freq) + 'P')
+  return nTT, nP, has_cl, frq, channel, mask_TP
 
 def get_l_range(l_info, mask_TP, nr_freq, frequencies):
   lmin_TP = -1*nm.ones(mask_TP.shape, dtype='int')
@@ -98,7 +112,7 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
         lmin_TP[j+nr_freq,i+nr_freq] = lmin_TP[i+nr_freq,j+nr_freq]
         lmax_TP[i+nr_freq,j+nr_freq] = l_info['LMAX_EE_' + freq1 + 'X' + freq2]
         lmax_TP[j+nr_freq,i+nr_freq] = lmax_TP[i+nr_freq,j+nr_freq]
-      if mask_TP[i+nr_freq,j+nr_freq] != 0:
+      if mask_TP[i+nr_freq,j] != 0:
         lmin_TP[i+nr_freq,j] = l_info['LMIN_TE_' + freq1 + 'X' + freq2]
         lmin_TP[j+nr_freq,i] = lmin_TP[i+nr_freq,j]
         lmin_TP[i,j+nr_freq] = lmin_TP[i+nr_freq,j]
@@ -107,22 +121,22 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
         lmax_TP[j+nr_freq,i] = lmax_TP[i+nr_freq,j]
         lmax_TP[i,j+nr_freq] = lmax_TP[i+nr_freq,j]
         lmax_TP[j,i+nr_freq] = lmax_TP[i+nr_freq,j]
-  submatrix     = lmin_TP[:nr_freq,:nr_freq]
   try:
+    submatrix   = lmin_TP[:nr_freq,:nr_freq]
     min_lmin_TT = min(submatrix[submatrix >= 0])
   except ValueError:
     min_lmin_TT = -1
   submatrix     = lmax_TP[:nr_freq,:nr_freq]
   max_lmax_TT   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
-  submatrix     = lmin_TP[nr_freq:,nr_freq:]
   try:
+    submatrix   = lmin_TP[nr_freq:,nr_freq:]
     min_lmin_EE = min(submatrix[submatrix >= 0])
   except ValueError:
     min_lmin_EE = -1
   submatrix     = lmax_TP[nr_freq:,nr_freq:]
   max_lmax_EE   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
-  submatrix     = lmin_TP[:nr_freq,nr_freq:]
   try:
+    submatrix   = lmin_TP[:nr_freq,nr_freq:]
     min_lmin_TE = min(submatrix[submatrix >= 0])
   except ValueError:
     min_lmin_TE = -1
@@ -141,11 +155,10 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
   l_info['lmax']        = lmax
   return lmin, lmax, lmin_TP, lmax_TP, l_info
 
-def get_l_binning(nT, nP, mask_TP, lmin_TP, lmax_TP, l_info, \
+def get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, \
                   bin_TT, bin_TE, bin_EE):
-  nr_channels = nT + nP
-  qmins       = nm.zeros([nr_channels, nr_channels], dtype='int')
-  qmaxs       = nm.zeros([nr_channels, nr_channels], dtype='int')
+  qmins = nm.zeros(mask_TP.shape, dtype='int')
+  qmaxs = nm.zeros(mask_TP.shape, dtype='int')
   if (l_info['min_lmin_TT'] == l_info['lmin']) \
      and (l_info['max_lmax_TT'] == l_info['lmax']):
     bins = bin_TT
@@ -163,52 +176,60 @@ def get_l_binning(nT, nP, mask_TP, lmin_TP, lmax_TP, l_info, \
   for i in range(nr_bins):
     lcuts[i] = min(nm.where(bins[i,:] > 0)[0]) + l_info['lmin']
   lcuts[-1] = l_info['lmax'] + 1
-  for i in range(nr_channels):
-    for j in range(nr_channels):
+  for i in range(mask_TP.shape[0]):
+    for j in range(mask_TP.shape[0]):
       if mask_TP[i,j] == 0:
         continue
       qmins[i,j] = nm.where(lcuts == lmin_TP[i,j])[0]
       qmaxs[i,j] = nm.where(lcuts == lmax_TP[i,j]+1)[0]
+  qmins = remove_zero_rowcol(qmins, mask_TP)
+  qmaxs = remove_zero_rowcol(qmaxs, mask_TP)
   return qmins, qmaxs, nr_bins, bins
 
-def get_power_spectra(fname, nT, nP, nr_freq, l_info, nr_bins, bins):
-  nr_channels  = nT + nP
-  cl_raw       = read_array(fname)
-  cl_raw.shape = [-1, 2*nr_freq, 2*nr_freq]
-  if cl_raw.shape[0] != 3001:
+def get_power_spectra(fname, nT, nP, nr_freq, mask_TP, l_info, nr_bins, bins):
+  cl_raw = read_array(fname)
+  try:
+    cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
+  except ValueError:
     print "Error: Power spectrum input file format mismatch"
     quit()
-  rqhat = nm.zeros([nr_bins, nr_channels, nr_channels])
-  for i in range(nr_channels):
-    for j in range(nr_channels):
-      rqhat[:,i,j] = nm.dot(bins, cl_raw[l_info['lmin']:l_info['lmax']+1,i,j])
+  rqhat     = nm.zeros([nr_bins, nT + nP, nT + nP])
+  rqhat_tmp = nm.zeros([nr_bins, mask_TP.shape[0], mask_TP.shape[0]])
+  for i in range(mask_TP.shape[0]):
+    for j in range(mask_TP.shape[0]):
+      rqhat_tmp[:,i,j] = nm.dot(bins, cl_raw[l_info['lmin']:l_info['lmax']+1,i,j])
+  for i in range(nr_bins):
+    rqhat[i,:,:] = remove_zero_rowcol(rqhat_tmp[i,:,:], mask_TP)
+  rqhat *= (1.0E6)**2
   return rqhat
 
 def input_from_cov_mat(pars):
+  print "Parsing binning information from covariance matrix"
   frequencies = ['100', '143', '217']
   nr_freq     = len(frequencies)
 
-  l_info, bin_TT, bin_TE, bin_EE, cov_mat \
-        = read_full_cov_mat(pars.str.mat)
+  l_info, bin_TT, bin_EE, bin_TE, cov_mat \
+     = read_full_cov_mat(pars.str.mat)
 
-  nT, nP, has_cl, channel, mask_TP \
-       = select_channels(l_info, nr_freq, frequencies)
+  nT, nP, has_cl, frq, channel, mask_TP \
+     = select_channels(l_info, nr_freq, frequencies)
 
   lmin, lmax, lmin_TP, lmax_TP, l_info \
-        = get_l_range(l_info, mask_TP, nr_freq, frequencies)
+     = get_l_range(l_info, mask_TP, nr_freq, frequencies)
 
   qmins, qmaxs, nr_bins, bins \
-         = get_l_binning(nT, nP, mask_TP, lmin_TP, lmax_TP, l_info, \
-                         bin_TT, bin_TE, bin_EE)
+     = get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, bin_TT, bin_TE, bin_EE)
 
-  rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, l_info, nr_bins, bins)
+  rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, mask_TP, \
+                            l_info, nr_bins, bins)
 
   bins = nm.tile(bins, [sum(has_cl), 1])
-  Acmb = ones(nT + nP)
-  return nT, nP, has_cl, channel, lmin, lmax, nr_bins, bins, \
+  Acmb = nm.ones(nT + nP)
+  return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
          qmins, qmaxs, Acmb, rqhat, cov_mat
 
 def input_from_config_file(pars):
+  print "Parsing binning information from config file"
   nT = pars.int.nT
   nP = pars.int.nP
 
@@ -258,24 +279,22 @@ def input_from_config_file(pars):
   rqhat = read_array(pars.str.rqhat)
 
   Acmb = pars.float_array(default=nm.ones(len(frq))).Acmb
-  return nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
-         rqhat, cov_mat
+  return nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
+         Acmb, rqhat, cov_mat
 
 def main(argv):
   pars = clik.miniparse(argv[1])
 
   if test_cov_mat_format(pars.str.mat):
-    nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
-        rqhat, cov_mat = input_from_cov_mat(pars)
-
+    nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
+        Acmb, rqhat, cov_mat = input_from_cov_mat(pars)
   else:
-    nT, nP, has_cl, channel, lmin, lmax, nq, bins, qmins, qmaxs, Acmb, \
-        rqhat, cov_mat = input_from_config_file(pars)
+    nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
+        Acmb, rqhat, cov_mat = input_from_config_file(pars)
 
   mask = smh.create_gauss_mask(nq,qmins,qmaxs)
 
   wq = nm.ones(nq) *1.
-
 
   #if "rqhat" in pars:
   #  rqhat = read_array(pars.str.rqhat)
@@ -311,6 +330,7 @@ def main(argv):
           colors += [nm.ones(len(frq))]
         else:
           colors += [read_array(cl)]
+
     for ip,pname in enumerate(pars.str_array.parametric):
       smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename,nT=nT)
 
