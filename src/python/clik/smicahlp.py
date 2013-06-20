@@ -1,6 +1,6 @@
 import parobject as php
 import numpy as nm
-
+import re
 
 def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   if bins==None:
@@ -65,6 +65,7 @@ def add_gcal_component(lkl_grp,typ,ngcal,gcaltpl,binned=False,names=[],position=
 def get_dnames(lkl_grp):
   if "dnames" in lkl_grp.attrs:
     dnames = [v for v in lkl_grp.attrs["dnames"].split('\0') if v]
+    return dnames
   else:
     raise Exception("argl")
 

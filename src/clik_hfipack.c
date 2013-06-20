@@ -622,6 +622,7 @@ SmicaComp * clik_smica_comp_gcal2_init(cldf *df,int nb, int mT,int mP, int nell,
   int tot_tpl;
   char *bnames, **xnames;
   int m;
+  int dsz;
 
   m = mtot(mT,mP,has_cl);
   
@@ -642,7 +643,8 @@ SmicaComp * clik_smica_comp_gcal2_init(cldf *df,int nb, int mT,int mP, int nell,
   free(jm);
   free(tpl);
 
-  bnames = cldf_readstr(df,"names",&npar, err);
+  dsz= -1;
+  bnames = cldf_readstr(df,"names",&dsz, err);
   forwardError(*err,__LINE__,NULL); 
   xnames = malloc_err(sizeof(char*)*npar,err);
   for(i=0;i<npar;i++) {
@@ -664,7 +666,7 @@ SmicaComp * clik_smica_comp_calTP_init(cldf *df,int nb, int mT,int mP, int nell,
   int tot_tpl;
   char *bnames, **xnames;
   int m;
-
+  int dsz;
   m = mtot(mT,mP,has_cl);
   
   npar = -1;
@@ -676,7 +678,8 @@ SmicaComp * clik_smica_comp_calTP_init(cldf *df,int nb, int mT,int mP, int nell,
 
   free(im);
 
-  bnames = cldf_readstr(df,"names",&npar, err);
+  dsz = -1;
+  bnames = cldf_readstr(df,"names",&dsz, err);
   forwardError(*err,__LINE__,NULL); 
   xnames = malloc_err(sizeof(char*)*npar,err);
   for(i=0;i<npar;i++) {
