@@ -24,13 +24,16 @@ def read_array(fname):
     return nm.loadtxt(fname)
 
 def test_cov_mat_format(fname):
-  hdulist = pf.open(fname)
+  full = False
   try:
-    dump = hdulist[0].header['DMC_PID']
-    full = True
-  except:
-    full = False
-  hdulist.close()
+    hdulist = pf.open(fname)
+    try:
+      dump = hdulist[0].header['DMC_PID']
+      full = True
+    finally:
+      hdulist.close()
+  except Exception:
+    pass
   return full
 
 def remove_zero_rowcol(matrix_in, mask):
@@ -90,9 +93,9 @@ def select_channels(l_info, nr_freq, frequencies):
       frq.append(float(freq))
   for i, freq in enumerate(frq):
     if i < nTT:
-      channel.append(str(freq) + 'T')
+      channel.append(str(int(freq)) + 'T')
     else:
-      channel.append(str(freq) + 'P')
+      channel.append(str(int(freq)) + 'P')
   return nTT, nP, has_cl, frq, channel, mask_TP
 
 def get_l_range(l_info, mask_TP, nr_freq, frequencies):
@@ -223,7 +226,7 @@ def input_from_cov_mat(pars):
   rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, mask_TP, \
                             l_info, nr_bins, bins)
 
-  bins = nm.tile(bins, [sum(has_cl), 1])
+  bins = nm.tile(bins, [sum(has_cl), sum(has_cl)])
   Acmb = nm.ones(nT + nP)
   return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
          qmins, qmaxs, Acmb, rqhat, cov_mat
@@ -285,17 +288,17 @@ def input_from_config_file(pars):
 def main(argv):
   pars = clik.miniparse(argv[1])
 
-  try:
-    if test_cov_mat_format(pars.str.mat):
-      nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
+  if test_cov_mat_format(pars.str.mat):
+    nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_cov_mat(pars)
-  except Exception:
+  else:
     nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_config_file(pars)
 
   mask = smh.create_gauss_mask(nq,qmins,qmaxs)
 
   wq = nm.ones(nq) *1.
+
 
   #if "rqhat" in pars:
   #  rqhat = read_array(pars.str.rqhat)
@@ -311,7 +314,7 @@ def main(argv):
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   lkl_grp = smh.base_smica(root_grp,has_cl,lmin,lmax,nT,nP,wq,rqhat,Acmb,None,bins)
   smh.set_criterion(lkl_grp,"gauss",mat=cov_mat,mask=mask)
-  lkl_grp.attrs["dnames"] =  php.pack256(*channel)
+  lkl_grp.attrs["dnames"] = php.pack256(*channel)
 
   # parametric components ?
   if "parametric" in pars:
