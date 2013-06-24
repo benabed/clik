@@ -107,13 +107,11 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
   
 def compress_bins(bins,has_cl):
   mins = bins!=0
-  print bins
   l = nm.arange(bins.shape[-1])
   # there is an issue with TEB stuff here.
   #to be fixed later
   blmin,blmax = nm.array([(l[ins][0],l[ins][-1]) for ins in mins]).T
   #b_ws = bins[mins]
-  print blmin,blmax,bins.shape
   b_ws = nm.concatenate([bins[i,blmin[i]:blmax[i]+1] for i in range(bins.shape[0])])
   return b_ws,blmin,blmax
   
@@ -218,7 +216,6 @@ def add_prior(root_grp,name,loc,var):
     nvar[len(loc):,len(loc):] = pvar
     var = nvar
     name = list(name) + list(pname)
-    print name
     loc = nm.concatenate((loc,ploc))
   else:
     prid = root_grp.create_group("prior")
@@ -244,7 +241,7 @@ def add_default(root_grp,name,loc,extn=None):
     #print prid.keys()
     #print prid.attrs.keys()
     pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
-    print pred
+    
   else:
     prid = root_grp.create_group("default")
     pred = {}
@@ -271,9 +268,7 @@ def add_default(root_grp,name,loc,extn=None):
     if len(pvar)==len(ploc):
       pvar = nm.diag(pvar)
     pvar.shape = (len(ploc),-1)
-    print pname,fname
     idx = [i for i,n in enumerate(pname) if n not in fname]
-    print idx
     if len(idx)!=len(ploc):
       ploc = ploc[idx] 
       pvar = pvar[idx][:,idx]

@@ -226,10 +226,17 @@ def input_from_cov_mat(pars):
   rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, mask_TP, \
                             l_info, nr_bins, bins)
 
-  bins = nm.tile(bins, [sum(has_cl), sum(has_cl)])
+  bins = expand_bins(bins,sum(has_cl))
   Acmb = nm.ones(nT + nP)
   return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
          qmins, qmaxs, Acmb, rqhat, cov_mat
+
+
+def expand_bins(bins,ncl):
+  rbins = nm.zeros((bins.shape[0]*ncl,bins.shape[1]*ncl))  
+  for i in range(ncl):
+    rbins[bins.shape[0]*i:bins.shape[0]*(i+1),bins.shape[1]*i:bins.shape[1]*(i+1)] = bins
+  return rbins
 
 def input_from_config_file(pars):
   print "Parsing binning information from config file"
@@ -263,7 +270,9 @@ def input_from_config_file(pars):
       bins[i,bm-lmin:bM-lmin] = qwgh[wi:wi+nb]
       wi+=nb
       bm=bM
-    bins = nm.tile(bins,(ncl,ncl))
+    
+    bins = expand_bins(bins,ncl)
+    
   else:
     lmin = pars.int.lmin
     lmax = pars.int.lmax

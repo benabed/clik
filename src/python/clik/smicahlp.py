@@ -225,7 +225,6 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
 import numpy as nm
 
 def set_criterion(lkl_grp,typ,**extra):
-  print typ
   if typ.lower()=="classic":
     lkl_grp.attrs["criterion"]="classic"
     return

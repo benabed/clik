@@ -320,6 +320,7 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
       free(ellmax);
       free(bin_ws);
     }
+    
   }
   
   clkl = NULL;
