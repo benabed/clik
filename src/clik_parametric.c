@@ -1254,15 +1254,17 @@ void parametric_sz_cib_payload_init(parametric *egl, double *template, int templ
     payload->ind_freq[m1]=-1;
     for (m2=0;m2<nfreqs_cib;m2++) {
       if (fabs(egl->freqlist[m1]-cib_freqlist[m2])<1e-6) {
-	payload->ind_freq[m1]=m2;
+	       payload->ind_freq[m1]=m2;
       }
     }
   }
 
-  payload->template = malloc_err(sizeof(double)*template_size,err);
-  forwardError(*err,__LINE__,);
+  if (template!=NULL) {
+    payload->template = malloc_err(sizeof(double)*template_size,err);
+    forwardError(*err,__LINE__,);
 
-  memcpy(payload->template,template,sizeof(double)*template_size);
+    memcpy(payload->template,template,sizeof(double)*template_size);
+  }
 
 }
 

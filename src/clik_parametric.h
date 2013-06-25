@@ -49,6 +49,7 @@ long pflist_hash(char* key);
 #define pflist_get_value cdic_get
 #define pflist_get_double_value cdic_get_double
 #define pflist_get_int_value cdic_get_int
+#define pflist_set_int_value cdic_set_int
 #define pflist_dump cdic_dump
 #define pflist cdic
 #endif

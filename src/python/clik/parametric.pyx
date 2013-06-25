@@ -82,6 +82,7 @@ cdef class parametric:
     return dref[ik],dap,dref[ik]-dap,(dref[ik]-dap)/dref[ik]
 
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+    """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={})"""
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef error *_err,**err
@@ -92,7 +93,7 @@ cdef class parametric:
     
     ndef = len(defs)
     ndet = len(detlist)
-    
+
     for i in range(ndet):
       p_detlist[i] = detlist[i]
 
@@ -111,11 +112,13 @@ cdef class parametric:
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
 
+
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
       #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
     else:
       self.celf = (<simple_init>self.initfunc)(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+      stdio.fprintf(stdio.stderr,"lala\n")
     er=doError(err)
     if er:
       raise er
@@ -249,6 +252,7 @@ cdef class parametric_template(parametric):
     self.plugin_name = ""
 
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
+    """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None)"""
     cdef double p_detlist[2000]
     cdef char *defkey[2000],*defvalue[2000],*key[2000]
     cdef double *template

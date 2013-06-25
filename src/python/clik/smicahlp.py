@@ -172,10 +172,14 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     if isinstance(prclass,parametric.parametric_pol):
       pass
     else:
+      if nT==0:
+        print "T only component, ignore"
+        return 
       print "cutme !"
       dets = dets[:nT]
       if color!=None:
         color = color[:nT]
+
   pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
@@ -247,6 +251,8 @@ def set_criterion(lkl_grp,typ,**extra):
     import numpy as nm
     if "mask" in extra:
         lkl_grp["criterion_gauss_mask"] = extra["mask"].flat[:]
+    if "ordering" in extra:
+      lkl_grp["criterion_gauss_ordering"] = extra["ordering"].flat[:]
     lkl_grp["criterion_gauss_mat"]=extra["mat"].flat[:]
     lkl_grp.attrs["criterion"]="gauss"
     return 

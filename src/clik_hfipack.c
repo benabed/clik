@@ -406,6 +406,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     } else if(strcmp(crit_name,"gauss")==0) {
       double *quad_crit;
       int *mask;
+      int *ordering;
       int nqu;
 
       nqu = -1;
@@ -420,9 +421,26 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
         mask = cldf_readintarray(df,"criterion_gauss_mask",&nqu,err);
         forwardError(*err,__LINE__,NULL);
       }
-      smica_set_crit_gauss(smic, quad_crit,mask,err);
+      ordering = NULL;
+      hk = cldf_haskey(df,"criterion_gauss_ordering",err);
       forwardError(*err,__LINE__,NULL);
-      free(mask);
+      if (hk == 1) { 
+        int i;
+        nqu = m*(m+1);
+        ordering = cldf_readintarray(df,"criterion_gauss_ordering",&nqu,err);
+        forwardError(*err,__LINE__,NULL);
+        //_DEBUGHERE_("","");
+      }
+
+      smica_set_crit_gauss(smic, quad_crit,mask,ordering,err);
+      forwardError(*err,__LINE__,NULL);
+      
+      if (mask!=NULL) {
+        free(mask);  
+      }
+      if (ordering!=NULL) {
+        free(ordering);  
+      }
       free(quad_crit);
     } else if(strcmp(crit_name,"eig")==0) {
       double *nrm;

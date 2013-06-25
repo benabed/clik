@@ -336,6 +336,37 @@ def input_from_config_file(pars):
   return nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
          Acmb, rqhat, cov_mat
 
+def ordering_TEB(nt,np,has_cl):
+  m = nt*has_cl[0]+np*has_cl[1]+np*has_cl[2]
+  rr=[]
+  # TT first
+  for m1 in range(nt*has_cl[0]):
+    for m2 in range(m1,nt*has_cl[0]):
+      rr += [(m1,m2)]
+  # EE
+  for m1 in range(np*has_cl[1]):
+    for m2 in range(m1,np*has_cl[1]):
+      rr += [(m1+nt*has_cl[0],m2+nt*has_cl[0])]
+  # BB
+  for m1 in range(np*has_cl[2]):
+    for m2 in range(m1,np*has_cl[2]):
+      rr += [(m1+nt*has_cl[0]+np*has_cl[1],m2+nt*has_cl[0]+np*has_cl[1])]
+  # TE
+  for m1 in range(nt*has_cl[0]):
+    for m2 in range(m1,np*has_cl[1]):
+      rr += [(m1,m2+nt*has_cl[0])]
+  # TB
+  for m1 in range(nt*has_cl[0]):
+    for m2 in range(m1,np*has_cl[2]):
+      rr += [(m1,m2+nt*has_cl[0]+np*has_cl[1])]
+  # EB
+  for m1 in range(np*has_cl[1]):
+    for m2 in range(m1,np*has_cl[2]):
+      rr += [(m1+nt*has_cl[0],m2+nt*has_cl[0]+np*has_cl[1])]
+  return nm.array(rr)
+  
+  
+  
 def main(argv):
   pars = clik.miniparse(argv[1])
 
@@ -345,6 +376,8 @@ def main(argv):
   else:
     nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_config_file(pars)
+
+  ordering = ordering_TEB(nT,nP,has_cl)
 
   mask = smh.create_gauss_mask(nq,qmins,qmaxs)
 
@@ -364,7 +397,7 @@ def main(argv):
 
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   lkl_grp = smh.base_smica(root_grp,has_cl,lmin,lmax,nT,nP,wq,rqhat,Acmb,None,bins)
-  smh.set_criterion(lkl_grp,"gauss",mat=cov_mat,mask=mask)
+  smh.set_criterion(lkl_grp,"gauss",mat=cov_mat,mask=mask,ordering=ordering)
   lkl_grp.attrs["dnames"] = php.pack256(*channel)
 
   # parametric components ?
@@ -387,6 +420,7 @@ def main(argv):
           colors += [read_array(cl)]
 
     for ip,pname in enumerate(pars.str_array.parametric):
+      print pname
       smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename,nT=nT)
 
   # Some fix contribution (affected by beam and calib) ?
