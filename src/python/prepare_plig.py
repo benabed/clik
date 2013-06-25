@@ -23,6 +23,12 @@ def read_array(fname):
   except Exception:
     return nm.loadtxt(fname)
 
+def expand_bins(bins,ncl):
+  rbins = nm.zeros((bins.shape[0]*ncl,bins.shape[1]*ncl))
+  for i in range(ncl):
+    rbins[bins.shape[0]*i:bins.shape[0]*(i+1),bins.shape[1]*i:bins.shape[1]*(i+1)] = bins
+  return rbins
+
 def test_cov_mat_format(fname):
   full = False
   try:
@@ -75,28 +81,27 @@ def select_channels(l_info, nr_freq, frequencies):
       mask_TP[j+nr_freq,i] = mask_TP[i+nr_freq,j]
       mask_TP[i,j+nr_freq] = mask_TP[i+nr_freq,j]
       mask_TP[j,i+nr_freq] = mask_TP[i+nr_freq,j]
-  nTT = int(sum(nm.diag(mask_TP[:nr_freq,:nr_freq])))
-  nEE = int(sum(nm.diag(mask_TP[nr_freq:,nr_freq:])))
-  nTE = int(sum(nm.diag(mask_TP[nr_freq:,:nr_freq])))
-  diag_EE = nm.diag(mask_TP[nr_freq:,nr_freq:]).astype('int')
-  diag_TE = nm.diag(mask_TP[:nr_freq,nr_freq:]).astype('int')
-  nP      = nEE + nTE - int(sum(diag_EE & diag_TE))
+  diag_TT = (sum(mask_TP[:nr_freq,:nr_freq], 0) > 0).astype('int')
+  diag_EE = (sum(mask_TP[nr_freq:,nr_freq:], 0) > 0).astype('int')
+  diag_TE = (sum(mask_TP[:nr_freq,nr_freq:], 0) > 0).astype('int')
+  nTT     = sum(diag_TT)
+  nEE     = sum(diag_EE)
+  nTE     = sum(diag_TE)
+  nT      = sum(diag_TT | diag_TE)
+  nP      = sum(diag_EE | diag_TE)
   has_cl  = [1*(nTT > 0), 1*(nEE > 0), 0, 1*(nTE > 0), 0, 0]
 
   frq     = []
   channel = []
   for i, freq in enumerate(frequencies):
-    if mask_TP[i,i] > 0:
+    if sum(mask_TP[i,:]) > 0:
       frq.append(float(freq))
+      channel.append(freq + 'T')
   for i, freq in enumerate(frequencies):
-    if (mask_TP[i+nr_freq,i+nr_freq] + mask_TP[i+nr_freq,i] > 0):
+    if sum(mask_TP[i+nr_freq,:]) > 0:
       frq.append(float(freq))
-  for i, freq in enumerate(frq):
-    if i < nTT:
-      channel.append(str(int(freq)) + 'T')
-    else:
-      channel.append(str(int(freq)) + 'P')
-  return nTT, nP, has_cl, frq, channel, mask_TP
+      channel.append(freq + 'P')
+  return nT, nP, has_cl, frq, channel, mask_TP
 
 def get_l_range(l_info, mask_TP, nr_freq, frequencies):
   lmin_TP = -1*nm.ones(mask_TP.shape, dtype='int')
@@ -206,9 +211,49 @@ def get_power_spectra(fname, nT, nP, nr_freq, mask_TP, l_info, nr_bins, bins):
   rqhat *= (1.0E6)**2
   return rqhat
 
+def dump_colorcorrections(color_corr, mask_TP, pars):
+  filename  = 'colorcorr_dust.dat'
+  write_col = False
+  color_in  = pars.str_array.parametric_dot_color
+  color_out = ''
+  for i, color in enumerate(color_in):
+    if color == "%DUST%":
+      color_out += ' ' + filename
+      write_col = True
+    else:
+      color_out += ' ' + color
+  color_out = color_out.strip()
+
+  if write_col:
+    pars.pf['parametric.color'] = color_out
+    color_corr_values = []
+    for i in range(mask_TP.shape[0]):
+      if sum(mask_TP[:,i], 0) > 0:
+        color_corr_values.append(color_corr[i])
+    handle = open(filename, "w")
+    nm.savetxt(handle, color_corr_values, fmt=' %15.7E')
+    handle.close()
+  return pars
+
+def add_calibration(channel, pars):
+  ref = '143'
+  if ((any('T' in entry for entry in channel) and (not ref + 'T' in channel)) or
+      (any('P' in entry for entry in channel) and (not ref + 'P' in channel))):
+    print "Error: Need {0:3s} GHz channel for calibration".format(ref)
+    quit()
+  calib_channels = ''
+  for freq in channel:
+    if ref in freq:
+      continue
+    calib_channels += ' ' + freq
+  calib_channels   = calib_channels.strip()
+  pars.pf['calib'] = calib_channels
+  return pars
+
 def input_from_cov_mat(pars):
   print "Parsing binning information from covariance matrix"
   frequencies = ['100', '143', '217']
+  color_corr  = [1.06881, 1.05195, 1.13962, 1.0, 1.0, 1.0]
   nr_freq     = len(frequencies)
 
   l_info, bin_TT, bin_EE, bin_TE, cov_mat \
@@ -226,17 +271,14 @@ def input_from_cov_mat(pars):
   rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, mask_TP, \
                             l_info, nr_bins, bins)
 
-  bins = expand_bins(bins,sum(has_cl))
+  pars = dump_colorcorrections(color_corr, mask_TP, pars)
+
+  pars = add_calibration(channel, pars)
+
+  bins = expand_bins(bins, sum(has_cl))
   Acmb = nm.ones(nT + nP)
   return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
-         qmins, qmaxs, Acmb, rqhat, cov_mat
-
-
-def expand_bins(bins,ncl):
-  rbins = nm.zeros((bins.shape[0]*ncl,bins.shape[1]*ncl))  
-  for i in range(ncl):
-    rbins[bins.shape[0]*i:bins.shape[0]*(i+1),bins.shape[1]*i:bins.shape[1]*(i+1)] = bins
-  return rbins
+         qmins, qmaxs, Acmb, rqhat, cov_mat, pars
 
 def input_from_config_file(pars):
   print "Parsing binning information from config file"
@@ -270,9 +312,9 @@ def input_from_config_file(pars):
       bins[i,bm-lmin:bM-lmin] = qwgh[wi:wi+nb]
       wi+=nb
       bm=bM
-    
+
     bins = expand_bins(bins,ncl)
-    
+
   else:
     lmin = pars.int.lmin
     lmax = pars.int.lmax
@@ -299,7 +341,7 @@ def main(argv):
 
   if test_cov_mat_format(pars.str.mat):
     nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
-        Acmb, rqhat, cov_mat = input_from_cov_mat(pars)
+        Acmb, rqhat, cov_mat, pars = input_from_cov_mat(pars)
   else:
     nT, nP, has_cl, frq, channel, lmin, lmax, nq, bins, qmins, qmaxs, \
         Acmb, rqhat, cov_mat = input_from_config_file(pars)
@@ -333,7 +375,7 @@ def main(argv):
     rename = {}
     if "parametric.rename.from" in pars:
       rename = dict(zip(pars.str_array.parametric_dot_rename_dot_from,pars.str_array.parametric_dot_rename_dot_to))
-    
+
     keys = pars.str_array.parametric_dot_parameter
     colors = [None]*1000
     if "parametric.color" in pars:
@@ -366,9 +408,9 @@ def main(argv):
   if "rq_noise" in pars:
     for rqn in pars.str_array.rq_noise:
       smh.add_cst_component(lkl_grp,read_array(rqn))
-  
+
   hf.close()
-  
+
 
 
 
