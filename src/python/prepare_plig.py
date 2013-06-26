@@ -322,8 +322,12 @@ def input_from_config_file(pars):
     nq = lmax+1-lmin
     bins = None
 
-  qmins = pars.int_array.qmin
-  qmaxs = pars.int_array.qmax
+  if "qmins" in pars:
+    qmins = pars.int_array.qmin
+    qmaxs = pars.int_array.qmax
+  else:
+    qmins = nm.zeros((len(channel),len(channel)))
+    qmaxs = nm.ones((len(channel),len(channel)))*nq
 
   qmins.shape=((len(channel),len(channel)))
   qmaxs.shape=((len(channel),len(channel)))
@@ -353,16 +357,17 @@ def ordering_TEB(nt,np,has_cl):
       rr += [(m1+nt*has_cl[0]+np*has_cl[1],m2+nt*has_cl[0]+np*has_cl[1])]
   # TE
   for m1 in range(nt*has_cl[0]):
-    for m2 in range(m1,np*has_cl[1]):
+    for m2 in range(0,np*has_cl[1]):
       rr += [(m1,m2+nt*has_cl[0])]
   # TB
   for m1 in range(nt*has_cl[0]):
-    for m2 in range(m1,np*has_cl[2]):
+    for m2 in range(0,np*has_cl[2]):
       rr += [(m1,m2+nt*has_cl[0]+np*has_cl[1])]
   # EB
   for m1 in range(np*has_cl[1]):
-    for m2 in range(m1,np*has_cl[2]):
+    for m2 in range(0,np*has_cl[2]):
       rr += [(m1+nt*has_cl[0],m2+nt*has_cl[0]+np*has_cl[1])]
+  #print nm.array(rr).shape, nt,np,has_cl,rr
   return nm.array(rr)
   
   
