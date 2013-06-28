@@ -118,7 +118,6 @@ cdef class parametric:
       #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
     else:
       self.celf = (<simple_init>self.initfunc)(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
-      stdio.fprintf(stdio.stderr,"lala\n")
     er=doError(err)
     if er:
       raise er
