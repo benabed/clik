@@ -314,7 +314,106 @@ cdef class parametric_template(parametric):
     return tmp
 
 cdef class parametric_pol(parametric):
-  pass
+  def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+    """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={})"""
+    cdef double p_detlist[2000]
+    cdef char *defkey[2000],*defvalue[2000],*key[2000]
+    cdef error *_err,**err
+    cdef int p_has_TEB[3]
+    
+    _err = NULL
+    err = &_err
+    
+    ndef = len(defs)
+    ndet_T = len(detlist_T)
+    ndet_P = len(detlist_P)
+
+    for i in range(ndet_T):
+      p_detlist[i] = detlist_T[i]
+    for i in range(ndet_P):
+      p_detlist[i+ndet_T] = detlist_P[i]
+
+    i = 0
+    for k,v in defs.items():
+      nk = rename.get(k,k)
+      defkey[i] = nk
+      defvalue[i] = v
+      i+=1
+    
+    p_has_TEB[0] = int(has_TEB[0])
+    p_has_TEB[1] = int(has_TEB[1])
+    p_has_TEB[2] = int(has_TEB[2])
+
+    nvar = len(vars)
+    for i in range(nvar):
+      nk = rename.get(vars[i],vars[i])
+      key[i] = nk
+
+    self.rename = rename
+    self.emaner = dict([(rename[k],k) for k in rename])
+
+
+    if self.initfunc==NULL:
+      raise NotImplementedError("Must fill self.initfunc with a valid c function")
+      #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    else:
+      self.celf = (<pol_init>self.initfunc)(ndet_T,ndet_P,p_has_TEB,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    er=doError(err)
+    if er:
+      raise er
+    
+    
+
+    self._post_init(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
+
+  def _post_init(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
+    cdef double _color[2000]
+    cdef int i
+    cdef error *_err,**err
+    cdef int voidlist[2000]
+
+    _err = NULL
+    err = &_err
+    
+    if color is not None:
+      for i in range(len(detlist_T)+len(detlist_P)):
+        _color[i] = color[i]
+      parametric_set_color(self.celf,_color,err)
+      er=doError(err)
+      if er:
+        raise er
+
+    if voidmask:
+      _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
+      nvoid = len(_voidlist)
+      if nvoid!=0:
+        for i in range(nvoid):
+          voidlist[i]=_voidlist[i]
+        parametric_set_void(self.celf,nvoid,voidlist,err)
+        er=doError(err)
+        if er:
+          raise er
+
+    parametric_dnofail(self.celf,int(dnofail))
+    prs = vars
+    if not dnofail:
+      prs = [p for p in vars if self.has_parameter(p)]
+      if len(prs)!= len(vars):
+        parametric_free(<void**>&(self.celf))
+        self.__init__(detlist_T,detlist_P,has_TEB,prs,lmin,lmax,defs,False,color,voidmask,*other)
+
+    dv = []
+    for p in prs:
+      if self.has_parameter(p):
+        dv += [self.get_default_value(p)]
+      else:
+        dv +=[0]
+
+    self.varpar = prs
+    self.parvalues = dv
+    #self.varpar = OrderedDict(zip(prs,dv))
+    self.nell = lmax+1-lmin    
+
 cdef class parametric_pol_template(parametric_pol):
   pass
 

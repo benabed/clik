@@ -10,6 +10,7 @@ cdef extern from "clik_parametric.h":
 
 ctypedef c_parametric* (*simple_init)(int , double *, int , char** , char **, int , char **, int , int , error **)
 ctypedef c_parametric* (*template_init)(int , double *, int , char** , char **, int , char **, int , int , double*, error **)
+ctypedef c_parametric* (*pol_init)(int , int , int*, double *, int , char** , char **, int , char **, int , int , error **)
 
 cdef class parametric:
   cdef c_parametric* celf

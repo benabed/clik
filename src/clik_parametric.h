@@ -67,7 +67,7 @@ typedef struct parametric_struct {
 
   double *freqlist;
   double *detlist;
-  double *det2freq;
+  int *det2freq;
   
   double *freqlist_T;
   double *freqlist_P;
@@ -141,7 +141,7 @@ typedef struct {
   int *ind_freq;
 } template_payload;
 void parametric_template_payload_init(parametric *egl, double *template, int template_size, double *freqlist, int nfreq, error **err);
-void parametric_sz_cib_payload_init(parametric *egl, double *template, int template_size, double *freqlist, int nfreq, error **err);
+//void parametric_sz_cib_payload_init(parametric *egl, double *template, int template_size, double *freqlist, int nfreq, error **err);
 void parametric_template_payload_free(void **pp);
 
 void parametric_simple_payload_free(void **pp);

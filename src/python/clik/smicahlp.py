@@ -160,7 +160,7 @@ def add_from_pars(lkl_grp,parfile):
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
-def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",nT=-1,data=None,position=-1):
+def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",data=None,position=-1):
   import os
   import parametric
   import os.path as osp
@@ -168,19 +168,18 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   
   # initialize parameters
   prclass = getattr(parametric,name)
-  if nT!=-1 and nT<len(dets):
-    if isinstance(prclass,parametric.parametric_pol):
-      pass
-    else:
-      if nT==0:
-        print "T only component, ignore"
-        return 
-      print "cutme !"
-      dets = dets[:nT]
-      if color!=None:
+  nT = lkl_grp.attrs["m_channel_T"]
+  nP = lkl_grp.attrs["m_channel_P"]
+  print prclass,issubclass(prclass,parametric.parametric_pol)
+  if issubclass(prclass,parametric.parametric_pol):
+    has_cl = lkl_grp.attrs["has_cl"]
+    pm = prclass(dets[:nT],dets[nT:],has_cl,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
+  else:
+    dets = dets[:nT]
+    if color!=None:
         color = color[:nT]
-
-  pm = getattr(parametric,name)(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
+    pm = prclass(dets,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
+    
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
   agrp = add_component(lkl_grp,name,position)

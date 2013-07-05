@@ -93,5 +93,49 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int mT, int mP, int n
     \
   return SC;  \
 }
+#define CREATE_PARAMETRIC_POL_FILE_INIT(NAME,INIT_FUNC) \
+SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int mT, int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
+  parametric* p_model;  \
+  SmicaComp *SC;  \
+  int lmin,lmax;  \
+  double *detlist;  \
+  int ndef,nvar;  \
+  char **defkeys,**defvalues,**varkeys;  \
+  double *template;  \
+  int dz,ndet,ndet_T,ndet_P;\
+  int m; \
+  int *hasTEB; \
+  \
+  \
+  m = mtot(mT,mP,has_cl);  \
+  \
+  lmin = ell[0];  \
+  lmax = ell[nell-1];  \
+  testErrorRet(nell!=(lmax-lmin+1),-111,"SAFEGARD",*err,__LINE__,NULL);  \
+  \
+  ndet = base_parametric_cldf_init(df,m, &detlist,&ndef, &defkeys, &defvalues, &nvar, &varkeys, err);  \
+  forwardError(*err,__LINE__,NULL);  \
+    \
+  p_model = INIT_FUNC(mT, mP, has_cl, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax, err);  \
+  forwardError(*err,__LINE__,NULL);  \
+    \
+  free(detlist);  \
+  if (defkeys[0]!=NULL) {  \
+    free(defkeys[0]);  \
+    free(defvalues[0]);  \
+  }  \
+  free(defkeys);  \
+  free(defvalues);  \
+  \
+  if (varkeys[0]!=NULL) {  \
+    free(varkeys[0]);  \
+  }  \
+  free(varkeys);  \
+  \
+  SC = finalize_parametric_cldf_init(p_model,df,nb,m,nell,ell,has_cl,unit,wl,bins,nbins,err);  \
+  forwardError(*err,__LINE__,NULL);  \
+    \
+  return SC;  \
+}
 
 #endif

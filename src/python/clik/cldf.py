@@ -15,6 +15,9 @@ def pack256(*li):
     rr += l+'\0'*(256-len(l))
   return rr
 
+def open(name,mode="r"):
+  return File(name,mode)
+
 _metadata = "_mdb"
 class File(object):
   def __init__(self,name,mode="r"):
@@ -32,7 +35,7 @@ class File(object):
   def _parsemetadata(self,path=""):
     if not path:
       path = self._name
-    f=open(osp.join(path,_metadata))
+    f=file(osp.join(path,_metadata))
     dct = {}
     for l in f:
       if not l.strip():
@@ -58,7 +61,7 @@ class File(object):
   def _writemetadata(self,dct,path=""):
     if not path:
       path = self._name
-    f=open(osp.join(path,_metadata),"w")
+    f=file(osp.join(path,_metadata),"w")
     for k,v in dct.items():
       if type(v)==str:
         typ="str"
@@ -91,7 +94,7 @@ class File(object):
     if osp.isdir(name):
       shu.rmtree(name)
     os.mkdir(name)
-    f=open(osp.join(name,_metadata),"w")
+    f=file(osp.join(name,_metadata),"w")
     f.write("")
     f.close()
     self._name = name
@@ -114,7 +117,7 @@ class File(object):
       try:
         return pf.open(fkey)[0].data
       except Exception:
-        value = open(fkey).read()
+        value = file(fkey).read()
         if key+"__type__" in self and self[key+"__type__"] == "str_array":
           rvalue = []
           p0 = value.find("\n")
@@ -147,7 +150,7 @@ class File(object):
         tvalue = "%d\n"%len(value)
         for v in value:
           tvalue += "%d\n"%len(v)+v+"\n"
-        f=open(fkey,"w")
+        f=file(fkey,"w")
         f.write(tvalue)
         f.close()
         self[key+"__type__"] = "str_array"
@@ -161,7 +164,7 @@ class File(object):
     if type(value) == str and ("\n" in value or "\0" in value or len(value)>50):
       #print key,len(value)
 
-      f=open(fkey,"w")
+      f=file(fkey,"w")
       f.write(value)
       f.close()
       return
@@ -231,7 +234,7 @@ try:
         dts = hdf[kk][:]
         install_path = osp.join(fdf._name,"_external")
         os.mkdir(install_path)
-        f=open(osp.join(install_path,"data.tar"),"w")
+        f=file(osp.join(install_path,"data.tar"),"w")
         f.write(dts.tostring())
         f.close()
         assert os.system("cd %s;tar xvf data.tar"%install_path)==0

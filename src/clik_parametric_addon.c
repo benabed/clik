@@ -33,6 +33,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   
   m = p_pay->m;
   ndet = p_pay->p_model->ndet;
+  //_DEBUGHERE_("%d %d",m,ndet);
 
   // apply wl and binning
   one=1;
