@@ -97,6 +97,7 @@ typedef struct parametric_struct {
   pflist *default_settings;
   int dnofail;
   double *color;
+  int has_color;
   double l_pivot;
   pfchar tensor_norm_template;
   int tensor_norm_template_len;

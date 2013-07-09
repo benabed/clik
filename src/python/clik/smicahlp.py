@@ -170,7 +170,6 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   prclass = getattr(parametric,name)
   nT = lkl_grp.attrs["m_channel_T"]
   nP = lkl_grp.attrs["m_channel_P"]
-  print prclass,issubclass(prclass,parametric.parametric_pol)
   if issubclass(prclass,parametric.parametric_pol):
     has_cl = lkl_grp.attrs["has_cl"]
     pm = prclass(dets[:nT],dets[nT:],has_cl,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)

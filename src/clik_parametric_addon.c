@@ -156,13 +156,13 @@ void free_comp_parametric(void** data) {
   free(p_pay->rq);
   if (p_pay->nbins!=0) {
     free(p_pay->bins);
+    free(p_pay->bi);
+    free(p_pay->bo);
+    free(p_pay->wbins);
   }
   if (p_pay->wl!=NULL) {
     free(p_pay->wl);
   }
-  free(p_pay->bi);
-  free(p_pay->bo);
-  free(p_pay->wbins);
   
   parametric_free((void**)&(p_pay->p_model));
   free(p_pay->A);
@@ -327,9 +327,25 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   hk = cldf_haskey(df,"color",err);
   forwardError(*err,__LINE__,NULL);  
   if (hk ==1) {
-    dz  = p_model->ndet;
+    dz  = -1;
     color = cldf_readfloatarray(df,"color",&dz, err);
     forwardError(*err,__LINE__,NULL);
+    if (dz == p_model->ndet) {
+      double *rolor;
+      int ii,jj;
+      dz = p_model->ndet * p_model->ndet;
+      rolor = malloc_err(sizeof(double)*dz,err);
+      forwardError(*err,__LINE__,NULL);
+      for (ii=0;ii<p_model->ndet;ii++) {
+        for (jj=ii;jj<p_model->ndet;jj++) {
+          rolor[i*p_model->ndet+j] = color[i]*color[j];
+          rolor[j*p_model->ndet+i] = color[i]*color[j];
+        }
+      }
+      free(color);
+      color = rolor;
+    }
+    testErrorRet(dz != p_model->ndet*p_model->ndet,-12443243,"bad size of color array",*err,__LINE__,NULL);
     parametric_set_color(p_model,color,err);
     forwardError(*err,__LINE__,NULL);
     free(color);

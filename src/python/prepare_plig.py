@@ -424,7 +424,6 @@ def main(argv):
 
     for ip,pname in enumerate(pars.str_array.parametric):
       print pname
-      print lkl_grp,str(pname),frq,keys,lmin,lmax,defaults,colors[ip]
       smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename)
 
   # Some fix contribution (affected by beam and calib) ?

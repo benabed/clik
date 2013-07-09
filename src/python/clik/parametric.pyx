@@ -49,6 +49,27 @@ cdef extern from "clik_parametric.h":
   c_parametric *powerlaw_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
   c_parametric *powerlaw_free_emissivity_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
+cdef set_color(c_parametric *egl, object color,int ndet):
+  cdef double *_color
+  cdef error *_err, **err
+  _err = NULL
+  err = &_err
+  if color is not None:
+    _color = <double*>stdlib.malloc(sizeof(double)*ndet*ndet)
+    assert _color!=NULL,"Can't allocate color"
+    if len(color)==ndet:
+      for i in range(ndet):
+        for j in range(ndet):
+          _color[i*ndet+j] = color[i]*color[j]
+    else:
+      assert len(color)==ndet,"bad lenght for color vector"
+      for i in range(ndet*ndet):
+        _color[i] = color[i]
+    parametric_set_color(egl,_color,err)
+    er=doError(err)
+    if er:
+      raise er
+
 
 cdef class parametric:
   
@@ -135,13 +156,14 @@ cdef class parametric:
     _err = NULL
     err = &_err
     
-    if color is not None:
-      for i in range(len(detlist)):
-        _color[i] = color[i]
-      parametric_set_color(self.celf,_color,err)
-      er=doError(err)
-      if er:
-        raise er
+    set_color(self.celf,color,len(detlist))
+    #if color is not None:
+    #  for i in range(len(detlist)):
+    #    _color[i] = color[i]
+    #  parametric_set_color(self.celf,_color,err)
+    #  er=doError(err)
+    #  if er:
+    #    raise er
 
     if voidmask:
       _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
@@ -374,14 +396,16 @@ cdef class parametric_pol(parametric):
 
     _err = NULL
     err = &_err
+
+    set_color(self.celf,color,len(detlist_T)+len(detlist_P))
     
-    if color is not None:
-      for i in range(len(detlist_T)+len(detlist_P)):
-        _color[i] = color[i]
-      parametric_set_color(self.celf,_color,err)
-      er=doError(err)
-      if er:
-        raise er
+    #if color is not None:
+    #  for i in range(len(detlist_T)+len(detlist_P)):
+    #    _color[i] = color[i]
+    #  parametric_set_color(self.celf,_color,err)
+    #  er=doError(err)
+    #  if er:
+    #    raise er
 
     if voidmask:
       _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]

@@ -371,12 +371,13 @@ parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *de
 
   epl->dnofail=0;
 
-  epl->color = malloc_err(sizeof(double)*epl->ndet,err);
+  epl->color = malloc_err(sizeof(double)*epl->ndet*epl->ndet,err);
   forwardError(*err,__LINE__,NULL);
   
-  for(i=0;i<epl->ndet;i++) {
+  for(i=0;i<epl->ndet*epl->ndet;i++) {
     epl->color[i]=1;
   }  
+  epl->has_color = 0;
 
   epl->eg_deriv_any = NULL;
   epl->eg_deriv = NULL;
@@ -409,7 +410,14 @@ parametric *parametric_bydet_init(int ndet, double *detlist, int ndef, char** de
 }
 
 void parametric_set_color(parametric *egl,double *color, error **err) {
-  memcpy(egl->color,color,sizeof(double)*egl->ndet);
+  int i;
+  memcpy(egl->color,color,sizeof(double)*egl->ndet*egl->ndet);
+  for (i=0;i<egl->ndet*egl->ndet;i++) {
+    if (egl->color[i]!=1) {
+      egl->has_color = 1;
+      break;
+    }
+  }
 }
 
 void parametric_add_derivative_function(parametric *egl, char* vk, exg_deriv* fnc,error **err) {
@@ -435,6 +443,7 @@ void parametric_dnofail(parametric* egl, int vl) {
 void parametric_free(void** pegl) {
   parametric *egl;
 
+  
   egl = *pegl;
   if(egl->eg_free!=NULL) {
     egl->eg_free(&(egl->payload));
@@ -501,7 +510,6 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
     sprintf(egl->pf->value[egl->ikey[ivar]],"%40g",pars[ivar]);
   }
   
-  
   if (egl->ndet!=egl->nfreq) {  
     sRq = NULL;
     if (Rq!=NULL) {
@@ -530,7 +538,7 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
             //_DEBUGHERE_("%d->%d %d->%d %d %d",idet,midet,jdet,mjdet,egl->ndet,egl->nfreq);
-            v = sRq[fell + midet*egl->nfreq + mjdet] * egl->color[idet] * egl->color[jdet];
+            v = sRq[fell + midet*egl->nfreq + mjdet] * egl->color[idet*egl->ndet+jdet];
             Rq[mell + idet*egl->ndet + jdet] = v;
             Rq[mell + jdet*egl->ndet + idet] = v;
           }
@@ -546,7 +554,8 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
           for(jdet=idet;jdet<egl->ndet;jdet++) {
             mjdet = egl->det2freq[jdet];
             for(dvar=0;dvar<egl->nvar;dvar++) {
-              v = sdRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet] * egl->color[idet] * egl->color[jdet];
+
+              v = sdRq[dvar*fdvar + fell + midet*egl->nfreq + mjdet] * egl->color[idet*egl->ndet+jdet];
               dRq[dvar*mdvar + mell + idet*egl->ndet + jdet] = v;
               dRq[dvar*mdvar + mell + jdet*egl->ndet + idet] = v;
             }
@@ -557,6 +566,42 @@ void parametric_compute(parametric *egl, double *pars, double* Rq, double *dRq, 
   } else {
     parametric_compute_loop(egl,Rq,dRq,err);
     forwardError(*err,__LINE__,);
+    if (egl->has_color==1) {
+      m2 = egl->ndet;
+      m2 = m2*m2;
+      f2 = egl->nfreq;
+      f2 = f2*f2;
+      mdvar = (egl->lmax+1-egl->lmin) * m2;
+      fdvar = (egl->lmax+1-egl->lmin) * f2;
+      
+      for(ell=0;ell<egl->lmax+1-egl->lmin;ell++) {
+        mell = ell*m2;
+        for(idet=0;idet<egl->ndet;idet++) {
+          for(jdet=idet;jdet<egl->ndet;jdet++) {
+            //_DEBUGHERE_("%d->%d %d->%d %d %d",idet,midet,jdet,mjdet,egl->ndet,egl->nfreq);
+            v = Rq[mell + idet*egl->ndet + jdet] * egl->color[idet*egl->ndet+jdet];
+            Rq[mell + idet*egl->ndet + jdet] = v;
+            Rq[mell + jdet*egl->ndet + idet] = v;
+          }
+        }
+      }
+      if (dRq!=NULL) {
+        for(ell=0;ell<egl->lmax+1-egl->lmin;ell++) {
+          mell = ell*m2;
+          fell = ell*f2; 
+          for(idet=0;idet<egl->ndet;idet++) {
+            for(jdet=idet;jdet<egl->ndet;jdet++) {
+              for(dvar=0;dvar<egl->nvar;dvar++) {
+                v = dRq[dvar*mdvar + mell + idet*egl->ndet + jdet] * egl->color[idet*egl->ndet+jdet];
+                dRq[dvar*mdvar + mell + idet*egl->ndet + jdet] = v;
+                dRq[dvar*mdvar + mell + jdet*egl->ndet + idet] = v;
+              }
+            }
+          }
+        }
+      }
+    }
+    
   }
   if (egl->nvoid!=0) {
   
