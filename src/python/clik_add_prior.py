@@ -27,7 +27,7 @@ def main(argv):
   outhf = h5py.File(pars.res_object,"r+")
   loc = pars.float_array.loc
   var = pars.float_array.var
-  php.add_prior(outhf["clik",name,loc,var)
+  php.add_prior(outhf["clik"],name,loc,var)
     
   
   if "check_param" in outhf["clik"]:
