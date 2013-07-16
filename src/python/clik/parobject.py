@@ -198,6 +198,7 @@ def add_prior(root_grp,name,loc,var):
     pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
     del(prid.attrs["name"])
     del[prid["loc"]]
+    del(root_grp["default"])
   if len(var) == len(loc):
       var = nm.diag(var)
   if "prior" in root_grp:
