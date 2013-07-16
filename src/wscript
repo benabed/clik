@@ -45,7 +45,7 @@ def build(bld):
     cflags = "-fopenmp"
     )
   bld.install_files('${INCDIR}', 
-                    'clik.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
+                    'clik.h clik_dic.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h'*(not bld.env.has_pmc))
   
   bld(
     features = 'c cprogram',

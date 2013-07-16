@@ -3,8 +3,8 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "8.0b1"
-plc_version = "1.1b1"
+clik_version = "8.0b2"
+plc_version = "1.1b2"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
