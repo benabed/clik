@@ -23,7 +23,7 @@ def main(argv):
   for n in name:
     if n not in extn:
       raise Exception("extra parameter %s does not exist in likelihood file %s"%(n,pars.input_object))
-  shutil.copyfile(pars.input_object,pars.res_object)
+  h5py.copyfile(pars.input_object,pars.res_object)
   outhf = h5py.File(pars.res_object,"r+")
   loc = pars.float_array.loc
   var = pars.float_array.var
