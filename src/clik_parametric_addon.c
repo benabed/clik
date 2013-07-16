@@ -338,8 +338,8 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
       forwardError(*err,__LINE__,NULL);
       for (ii=0;ii<p_model->ndet;ii++) {
         for (jj=ii;jj<p_model->ndet;jj++) {
-          rolor[i*p_model->ndet+j] = color[i]*color[j];
-          rolor[j*p_model->ndet+i] = color[i]*color[j];
+          rolor[ii*p_model->ndet+jj] = color[ii]*color[jj];
+          rolor[jj*p_model->ndet+ii] = color[ii]*color[jj];
         }
       }
       free(color);
