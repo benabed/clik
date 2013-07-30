@@ -3,8 +3,8 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "8.0b2"
-plc_version = "1.1b2"
+clik_version = "8.0b3"
+plc_version = "1.1b3"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
@@ -378,11 +378,11 @@ def dist_public(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'plc-'+plc_version
-  res = ctx.cmd_and_log("svnversion")
-  svnversion = res
-  f=open("svnversion","w")
-  print >>f,svnversion
-  f.close()
+  #res = ctx.cmd_and_log("svnversion")
+  #svnversion = res
+  #f=open("svnversion","w")
+  #print >>f,svnversion
+  #f.close()
   
   dist_list =  "Makefile setup.py svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "

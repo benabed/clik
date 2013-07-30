@@ -581,7 +581,7 @@ double ezgauss_log_pdf(void* ping, double* pars, error **err) {
   for(i=0;i<ing->ndim;i++) {
     log_CN += ing->tmp[i]*ing->tmp[i];     
   }
-  return - 0.5 * (log_CN) - ing->logdets2;
+  return - 0.5 * (log_CN) - ing->logdets2 - (ln2pi*ing->ndim)/2.;
 }
 
 distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) {
@@ -607,6 +607,7 @@ distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) 
   memcpy(ing->mean,mean,sizeof(double)*ndim);
   memcpy(ing->std,Sig,sizeof(double)*ndim*ndim);
 
+
   uplo = 'L';
   dpotrf(&uplo,&ing->ndim,ing->std,&ing->ndim,&info);
   testErrorRetVA(info!=0,-1616165,"Could not cholesky decompose using dpotrf (%d)",*err,__LINE__,NULL,info);
@@ -615,6 +616,7 @@ distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) 
   for (i = 0; i < ing->ndim*ing->ndim; i+=(ing->ndim+1)) {
     det *= ing->std[i];
   }
+  
   ing->logdets2=log(det);
 
   ding = init_distribution(ndim, ing, &ezgauss_log_pdf, &ezgauss_free, NULL,err);
