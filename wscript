@@ -12,6 +12,14 @@ import autoinstall_lib as atl
 from waflib.Configure import conf
 
 
+def get_version(ctx):
+  res = ctx.cmd_and_log("hg identify --id")
+  svnversion = res
+  f=open("svnversion","w")
+  print >>f,svnversion
+  f.close()
+  
+
 
 def options(ctx):
   ctx.add_option('--forceinstall_all_deps',action='store_true',default=False,help='Install all dependencies',dest="install_all_deps")
@@ -251,10 +259,14 @@ def configure(ctx):
       ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
 
 
-  f=open("svnversion")
+  try:
+    f=open("svnversion")
+  except :
+    get_version(ctx)
+    f=open("svnversion")
   ctx.env.svnversion = f.read()
   f.close()
-
+  
   # extra libs
   if ctx.options.extra_lib:
     libpath = ctx.options.extra_libpath.split(":")
@@ -347,11 +359,7 @@ def dist(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'clik-'+clik_version
-  #res = ctx.cmd_and_log("svnversion")
-  #svnversion = res
-  #f=open("svnversion","w")
-  #print >>f,svnversion
-  #f.close()
+  get_version(ctx)
   dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
   dist_list += "examples/*.par examples/*.dat "
@@ -378,12 +386,7 @@ def dist_public(ctx):
   except Exception,e:
     pass
   ctx.base_name = 'plc-'+plc_version
-  #res = ctx.cmd_and_log("svnversion")
-  #svnversion = res
-  #f=open("svnversion","w")
-  #print >>f,svnversion
-  #f.close()
-  
+  get_version(ctx)
   dist_list =  "Makefile setup.py svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
   dist_list += "src/* src/CAMspec/* "
