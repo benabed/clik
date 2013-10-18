@@ -352,17 +352,23 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
       prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color,data=data)]
   return prms  
 
-def create_gauss_mask(nq,qmins,qmaxs):
+def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored
   mask is 1 for q in qmins<=q<qmaxs
   only the upper part (j>=i) of qmins and qmaxs is used"""
   qmins = nm.array(qmins)
   qmaxs = nm.array(qmaxs)
   ndet = qmins.shape[0]
+  assert ndet = nT+nP
   mask = nm.zeros((nq,ndet,ndet),dtype=nm.int )
   for i in range(ndet):
     for j in range(i,ndet):
       mask[qmins[i,j]:qmaxs[i,j],i,j]=1
       mask[qmins[i,j]:qmaxs[i,j],j,i]=1
+      if i<nT and j>=nT and i>j-nT:
+        # cas TE dessous
+        mask[qmins[i,j]:qmaxs[i,j],i,j]=0
+        mask[qmins[i,j]:qmaxs[i,j],j,i]=0
+
   return mask
 

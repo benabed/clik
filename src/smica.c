@@ -935,7 +935,7 @@ double smica_crit_gauss(void *vsmic, error **err) {
   dzero = 0;
   uplo = 'L';
   //printMat(smic->crit_cor,smic->quad_sn,smic->quad_sn);
-  write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
+  //write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
   dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
 
   res = 0;
