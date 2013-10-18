@@ -359,7 +359,7 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   qmins = nm.array(qmins)
   qmaxs = nm.array(qmaxs)
   ndet = qmins.shape[0]
-  assert ndet = nT+nP
+  assert ndet == nT+nP
   mask = nm.zeros((nq,ndet,ndet),dtype=nm.int )
   for i in range(ndet):
     for j in range(i,ndet):
