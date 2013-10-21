@@ -481,7 +481,7 @@ void galactic_component_compute(parametric* egl, double *Rq, error **err) {
   pfchar type;
   char* pt;
   int isdust;
-
+  double prm_nu0;
   
   // dust or non_thermal
 
@@ -499,6 +499,9 @@ void galactic_component_compute(parametric* egl, double *Rq, error **err) {
   isdust = 1;
   pt = (char*)type;
   pt = pflist_get_value(egl->pf,"gal_type",pt,err);
+  forwardError(*err,__LINE__,);
+
+  prm_nu0 = parametric_get_value(egl,"gal_nu0",err);
   forwardError(*err,__LINE__,);
 
   if (strcmp(pt,"dust")==0) {
@@ -529,9 +532,9 @@ void galactic_component_compute(parametric* egl, double *Rq, error **err) {
 
   for (m1=0;m1<nfreq;m1++) {
     if (isdust) {
-      a[m1] = dust_spectrum((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
+      a[m1] = dust_spectrum((double)egl->freqlist[m1],T_dust,beta_dust,prm_nu0);
     } else {
-      a[m1] = non_thermal_spectrum((double)egl->freqlist[m1],alpha_non_thermal,PRM_NU0);
+      a[m1] = non_thermal_spectrum((double)egl->freqlist[m1],alpha_non_thermal,prm_nu0);
     }
   }
 
@@ -565,7 +568,8 @@ void gal_beta_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, 
   double T_dust, beta_dust;
   double lA,v;
   double norm,l_pivot,index;
-  
+  double prm_nu0;
+
   A = egl->payload;            // Rank-one, tensorial emissivity
   nfreq = egl->nfreq;
   a = &(A[nfreq*nfreq]);       // Emissivity vector
@@ -589,10 +593,13 @@ void gal_beta_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, 
   index = parametric_get_value(egl,"gal_index",err);
   forwardError(*err,__LINE__,);
 
+  prm_nu0 = parametric_get_value(egl,"gal_nu0",err);
+  forwardError(*err,__LINE__,);
+
   // dR/dbeta_dust
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
-    b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
+    b[m1] = d_dust_spectrum_d_beta_dust((double)egl->freqlist[m1],T_dust,beta_dust,prm_nu0);
   }
   for (m1=0;m1<nfreq;m1++) {
     for (m2=m1;m2<nfreq;m2++) {
@@ -620,7 +627,8 @@ void gal_T_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, err
   double T_dust, beta_dust;
   double lA,v;
   double norm,l_pivot,index;
-  
+  double prm_nu0;
+
   A = egl->payload;            // Rank-one, tensorial emissivity
   nfreq = egl->nfreq;
   a = &(A[nfreq*nfreq]);       // Emissivity vector
@@ -644,10 +652,13 @@ void gal_T_dust_derivative(parametric *egl, int iv, double *Rq, double *dRq, err
   index = parametric_get_value(egl,"gal_index",err);
   forwardError(*err,__LINE__,);
 
+  prm_nu0 = parametric_get_value(egl,"gal_nu0",err);
+  forwardError(*err,__LINE__,);
+
   // dR/dT_dust
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
-    b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,PRM_NU0);
+    b[m1] = d_dust_spectrum_d_T_dust((double)egl->freqlist[m1],T_dust,beta_dust,prm_nu0);
   }
   for (m1=0;m1<nfreq;m1++) {
     for (m2=m1;m2<nfreq;m2++) {
@@ -674,7 +685,8 @@ void gal_alpha_non_thermal_derivative(parametric *egl, int iv, double *Rq, doubl
   double alpha_non_thermal;
   double lA,v;
   double norm,l_pivot,index;
-  
+  double prm_nu0;
+
   A = egl->payload;            // Rank-one, tensorial emissivity
   nfreq = egl->nfreq;
   a = &(A[nfreq*nfreq]);       // Emissivity vector
@@ -695,10 +707,13 @@ void gal_alpha_non_thermal_derivative(parametric *egl, int iv, double *Rq, doubl
   index = parametric_get_value(egl,"gal_index",err);
   forwardError(*err,__LINE__,);
 
+  prm_nu0 = parametric_get_value(egl,"gal_nu0",err);
+  forwardError(*err,__LINE__,);
+
   // dR/dalpha_non_thermal
   // Get vector emissivity derivative
   for (m1=0;m1<nfreq;m1++) {
-    b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,PRM_NU0);
+    b[m1] = d_non_thermal_spectrum_d_alpha_non_thermal((double)egl->freqlist[m1],alpha_non_thermal,prm_nu0);
   }
   for (m1=0;m1<nfreq;m1++) {
     for (m2=m1;m2<nfreq;m2++) {
@@ -748,6 +763,9 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   forwardError(*err,__LINE__,NULL);
   parametric_add_derivative_function(egl,"gal_index",&parametric_index_derivative,err);  
   forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gal_nu0",PRM_NU0,err);
+  forwardError(*err,__LINE__,);
 
   sprintf(type,"dust");
   isdust = 1;
