@@ -547,6 +547,7 @@ typedef struct {
   double *std;
   int ndim;
   double logdets2;
+  double nrm;
 } ezgauss;
 
 void ezgauss_free(void **ping) {
@@ -581,7 +582,7 @@ double ezgauss_log_pdf(void* ping, double* pars, error **err) {
   for(i=0;i<ing->ndim;i++) {
     log_CN += ing->tmp[i]*ing->tmp[i];     
   }
-  return - 0.5 * (log_CN) - ing->logdets2 - (ln2pi*ing->ndim)/2.;
+  return - 0.5 * (log_CN) - ing->nrm; //ing->logdets2 - (ln2pi*ing->ndim)/2.;
 }
 
 distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) {
@@ -618,6 +619,8 @@ distribution* ezgauss_init(size_t ndim, double *mean, double *Sig, error **err) 
   }
   
   ing->logdets2=log(det);
+
+  ing->nrm = ing->logdets2 + (ln2pi*ing->ndim)/2.;
 
   ding = init_distribution(ndim, ing, &ezgauss_log_pdf, &ezgauss_free, NULL,err);
   forwardError(*err,__LINE__,NULL);
@@ -670,6 +673,8 @@ distribution *add_gaussian_prior_2(distribution *orig, int ndim, int *idim, doub
   
   dmv = ezgauss_init(ndim,loc,var,err);
   forwardError(*err,__LINE__,NULL);
+
+  //dmv->nrm = 0;
   
   if (orig->log_pdf == &combine_lkl) {
     //_DEBUGHERE_("","");
