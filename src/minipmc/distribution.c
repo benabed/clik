@@ -674,7 +674,7 @@ distribution *add_gaussian_prior_2(distribution *orig, int ndim, int *idim, doub
   dmv = ezgauss_init(ndim,loc,var,err);
   forwardError(*err,__LINE__,NULL);
 
-  //dmv->nrm = 0;
+  ((ezgauss*) dmv->data)->nrm = 0;
   
   if (orig->log_pdf == &combine_lkl) {
     //_DEBUGHERE_("","");

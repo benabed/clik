@@ -42,7 +42,7 @@ def configure(ctx):
     ctx.options.lapack_include = osp.join(ctx.env.PREFIX,"include")
     ctx.options.lapack_lib = "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/Versions/Current"
     do_include(ctx,"%s_")
-
+    
   elif ctx.options.lapack_mkl:
     # parse version
     ctx.start_msg("Check mkl version")
@@ -156,6 +156,7 @@ def configure(ctx):
     lapack_extradefs += ["LAPACK_CLIK"]
     do_include(ctx)
 
+  
   atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)
 
 def installlapack(ctx):

@@ -45,11 +45,11 @@ def build_pkgconfig(self):
   stlibs = ptrquote(" ".join([self.env.STLIB_ST%v for v in uniqify(vrs["STLIB"])]))
   defines = ptrquote(" ".join([self.env.DEFINES_ST%v for v in uniqify(vrs["DEFINES"])]))
   cfs = []
-  print cf
+  #print cf
   for tt in cf+["LINKFLAGS"]:
-    print tt,vrs[tt]
+    #print tt,vrs[tt]
     cfs += vrs[tt]
-  print cfs
+  #print cfs
   cflags = ptrquote(" ".join(uniqify(cfs)))
 
   #print "YEAH:"
