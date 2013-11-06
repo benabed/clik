@@ -7,311 +7,7 @@
  *
  */
 
-#ifdef __PLANCK__
-#include "HL2_likely/target/smica.h"
-#else
 #include "smica.h"
-#endif
-
-/*
-
-smica * smica_init(int nq, int nell, int m, double *wq,double *bin,double *rq_hat, double *rq, double *A, double *P, int *C,int nc, error **err) {
-
-  // init smica struct
-  smica *smic;
-  smic = (smica*) malloc_err(sizeof(smic), err);
-  forwardError(*err,__LINE__,NULL);
-
-  // dimensions
-  smic->nq = nq;
-  smic->nell = nell;
-  smic->nc = nc;
-  smic->m  = m ; 
-  int ncross = m*(m+1)/2; // cov matrix are symmetric
-
-  // data
-  smic->rq_hat = (double*) malloc_err(sizeof(double)*(nq*ncross), err);
-  forwardError(*err,__LINE__,NULL);
-  memcpy(smic->rq_hat, rq_hat, sizeof(double)*(nq*ncross));
-
-  smic->wq = (double*) malloc_err(sizeof(double)*(nq), err);
-  forwardError(*err,__LINE__,NULL);
-  memcpy(smic->wq, wq, sizeof(double)*nq);
-
-  // bin 
-  smic->bin =(double*)  malloc_err(sizeof(double)*(nq*nell), err);
-  forwardError(*err,__LINE__,NULL);
-  memcpy(smic->bin, bin, sizeof(double)*(nq*nell));
-  
-  // model : 2 cases
-  
-  // contaminant covariance is not fixed
-  // A contains mixing matrix of all components
-  // P contains power spectra of all components
-  // nc > 1
-  // for example C = [1 5 1 1 1 1 1 1 1 1 1] 
-  if (rq==NULL){
-    smic->nc = nc;
-  }
-  
-  // contaminant covariance is fixed
-  // Rq contains contaminant covariance ( gal + noise + ...)
-  // A contains cmb mixing matrix
-  // P contains cmb binned power spectra
-  // nc = 1
-  // C  = [1]
-  else {
-    
-    smic->rq = (double*) malloc_err(sizeof(double)*(nq*ncross), err);
-    forwardError(*err,__LINE__,NULL);
-    memcpy(smic->rq, rq, sizeof(double)*(nq*ncross));
-    
-    smic->A = (double*) malloc_err(sizeof(double)*(m), err);
-    forwardError(*err,__LINE__,NULL);
-    memcpy(smic->A, A, sizeof(double)*(m));
-    
-    smic->nc = 1;
-
-    smic->C =(int*)  malloc_err(sizeof(int)*(1), err);
-    forwardError(*err,__LINE__,NULL);
-    memcpy(smic->C, C, sizeof(int)*(1));
-    
-    smic->P = (double*) malloc_err(sizeof(double)*(nq), err);
-    forwardError(*err,__LINE__,NULL);
-    memcpy(smic->P, P, sizeof(double)*(nq));
-
-    printf("nq is %i nell is %i\n", nq, nell);
-
-    }
-  return smic;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-double smica_lkl(void* psmic, double *pars, error **err) {
-  smica* smic;
-  double *cl;
-  double res=0;
-  
-  smic = psmic;
-  cl   = pars;
-
-  // bin cmb power spectrum
-  bin_cl (smic, cl, err);
-  forwardError(*err,__LINE__,0);
-
-  // contaminant covariance is not fixed
-  // update local parameters 
-  if (smic->nc>1){
-    compute_rq(smic, err);
-    forwardError(*err,__LINE__,0);
-  }
-
-  // compute mismatch
-  res = compute_smica_lkl(smic, err);
-  forwardError(*err,__LINE__,0);
-  
-  return res;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void free_smica(smica** smic) {
-
-  free((*smic)->wq);
-  free((*smic)->bin);
-  free((*smic)->rq_hat);
-  free((*smic)->rq);
-  free((*smic)->A);
-  free((*smic)->P);
-  free((*smic)->C);
-  
-  //finally
-  free(*smic);
-  smic=NULL;
-}
-
-
-
-
-
-
-
-
-
-void bin_cl(smica* smic, double *cl, error **err) {
-  smica* s;
-  int q, ell;
-  double mv;
-  
-  for (q=0; q<smic->nq; q++) {
-    smic->P[q] = 0;
-    for (ell=0; ell<smic->nell; ell++) {
-      smic->P[q] += cl[ell]*smic->bin[q*smic->nell+ell];
-    }
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-void compute_rq(smica* smic,  error **err) {
-  // use close form algorithm to update local parameters (power spectra)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-double compute_smica_lkl(smica* smic, error **err) {
-  
-  // init mismatch
-  double res = 0;
-  double tmp = 0;
-
-  printf("m is %d \n" , smic->m);
-  int m= smic->m;
-  // used to store covariance matrices
-  gsl_matrix *hR, *R, *iR;
-  hR  = gsl_matrix_alloc (m, m);
-  R   = gsl_matrix_alloc (smic->m, smic->m);
-  iR  = gsl_matrix_alloc (smic->m, smic->m);
-
-  // used to invert Rmodel
-  CBLAS_UPLO_t Uplo=CblasLower;
-  int signum;
-  gsl_permutation *p;
-  p  = gsl_permutation_alloc (smic->m);
-  
-  // used to compute matrix-matrix product
-  CBLAS_SIDE_t Side=CblasLeft; 
-    
- 
-  // used to compute svd
-  gsl_vector_complex *eig;
-  gsl_eigen_nonsymm_workspace *work;
-  work = gsl_eigen_nonsymm_alloc (smic->m);
-  eig  = gsl_vector_complex_alloc (smic->m);
-
-  // compute mismatch
-  int q, i, j, k;
-  int ncross = (int)smic->m*(smic->m+1)/2;
-  for (q=0; q<smic->nq; q++) {
-
-    tmp = 0;
-    
-    //init R : 2 cases
-    // contaminant covariance is not fixed
-    // cmb contribution already contained in smic->rq
-    if (smic->nc>1){
-      k = 0;
-      for (i=0; i<smic->m; i++) {
-        for (j=0; j<i; j++){
-          gsl_matrix_set (R , i, j, smic->rq[q*ncross+k]);
-          gsl_matrix_set (hR, i, j, smic->rq_hat[q*ncross+k]);
-          k++; // cross term index
-        }
-      }
-    }
-    
-    // contaminant covariance is fixed
-    // cmb contribution has to be computed
-    else {
-      k = 0;
-      for (i=0; i<smic->m; i++) {
-        for (j=0; j<i; j++){
-          double cmb= smic->A[i]*smic->A[i]*smic->P[q]; // jf: should be smic->A[i]*smic->A[j]*smic->P[q];  i.e. i --> j ?
-          gsl_matrix_set (R , i, j, smic->rq[q*ncross+k]+cmb);
-          gsl_matrix_set (hR, i, j, smic->rq_hat[q*ncross+k]);
-          k++; // cross term index
-        }
-      }
-    }
-    
-    //invert model
-    gsl_linalg_LU_decomp (R, p, &signum);
-    gsl_linalg_LU_invert (R, p, iR);
-    
-    // product
-    // now R contains hR*iR
-    gsl_matrix_set_zero (R);
-    gsl_blas_dsymm (Side, Uplo, 1, hR, iR, 1, R);
-    
-    for (i=0; i<m; i++) {
-      for (j=0; j<=i; j++) {
-        gsl_matrix_get(R, i, j);
-      }
-    }
-      
-    // svd
-    gsl_eigen_nonsymm (R, eig, work); // jf: Here R is no longer symmetric.  So using gsl_eigen_symm seems wrong 
-    
-    // sum eigen values
-    for (i=0; i<smic->m; i++) {
-      double ei = gsl_matrix_get(R, i, i);
-      tmp += ei - log(ei);
-    }
-    tmp -= smic->m;
-    tmp *= smic->wq[q];
-    
-    res += tmp;
-  }
-  
-  gsl_eigen_nonsymm_free (work);
-  
-  gsl_permutation_free(p);
-  gsl_vector_complex_free (eig);
-  
-  gsl_matrix_free (hR);
-  gsl_matrix_free (R);
-  gsl_matrix_free (iR);
-  
-  return res;
-  
-  
-}
-
-
-*/
-//////////////////////// NEW /////////////////////////////////////////////
 
 void printMat(double* A, int n, int m) {
   int im,in;
@@ -347,31 +43,7 @@ Smica* Smica_init(int nq, double *wq, int m, double *rq_hat, double* rq_0, int n
   smic->rq_hat = malloc_err(sizeof(double)*(trois*nq+1)*m*m, err);
   forwardError(*err,__LINE__,NULL);
   memcpy(smic->rq_hat,rq_hat,sizeof(double)*m*m*nq);
-  //_DEBUGHERE_("","");
   
-  /*for(iq = 0; iq < nq;iq++) { //precompute chol decomposed rq_hat
-    int mx,my;
-    double *rql;
-    //_DEBUGHERE_("","");
-    
-    rql = smic->rq_hat + iq*m*m;
-    // chol
-    uplo = 'L';
-    dpotrf(&uplo,&m,rql,&m,&info);
-    testErrorRetVA(info!=0,lowly_chol,"Could not cholesky decompose rq_hat using dpotrf (%d)",*err,__LINE__,NULL,info);
-    //_DEBUGHERE_("","");
-    
-    // fill the U part with 0 (beware, f90!)
-    for(mx=0;mx<m;mx++) {
-      for(my=mx+1;my<m;my++) {
-        rql[my*m+mx] = 0;
-      }
-    }
-    //_DEBUGHERE_("","");
-    
-  }
-  */
-  //_DEBUGHERE_("","");
   smic->z_buf = smic->rq_hat + m*m*nq;
   smic->rq = smic->z_buf + m*m;
   //_DEBUGHERE_("","");
@@ -917,7 +589,11 @@ double smica_crit_gauss(void *vsmic, error **err) {
   int one;
 
   smic = vsmic;
-
+  //_DEBUGHERE_("%d %d",smic->nq,smic->m);
+  //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  //forwardError(*err,__LINE__,0);
+  //write_bin_vector(smic->rq_hat, "rq_hat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  //forwardError(*err,__LINE__,0);
   // reorganize data
   m = smic->m;
   m2 = m*m;
@@ -1116,9 +792,13 @@ SmicaComp* alloc_SC(int ndim,int nq,int m,void* data, update_rq* update, posteri
   SC->data = data;
   SC->free = pfree;
   SC->names=NULL;
+  SC_set_compname(SC,"UNK");
   return SC;
 }
 
+void SC_set_compname(SmicaComp *SC, char *name) {
+  sprintf(SC->comp_name,"%s",name);
+}
 
 
 void SC_setnames(SmicaComp *SC, char** names, error **err) {

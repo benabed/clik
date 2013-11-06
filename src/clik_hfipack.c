@@ -320,6 +320,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   // init cmb comp
   SCs[0] = comp_CMB_init(nb, mT,mP, has_cl, A_cmb, err);
   forwardError(*err,__LINE__,NULL);    
+  SC_set_compname(SCs[0],"CMB");
   
   free(A_cmb);
   
@@ -360,7 +361,8 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
 
     SCs[ic] = smica_dl_init(comp_df,nb,mT,mP, nell, ell, has_cl, unit, wl, bins,nb,err);
     forwardError(*err,__LINE__,NULL);
-    
+    SC_set_compname(SCs[ic],comp_type);
+      
     cldf_close(&comp_df);
     
     xdim += SCs[ic]->ndim;

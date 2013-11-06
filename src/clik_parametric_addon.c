@@ -22,6 +22,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   double res;
   int m, ndet;
   //double r10[16];
+  char nm[3000];
 
   SC = data;
   p_pay = SC->data;
@@ -30,6 +31,10 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
 
   parametric_compute(p_pay->p_model, locpars, p_pay->rq, NULL, err);
   forwardError(*err,__LINE__,);
+  
+  //sprintf(nm,"rq_%s.dat",SC->comp_name);
+  //write_bin_vector(p_pay->rq, nm, sizeof(double)*(p_pay->nell*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
+  //forwardError(*err,__LINE__,0);
   
   m = p_pay->m;
   ndet = p_pay->p_model->ndet;
@@ -63,6 +68,10 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   //_DEBUGHERE_("%g %g %g",egfs_pay->rq[0],egfs_pay->rq[2],egfs_pay->unit);
   
   // apply binning if needed
+  //sprintf(nm,"rq_before_%s.dat",SC->comp_name);
+  //write_bin_vector(rq, nm, sizeof(double)*(p_pay->nbins*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
+  //forwardError(*err,__LINE__,0);
+  
   if (p_pay->bins!=NULL) {
     char transa,transb;
     int npar;
@@ -116,6 +125,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
           bb++;
           for(if1=0;if1<ndet;if1++) {
             for(if2=0;if2<ndet;if2++) {
+              //_DEBUGHERE_("%d %d %g %d,%d %g %g",il,iq,w,if1,if2,rq[iq*ndim+if1*m+if2],p_pay->rq[il*ndet*ndet+if1*ndet+if2]);
               rq[iq*ndim+if1*m+if2] += w * p_pay->rq[il*ndet*ndet+if1*ndet+if2];
               /*if (iq==10)
                   r10[if1*egfs_pay->m+if2] += egfs_pay->bins[iq*nell+il] * egfs_pay->rq[il+if1*egfs_pay->m*egfs_pay->nell+if2*egfs_pay->nell];*/
@@ -145,6 +155,9 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
       }
     }
   }
+ //sprintf(nm,"rq_after_%s.dat",SC->comp_name);
+ //write_bin_vector(rq, nm, sizeof(double)*(p_pay->nbins*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
+ //forwardError(*err,__LINE__,0);
     
 }
 void free_comp_parametric(void** data) {
@@ -292,6 +305,7 @@ int base_parametric_cldf_init(cldf *df,int m, double** detlist,int *ndef, char *
 
 }
 
+
 SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   parametric_smica *p_pay;
   int i,eb;
@@ -306,6 +320,7 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   int nvoid;
   int *voidlist;
   int hk;
+  int ncl;
 
   nrename=0;
   rename_from = NULL;
@@ -392,10 +407,12 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   p_pay->bins = NULL;
   if (bins !=NULL) {
     int li,bi,bn;
+    ncl = p_model->has_TEB[0] + p_model->has_TEB[1] + p_model->has_TEB[2] + p_model->has_TEB[0] * p_model->has_TEB[1] + p_model->has_TEB[0] * p_model->has_TEB[2] +p_model->has_TEB[1] * p_model->has_TEB[2];
+    //_DEBUGHERE_("ncl %d",ncl);
     p_pay->nbins = nbins;
-    p_pay->bins = malloc_err(sizeof(double)*(nell*nbins),err);
+    p_pay->bins = malloc_err(sizeof(double)*(ncl*nell*nbins),err);
     forwardError(*err,__LINE__,NULL);
-    memcpy(p_pay->bins,bins,sizeof(double)*nbins*nell);    
+    memcpy(p_pay->bins,bins,sizeof(double)*nbins*ncl*nell);    
     p_pay->bi = malloc_err(sizeof(int)*nbins,err);
     forwardError(*err,__LINE__,NULL);
     p_pay->bo = malloc_err(sizeof(int)*nbins,err);
@@ -405,21 +422,33 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
     for(bi=0;bi<nbins;bi++) {
       for(li = 0;li<nell;li++) {
         p_pay->bi[bi] = 0;
-        if (p_pay->bins[bi*nell+li]!=0) {
+        if (p_pay->bins[bi*ncl*nell+li]!=0) {
           p_pay->bi[bi] = li;
           break;
         }
       }
       for(li=p_pay->bi[bi];li<nell;li++) {
         p_pay->bo[bi] = nell;
-        if (p_pay->bins[bi*nell+li]==0) {
+        if (p_pay->bins[bi*ncl*nell+li]==0) {
           p_pay->bo[bi] = li;
           break; 
         }
+        p_pay->wbins[bn] = p_pay->bins[bi*ncl*nell+li];
+        bn++;
       }
-      memcpy(&(p_pay->wbins[bn]),&(p_pay->bins[bi*nell+ p_pay->bi[bi]]),sizeof(double)*( p_pay->bo[bi]- p_pay->bi[bi])); 
-      bn += p_pay->bo[bi]- p_pay->bi[bi];
+      //memcpy(&(p_pay->wbins[bn]),&(p_pay->bins[bi*nell+ p_pay->bi[bi]]),sizeof(double)*( p_pay->bo[bi]- p_pay->bi[bi])); 
+      //bn += p_pay->bo[bi]- p_pay->bi[bi];
     }
+    //write_bin_vector(bins, "bins.dat", sizeof(double)*(nell*nbins), err);  
+    //forwardError(*err,__LINE__,-1); 
+    //write_bin_vector(p_pay->bi, "bi.dat", sizeof(int)*(nbins), err);  
+    //forwardError(*err,__LINE__,-1); 
+    //write_bin_vector(p_pay->bo, "bo.dat", sizeof(int)*(nbins), err);  
+    //forwardError(*err,__LINE__,-1); 
+    //_DEBUGHERE_("%d",bn);
+    //write_bin_vector(p_pay->wbins, "wb.dat", sizeof(double)*(bn), err);  
+    //forwardError(*err,__LINE__,-1); 
+
   }
   p_pay->wl = NULL;
   if (wl!=NULL) {
@@ -434,6 +463,8 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   SC = alloc_SC(p_model->nvar,nb,m,p_pay,&comp_parametric_update,&free_comp_parametric,err);
   forwardError(*err,__LINE__,NULL);
   
+  
+
   if (p_model->nvar!=0) {
     xnames = malloc_err(sizeof(char*)*(p_model->nvar),err);
     forwardError(*err,__LINE__,NULL);
