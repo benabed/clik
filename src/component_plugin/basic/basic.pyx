@@ -27,6 +27,7 @@ cdef extern c_parametric *sz_x_init(int ndet, double *detlist, int ndef, char** 
 cdef extern c_parametric *cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *sz_cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
@@ -110,6 +111,12 @@ cdef class ksz(parametric_template):
     self.template_name = "ksz_fromcamspec.dat"
     self.plugin_name = "basic"
 
+cdef class ncib(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> ncib_init;
+    self.template_name = "cib_model_100_143_217_353.dat"
+    self.plugin_name = "basic"
+
 cdef class sz_cib(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> sz_cib_init;
@@ -146,5 +153,5 @@ cdef class gpe_dust(parametric):
     self.initfunc = <void*> gpe_dust_init;
 
     
-component_list = ["cib","cibr","pointsource","poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","gpe_dust"]
+component_list = ["ncib","cib","cibr","pointsource","poisson_tensor","powerlaw_tensor","powerlaw_triangle","powerlaw_tanh","poisson_tensor_bydet","powerlaw_tensor_bydet","radiogal","galametric","ir_clustered","ir_poisson","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","gpe_dust"]
 
