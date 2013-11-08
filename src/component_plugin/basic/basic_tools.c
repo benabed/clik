@@ -65,3 +65,54 @@ void powerlaw_tanh_norm_derivative(parametric * egl, int iv, double *Rq, double 
   }
   return;
 }
+
+void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err) {
+  int ell,m1,m2,mell,nfreq,mv;
+  double l_pivot,index,v,lA;
+  double *A;
+  pfchar name;
+  int stop;
+  double nrm;
+
+  //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
+  //forwardError(*err,__LINE__,);
+  //
+  //A = egl->payload;
+  nfreq = egl->nfreq;
+  //for(m1=0;m1<nfreq;m1++) {
+  //  for(m2=m1;m2<nfreq;m2++) {
+  //    sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+  //    v = 1;
+  //    v = parametric_get_value(egl,name,err);
+  //    A[m1*nfreq+m2] = v;
+  //    A[m2*nfreq+m1] = v;
+  //  }
+  //}
+
+  nrm = l_pivot*(l_pivot+1)/2/M_PI;
+  stop = 0;
+  v = 1/nrm;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      sprintf(name,"ps_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      if (strcmp(egl->varkey[iv],name)==0) {
+        stop=1;
+        memset(dRq,0,sizeof(double)*(egl->lmax+1-egl->lmin)*nfreq*nfreq);
+        for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+          dRq[IDX_R(egl,ell,m1,m2)] = v;
+          dRq[IDX_R(egl,ell,m2,m1)] = v;
+        }
+        break;
+      }
+    }
+    if (stop==1) {
+      return;
+    }
+  }      
+  // error return
+  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  forwardError(*err,__LINE__,);
+
+  return;
+}
+

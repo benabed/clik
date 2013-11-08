@@ -1,0 +1,3 @@
+source : cibsz.c, cibsz_tools.c
+data   : sz.dat, sz_cib.dat, ksz_fromcamspec.dat, cib_model_100_143_217_353.dat
+python : cibsz.pyx

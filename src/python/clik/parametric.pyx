@@ -329,8 +329,12 @@ cdef class parametric_template(parametric):
         fpth = self.template_name
         if data_file:
           fpth = data_file  
-        pth = osp.join(bpth,fpth)
-      tmp = nm.loadtxt(pth)
+        if isinstance(fpth,str):
+          fpth = [fpth]
+        pth = [osp.join(bpth,fpthI) for fpthI in fpth]
+      if isinstance(pth,str):
+        pth = [pth]
+      tmp = nm.concatenate([nm.loadtxt(pp) for pp in pth])
     else:
       tmp = nm.array(data)
     return tmp

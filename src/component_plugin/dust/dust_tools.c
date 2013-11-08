@@ -1,3 +1,5 @@
+#include "dust.h"
+
 // Group all unused derivatives stuff here
 // Derivative of dust_spectrum with respect to T_dust
 double d_dust_spectrum_d_T_dust(double nu, double T_dust, double beta_dust, double nu0) {
