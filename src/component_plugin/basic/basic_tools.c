@@ -66,6 +66,10 @@ void powerlaw_tanh_norm_derivative(parametric * egl, int iv, double *Rq, double 
   return;
 }
 
+double powerlaw_tensor_step_index(parametric* egl, int m1,int m2) {
+  return fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33;
+}
+
 void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err) {
   int ell,m1,m2,mell,nfreq,mv;
   double l_pivot,index,v,lA;

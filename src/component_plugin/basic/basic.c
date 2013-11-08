@@ -129,7 +129,7 @@ void powerlaw_tensor_bydet_compute(parametric* egl, double *Rq, error **err) {
   for(m1=0;m1<egl->nfreq;m1++) {
     dcm[m1*egl->nfreq+m1] = 1.;
     for(m2=0;m2<m1;m2++) {
-      dcm[m1*egl->nfreq+m2] = pow(step,ir_clustered_step_index(egl,m1,m2));
+      dcm[m1*egl->nfreq+m2] = pow(step,powerlaw_tensor_step_index(egl,m1,m2));
       dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
       //_DEBUGHERE_("%d %d %g %g",m1,m2,dcm[m1*egl->nfreq+m2],fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33)
     }
@@ -219,6 +219,8 @@ parametric *powerlaw_tensor_init(int ndet, double *detlist, int ndef, char** def
   return egl;
 }
 
+
+
 void powerlaw_tensor_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv,lell;
   double l_pivot,index,v;
@@ -249,7 +251,7 @@ void powerlaw_tensor_compute(parametric* egl, double *Rq, error **err) {
   for(m1=0;m1<egl->nfreq;m1++) {
     dcm[m1*egl->nfreq+m1] = 1.;
     for(m2=0;m2<m1;m2++) {
-      dcm[m1*egl->nfreq+m2] = pow(step,ir_clustered_step_index(egl,m1,m2));
+      dcm[m1*egl->nfreq+m2] = pow(step,powerlaw_tensor_step_index(egl,m1,m2));
       dcm[m2*egl->nfreq+m1] = dcm[m1*egl->nfreq+m2];
       //_DEBUGHERE_("%d %d %g %g",m1,m2,dcm[m1*egl->nfreq+m2],fabs(log(egl->freqlist[m1])-log(egl->freqlist[m2]))*2.33)
     }
@@ -622,6 +624,7 @@ parametric *pointsource_bydet_init(int ndet, double *detlist, int ndef, char** d
 
   return egl;
 }
+
 
 
 
