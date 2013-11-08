@@ -1,2 +1,2 @@
-source : dust.c
+source : dust.c, dust_derivative.c
 python : dust.pyx
