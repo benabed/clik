@@ -7,6 +7,8 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   parametric *egl;
   double fac;
   int l;
+  double *fnu;
+  int m1;
 
   // make sure l(l+1)/(2pi)*C_l template is normalized to 1 at l=3000 
   fac = template[3000-lmin_sz_template];
@@ -22,12 +24,19 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   forwardError(*err,__LINE__,NULL);
   memcpy(egl->payload,template,sizeof(double)*(lmax_sz_template-lmin_sz_template+1));
   
+  fnu = egl->payload + (lmax_sz_template-lmin_sz_template+1)*sizeof(double);
+  
+  // Compute SZ spectrum
+  for (m1=0;m1<egl->nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+  }
+
   egl->eg_compute = &sz_compute;
   egl->eg_free = &parametric_simple_payload_free;
   
-  parametric_set_default(egl,"sz_norm",4.0,err);
+  parametric_set_default(egl,"A_sz",4.0,err);
   forwardError(*err,__LINE__,NULL);
-  parametric_add_derivative_function(egl,"sz_norm",&parametric_norm_derivative,err);
+  parametric_add_derivative_function(egl,"A_sz",&parametric_norm_derivative,err);
   forwardError(*err,__LINE__,NULL);
 
   return egl;
@@ -45,15 +54,10 @@ void sz_compute(parametric* egl, double *Rq, error **err) {
   cl = A;
   fnu = &(A[lmax_sz_template-lmin_sz_template+1]);
   
-  sz_norm = parametric_get_value(egl,"sz_norm",err);
+  sz_norm = parametric_get_value(egl,"A_sz",err);
   forwardError(*err,__LINE__,);
 
-  // Compute SZ spectrum
-  for (m1=0;m1<nfreq;m1++) {
-    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
-    printf("%g %g\n",egl->freqlist[m1],fnu[m1]);
-  }
-
+  
   // Create covariance matrix
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
     dell = (double)ell;
@@ -146,12 +150,8 @@ void ncib_compute(parametric *egl, double *rq, error **err);
 parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   int i,m,*mv;
-  int dreq[4];
+  double dreq[4];
 
-  dreq[0] = 100;
-  dreq[1] = 143;
-  dreq[2] = 217;
-  dreq[3] = 353;
 
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
@@ -168,20 +168,13 @@ parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char *
 
   mv = egl->payload + sizeof(double)* (3001*4*4);
 
-  for(m=0;m<egl->nfreq;m++) {
-    double f;
-    f = egl->freqlist[m];
-    mv[m]=-1;
-    for(i=0;i<4;i++) {
-      //_DEBUGHERE_("%g %d",f,dreq[i]);
-      if (fabs(f-dreq[i])<1e-6) {
-        mv[m]=i;
-        break;
-      }  
-    }
-    testErrorRet(mv[m]==-1,-431432,"argl",*err,__LINE__,NULL);
-  }    
-  
+  dreq[0] = 100;
+  dreq[1] = 143;
+  dreq[2] = 217;
+  dreq[3] = 353;
+  fill_offset_freq(4,dreq, egl,mv,-1,err);
+  forwardError(*err,__LINE__,NULL);
+
   parametric_set_default(egl,"A_cib_217",70,err); // Millea et al. ref value
   forwardError(*err,__LINE__,NULL);
 
@@ -631,6 +624,108 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) {
   return;
 }  
 
+void ncibXsz_compute(parametric *egl, double *Rq, error **err) {
+  double a_cib,xi_sz_cib,a_sz;
+  double *ratio;
+  double *corr_template;
+  double l_pivot,index,v;
+  int m1,m2,ell;
+  double nrm;
+  int *mv;
+  double *fnu;
+
+  mv = egl->payload + sizeof(double)* (lmax_sz_template+4*4+egl->nfreq);
+
+  ratio = egl->payload;
+  fnu = ratio + 4*4;
+
+  corr_template = egl->payload+(4*4+egl->nfreq)*sizeof(double);
+  
+  a_cib = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    for(m1=0;m1<egl->nfreq;m1++) {
+      for(m2=m1;m2<egl->nfreq;m2++) {
+        _DEBUGHERE_("%g %g %g %g",a_cib,a_sz,xi_sz_cib,- xi_sz_cib * sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib*ratio[mv[m2]]) + sqrt(fnu[m2]*a_cib*ratio[mv[m1]]) ));
+        Rq[IDX_R(egl,ell,m1,m2)] = - xi_sz_cib * sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib*ratio[mv[m2]]) + sqrt(fnu[m2]*a_cib*ratio[mv[m1]]) ) *
+             corr_template[ell] * 2.0*M_PI/(ell*(ell+1.0));
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+        _DEBUGHERE_("%d %d %d %g",ell,m1,m2,Rq[IDX_R(egl,ell,m2,m1)]);
+      }  
+    }
+  } 
+}
+
+parametric *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  double fac;
+  int l,i;
+  double *fnu;
+  int m1;
+  int *mv;
+  double *corr_template;
+  double dreq[4];
+  double *ratio;
+
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  egl->payload = malloc_err(sizeof(double)*(lmax_corr_template+1 + egl->nfreq + 4*4)+sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  corr_template = egl->payload+(4*4+egl->nfreq)*sizeof(double);
+  fnu = egl->payload+(4*4)*sizeof(double);
+  
+
+  // copy ratio
+  memcpy(egl->payload,template,sizeof(double)*4*4);
+  ratio = egl->payload;
+
+  // now deal with correlation
+  corr_template = egl->payload+(4*4+egl->nfreq)*sizeof(double);
+  fac = template[4*4+3000-lmin_sz_template];
+  for(l=0;l<lmin_sz_template;l++) {
+    corr_template[l] = 0;
+  }
+  for(l=lmin_sz_template;l<=lmax_corr_template;l++) {
+    corr_template[l] = template[4*4+l-lmin_sz_template]/fac;
+    //_DEBUGHERE_("%d %g",l,corr_template[l]);
+  }
+  
+  mv = egl->payload + sizeof(double)*(lmax_corr_template+1 + egl->nfreq + 4*4);
+
+  dreq[0] = 100;
+  dreq[1] = 143;
+  dreq[2] = 217;
+  dreq[3] = 353;
+  fill_offset_freq(4,dreq, egl,mv,-1,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  
+  // Compute SZ spectrum
+  for (m1=0;m1<egl->nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+  }
+  
+  egl->eg_compute = &ncibXsz_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  parametric_set_default(egl,"A_cib_217",70,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"A_sz",4.0,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"xi_sz_cib",0.0,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return egl;
+}
+
 CREATE_PARAMETRIC_FILE_INIT(cib,cib_init);
 CREATE_PARAMETRIC_FILE_INIT(cibr,cibr_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz,sz_init);
@@ -640,4 +735,5 @@ CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_x,sz_x_init);
 CREATE_PARAMETRIC_FILE_INIT(cib_x,cib_x_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_cib_x,sz_cib_x_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ncib,ncib_init);
+CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ncibXsz,ncibXsz_init);
 

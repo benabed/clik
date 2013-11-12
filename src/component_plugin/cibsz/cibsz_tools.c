@@ -408,4 +408,20 @@ void sz_cib_A_sz_derivative(parametric *egl, int iv, double *Rq, double *dRq, er
 }  
 
 
+void fill_offset_freq(int idreq,double *dreq, parametric *egl,int *mv,int def, error **err) {
+  int m,i;
 
+  for(m=0;m<egl->nfreq;m++) {
+    double f;
+    f = egl->freqlist[m];
+    mv[m]=def;
+    for(i=0;i<idreq;i++) {
+      //_DEBUGHERE_("%g %d",f,dreq[i]);
+      if (fabs(f-dreq[i])<1e-6) {
+        mv[m]=i;
+        break;
+      }  
+    }
+    testErrorRetVA(mv[m]==-1,-431432,"Don't know how to compute component for freq %g",*err,__LINE__,NULL,f);
+  }    
+}

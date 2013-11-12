@@ -4,6 +4,16 @@ nm.import_array()
 cimport stdlib as stdlib
 cimport stdio as stdio
 import os.path as osp
+import re
+
+def loadcolumn(pth):
+  reg = re.search("(.+)\[(\d+)\]",pth)
+  if reg:
+    pth = reg.group(1)
+    col = int(reg.group(2))
+    return nm.loadtxt(pth)[:,col]
+  else:
+    return nm.loadtxt(pth)
 
 cdef extern from "errorlist.h":
   ctypedef struct error:
@@ -318,6 +328,7 @@ cdef class parametric_template(parametric):
 
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename,data_dir,data_path,data_file,data)
 
+  
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
     if data is None:
       if data_path:
@@ -334,7 +345,7 @@ cdef class parametric_template(parametric):
         pth = [osp.join(bpth,fpthI) for fpthI in fpth]
       if isinstance(pth,str):
         pth = [pth]
-      tmp = nm.concatenate([nm.loadtxt(pp) for pp in pth])
+      tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
     else:
       tmp = nm.array(data)
     return tmp

@@ -83,3 +83,4 @@ void parametric_zero_rq(parametric *egl, double* rrq);
   }                                                                    
 void cib_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **err);
 
+void fill_offset_freq(int idreq,double *dreq, parametric *egl,int *mv,int def,error **err);
