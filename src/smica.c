@@ -595,6 +595,7 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //write_bin_vector(smic->rq_hat, "rq_hat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
   //forwardError(*err,__LINE__,0);
   // reorganize data
+  //write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);   
   m = smic->m;
   m2 = m*m;
   iv = 0;
@@ -611,9 +612,13 @@ double smica_crit_gauss(void *vsmic, error **err) {
   dzero = 0;
   uplo = 'L';
   //printMat(smic->crit_cor,smic->quad_sn,smic->quad_sn);
+  //_DEBUGHERE_("%d",smic->quad_sn);
   //write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
+  //write_bin_vector(smic->crit_cor, "crit_cor.dat", sizeof(double)*(smic->quad_sn)*(smic->quad_sn), err);   
   dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
 
+  //write_bin_vector(smic->gvec, "gvecCC.dat", sizeof(double)*(smic->quad_sn), err);   
+  
   res = 0;
   for(iq=0;iq<iv;iq++) {
     //_DEBUGHERE_("%g %g %g",res,smic->gvec[iq],smic->gvec[iq+iv])
