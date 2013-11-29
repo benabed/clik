@@ -88,6 +88,7 @@ parametric *parametric_pol_init(int ndet_T, int ndet_P, int *has_TEB, double *de
   for(i=0;i<nvar;i++) {
     pflist_add_item(epl->pf,1,&(varkey[i]),&nop,err);
     forwardError(*err,__LINE__,NULL);
+    //_DEBUGHERE_("%s",varkey[i]);
   }
 
   pflist_add_item(epl->pf,ndef,defkey,defvalue,err);
