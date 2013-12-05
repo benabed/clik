@@ -13,12 +13,33 @@ from waflib.Configure import conf
 
 
 def get_version(ctx):
-  res = ctx.cmd_and_log("hg identify --id")
+  res = ctx.cmd_and_log("hg identify --id", output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
   svnversion = res
   f=open("svnversion","w")
   print >>f,svnversion
   f.close()
   
+def get_tag(ctx):
+  res = ctx.cmd_and_log("hg tags", output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
+  clik_v = None
+  plc_v = None
+  for r in res.split("\n"):
+    if not r:
+      continue
+    print r
+    v = (r.split()[0]).strip()
+    if v.startswith("clik_") and not clik_v:
+      clik_v = v[len("clik_"):]
+    elif v.startswith("plc_") and not plc_v:
+      plc_v = v[len("plc_"):]
+  print plc_v
+  print clik_v
+
+  global clik_version,plc_version
+  if clik_v:
+    clik_version = clik_v
+  if plc_v:
+    plc_version = plc_v
 
 
 def options(ctx):
@@ -322,42 +343,12 @@ def _remove_arch(ctx,evn):
         continue
       cflags_pyext_new +=[cf]
     setattr(ctx.env,evn,cflags_pyext_new)
-def _prepare_src(ctx):
-  import shutil
-  import os
-  
-  # deals with .h
-  [os.link(osp.realpath("../include/target/%s"%ff),"src/%s"%ff) for ff in [
-    "aplowly.h",
-    "erfinv.h",
-    "fowly.h",
-    "lklbs.h",
-    "lowly_common.h",
-    "lowly_pol.h",
-    "lowly.h",
-    "smica.h"
-    ]]
-  
-  # deals with .c
-  [os.link(osp.realpath("../src/target/%s"%ff),"src/%s"%ff) for ff in [
-    "aplowly.c",
-    "erfinv.c",
-    "fowly.c",
-    "lklbs.c",
-    "lowly_common.c",
-    "lowly_pol.c",
-    "lowly.c",
-    "smica.c",
-    ]]
 
 
 def dist(ctx):
   print "private"
   import re
-  try:
-    _prepare_src(ctx)
-  except Exception,e:
-    pass
+  get_tag(ctx)
   ctx.base_name = 'clik-'+clik_version
   get_version(ctx)
   dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
@@ -381,10 +372,7 @@ class Dist_public(waflib.Scripting.Dist):
 def dist_public(ctx):
   print "public"
   import re
-  try:
-    _prepare_src(ctx)
-  except Exception,e:
-    pass
+  get_tag(ctx)
   ctx.base_name = 'plc-'+plc_version
   get_version(ctx)
   dist_list =  "Makefile setup.py svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
