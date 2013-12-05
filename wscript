@@ -20,21 +20,18 @@ def get_version(ctx):
   f.close()
   
 def get_tag(ctx):
-  res = ctx.cmd_and_log("hg tags", output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
+  res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
   clik_v = None
   plc_v = None
   for r in res.split("\n"):
     if not r:
       continue
-    print r
     v = (r.split()[0]).strip()
     if v.startswith("clik_") and not clik_v:
       clik_v = v[len("clik_"):]
     elif v.startswith("plc_") and not plc_v:
       plc_v = v[len("plc_"):]
-  print plc_v
-  print clik_v
-
+  
   global clik_version,plc_version
   if clik_v:
     clik_version = clik_v
