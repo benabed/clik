@@ -46,7 +46,7 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
 
   plid = malloc_err(sizeof(clik_lensing_object),err);
   forwardError(*err,__LINE__,NULL);
-  plid->renorm = 0;
+  plid->renorm = 1;
 
   for(cnt=0;cnt<7;cnt++) {
     plid->lmax[cnt] = -1;
