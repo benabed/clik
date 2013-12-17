@@ -86,7 +86,7 @@ def main_CMB(argv):
 def main_lensing(argv):
   lkl = clik.clik_lensing(sys.argv[1])
   print "clik lensing file = %s"%sys.argv[1]
-  print "  lmax = %d"%lkl.lmax
+  print "  lmax = %s (PP TT EE BB TE TB EB)"%lkl.lmax
   print "  number of extra parameters %d"%len(lkl.extra_parameter_names)
   for nn in lkl.extra_parameter_names:
     print "     %s"%nn

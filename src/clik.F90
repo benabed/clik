@@ -306,6 +306,16 @@ contains
 
   end subroutine clik_lensing_get_lmax
 
+  subroutine clik_lensing_get_lmaxs(clikid,lmax)
+
+    ! Input
+    type(clik_object), intent(in) :: clikid
+    integer(kind=4),dimension(7),intent(out) :: lmax
+    
+    call fortran_clik_lensing_get_lmaxs(clikid%ptr,lmax)
+
+  end subroutine clik_lensing_get_lmaxs
+
   integer(kind=4) function clik_lensing_get_extra_parameter_names(clikid,names)
 
     ! Input
@@ -357,21 +367,37 @@ contains
     !Input
     type(clik_object), intent(in) :: clikid
     real(kind=8),dimension(:),allocatable,intent(out)::cltt
-    integer::lmax
+    integer,dimension(7)::lmax
 
-    call clik_lensing_get_lmax(clikid,lmax)
-    allocate(cltt(0:lmax))
+    call clik_lensing_get_lmaxs(clikid,lmax)
+    allocate(cltt(0:lmax(2)))
     call fortran_clik_lensing_cltt_fid(clikid,cltt)
   end subroutine clik_lensing_cltt_fid
+
+  subroutine clik_lensing_clcmb_fid(clikid,cltt)
+    !Input
+    type(clik_object), intent(in) :: clikid
+    real(kind=8),dimension(:),allocatable,intent(out)::cltt
+    integer,dimension(7)::lmax
+    integer::ntot,i
+
+    call clik_lensing_get_lmaxs(clikid,lmax)
+    do i=3,7
+      ntot = ntot + lmax(i)+1
+    enddo
+
+    allocate(cltt(0:ntot-1))
+    call fortran_clik_lensing_clcmb_fid(clikid,cltt)
+  end subroutine clik_lensing_clcmb_fid
 
   subroutine clik_lensing_clpp_fid(clikid,cltt)
     !Input
     type(clik_object), intent(in) :: clikid
     real(kind=8),dimension(:),allocatable,intent(out)::cltt
-    integer::lmax
+    integer,dimension(7)::lmax
 
-    call clik_lensing_get_lmax(clikid,lmax)
-    allocate(cltt(0:lmax))
+    call clik_lensing_get_lmaxs(clikid,lmax)
+    allocate(cltt(0:lmax(0)))
     call fortran_clik_lensing_clpp_fid(clikid,cltt)
   end subroutine clik_lensing_clpp_fid
 

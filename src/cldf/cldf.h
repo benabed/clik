@@ -19,6 +19,8 @@
 #include "hdf5.h"
 #endif
 
+#ifndef CLDF_
+#define CLDF_
 typedef char kv[256];
 
 typedef struct {
@@ -51,3 +53,4 @@ void cldf_external(cldf* df, char *dirname, char* pwd, error **err);
 void cldf_external_cleanup(char* pwd,char *dirname,error **err);
 void cldf_close(cldf** pdf);
 
+#endif

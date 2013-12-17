@@ -9,16 +9,26 @@
 void free_qe(qest *qe) {
   int i;
 
-  for (i=0; i < qe->ntrm; i++) {
-    free( qe->w12L[i][2] );
-    free( qe->w12L[i][1] );
-    free( qe->w12L[i][0] );
-    free( qe->w12L[i] );
-    free( qe->s12L[i] );
+  if (qe->w12L != NULL) {
+    for (i=0; i < qe->ntrm; i++) {
+      if (qe->w12L[i] != NULL) {
+	if (qe->w12L[i][2] != NULL) { free( qe->w12L[i][2] ); qe->w12L[i][2] = NULL; };
+	if (qe->w12L[i][1] != NULL) { free( qe->w12L[i][1] ); qe->w12L[i][1] = NULL; };
+	if (qe->w12L[i][0] != NULL) { free( qe->w12L[i][0] ); qe->w12L[i][0] = NULL; };
+	free( qe->w12L[i] ); qe->w12L[i] = NULL;
+      }
+    }
+    free( qe->w12L ); qe->w12L = NULL;
   }
-  
-  free( qe->w12L );
-  free( qe->s12L );
+
+  if (qe->s12L != NULL) {
+    for (i=0; i < qe->ntrm; i++) {
+      if (qe->s12L[i] != NULL) {
+	free( qe->s12L[i] ); qe->s12L[i] = NULL;
+      }
+    }
+    free( qe->s12L ); qe->s12L = NULL;
+  }
 }
 
 void fill_qe_resp(int lmax, double *resp, qest *qee, qest *qes, 
@@ -109,7 +119,7 @@ void init_qe_plm( qest *qe, int lmax, double *cltt) {
   qe->lmax = lmax;
 
   qe->s12L = malloc( qe->ntrm*sizeof(int *) );
-  qe->w12L = malloc( 4*sizeof(double *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
   for (i=0; i < qe->ntrm; i++) {
     qe->s12L[i] = malloc( 3*sizeof(int) );
     qe->w12L[i] = malloc( 3*sizeof(double *) );
@@ -140,7 +150,7 @@ void init_qe_slm( qest *qe, int lmax) {
   qe->lmax = lmax;
 
   qe->s12L = malloc( qe->ntrm*sizeof(int *) );
-  qe->w12L = malloc( 4*sizeof(double *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
   for (i=0; i < qe->ntrm; i++) {
     qe->s12L[i] = malloc( 3*sizeof(int) );
     qe->w12L[i] = malloc( 3*sizeof(double *) );
@@ -154,4 +164,288 @@ void init_qe_slm( qest *qe, int lmax) {
   for (l=0; l<=lmax; l++) {
     qe->w12L[0][0][l] = 1.0; qe->w12L[0][1][l] = 1.0; qe->w12L[0][2][l] = 1.0;
   }
+}
+
+void init_qe_mlm( qest *qe, int lmax, double *cltt, double *fbl1, double *fbl2) {
+  int i, l;
+
+  qe->ntrm = 2;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] = 0; qe->s12L[0][1] = 0; qe->s12L[0][2] = 0;
+  qe->s12L[1][0] = 0; qe->s12L[1][1] = 0; qe->s12L[1][2] = 0;
+
+  for (l=0; l<=lmax; l++) {
+    qe->w12L[0][0][l] = cltt[l] / fbl2[l];
+    qe->w12L[0][1][l] = fbl1[l];
+    qe->w12L[0][2][l] = 1.0;
+
+    qe->w12L[0][0][l] = fbl1[l];
+    qe->w12L[0][1][l] = cltt[l] / fbl2[l];
+    qe->w12L[0][2][l] = 1.0;
+  }
+}
+
+void init_qe_nlm( qest *qe, int lmax, double *fbl1, double *fbl2) {
+  int i, l;
+
+  qe->ntrm = 1;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double *) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] = 0; qe->s12L[0][1] = 0; qe->s12L[0][2] = 0;
+
+  for (l=0; l<=lmax; l++) {
+    qe->w12L[0][0][l] = fbl1[l];
+    qe->w12L[0][1][l] = fbl2[l];
+    qe->w12L[0][2][l] = 1.0;
+  }
+}
+
+void init_qe_plm_tt( qest *qe, int lmax, double *cltt) {
+  init_qe_plm( qe, lmax, cltt );
+}
+
+void init_qe_plm_ee( qest *qe, int lmax, double *clee) {
+  int i, l;
+  double sq, sq2, sq3, ln;
+
+  qe->ntrm = 8;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] = -2; qe->s12L[0][1] =  3; qe->s12L[0][2] = 1;
+  qe->s12L[1][0] = -2; qe->s12L[1][1] =  3; qe->s12L[1][2] = 1;
+  qe->s12L[2][0] =  3; qe->s12L[2][1] = -2; qe->s12L[2][2] = 1;
+  qe->s12L[3][0] =  3; qe->s12L[3][1] = -2; qe->s12L[3][2] = 1;
+  qe->s12L[4][0] =  2; qe->s12L[4][1] = -1; qe->s12L[4][2] = 1;
+  qe->s12L[5][0] =  2; qe->s12L[5][1] = -1; qe->s12L[5][2] = 1;
+  qe->s12L[6][0] = -1; qe->s12L[6][1] =  2; qe->s12L[6][2] = 1;
+  qe->s12L[7][0] = -1; qe->s12L[7][1] =  2; qe->s12L[7][2] = 1;
+
+  for (l=0; l<=lmax; l++) {
+    sq  = sqrt(1.0*l*(l+1.));
+    sq2 = sqrt(1.0*(l+2.)*(l-1.));
+    sq3 = sqrt(1.0*(l-2.)*(l+3.));
+    ln = (l%2 ? -1. : 1.);
+    qe->w12L[0][0][l] = -1.0;                qe->w12L[0][1][l] = sq3 * clee[l];      qe->w12L[0][2][l] = 0.25 * sq;
+    qe->w12L[1][0][l] = -ln;                 qe->w12L[1][1][l] = ln * sq3 * clee[l]; qe->w12L[1][2][l] = ln * 0.25 * sq;
+    qe->w12L[2][0][l] = -sq3 * clee[l];      qe->w12L[2][1][l] = 1.0;                qe->w12L[2][2][l] = 0.25 * sq;
+    qe->w12L[3][0][l] = -ln * sq3 * clee[l]; qe->w12L[3][1][l] = ln;                 qe->w12L[3][2][l] = ln * 0.25 * sq;
+
+    qe->w12L[4][0][l] = -1.0;                qe->w12L[4][1][l] = sq2 * clee[l];      qe->w12L[4][2][l] = 0.25 * sq;
+    qe->w12L[5][0][l] = -ln;                 qe->w12L[5][1][l] = ln * sq2 * clee[l]; qe->w12L[5][2][l] = ln * 0.25 * sq;
+    qe->w12L[6][0][l] = -sq2 * clee[l];      qe->w12L[6][1][l] = 1.0;                qe->w12L[6][2][l] = 0.25 * sq;
+    qe->w12L[7][0][l] = -ln * sq2 * clee[l]; qe->w12L[7][1][l] = ln;                 qe->w12L[7][2][l] = ln * 0.25 * sq;
+  }
+}
+
+void init_qe_plm_te( qest *qe, int lmax, double *clte) {
+  int i, l;
+  double sq, sq2, sq3, ln;
+
+  qe->ntrm = 6;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] =  3; qe->s12L[0][1] = -2; qe->s12L[0][2] = 1;
+  qe->s12L[1][0] =  3; qe->s12L[1][1] = -2; qe->s12L[1][2] = 1;
+  qe->s12L[2][0] = -1; qe->s12L[2][1] =  2; qe->s12L[2][2] = 1;
+  qe->s12L[3][0] = -1; qe->s12L[3][1] =  2; qe->s12L[3][2] = 1;
+  qe->s12L[4][0] =  0; qe->s12L[4][1] =  1; qe->s12L[4][2] = 1;
+  qe->s12L[5][0] =  0; qe->s12L[5][1] =  1; qe->s12L[5][2] = 1;
+
+  for (l=0; l<=lmax; l++) {
+    sq  = sqrt(1.0*l*(l+1.));
+    sq2 = sqrt(1.0*(l+2.)*(l-1.));
+    sq3 = sqrt(1.0*(l-2.)*(l+3.));
+    ln = (l%2 ? -1. : 1.);
+
+    qe->w12L[0][0][l] = -sq3 * clte[l];
+    qe->w12L[0][1][l] = 1.0;
+    qe->w12L[0][2][l] = 0.25 * sq;
+
+    qe->w12L[1][0][l] = -ln * sq3 * clte[l];
+    qe->w12L[1][1][l] = ln;
+    qe->w12L[1][2][l] = ln * 0.25 * sq;
+
+    qe->w12L[2][0][l] = -sq2 * clte[l];
+    qe->w12L[2][1][l] = 1.0;
+    qe->w12L[2][2][l] = 0.25 * sq;
+
+    qe->w12L[3][0][l] = -ln * sq2 * clte[l];
+    qe->w12L[3][1][l] = ln;
+    qe->w12L[3][2][l] = ln * 0.25 * sq;
+
+    qe->w12L[4][0][l] = -1.0;
+    qe->w12L[4][1][l] = sq * clte[l];
+    qe->w12L[4][2][l] = 0.5 * sq;
+
+    qe->w12L[5][0][l] = -ln;
+    qe->w12L[5][1][l] = ln * sq * clte[l];
+    qe->w12L[5][2][l] = ln * 0.5 * sq;
+  }
+}
+
+void init_qe_plm_tb( qest *qe, int lmax, double *clte) {
+  int i, l;
+  double sq, sq2, sq3, ln;
+
+  qe->ntrm = 4;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] =  3; qe->s12L[0][1] = -2; qe->s12L[0][2] = 1;
+  qe->s12L[1][0] =  3; qe->s12L[1][1] = -2; qe->s12L[1][2] = 1;
+  qe->s12L[2][0] = -1; qe->s12L[2][1] =  2; qe->s12L[2][2] = 1;
+  qe->s12L[3][0] = -1; qe->s12L[3][1] =  2; qe->s12L[3][2] = 1;
+
+  for (l=0; l<=lmax; l++) {
+    sq  = sqrt(1.0*l*(l+1.));
+    sq2 = sqrt(1.0*(l+2.)*(l-1.));
+    sq3 = sqrt(1.0*(l-2.)*(l+3.));
+    ln = (l%2 ? -1. : 1.);
+
+    qe->w12L[0][0][l] = sq3 * clte[l];
+    qe->w12L[0][1][l] = 1.0;
+    qe->w12L[0][2][l] = 0.25 * sq;
+
+    qe->w12L[1][0][l] = -ln * sq3 * clte[l];
+    qe->w12L[1][1][l] = ln;
+    qe->w12L[1][2][l] = ln * 0.25 * sq;
+
+    qe->w12L[2][0][l] = -sq2 * clte[l];
+    qe->w12L[2][1][l] = 1.0;
+    qe->w12L[2][2][l] = 0.25 * sq;
+
+    qe->w12L[3][0][l] = ln * sq2 * clte[l];
+    qe->w12L[3][1][l] = ln;
+    qe->w12L[3][2][l] = ln * 0.25 * sq;
+  }
+}
+
+void init_qe_plm_eb( qest *qe, int lmax, double *clee) {
+  int i, l;
+  double sq, sq2, sq3, ln;
+
+  qe->ntrm = 4;
+  qe->lmax = lmax;
+
+  qe->s12L = malloc( qe->ntrm*sizeof(int *) );
+  qe->w12L = malloc( qe->ntrm*sizeof(double **) );
+  for (i=0; i < qe->ntrm; i++) {
+    qe->s12L[i] = malloc( 3*sizeof(int) );
+    qe->w12L[i] = malloc( 3*sizeof(double *) );
+    qe->w12L[i][0] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][1] = malloc( (lmax+1)*sizeof(double) );
+    qe->w12L[i][2] = malloc( (lmax+1)*sizeof(double) );
+  }
+
+  qe->s12L[0][0] =  3; qe->s12L[0][1] = -2; qe->s12L[0][2] = 1;
+  qe->s12L[1][0] =  3; qe->s12L[1][1] = -2; qe->s12L[1][2] = 1;
+  qe->s12L[2][0] = -1; qe->s12L[2][1] =  2; qe->s12L[2][2] = 1;
+  qe->s12L[3][0] = -1; qe->s12L[3][1] =  2; qe->s12L[3][2] = 1;
+
+  for (l=2; l<=lmax; l++) {
+    sq  = sqrt(1.0*l*(l+1.));
+    sq2 = sqrt(1.0*(l+2.)*(l-1.));
+    sq3 = sqrt(1.0*(l-2.)*(l+3.));
+    ln = (l%2 ? -1. : 1.);
+
+    qe->w12L[0][0][l] = sq3 * clee[l];
+    qe->w12L[0][1][l] = 1.;
+    qe->w12L[0][2][l] = 0.25 * sq;
+
+    qe->w12L[1][0][l] = ln * sq3 * clee[l];
+    qe->w12L[1][1][l] = -ln;
+    qe->w12L[1][2][l] = ln * 0.25 * sq;
+
+    qe->w12L[2][0][l] = sq2 * clee[l];
+    qe->w12L[2][1][l] = -1.;
+    qe->w12L[2][2][l] = 0.25 * sq;
+
+    qe->w12L[3][0][l] = ln * sq2 * clee[l];
+    qe->w12L[3][1][l] = ln;
+    qe->w12L[3][2][l] = ln * 0.25 * sq;
+  }
+}
+
+void switch_qe( qest *qe ) {
+  int i, l, ts;
+  double tw;
+
+  for (i=0; i < qe->ntrm; i++) {
+    ts = qe->s12L[i][0];
+    qe->s12L[i][0] = qe->s12L[i][1];
+    qe->s12L[i][1] = ts;
+  }
+
+  for (l=0; l <= qe->lmax; l++) {
+    for (i=0; i < qe->ntrm; i++) {
+      tw = qe->w12L[i][0][l];
+      qe->w12L[i][0][l] = qe->w12L[i][1][l];
+      qe->w12L[i][1][l] = tw;
+    }
+  }
+}
+
+void init_qe_plm_et( qest *qe, int lmax, double *clte) {
+  init_qe_plm_te( qe, lmax, clte );
+  switch_qe(qe);
+}
+
+void init_qe_plm_bt( qest *qe, int lmax, double *clte) {
+  init_qe_plm_tb( qe, lmax, clte );
+  switch_qe(qe);
+}
+
+void init_qe_plm_be( qest *qe, int lmax, double *clee) {
+  init_qe_plm_eb( qe, lmax, clee );
+  switch_qe(qe);
 }

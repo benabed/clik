@@ -39,10 +39,10 @@ cdef extern from "clik.h":
   
   clik_lensing_object* clik_lensing_init(char* hdffilepath, error **err)
   int clik_lensing_get_extra_parameter_names(clik_lensing_object* self, parname **names, error **err)
-  int clik_lensing_get_lmax(clik_lensing_object *self,error **err)
+  void clik_lensing_get_lmaxs(clik_lensing_object *self,int *lmax,error **err)
   double clik_lensing_compute(clik_lensing_object* self, double* cl_and_pars,error **err)
   void clik_lensing_cleanup(clik_lensing_object** pself)
-  double* clik_lensing_cltt_fid(clik_lensing_object* clikid, error **_err)
+  double* clik_lensing_clcmb_fid(clik_lensing_object* clikid, error **_err)
   double* clik_lensing_clpp_fid(clik_lensing_object* clikid, error **_err)
   int clik_try_lensing(char *fpath,error **_err)
 
@@ -62,13 +62,12 @@ cdef class clik_lensing:
       raise er
     lmax = self.lmax
     extra = self.extra_parameter_names
-    nn = (lmax+1)*2
+    nn = nm.sum(lmax+1)
     self.ndim = nn + len(extra)
-    self.pdim = lmax+1+len(extra)
+    self.pdim = lmax[0]+1+len(extra)
 
   def __call__(self,pars):
-    cdef int lmax
-
+    
     lmax = self.lmax
     pars_2d = nm.atleast_2d(pars)
     if pars_2d.shape[1] not in (self.ndim,self.pdim) :
@@ -77,7 +76,7 @@ cdef class clik_lensing:
     i=0
     for apars in pars_2d:
       if apars.shape[0] == self.pdim:
-        qpars = nm.concatenate((apars[:lmax+1],self.get_cltt_fid(),apars[lmax+1:]))
+        qpars = nm.concatenate((apars[:lmax[0]+1],self.get_cltt_fid(),apars[nm.sum(lmax[1:]+1):]))
         pars_proxy=nm.PyArray_ContiguousFromAny(qpars,nm.NPY_DOUBLE,1,1)
       else:
         pars_proxy=nm.PyArray_ContiguousFromAny(apars,nm.NPY_DOUBLE,1,1)
@@ -93,12 +92,12 @@ cdef class clik_lensing:
       clik_lensing_cleanup(&(self.celf))
         
   def get_lmax(self):
-    cdef int lmax
-    lmax = clik_lensing_get_lmax(self.celf, self.err)
+    cdef int lmax[7]
+    clik_lensing_get_lmaxs(self.celf,lmax, self.err)
     er=doError(self.err)
     if er:
       raise er
-    return lmax
+    return nm.array([lmax[i] for i in range(7)])
     
   property lmax:
     def __get__(self):
@@ -118,30 +117,32 @@ cdef class clik_lensing:
       return self.get_extra_parameter_names()
 
   def get_cltt_fid(self):
-    cdef double *cltt
-    cdef int lmax
+    return self.get_clcmb_fid()[self.lmax[1]+1:]
 
-    cltt = clik_lensing_cltt_fid(self.celf,self.err)
+  def get_clcmb_fid(self):
+    cdef double *cltt
+    
+    cltt = clik_lensing_clcmb_fid(self.celf,self.err)
     er=doError(self.err)
     if er:
       raise er
     lmax = self.lmax
-    rltt = nm.zeros(lmax+1,dtype=nm.double)
-    memcpy(<void*> nm.PyArray_DATA(rltt), cltt,sizeof(double)*(lmax+1))
+    ntot = nm.sum(lmax[1:]+1)
+    rltt = nm.zeros(ntot,dtype=nm.double)
+    memcpy(<void*> nm.PyArray_DATA(rltt), cltt,sizeof(double)*(ntot))
     stdlib.free(cltt)
     return rltt
 
   def get_clpp_fid(self):
     cdef double *cltt
-    cdef int lmax
-
+    
     cltt = clik_lensing_clpp_fid(self.celf,self.err)
     er=doError(self.err)
     if er:
       raise er
     lmax = self.lmax
-    rltt = nm.zeros(lmax+1,dtype=nm.double)
-    memcpy(<void*> nm.PyArray_DATA(rltt), cltt,sizeof(double)*(lmax+1))
+    rltt = nm.zeros(lmax[0]+1,dtype=nm.double)
+    memcpy(<void*> nm.PyArray_DATA(rltt), cltt,sizeof(double)*(lmax[0]+1))
     stdlib.free(cltt)
     return rltt
 
@@ -154,6 +155,6 @@ def try_lensing(fl):
   er=doError(err)
   if er:
     raise er
-    
+  
   return bool(r==1)
 

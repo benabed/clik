@@ -5,7 +5,7 @@ int main_lensing(int argc, char **argv) {
   error *_err,**err;
   clik_lensing_object* clikid;
   int i,cli;
-  int lmax;
+  int lmax[7];
   parname clnames[6];
   parname *names;
   int nextra;
@@ -32,11 +32,15 @@ int main_lensing(int argc, char **argv) {
   }
   free(names);
   
-  lmax = clik_lensing_get_lmax(clikid,err);
+  clik_lensing_get_lmaxs(clikid,lmax,err);
   quitOnError(*err,__LINE__,stderr);
   
-  ndim = nextra + 2*(lmax+1);
+  ndim = nextra + (lmax[0]+1);
+  for(i=1;i<7;i++) {
+    ndim += lmax[i]+1;
+  }
   
+  _DEBUGHERE_("%d",ndim);
   for(i=2;i<argc;i++) {
     // read cl as ascii file
     cl_and_pars = read_double_vector(argv[i],ndim,err);

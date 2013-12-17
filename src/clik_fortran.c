@@ -247,6 +247,17 @@ void fortran_clik_lensing_get_lmax_(int* lmax,long* *pself) {
 }
 
 #ifdef ADD0US
+void fortran_clik_lensing_get_lmaxs(long *pself, int* lmax) {
+#elseif ADD2US
+void fortran_clik_lensing_get_lmaxs__(long *pself, int* lmax) {
+#else
+void fortran_clik_lensing_get_lmaxs_(long *pself, int* lmax) {
+#endif
+  clik_lensing_object* self;
+  self = (clik_lensing_object *)*pself;
+  clik_lensing_get_lmaxs(self,lmax,NULL);
+}
+#ifdef ADD0US
 void fortran_clik_lensing_compute(double* res, long *pself, double *pars) {
 #elseif ADD2US
 void fortran_clik_lensing_compute__(double* res, long *pself, double *pars) {
@@ -337,6 +348,26 @@ void fortran_clik_lensing_cltt_fid_(long* pself, double *cltt) {
   tmp = clik_lensing_cltt_fid(self, NULL);
   lmax = clik_lensing_get_lmax(self,NULL);
   memcpy(cltt,tmp,sizeof(double)*(lmax+1));
+  free(tmp);
+}
+
+#ifdef ADD0US
+void fortran_clik_lensing_clcmb_fid(long* pself, double *cltt) {
+#elseif ADD2US
+void fortran_clik_lensing_clcmb_fid__(long* pself, double *cltt) {
+#else
+void fortran_clik_lensing_clcmb_fid_(long* pself, double *cltt) {
+#endif
+  double *tmp;
+  int lmax[7];
+  int i,ntot;
+  clik_lensing_object* self;
+  self = (clik_lensing_object*) *pself;
+  tmp = clik_lensing_clcmb_fid(self, NULL);
+  clik_lensing_get_lmaxs(self,lmax,NULL);
+  ntot = lmax[1]+1;
+  for(i=2;i<7;i++) ntot += lmax[i]+1;
+  memcpy(cltt,tmp,sizeof(double)*(ntot));
   free(tmp);
 }
 

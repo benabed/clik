@@ -120,12 +120,12 @@ subroutine main_lensing
   implicit none
   type(clik_object) :: pself
   character(len=128) :: hdffilename, clfilename, clnames(6)
-  integer(kind=4):: lmax
+  integer(kind=4),dimension(7):: lmax
   character(len=256), dimension(:), pointer :: names
   integer(kind=4) :: numnames, counter, nl, i, j, l, nargc
   real(kind=8), dimension(:), allocatable :: cl_and_pars, cls
   real(kind=8) :: lkl
-  
+
   nargc = iargc()
   if (nargc < 2) then
      print*,'usage: clik_example_f90 hdffile clfile1 [clfile2 ...]'
@@ -135,7 +135,7 @@ subroutine main_lensing
 
   call clik_lensing_init(pself,hdffilename)
 
-  call clik_lensing_get_lmax(pself,lmax)
+  call clik_lensing_get_lmaxs(pself,lmax)
   
   numnames=clik_lensing_get_extra_parameter_names(pself,names)
   print*,'Number of extra parameters: ',numnames
@@ -146,16 +146,18 @@ subroutine main_lensing
   ! Total number of multipoles to read
 
   nl = numnames ! Place for parameters values
-  nl = nl + (lmax+1)*2
-
+  nl = nl + (lmax(1)+1)
+  do i=2,7
+    nl = nl+lmax(i)+1
+  enddo
+  allocate(cl_and_pars(nl))
+  
   ! Fill cls
   do j=2,nargc
     call getarg(j,clfilename)  
     open(unit=100,file=clfilename,form='formatted')
-    allocate(cl_and_pars(nl))
     do l=1,nl
       read(100,*),cl_and_pars(l)
-      
     enddo
 
     lkl = clik_lensing_compute(pself,cl_and_pars)

@@ -45,6 +45,10 @@ void load_plenslike_dat_quad( plenslike_dat_quad *dat, char *tfname ) {
   dat->bl2n1_fid     = malloc( (dat->lmaxt+1) * sizeof(double) );
   dat->bl3n1_fid     = malloc( (dat->lmaxt+1) * sizeof(double) );
   dat->bl4n1_fid     = malloc( (dat->lmaxt+1) * sizeof(double) );
+  dat->fl1           = malloc( (dat->lmaxt+1) * sizeof(double) );
+  dat->fl2           = malloc( (dat->lmaxt+1) * sizeof(double) );
+  dat->fl3           = malloc( (dat->lmaxt+1) * sizeof(double) );
+  dat->fl4           = malloc( (dat->lmaxt+1) * sizeof(double) );
 
   // read bin info
   for (i=0; i<dat->nbins; i++) {
@@ -78,8 +82,10 @@ void load_plenslike_dat_quad( plenslike_dat_quad *dat, char *tfname ) {
 
   // read spectra
   for (l=0; l<=dat->lmaxt; l++) {
-    err = fscanf(tf, "%lf %lf %lf %lf %lf %lf", &dmp, &dat->cltt_fid[l], &dat->bl1n1_fid[l], &dat->bl2n1_fid[l], &dat->bl3n1_fid[l], &dat->bl4n1_fid[l] );
-    assert( err == 6 );
+    err = fscanf(tf, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", &dmp, &dat->cltt_fid[l], 
+		 &dat->bl1n1_fid[l], &dat->bl2n1_fid[l], &dat->bl3n1_fid[l], &dat->bl4n1_fid[l],
+		 &dat->fl1[l], &dat->fl2[l], &dat->fl3[l], &dat->fl4[l]);
+    assert( err == 10 );
     assert( dmp == l );
   }
 
@@ -162,6 +168,10 @@ void free_plenslike_dat_quad( plenslike_dat_quad *dat ) {
   free(dat->bl2n1_fid);
   free(dat->bl3n1_fid);
   free(dat->bl4n1_fid);
+  free(dat->fl1);
+  free(dat->fl2);
+  free(dat->fl3);
+  free(dat->fl4);
 
   free_qe(dat->qe12);
 

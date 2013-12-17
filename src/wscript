@@ -3,7 +3,7 @@ import os.path as osp
 
 def build(bld):
   
-  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c'.split()
+  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c'.split()
   source_clik += 'smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c'.split()*bool(bld.env.has_plik)
   source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
@@ -58,7 +58,7 @@ def build(bld):
   if bld.env.has_lenslike:
     bld.objects(
       features = 'c',
-      source = [osp.join("lenslike/plenslike/",v) for v in "plenslike_dat_mono.c plenslike_dat_quad.c qest.c wignerd.c".split() if v.strip()],
+      source = [osp.join("lenslike/plenslike/",v) for v in "plenslike_dat_mono.c plenslike_dat_quad.c plenslike_dat_qecl.c qest.c wignerd.c".split() if v.strip()],
       includes = "lenslike/plenslike/",
       cflags = bld.env.CFLAGS_cpic,
       target = 'lenslike'

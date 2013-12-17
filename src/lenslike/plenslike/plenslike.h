@@ -1,8 +1,19 @@
 #include <stdbool.h>
 
+#ifndef PLENSLIKE
+#define PLENSLIKE
+
 #define min(X,Y) ((X) < (Y) ? (X) : (Y))
 #define max(X,Y) ((X) > (Y) ? (X) : (Y))
 #define min3(X,Y,Z) ( min( X, min(Y, Z) ) )
+
+#ifndef perr
+#define perr(...) do { \
+    printf ("@ %s (%d): ", __FILE__, __LINE__); \
+    printf (__VA_ARGS__); \
+} while (0)
+#endif
+
 
 typedef struct {
   int     ntrm;
@@ -51,9 +62,41 @@ typedef struct {
   double *bl2n1_fid;
   double *bl3n1_fid;
   double *bl4n1_fid;
+  double *fl1;
+  double *fl2;
+  double *fl3;
+  double *fl4;
   qest   *qe12;
   qest   *qe34;
 } plenslike_dat_quad;
+
+typedef struct {
+  int     nbins;
+  int     lmaxcmb;
+  int     lmaxphi;
+  int     nqe;
+  int     nx;
+
+  int    *bin_lmins;
+  int    *bin_lmaxs;
+  double *bin_vals;
+  double *mat_sigma;
+  double *mat_sigma_inv;
+
+  double *cltt_fid;
+  double *clee_fid;
+  double *clte_fid;
+
+  double *clpp_fid;
+  double *qlpp_fid;
+  double *vlpp_inv;
+  double *qlpp_inv;
+
+  qest  **qes;
+  int    *qefs;
+  int    *qe12;
+  int    *qe34;
+} plenslike_dat_qecl;
 
 // qest.c
 void free_qe( qest *qe );
@@ -66,6 +109,19 @@ void fill_qe_covn( int lmax, double *covn, qest *q12, qest *q34,
 
 void init_qe_plm( qest *qe, int lmax, double *cltt);
 void init_qe_slm( qest *qe, int lmax );
+void init_qe_mlm( qest *qe, int lmax, double *cltt, double *fbl1, double *fbl2 );
+void init_qe_nlm( qest *qe, int lmax, double *fbl1, double *fbl2 );
+
+void init_qe_plm_tt( qest *qe, int lmax, double *cltt);
+void init_qe_plm_ee( qest *qe, int lmax, double *clee);
+void init_qe_plm_te( qest *qe, int lmax, double *clte);
+void init_qe_plm_tb( qest *qe, int lmax, double *clte);
+void init_qe_plm_eb( qest *qe, int lmax, double *clee);
+
+void switch_qe( qest *qe );
+void init_qe_plm_et( qest *qe, int lmax, double *clte);
+void init_qe_plm_bt( qest *qe, int lmax, double *clte);
+void init_qe_plm_be( qest *qe, int lmax, double *clee);
 
 // wignerd.c
 void init_gauss_legendre_quadrature( int n, double *x, double *w );
@@ -97,4 +153,17 @@ void   fill_quad_resp_qq_bfid( int lmax, double *rl, plenslike_dat_quad *dat, qe
 double calc_plenslike_quad( plenslike_dat_quad *dat, double *clpp );
 double calc_plenslike_quad_renorm_cltt( plenslike_dat_quad *dat, double *clpp, double *cltt );
 
+// plenslike_dat_qecl.c
+int  load_plenslike_dat_qecl( plenslike_dat_qecl *dat, char *tfname );
+void free_plenslike_dat_qecl( plenslike_dat_qecl *dat );
+void fill_plenslike_qecl_bins( plenslike_dat_qecl *dat, double *bins, double *clpp );
 
+void init_qls( qest **qls, int lmaxcmb, double *cltt, double *clee, double *clte );
+void free_qls( qest **qls );
+void fill_qecl_resp_pp_qls( int lmax, double *rl, plenslike_dat_qecl *dat, qest **qls );
+void full_qecl_resp_pp_cls( int lmax, double *rl, plenslike_dat_qecl *dat, double *cltt, double *clee, double *clte);
+
+double calc_plenslike_qecl( plenslike_dat_qecl *dat, double *clpp );
+double calc_plenslike_qecl_renorm( plenslike_dat_qecl *dat, double *clpp, double *cltt, double *clee, double *clte );
+
+#endif
