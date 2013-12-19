@@ -352,6 +352,40 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
       prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color,data=data)]
   return prms  
 
+def calTP_from_smica(dffile):
+  import hpy
+  
+  fi = hpy.File(dffile)
+  hgrp = fi["clik/lkl_0"]
+  nc = hgrp.attrs["n_component"]
+  prms = []
+  for i in range(1,nc):
+    compot = hgrp["component_%d"%i].attrs["component_type"]
+    if not (compot=="calTP"):
+      continue
+    break
+  names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
+  im = fi["clik/lkl_0/component_%d/im"%i]
+  nb = fi["clik/lkl_0/nbins"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  def cal(vals):
+    vec = nm.ones(m)
+    print im
+    print im<mt
+    print im[im<mt]
+    evals = nm.exp(vals)
+    vec[im[im<mt]] = evals[im<mt]
+    vec[im[im>=mt]] = evals[im>=mt]
+    if mb:
+      vec[im[im>=mt]+mb] = evals[im>=mt]
+    return nm.ones((nb,m,m))*nm.outer(vec,vec)[nm.newaxis,:,:]
+  cal.varpar = names
+  return cal
+
 def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored
   mask is 1 for q in qmins<=q<qmaxs
@@ -372,3 +406,132 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
 
   return mask
 
+def ordering_from_smica(dffile,jac=True):
+  import hpy
+  
+  fi = hpy.File(dffile)
+  msk = fi["clik/lkl_0/criterion_gauss_mask"]
+  ord = fi["clik/lkl_0/criterion_gauss_ordering"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  assert nm.sum(hascl)==1,"can't work for T+P yet"
+  m = fi["clik/lkl_0/m_channel_T"]*hascl[0]+fi["clik/lkl_0/m_channel_P"]*hascl[1]+fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  nm.concatenate([nm.arange(201)[msk[iv+jv*3::9]==1]*9+iv*3+jv for iv,jv in zip(ord[::2],ord[1::2])])
+  nb = fi["clik/lkl_0/nbins"]
+  m2 = m*m
+  ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
+  if jac==True:
+    return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
+  fi.close()
+
+def get_bestfit_and_cl(dffile,bffile):
+  import hpy
+  import lkl
+
+  fi = hpy.File(dffile)
+  bff = nm.loadtxt(bffile)
+  lmax = fi["clik/lkl_0/lmax"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  cls = nm.zeros((6,lmax+1))
+  cnt=0
+  for i in range(6):
+    if hascl[i]:
+      cls[i] = bff[cnt:cnt+lmax+1]
+      cnt += lmax+1
+  lkl = lkl.clik(dffile)
+  names = lkl.extra_parameter_names
+  bestfit = dict(zip(names,bff[cnt:]))
+  return bestfit,cls
+
+
+def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
+  import hpy
+  if isinstance(bestfit,str):
+    bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+  fi = hpy.File(dffile)
+  cal = calTP_from_smica(dffile)
+  cvec = [bestfit[nn] for nn in cal.varpar]
+  g = cal(cvec)
+  acmb = fi["clik/lkl_0/A_cmb"]
+  g *= nm.outer(acmb,acmb)[nm.newaxis,:,:]
+  rqh = fi["clik/lkl_0/Rq_hat"]
+  rqh.shape = g.shape
+  rqh/=g
+  prms = parametric_from_smica(dffile)
+  oq = []
+  nrms = []
+  for p in prms:
+    pvec = [bestfit[nn] for nn in p.varpar]
+    oq += [p(pvec)]
+    nrms += [p.__class__.__name__]
+  oq = nm.array(oq)
+  blmin = fi["clik/lkl_0/bin_lmin"]
+  blmax = fi["clik/lkl_0/bin_lmax"]
+  b_ws = fi["clik/lkl_0/bin_ws"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  lmin = fi["clik/lkl_0/lmin"]
+  lmax = fi["clik/lkl_0/lmax"]
+  nb = fi["clik/lkl_0/nbins"]
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  
+  oqb = nm.zeros((len(oq),)+rqh.shape)
+  lm = nm.zeros(nb)
+  for b in range(nb):
+    oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
+    lm[b] += nm.sum(nm.arange(lmin+blmin[b],lmin+blmax[b]+1)*b_ws[blmin[b]:blmax[b]+1])
+  res = lm,oqb,nrms,rqh
+  if cls!=None:
+    rq = nm.zeros((nb,m,m))
+    for b in range(nb):
+      if mt:
+        rq[b,:mt,:mt]+=nm.sum(cls[0,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+        if me:
+          rq[b,:mt,mt:mt+me]+=nm.sum(cls[3,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+          rq[b,mt:mt+me,:mt]+=nm.sum(cls[3,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+        if mb:
+          rq[b,:mt,mt+me:mb+mt+me]+=nm.sum(cls[4,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+          rq[b,mt+me:mb+mt+me,:mt]+=nm.sum(cls[4,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+      if me:
+        rq[b,mt:mt+me,mt:mt+me]+=nm.sum(cls[1,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+        if mb:
+          rq[b,mt:mt+me,mt+me:mb+mt+me]+=nm.sum(cls[5,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+          rq[b,mt+me:mb+mt+me,mt:mt+me]+=nm.sum(cls[5,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+      if mb:
+        rq[b,mt+me:mt+me+mb,mt+me:mb+mt+me]+=nm.sum(cls[2,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+    res = lm,oqb,nrms,rqh,rq
+  return res
+
+  
+def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
+  import pylab as plt
+  plt.figure()
+  plt.semilogy(lm,rqh[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="data")
+  plt.semilogy(lm,rq[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="cmb")
+  for oq,nn in zip(oqb,nrms):
+    plt.semilogy(lm,oq[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label=nn)
+  plt.semilogy(lm,nm.abs(rqh[:,m1,m2]-(rq[:,m1,m2]+nm.sum(oqb[:,:,m1,m2],0)))*lm*(lm+1.)/2./nm.pi,label="|data-model|")
+  plt.legend(loc="upper right",frameon=False,ncol=3,prop=plt.matplotlib.font_manager.FontProperties(size="x-small"))
+  #plt.xscale=("linear")
+  #plt.xaxis = (0,lm[-1]+100)
+
+def best_fit_cmb(dffile,bestfit):
+  import parobject as php
+  import hpy
+
+  oo,Jt = ordering_from_smica(dffile)
+
+  fi = hpy.File(dffile)
+
+  siginv = fi["clik/lkl_0/criterion_gauss_mat"]
+  siginv.shape=(len(oo),len(oo))
+
+  lm,oqb,nrms,rqh = get_binned_calibrated_model_and_data(dffile,bestfit)
+
+  Yo = nm.sum(oqb,0)-rqh
+  Yo = Yo.flat[oo]
+  Jt_siginv = nm.dot(Jt,siginv)
+  Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
+  Jt_siginv_J = nm.dot(Jt_siginv,Jt.T)
+  return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo)

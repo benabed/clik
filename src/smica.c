@@ -1648,7 +1648,7 @@ void comp_calTP_update(void* data,double* locpars, double* rq, error **err) {
     int im;
     im = gc->im[i];
     gc->calvec[im] = exp(locpars[i]);
-    if (gc->TEB[2]==1) {
+    if (gc->TEB[2]==1 && im>gc->mT) {
       gc->calvec[im+gc->mP*gc->TEB[1]] = gc->calvec[im];
     }
   }
