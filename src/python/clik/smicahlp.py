@@ -346,37 +346,49 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
       lmin = hgrp["component_%d"%i].attrs["lmin"]
     if lmax==-1:
       lmax = hgrp["component_%d"%i].attrs["lmax"]
-    if data == None:
-      prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color)]
+    cmpr = getattr(prm,compot)
+    if issubclass(cmpr,prm.parametric_pol):
+      has_TEB = hgrp["has_cl"]
+      detT = frq[:hgrp["m_channel_T"]]
+      detP = frq[:hgrp["m_channel_P"]]
+      args = [detT,detP,has_TEB[:3],key,lmin,lmax]
     else:
-      prms += [getattr(prm,compot)(frq,key,lmin,lmax,defdir,rename=rename,color=color,data=data)]
+      args = [frq,key,lmin,lmax]
+    kargs = {"rename":rename,"defs":defdir,"color":color}
+    if data != None:
+      kargs["data"]=data
+    prms += [cmpr(*args,**kargs)]
   return prms  
 
 def calTP_from_smica(dffile):
   import hpy
   
   fi = hpy.File(dffile)
-  hgrp = fi["clik/lkl_0"]
-  nc = hgrp.attrs["n_component"]
-  prms = []
-  for i in range(1,nc):
-    compot = hgrp["component_%d"%i].attrs["component_type"]
-    if not (compot=="calTP"):
-      continue
-    break
-  names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
-  im = fi["clik/lkl_0/component_%d/im"%i]
-  nb = fi["clik/lkl_0/nbins"]
   hascl = fi["clik/lkl_0/has_cl"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
   m = mt+me+mb
+  hgrp = fi["clik/lkl_0"]
+  nc = hgrp.attrs["n_component"]
+  prms = []
+  fnd=False
+  for i in range(1,nc):
+    compot = hgrp["component_%d"%i].attrs["component_type"]
+    if not (compot=="calTP"):
+      continue
+    fnd=True
+    break
+  if not fnd:
+    def cal(vals):
+      return nm.ones((nb,m,m))
+    cal.varpar = []
+    return cal
+  names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
+  im = fi["clik/lkl_0/component_%d/im"%i]
   def cal(vals):
     vec = nm.ones(m)
-    print im
-    print im<mt
-    print im[im<mt]
     evals = nm.exp(vals)
     vec[im[im<mt]] = evals[im<mt]
     vec[im[im>=mt]] = evals[im>=mt]
@@ -413,10 +425,8 @@ def ordering_from_smica(dffile,jac=True):
   msk = fi["clik/lkl_0/criterion_gauss_mask"]
   ord = fi["clik/lkl_0/criterion_gauss_ordering"]
   hascl = fi["clik/lkl_0/has_cl"]
-  assert nm.sum(hascl)==1,"can't work for T+P yet"
   m = fi["clik/lkl_0/m_channel_T"]*hascl[0]+fi["clik/lkl_0/m_channel_P"]*hascl[1]+fi["clik/lkl_0/m_channel_P"]*hascl[2]
-  nm.concatenate([nm.arange(201)[msk[iv+jv*3::9]==1]*9+iv*3+jv for iv,jv in zip(ord[::2],ord[1::2])])
-  nb = fi["clik/lkl_0/nbins"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   m2 = m*m
   ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
   if jac==True:
@@ -470,7 +480,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   hascl = fi["clik/lkl_0/has_cl"]
   lmin = fi["clik/lkl_0/lmin"]
   lmax = fi["clik/lkl_0/lmax"]
-  nb = fi["clik/lkl_0/nbins"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -505,14 +515,21 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
 
   
 def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
-  import pylab as plt
+  import pylab as plt  
   plt.figure()
   plt.semilogy(lm,rqh[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="data")
   plt.semilogy(lm,rq[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="cmb")
+  if extra.get("abs",False):
+    plt.semilogy(lm,-rqh[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="-data")
+    plt.semilogy(lm,-rq[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label="-cmb")
   for oq,nn in zip(oqb,nrms):
     plt.semilogy(lm,oq[:,m1,m2]*lm*(lm+1.)/2./nm.pi,label=nn)
   plt.semilogy(lm,nm.abs(rqh[:,m1,m2]-(rq[:,m1,m2]+nm.sum(oqb[:,:,m1,m2],0)))*lm*(lm+1.)/2./nm.pi,label="|data-model|")
   plt.legend(loc="upper right",frameon=False,ncol=3,prop=plt.matplotlib.font_manager.FontProperties(size="x-small"))
+  if extra.get("title",""):
+    plt.suptitle(extra["title"])
+  plt.ylabel(extra.get("ylabel","$D_{\\ell}\\ \\mu K^2$"))
+  plt.xlabel(extra.get("xlabel","$\\ell$"))
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
 
@@ -534,4 +551,4 @@ def best_fit_cmb(dffile,bestfit):
   Jt_siginv = nm.dot(Jt,siginv)
   Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
   Jt_siginv_J = nm.dot(Jt_siginv,Jt.T)
-  return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo)
+  return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
