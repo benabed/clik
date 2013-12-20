@@ -1154,7 +1154,7 @@ SmicaComp * comp_CMB_init(int nbins, int mt,int mp, int *has_cl, double* Acprs, 
   double *A;
   SC_CMB_data* data;
   int mtot;
-  int trois,im,i;
+  int trois,im,i,six;
   SmicaComp *SC;
   
   data = malloc_err(sizeof(SC_CMB_data), err);
@@ -1162,6 +1162,7 @@ SmicaComp * comp_CMB_init(int nbins, int mt,int mp, int *has_cl, double* Acprs, 
   
   trois = has_cl[0]+has_cl[1]+has_cl[2];
   testErrorRet(trois==0,smica_uncomp,"mismatch",*err,__LINE__,NULL);
+  six = trois + has_cl[3]+has_cl[4]+has_cl[5];
   
   mtot = mt*has_cl[0]+(has_cl[1]+has_cl[2])*mp;
   testErrorRet(mtot==0,smica_uncomp,"mismatch",*err,__LINE__,NULL);
@@ -1225,9 +1226,15 @@ SmicaComp * comp_CMB_init(int nbins, int mt,int mp, int *has_cl, double* Acprs, 
     data->jmp_cl[0] = 0;
     data->jmp_cl[1] = 3;
     data->jmp_cl[2] = 5;
-    data->jmp_cl[3] = 1;
-    data->jmp_cl[4] = 2;
-    data->jmp_cl[5] = 4;
+    if (has_cl[3]==1) {
+      data->jmp_cl[3] = 1;
+    }
+    if (has_cl[4]==1) {
+      data->jmp_cl[4] = 2;
+    }
+    if (has_cl[5]==1) {
+      data->jmp_cl[5] = 4;
+    }
   }
   
   if (trois==2) {
@@ -1235,20 +1242,26 @@ SmicaComp * comp_CMB_init(int nbins, int mt,int mp, int *has_cl, double* Acprs, 
       data->jmp_cl[0] = 0;
       if (has_cl[1]==1) {
         data->jmp_cl[1] = 2;
-        data->jmp_cl[3] = 1;
+        if (has_cl[3]==1) {
+          data->jmp_cl[3] = 1;  
+        }
       } else {
         data->jmp_cl[2] = 2;
-        data->jmp_cl[4] = 1;
+        if (has_cl[4]==1) {
+          data->jmp_cl[4] = 1;
+        }
       }
     } else {
       data->jmp_cl[1] = 0;
       data->jmp_cl[2] = 2;
-      data->jmp_cl[5] = 1;
+      if (has_cl[5]==1) {
+        data->jmp_cl[5] = 1;
+      }
     }
   }
   data->trois = trois;
   
-  SC = alloc_SC(nbins*(trois*(trois+1))/2,nbins,mtot,data,&comp_CMB_update,&free_comp_CMB,err);
+  SC = alloc_SC(nbins*six,nbins,mtot,data,&comp_CMB_update,&free_comp_CMB,err);
   forwardError(*err,__LINE__,NULL);
   return SC;
   
