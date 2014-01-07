@@ -169,7 +169,7 @@ void cib_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, error **e
     }
   }      
   // error return
-  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  parametric_end_derivative_loop(egl,&(dRq[iv]),egl->varkey[iv],err);
   forwardError(*err,__LINE__,);
 
   return;
@@ -422,6 +422,6 @@ void fill_offset_freq(int idreq,double *dreq, parametric *egl,int *mv,int def, e
         break;
       }  
     }
-    testErrorRetVA(mv[m]==-1,-431432,"Don't know how to compute component for freq %g",*err,__LINE__,NULL,f);
+    testErrorRetVA(mv[m]==-1,-431432,"Don't know how to compute component for freq %g",*err,__LINE__,,f);
   }    
 }

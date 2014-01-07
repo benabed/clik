@@ -230,7 +230,9 @@ parametric *pw_EE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
 
   egl->payload  = init_pw_XX_payload(TE_KIND,egl->nfreq_T,egl->nfreq_P,err);
   forwardError(*err,__LINE__,NULL);
+  payload = egl->payload;
 
+  
   mx = egl->nfreq_P;
 
   parametric_set_default(egl,"pw_EE_index",-1,err);

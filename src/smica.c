@@ -1115,6 +1115,7 @@ SmicaComp* amp_diag_init(int nq, int m, double* tmpl, error **err) {
   SC = alloc_SC(m,nq,m,itmpl,&amp_diag_update,&amp_diag_free,err);
   forwardError(*err,__LINE__,NULL);
   
+  return SC;
 }
 
 void amp_diag_update(void* data,double* locpars, double* rq, error **err) {

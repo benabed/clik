@@ -210,35 +210,35 @@ int base_parametric_cldf_init(cldf *df,int m, double** detlist,int *ndef, char *
   int hk;
   
   *nvar = cldf_readint(df,"ndim",err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
   
   nrename=0;
   rename_from = NULL;
   rename_to = NULL;
 
   hk = cldf_haskey(df,"nrename",err);
-  forwardError(*err,__LINE__,);  
+  forwardError(*err,__LINE__,0);  
   if (hk ==1) {
     nrename = cldf_readint(df,"nrename",err);
-    forwardError(*err,__LINE__,);   
+    forwardError(*err,__LINE__,0);   
     dz = -1;
     rename_from = cldf_readstr(df,"rename_from",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     dz = -1;
     rename_to = cldf_readstr(df,"rename_to",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
   }
   
   dz = -1;
   keyvartable = cldf_readstr(df,"keys",&dz, err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
     
   if (*nvar!=0) {
     *varkeys = malloc_err(sizeof(char*)**nvar,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
   } else {
     *varkeys = malloc_err(sizeof(char*)*1,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     (*varkeys)[0] = NULL;
   }
   
@@ -249,25 +249,25 @@ int base_parametric_cldf_init(cldf *df,int m, double** detlist,int *ndef, char *
   
   // get defaults
   *ndef = cldf_readint(df,"ndef",err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
   
   dz = -1;
   deftable = cldf_readstr(df,"defaults",&dz, err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
   dz = -1;
   valtable = cldf_readstr(df,"values",&dz, err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
   
   if (*ndef!=0) {
     *defkeys = malloc_err(sizeof(char*)**ndef,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     *defvalues = malloc_err(sizeof(char*)**ndef,err);
-    forwardError(*err,__LINE__,);    
+    forwardError(*err,__LINE__,0);    
   } else {
     *defkeys = malloc_err(sizeof(char*)*1,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     *defvalues = malloc_err(sizeof(char*)*1,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     (*defkeys)[0] = NULL;
     (*defvalues)[0] = NULL;
   }

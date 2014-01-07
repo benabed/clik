@@ -98,7 +98,7 @@ void load_plenslike_dat_quad( plenslike_dat_quad *dat, char *tfname ) {
   for (i=0; i < dat->qe12->ntrm; i++) {
     dat->qe12->s12L[i] = malloc( 3*sizeof(int) );
     err = fscanf(tf, "%d %d %d", &dat->qe12->s12L[i][0], &dat->qe12->s12L[i][1], &dat->qe12->s12L[i][2]);
-    assert( err = 3 );
+    assert( err == 3 );
   }
   
   dat->qe12->w12L = malloc( dat->qe12->ntrm*sizeof(double **) );
@@ -130,7 +130,7 @@ void load_plenslike_dat_quad( plenslike_dat_quad *dat, char *tfname ) {
     for (i=0; i < dat->qe34->ntrm; i++) {
       dat->qe34->s12L[i] = malloc( 3*sizeof(int) );
       err = fscanf(tf, "%d %d %d", &dat->qe34->s12L[i][0], &dat->qe34->s12L[i][1], &dat->qe34->s12L[i][2]);
-      assert( err = 2 );
+      assert( err == 2 );
     }
     
     dat->qe34->w12L = malloc( dat->qe34->ntrm*sizeof(double **) );

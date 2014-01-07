@@ -270,7 +270,7 @@ def add_python_option(ctx,name):
   grp.add_option("--%s_installifneeded"%name,action="store_true",default=False,help="if %s is not found, install it try to install"%name,dest="%s_install"%name)
   ctx.add_option_group(grp)  
 
-def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False):
+def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False,postinstall=None):
   import waflib.Logs
   import os
   from waflib import Errors
@@ -304,5 +304,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
           import os
           os.symlink(osp.join(ctx.env.PYTHONDIR,eggdir,mdir),osp.join(ctx.env.PYTHONDIR,name))
       check_python_module(ctx,name,extracmd)
+      if postinstall:
+        postinstall()
     else:
       raise e

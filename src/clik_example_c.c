@@ -55,6 +55,8 @@ int main_lensing(int argc, char **argv) {
   }
   
   clik_lensing_cleanup(&clikid);
+  return 0;
+  
 }
 
 int main(int argc, char **argv) {

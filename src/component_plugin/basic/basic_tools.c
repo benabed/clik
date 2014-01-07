@@ -78,8 +78,6 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
   int stop;
   double nrm;
 
-  //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
-  //forwardError(*err,__LINE__,);
   //
   //A = egl->payload;
   nfreq = egl->nfreq;
@@ -92,6 +90,8 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
   //    A[m2*nfreq+m1] = v;
   //  }
   //}
+
+  l_pivot = egl->l_pivot;
 
   nrm = l_pivot*(l_pivot+1)/2/M_PI;
   stop = 0;
@@ -114,7 +114,7 @@ void pointsource_A_derivative(parametric* egl, int iv,double *Rq, double *dRq, e
     }
   }      
   // error return
-  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  parametric_end_derivative_loop(egl,&(dRq[iv]),egl->varkey[iv],err);
   forwardError(*err,__LINE__,);
 
   return;

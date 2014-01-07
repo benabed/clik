@@ -534,7 +534,18 @@ def configure_cython(ctx):
   
   os.environ["PATH"] = os.environ["PATH"]+":"+osp.dirname(osp.realpath(ctx.env.PYTHON[0]))
   vv=False
-  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
+  def postinstallcython():
+    ctx.env.CYTHON=[osp.join(ctx.env.BINDIR,"cython")]
+    f=open(osp.join(ctx.env.BINDIR,"cython"))
+    cytxt = f.readlines()
+    f.close()
+    cytxt[1:1] = ["import sys\n","sys.path+=['%s']\n"%str(ctx.env.PYTHONDIR)]
+    f=open(osp.join(ctx.env.BINDIR,"cython"),"w")
+    f.write("".join(cytxt))
+    f.close()
+    os.chmod(osp.join(ctx.env.BINDIR,"cython"),Utils.O755)
+
+  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",postinstall=postinstallcython)
 
   try:
     # check for cython
@@ -552,7 +563,7 @@ def configure_cython(ctx):
     if vv:
       ctx.end_msg("no (%s)"%version_str,'YELLOW')
     # no cython, install it !
-    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1")
+    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",postinstall=postinstallcython)
 
   try:
     ctx.load("cython")

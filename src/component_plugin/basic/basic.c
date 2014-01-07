@@ -555,8 +555,8 @@ void pointsource_bydet_A_derivative(parametric* egl, int iv,double *Rq, double *
   int stop;
   double nrm;
 
-  //l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
-  //forwardError(*err,__LINE__,);
+  l_pivot = parametric_get_value(egl,"ps_l_pivot",err);
+  forwardError(*err,__LINE__,);
   //
   //A = egl->payload;
   nfreq = egl->nfreq;
@@ -591,7 +591,7 @@ void pointsource_bydet_A_derivative(parametric* egl, int iv,double *Rq, double *
     }
   }      
   // error return
-  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  parametric_end_derivative_loop(egl,&(dRq[iv]),egl->varkey[iv],err);
   forwardError(*err,__LINE__,);
 
   return;

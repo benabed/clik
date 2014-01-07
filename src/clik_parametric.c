@@ -580,7 +580,7 @@ double parametric_get_value(parametric *egl, char *key, error **err) {
   }
   res = 0;
   res = pflist_get_double_value(egl->pf,key,&res,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,-1);
   return res;
 }
 
@@ -1007,7 +1007,7 @@ void powerlaw_free_emissivity_A_derivative(parametric* egl, int iv,double *Rq, d
     }
   }      
   // error return
-  parametric_end_derivative_loop(egl,&(dRq[mv]),egl->varkey[iv],err);
+  parametric_end_derivative_loop(egl,&(dRq[iv]),egl->varkey[iv],err);
   forwardError(*err,__LINE__,);
 
   return;

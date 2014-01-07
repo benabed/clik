@@ -153,7 +153,7 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
   forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gal_nu0",PRM_NU0,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
 
   sprintf(type,"dust");
   isdust = 1;
@@ -179,7 +179,7 @@ parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** 
     parametric_add_derivative_function(egl,"gal_alpha_non_thermal",&gal_alpha_non_thermal_derivative,err);  
     forwardError(*err,__LINE__,NULL);
   } else {
-    testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,,type);
+    testErrorRetVA(1==1,-1234,"Unknown Galactic component type '%s'",*err,__LINE__,NULL,type);
     // return ?
   }
 
@@ -229,7 +229,7 @@ parametric *gal_TE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, i
   forwardError(*err,__LINE__,NULL);
   
   parametric_set_default(egl,"gal_TE_nu0",PRM_NU0,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gal_TE_beta_dust",1.8,err);
   forwardError(*err,__LINE__,NULL);
@@ -317,7 +317,7 @@ parametric *gal_EE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, i
   forwardError(*err,__LINE__,NULL);
   
   parametric_set_default(egl,"gal_EE_nu0",PRM_NU0,err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gal_EE_beta_dust",1.8,err);
   forwardError(*err,__LINE__,NULL);

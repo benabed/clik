@@ -28,7 +28,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf * df,int nb, int mT,int mP, int n
                                                                                                          \
   dz = -1;                                                                                               \
   template = cldf_readfloatarray(df,"template",&dz, err);                                                \
-  forwardError(*err,__LINE__,);                                                                          \
+  forwardError(*err,__LINE__,NULL);                                                                          \
   p_model = INIT_FUNC(ndet, detlist, ndef, defkeys, defvalues, nvar, varkeys, lmin, lmax,template, err); \
   forwardError(*err,__LINE__,NULL);                                                                      \
                                                                                                          \

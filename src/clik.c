@@ -395,6 +395,7 @@ void* _clik_dig(clik_object* clikid, error **err) {
     return target->data;
   }
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
+  return NULL;
 }
 
 void* _clik_dig2(clik_object* clikid, error **err) {
@@ -415,5 +416,6 @@ void* _clik_dig2(clik_object* clikid, error **err) {
     return target;
   }
   testErrorRet(1==1,-111,"No clik likelihood found",*err,__LINE__,NULL);
+  return NULL;
 }
 
