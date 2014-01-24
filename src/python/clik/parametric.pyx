@@ -153,28 +153,12 @@ cdef class parametric:
     if er:
       raise er
     
-    
-
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
 
-  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
-    cdef double _color[2000]
-    cdef int i
-    cdef error *_err,**err
-    cdef int voidlist[2000]
+  def _post_init_1(self,color,ndet,voidmask):
+    set_color(self.celf,color,ndet)
 
-    _err = NULL
-    err = &_err
-    
-    set_color(self.celf,color,len(detlist))
-    #if color is not None:
-    #  for i in range(len(detlist)):
-    #    _color[i] = color[i]
-    #  parametric_set_color(self.celf,_color,err)
-    #  er=doError(err)
-    #  if er:
-    #    raise er
-
+    self.voidmask=None
     if voidmask:
       _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
       nvoid = len(_voidlist)
@@ -185,15 +169,9 @@ cdef class parametric:
         er=doError(err)
         if er:
           raise er
+      self.voidmask = voidmask
 
-    parametric_dnofail(self.celf,int(dnofail))
-    prs = vars
-    if not dnofail:
-      prs = [p for p in vars if self.has_parameter(p)]
-      if len(prs)!= len(vars):
-        parametric_free(<void**>&(self.celf))
-        self.__init__(detlist,prs,lmin,lmax,defs,False,color,voidmask,*other)
-
+  def _post_init_2(self,prs,lmin,lmax):
     dv = []
     for p in prs:
       if self.has_parameter(p):
@@ -205,7 +183,29 @@ cdef class parametric:
     self.parvalues = dv
     #self.varpar = OrderedDict(zip(prs,dv))
     self.nell = lmax+1-lmin    
+    self.name = self.__class__
+
+  def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
+    cdef double _color[2000]
+    cdef int i
+    cdef error *_err,**err
+    cdef int voidlist[2000]
+
+    _err = NULL
+    err = &_err
     
+    self._post_init_1(len(detlist),voidmask)
+
+    parametric_dnofail(self.celf,int(dnofail))
+    prs = vars
+    if not dnofail:
+      prs = [p for p in vars if self.has_parameter(p)]
+      if len(prs)!= len(vars):
+        parametric_free(<void**>&(self.celf))
+        self.__init__(detlist,prs,lmin,lmax,defs,False,color,voidmask,*other)
+
+    self._post_init_2(prs,lmin,lmax)
+
   def get_default_value(self,key):
     cdef error *_err,**err
     _err = NULL
@@ -412,27 +412,8 @@ cdef class parametric_pol(parametric):
     _err = NULL
     err = &_err
 
-    set_color(self.celf,color,len(detlist_T)+len(detlist_P))
+    self._post_init_1(len(detlist_T)+len(detlist_P),voidmask)
     
-    #if color is not None:
-    #  for i in range(len(detlist_T)+len(detlist_P)):
-    #    _color[i] = color[i]
-    #  parametric_set_color(self.celf,_color,err)
-    #  er=doError(err)
-    #  if er:
-    #    raise er
-
-    if voidmask:
-      _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
-      nvoid = len(_voidlist)
-      if nvoid!=0:
-        for i in range(nvoid):
-          voidlist[i]=_voidlist[i]
-        parametric_set_void(self.celf,nvoid,voidlist,err)
-        er=doError(err)
-        if er:
-          raise er
-
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
     if not dnofail:
@@ -441,17 +422,7 @@ cdef class parametric_pol(parametric):
         parametric_free(<void**>&(self.celf))
         self.__init__(detlist_T,detlist_P,has_TEB,prs,lmin,lmax,defs,False,color,voidmask,*other)
 
-    dv = []
-    for p in prs:
-      if self.has_parameter(p):
-        dv += [self.get_default_value(p)]
-      else:
-        dv +=[0]
-
-    self.varpar = prs
-    self.parvalues = dv
-    #self.varpar = OrderedDict(zip(prs,dv))
-    self.nell = lmax+1-lmin    
+    self._post_init_2(prs,lmin,lmax)
 
 cdef class parametric_pol_template(parametric_pol):
   pass
@@ -467,12 +438,12 @@ def register_plugin(plg,gl,verb):
   global component_list
   component_list += mlg.component_list
   for cp in mlg.component_list:
-    gl[cp]=getattr(mlg,cp)
+    setattr(gl,cp,getattr(mlg,cp))
     if verb:
       print "add %s"%cp
 
-
-def register_all(gl=globals(),verb=False):
+import sys
+def register_all(gl=sys.modules[__name__],verb=False):
   #print gl
   import os  
   plgs = [plg.strip() for plg in os.environ.get("CLIK_PLUGIN","").split(",") if plg.strip()]

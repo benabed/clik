@@ -32,6 +32,78 @@ double non_thermal_spectrum(double nu, double alpha_non_thermal, double nu0) {
 }
 
 // TT
+
+void hgal_compute(parametric *egl, double *Rq, error **err) {
+  double *A;
+  int nfreq,m1,m2,ell;
+  double a,b,v,l_pivot,lA;
+
+  A = egl->payload;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      v = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      A[m1*nfreq+m2] = v;
+      A[m2*nfreq+m1] = v;
+    }
+  }
+
+  b = parametric_get_value(egl,"hgal_beta",err);
+  forwardError(*err,__LINE__,);
+  l_pivot = parametric_get_value(egl,"hgal_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = nm.exp(b*(ell-l_pivot))/l_pivot/(l_pivot-1)*2*M_PI;
+    mell = (ell-egl->lmin)*nfreq*nfreq;
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        lA = A[m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
+        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
+      }  
+    }
+  }
+}
+
+parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int m1,m2;
+  pfchar name;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &hgal_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"hgal_l_pivot",250,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"hgal_beta",-0.00849,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,50,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  
+  return egl;
+}
+
 void galactic_component_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv;
   double norm,l_pivot,index,alpha_non_thermal,beta_dust,T_dust;

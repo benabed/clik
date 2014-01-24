@@ -181,7 +181,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     
   #filter them out
   npars = [vp for vp in vpars if pm.has_parameter(vp)]
-  agrp = add_component(lkl_grp,name,position)
+  agrp = add_component(lkl_grp,pm.name,position)
   agrp.attrs["ndim"] = len(npars)
   agrp.attrs["keys"] = php.pack256(*npars)
   
@@ -197,6 +197,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["dfreq"] = [float(d) for d in dets]
   agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
 
+  voidmask = pm.voidmask
   if voidmask:
       _voidlist = [i for i in range(len(voidmask)) if not bool(int(voidmask[i]))]
       nvoid = len(_voidlist)
@@ -216,6 +217,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     else:
       agrp.create_dataset("template",data=nm.array(data,dtype=nm.double).flat[:])
 
+  rename = pm.rename
   if rename:
     rename_from = rename.keys()
     rename_to = [rename[k] for k in rename_from]

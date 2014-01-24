@@ -1,4 +1,4 @@
-from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template
+from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template,powerlaw_free_emissivity
 
 cdef extern c_parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -35,6 +35,15 @@ cdef class gpe_dust(parametric):
   def __cinit__(self):
     self.initfunc = <void*> gpe_dust_init;
 
-    
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE"]
+def galf(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+  rups = {}
+  for v in vars:
+    if v.startswith("galf"):
+      rv = v.replace("galf","pwfe")
+      rvl = rv.split("_")
+      if rvl[-1].isalnum() and nor rvl[-2].isalnum:
+        rvl+=[rvl[-1]]
+      rups[v]="_".join(rvl)
+  return powerlaw_free_emissivity(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf"]
 

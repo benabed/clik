@@ -17,7 +17,7 @@ cdef class parametric:
   cdef int nell
   cdef readonly object varpar,parvalues
   cdef void* initfunc
-  cdef object rename,emaner
+  cdef object rename,emaner,voidmask,name
 
 cdef class parametric_template(parametric):
   cdef object template_name
