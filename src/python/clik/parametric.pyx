@@ -156,6 +156,12 @@ cdef class parametric:
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
 
   def _post_init_1(self,color,ndet,voidmask):
+    cdef int voidlist[2000]
+    cdef error *_err,**err
+    _err = NULL
+    err = &_err
+    
+
     set_color(self.celf,color,ndet)
 
     self.voidmask=None
@@ -194,7 +200,7 @@ cdef class parametric:
     _err = NULL
     err = &_err
     
-    self._post_init_1(len(detlist),voidmask)
+    self._post_init_1(color,len(detlist),voidmask)
 
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
@@ -412,7 +418,7 @@ cdef class parametric_pol(parametric):
     _err = NULL
     err = &_err
 
-    self._post_init_1(len(detlist_T)+len(detlist_P),voidmask)
+    self._post_init_1(color,len(detlist_T)+len(detlist_P),voidmask)
     
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
@@ -456,4 +462,20 @@ def register_all(gl=sys.modules[__name__],verb=False):
       #print e
       pass
 
+def rename_machine(component, bdefs, rename_func):
+  def rmch(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+    rups = {}
+    bdef = bdefs.copy()
+    bdef.update(defs)
+    vv = tuple(vars)+tuple(bdef.keys())+tuple(rename.values())
+    for v in vv:
+      rename_func(v,rups)
+    for k in rename:
+      if rename[k] in rups:
+        oo = rename[k]
+        rename[k] = oo
+        del(rups[k])
+    rename.update(rups)
+    return component(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+  return rmch
 register_all()

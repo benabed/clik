@@ -37,13 +37,15 @@ void hgal_compute(parametric *egl, double *Rq, error **err) {
   double *A;
   int nfreq,m1,m2,ell;
   double a,b,v,l_pivot,lA;
-
+  pfchar name;
+  int mell;
+  
   A = egl->payload;
   nfreq = egl->nfreq;
   for(m1=0;m1<nfreq;m1++) {
     for(m2=m1;m2<nfreq;m2++) {
       if (m1==m2) {
-        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1]);  
+        sprintf(name,"hgal_A_%d",(int)egl->freqlist[m1]);  
       } else {
         sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
@@ -60,7 +62,7 @@ void hgal_compute(parametric *egl, double *Rq, error **err) {
   forwardError(*err,__LINE__,);
   
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-    v = nm.exp(b*(ell-l_pivot))/l_pivot/(l_pivot-1)*2*M_PI;
+    v = exp(b*(ell-l_pivot))/l_pivot/(l_pivot-1)*2*M_PI;
     mell = (ell-egl->lmin)*nfreq*nfreq;
     for(m1=0;m1<nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
@@ -92,7 +94,7 @@ parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char *
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
-        sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1]);  
+        sprintf(name,"hgal_A_%d",(int)egl->freqlist[m1]);  
       } else {
         sprintf(name,"hgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
