@@ -2,6 +2,7 @@ from clik.parametric cimport c_parametric, error, doError, parametric, parametri
 from clik.parametric import powerlaw_free_emissivity,rename_machine
 
 cdef extern c_parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern double c_dust_spectrum "dust_spectrum" (double nu, double T_dust, double beta_dust, double nu0)
 cdef extern double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, double alpha_non_thermal, double nu0)
@@ -36,29 +37,10 @@ cdef class gpe_dust(parametric):
   def __cinit__(self):
     self.initfunc = <void*> gpe_dust_init;
 
-def _galf(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
-  rups = {}
-  bdef = {"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"}
-  bdef.update(defs)
-  vv = tuple(vars)+tuple(bdef.keys())+tuple(rename.values())
-  print vv
-  for v in vv:
-    if v.startswith("galf"):
-      rv = v.replace("galf","pwfe")
-      rvl = rv.split("_")
-      print rvl
-      print rvl[-1].isalnum() and not rvl[-2].isalnum()
-      if rvl[-1].isdigit() and not rvl[-2].isdigit():
-        rvl+=[rvl[-1]]
-      rups[v]="_".join(rvl)
-  for k in rename:
-    if rename[k] in rups:
-      oo = rename[k]
-      rename[k] = oo
-      del(rups[k])
-  rename.update(rups)
-  print rename
-  return powerlaw_free_emissivity(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+cdef class hgal(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*> hgal_init;
+
 
 def galf_rename_func(v,rups):
   if v.startswith("galf"):
@@ -70,5 +52,5 @@ def galf_rename_func(v,rups):
 
 galf = rename_machine(powerlaw_free_emissivity,{"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"},galf_rename_func)
   
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf"]
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal"]
 

@@ -39,7 +39,7 @@ void hgal_compute(parametric *egl, double *Rq, error **err) {
   double a,b,v,l_pivot,lA;
   pfchar name;
   int mell;
-  
+
   A = egl->payload;
   nfreq = egl->nfreq;
   for(m1=0;m1<nfreq;m1++) {
@@ -105,6 +105,7 @@ parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char *
   
   return egl;
 }
+CREATE_PARAMETRIC_FILE_INIT(hgal,hgal_init);
 
 void galactic_component_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv;
