@@ -10,6 +10,7 @@ cdef extern c_parametric *sz_x_init(int ndet, double *detlist, int ndef, char** 
 cdef extern c_parametric *cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *sz_cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *tcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric  *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
 
 
@@ -33,6 +34,12 @@ cdef class ncib(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> ncib_init;
     self.template_name = "cib_model_100_143_217_353.dat"
+    self.plugin_name = "cibsz"
+
+cdef class tcib(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> tcib_init;
+    self.template_name = "cib_tot_100_353_Jsr-1_GL_2013_10.dat"
     self.plugin_name = "cibsz"
 
 cdef class ncibXsz(parametric_template):
@@ -73,5 +80,5 @@ cdef class cibr(parametric):
     self.initfunc = <void*> cibr_init;
 
     
-component_list = ["ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz"]
+component_list = ["ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib"]
 

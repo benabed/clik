@@ -62,7 +62,7 @@ void hgal_compute(parametric *egl, double *Rq, error **err) {
   forwardError(*err,__LINE__,);
   
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-    v = exp(b*(ell-l_pivot))/l_pivot/(l_pivot-1)*2*M_PI;
+    v = exp(b*(ell-l_pivot))/l_pivot/(l_pivot+1)*2*M_PI;
     mell = (ell-egl->lmin)*nfreq*nfreq;
     for(m1=0;m1<nfreq;m1++) {
       for(m2=m1;m2<nfreq;m2++) {
