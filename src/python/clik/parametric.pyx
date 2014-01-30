@@ -190,6 +190,8 @@ cdef class parametric:
     #self.varpar = OrderedDict(zip(prs,dv))
     self.nell = lmax+1-lmin    
     self.name = self.__class__
+    #print self.name
+    #print dir(self)
 
   def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
     cdef double _color[2000]

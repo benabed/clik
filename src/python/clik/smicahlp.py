@@ -164,7 +164,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   import os
   import parametric
   import os.path as osp
-  parametric.register_all(parametric.__dict__,False)
+  #parametric.register_all(parametric.__dict__,False)
   
   # initialize parameters
   prclass = getattr(parametric,name)
