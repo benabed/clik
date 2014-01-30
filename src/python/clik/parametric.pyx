@@ -189,7 +189,7 @@ cdef class parametric:
     self.parvalues = dv
     #self.varpar = OrderedDict(zip(prs,dv))
     self.nell = lmax+1-lmin    
-    self.name = self.__class__
+    self.name = self.__class__.__name__
     #print self.name
     #print dir(self)
 
