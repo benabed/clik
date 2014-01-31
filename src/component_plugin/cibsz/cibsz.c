@@ -286,7 +286,7 @@ void ncib_compute(parametric *egl, double *Rq, error **err) {
       for(m2=m1;m2<egl->nfreq;m2++) {
         //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*16+mv[m1]*4+mv[m2]]);
         //Rq[IDX_R(egl,ell,m1,m2)] = template[ell*16+mv[m1]*4+mv[m2]] * v;
-        Rq[IDX_R(egl,ell,m1,m2)] = template[ell*16+mv[m1]*4+mv[m2]] * A[m2*egl->nfreq+m1];
+        Rq[IDX_R(egl,ell,m1,m2)] = v*template[ell*16+mv[m1]*4+mv[m2]] * A[m2*egl->nfreq+m1];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }  
     }
@@ -420,7 +420,7 @@ void tcib_compute(parametric *egl, double *Rq, error **err) {
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
         //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*16+mv[m1]*4+mv[m2]]);
-        Rq[IDX_R(egl,ell,m1,m2)] = template[ell*16+mv[m1]*4+mv[m2]] * A[m2*egl->nfreq+m1];
+        Rq[IDX_R(egl,ell,m1,m2)] = v*template[ell*16+mv[m1]*4+mv[m2]] * A[m2*egl->nfreq+m1];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }  
     }
