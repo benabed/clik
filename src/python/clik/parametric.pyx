@@ -465,7 +465,7 @@ def register_all(gl=sys.modules[__name__],verb=False):
       pass
 
 def rename_machine(component, bdefs, rename_func):
-  def rmch(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+  def rename_update(defs,vars,rename):
     rups = {}
     bdef = bdefs.copy()
     bdef.update(defs)
@@ -478,6 +478,17 @@ def rename_machine(component, bdefs, rename_func):
         rename[k] = oo
         del(rups[k])
     rename.update(rups)
-    return component(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+    return rename,bdef
+
+  if issubclass(component,parametric_pol):
+    def rmch(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      rename,bdef = rename_update(defs,vars,rename)
+      return component(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+  else:
+    def rmch(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      rename,bdef = rename_update(defs,vars,rename)
+      return component(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
   return rmch
+
+
 register_all()

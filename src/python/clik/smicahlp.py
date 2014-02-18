@@ -455,6 +455,112 @@ def get_bestfit_and_cl(dffile,bffile):
   return bestfit,cls
 
 
+def _simu_from_rq(mt,me,mb,rq,nside=2048):
+  import healpy as hp
+  m = mt+me+mb
+  cls = []
+  for i in range(m):
+    for j in range(m-i):
+      cls += [rq[:,j,j+i]]
+  print "random alms"
+  alms = hp.synalm(cls,new = True)
+  rmaps = nm.zeros((m,m,12*nside**2))
+  mp = nm.max(me,mb)
+        
+  mps = []
+
+  for i in range(mp):
+    almsr = []
+    if mt<=i:
+      almsr += [nm.zeros_like(alms[0])]
+    else:
+      almsr += [cls[i]]
+    if me<=i:
+      almsr += [nm.zeros_like(alms[0])]
+    else:
+      almsr += [cls[i+mt]]
+    if mb<=i:
+      almsr += [nm.zeros_like(alms[0])]
+    else:
+      almsr += [cls[i+mt+me]]
+    print "fg channel %d"%i
+    mps += [hp.alm2map(almsr,nside,pol=True)]
+  for i in range(mp,m):
+    print "fg channel %d"%i
+    mps += [[hp.alm2map(alms[i],nside,pol=True),None,None]]
+  return mps
+
+def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
+  import hpy
+  if isinstance(bestfit,str):
+    bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+  fi = hpy.File(dffile)
+  cal = calTP_from_smica(dffile)
+  cvec = [bestfit[nn] for nn in cal.varpar]
+  if not calib:
+    cvec = cvec*0
+  g = nm.sqrt(cal(cvec)[0].diagonal())
+  hascl = fi["clik/lkl_0/has_cl"]
+  lmin = fi["clik/lkl_0/lmin"]
+  lmax = fi["clik/lkl_0/lmax"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  import healpy as hp
+
+  #icls = [-1,-1,-1,-1,-1,-1]
+  #if mt!=0:
+  #  icls[0] = 0
+  #if me!=0:
+  #  icls[1] = 1
+  #if mt!=[0]:
+  #  icls[2] = 2
+  #if mt*me != 0:
+  #  icls[3] = 3
+  #if mt*mb !=0:
+  #  icls[4] = 5
+  #if me*mb !=0:
+  #  icls[5] = 4
+
+  #ncls = [cls[i] if cls[i].sum() else None for i in icls if i!=-1]
+
+  icls = [0,1,2,3,5,4]
+  ncls = [cls[i]  for i in icls]
+
+  if me==0 and mb == 0:
+    icls = [0]
+
+  print "generate cmb"
+  cmb = hp.synfast(ncls,nside,pol=True and len(ncls)>1 ,new=True)
+
+  # got maps  for the cmb !
+
+  prms = parametric_from_smica(dffile)
+  oq = []
+  nrms = []
+  for p in prms:
+    pvec = [bestfit[nn] for nn in p.varpar]
+    oq += [p(pvec)]
+    nrms += [p.__class__.__name__]
+  oq = nm.array(oq)
+  oq = nm.sum(oq,0)
+  print "generate fg"
+  fg = _simu_from_rq(mt,me,mb,oq,nside)
+
+  maps = [[None,None,None]]*max(mt,me,mb)
+  for i in range(mt):
+    maps[i][0] = (cmb[0] + fg[i][0]) *g[i]
+  for j in range(max(me,mb)):
+    maps[i][1] = (cmb[1] + fg[i][1]) * g[i+mt]
+    maps[i][2] = (cmb[2] + fg[i][2]) * g[i+mt]
+  if all:
+    return maps,cmb,fg,g
+  return maps
+
+
+
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   import hpy
   if isinstance(bestfit,str):
