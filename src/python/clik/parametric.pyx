@@ -464,7 +464,7 @@ def register_all(gl=sys.modules[__name__],verb=False):
       #print e
       pass
 
-def rename_machine(component, bdefs, rename_func):
+def rename_machine_(component, bdefs, rename_func):
   def rename_update(defs,vars,rename):
     rups = {}
     bdef = bdefs.copy()
@@ -488,6 +488,37 @@ def rename_machine(component, bdefs, rename_func):
     def rmch(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
       rename,bdef = rename_update(defs,vars,rename)
       return component(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+  return rmch
+
+def rename_machine(component, bdefs, rename_func):
+  import types
+  def rename_update(defs,vars,rename):
+    rups = {}
+    bdef = bdefs.copy()
+    bdef.update(defs)
+    vv = tuple(vars)+tuple(bdef.keys())+tuple(rename.values())
+    for v in vv:
+      rename_func(v,rups)
+    for k in rename:
+      if rename[k] in rups:
+        oo = rename[k]
+        rename[k] = oo
+        del(rups[k])
+    rename.update(rups)
+    return rename,bdef
+
+  rmch = type("rename_%s"%component.__name__,(component,),{})
+
+  if issubclass(component,parametric_pol):  
+    def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      rename,bdef = rename_update(defs,vars,rename)
+      component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+    
+  else:
+    def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      rename,bdef = rename_update(defs,vars,rename)
+      component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+  rmch.__init__ = types.UnboundMethodType(__init__,None,rmch)
   return rmch
 
 
