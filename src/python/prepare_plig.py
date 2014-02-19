@@ -277,7 +277,8 @@ def add_calibration(channel, pars):
       continue
     calib_channels += ' ' + freq
   calib_channels   = calib_channels.strip()
-  pars.pf['calib'] = calib_channels
+  if calib_channels:
+    pars.pf['calib'] = calib_channels
   return pars
 
 def input_from_cov_mat(pars):
@@ -433,7 +434,7 @@ def main(argv):
 
 
   # a gcal component ?
-  if "calib" in pars:
+  if "calib" in pars and pars.calib.strip():
     names = ["calib_"+v for v in pars.str_array.calib]
     smh.add_calTP_component(lkl_grp,names)
   if "beammode.select" in pars:
