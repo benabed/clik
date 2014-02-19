@@ -508,7 +508,7 @@ def rename_machine(component, bdefs, rename_func):
     rename.update(rups)
     return rename,bdef
 
-  rmch = type("rename_%s"%component.__name__,(component,),{})
+  rmch = type(component.__name__,(component,),{})
 
   if issubclass(component,parametric_pol):  
     def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
