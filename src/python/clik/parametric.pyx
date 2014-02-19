@@ -155,12 +155,13 @@ cdef class parametric:
     
     self._post_init(detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,rename)
 
-  def _post_init_1(self,color,ndet,voidmask):
+  def _post_init_1(self,color,ndet,voidmask,defs):
     cdef int voidlist[2000]
     cdef error *_err,**err
     _err = NULL
     err = &_err
     
+    self.defaults = defs
 
     set_color(self.celf,color,ndet)
 
@@ -202,7 +203,7 @@ cdef class parametric:
     _err = NULL
     err = &_err
     
-    self._post_init_1(color,len(detlist),voidmask)
+    self._post_init_1(color,len(detlist),voidmask,defs)
 
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
@@ -420,7 +421,7 @@ cdef class parametric_pol(parametric):
     _err = NULL
     err = &_err
 
-    self._post_init_1(color,len(detlist_T)+len(detlist_P),voidmask)
+    self._post_init_1(color,len(detlist_T)+len(detlist_P),voidmask,defs)
     
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars

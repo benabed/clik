@@ -184,10 +184,10 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp = add_component(lkl_grp,pm.name,position)
   agrp.attrs["ndim"] = len(npars)
   agrp.attrs["keys"] = php.pack256(*npars)
-  
-  agrp.attrs["ndef"] = len(defaults)
-  defkey = defaults.keys()
-  defval = [defaults[k] for k in defkey]
+  nefaults = pm.defaults
+  agrp.attrs["ndef"] = len(nefaults)
+  defkey = nefaults.keys()
+  defval = [nefaults[k] for k in defkey]
   agrp.attrs["defaults"] = php.pack256(*defkey)
   agrp.attrs["values"] = php.pack256(*defval)
 

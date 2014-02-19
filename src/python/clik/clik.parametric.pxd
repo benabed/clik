@@ -15,7 +15,7 @@ ctypedef c_parametric* (*pol_init)(int , int , int*, double *, int , char** , ch
 cdef class parametric:
   cdef c_parametric* celf
   cdef int nell
-  cdef readonly object varpar,parvalues
+  cdef readonly object varpar,parvalues,defaults
   cdef void* initfunc
   cdef readonly object rename,emaner,voidmask,name
 
