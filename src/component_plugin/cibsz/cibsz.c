@@ -427,6 +427,144 @@ void tcib_compute(parametric *egl, double *Rq, error **err) {
   }
 }
 
+//cib alone on the basis of the pip cib modelling
+void gcib_compute(parametric *egl, double *rq, error **err);
+
+parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  int i,m,*mv,m1,m2;
+  double dreq[4];
+  pfchar name;
+  double *conv,*A;
+
+
+  egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  forwardError(*err,__LINE__,NULL);
+
+  egl->eg_compute = &gcib_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+
+  egl->payload = malloc_err(sizeof(double)* (10001*4*4) + sizeof(double)*(4+egl->nfreq*egl->nfreq)+sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+
+  memcpy(egl->payload,template,sizeof(double)* (10001*4*4));
+
+  mv = egl->payload + sizeof(double)* (10001*4*4) + sizeof(double)*(4+egl->nfreq*egl->nfreq);
+  conv = egl->payload + sizeof(double)* (10001*4*4);
+
+  dreq[0] = 100;
+  dreq[1] = 143;
+  dreq[2] = 217;
+  dreq[3] = 353;
+  fill_offset_freq(4,dreq, egl,mv,-1,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"A_cib_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"A_cib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,70,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+
+  parametric_set_default(egl,"cib_index",-1.3,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  // conversion factor from table 6
+  //4096.68168783,  2690.05218701,  2067.43988919,  3478.86588972
+  parametric_set_default(egl,"cib_muK_MJ-2sr_100",4096.68168783/1e6,err); 
+  forwardError(*err,__LINE__,NULL);
+  
+  conv[0] = parametric_get_value(egl,"cib_muK_MJ-2sr_100",err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_muK_MJ-2sr_143",2690.05218701/1e6,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  conv[1] = parametric_get_value(egl,"cib_muK_MJ-2sr_143",err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_muK_MJ-2sr_217",2067.43988919/1e6,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  conv[2] = parametric_get_value(egl,"cib_muK_MJ-2sr_217",err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_muK_MJ-2sr_353",3478.86588972/1e6,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  conv[3] = parametric_get_value(egl,"cib_muK_MJ-2sr_353",err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_rigid",1,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"cib_l_pivot",3000,err); 
+  forwardError(*err,__LINE__,NULL);
+
+  return egl;
+}
+
+void gcib_compute(parametric *egl, double *Rq, error **err) {
+  double *template;
+  double l_pivot,index,v;
+  int m1,m2,ell;
+  double nrm;
+  int *mv;
+  int rigid;
+  double *conv,*A;
+  pfchar name;
+  
+
+  mv = egl->payload + sizeof(double)* (10001*4*4) + sizeof(double)*(4+egl->nfreq*egl->nfreq);
+  conv = egl->payload + sizeof(double)* (10001*4*4);
+  A = egl->payload + sizeof(double)* (10001*4*4)+sizeof(double)*4;
+
+  template = egl->payload;
+  l_pivot = parametric_get_value(egl,"cib_l_pivot",err);
+  forwardError(*err,__LINE__,);;
+
+  rigid = parametric_get_value(egl,"cib_rigid",err);
+  forwardError(*err,__LINE__,);
+
+  index = parametric_get_value(egl,"cib_index",err);
+  forwardError(*err,__LINE__,);
+
+  nrm = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"A_cib_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"A_cib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      v = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      A[m1*egl->nfreq+m2] = (v/template[((int) l_pivot)*16+mv[m1]*4+mv[m2]]*(1-rigid) +  nrm/template[((int)l_pivot)*16+2*4+2]*rigid*conv[mv[m1]]*conv[mv[m2]]/conv[2]/conv[2]) /l_pivot/(l_pivot+1)*2*M_PI ;
+      A[m2*egl->nfreq+m1] = A[m1*egl->nfreq+m2];
+    }
+  }
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = pow((double) ell/l_pivot,(double) index-(-1.3));
+    //_DEBUGHERE_("%d %g",ell,v);
+    for(m1=0;m1<egl->nfreq;m1++) {
+      for(m2=m1;m2<egl->nfreq;m2++) {
+        //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*16+mv[m1]*4+mv[m2]]);
+        Rq[IDX_R(egl,ell,m1,m2)] = v*template[ell*16+mv[m1]*4+mv[m2]] * A[m2*egl->nfreq+m1];
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }  
+    }
+  }
+}
+
 
 // CIB with free amplitudes and power law spectrum
 

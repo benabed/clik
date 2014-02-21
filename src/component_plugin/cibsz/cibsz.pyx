@@ -1,4 +1,5 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template
+from clik.parametric import norename,rename_machine
 
 cdef extern double c_sz_spectrum "sz_spectrum" (double nu, double nu0)
 cdef extern c_parametric *cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -12,6 +13,7 @@ cdef extern c_parametric *sz_cib_x_init(int ndet, double *detlist, int ndef, cha
 cdef extern c_parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *tcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric  *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
+cdef extern c_parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
 
@@ -40,6 +42,12 @@ cdef class tcib(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> tcib_init;
     self.template_name = "cib_tot_100_353_Jsr-1_GL_2013_10.dat"
+    self.plugin_name = "cibsz"
+
+cdef class gcib(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> tcib_init;
+    self.template_name = "cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat"
     self.plugin_name = "cibsz"
 
 cdef class ncibXsz(parametric_template):
@@ -80,5 +88,9 @@ cdef class cibr(parametric):
     self.initfunc = <void*> cibr_init;
 
     
-component_list = ["ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib"]
 
+cib_1h_2h = rename_machine(gcib,{},norename,data_file="cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
+cib_1h_2h_SN = rename_machine(gcib,{},norename,data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
+
+      
+component_list = ["cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib"]

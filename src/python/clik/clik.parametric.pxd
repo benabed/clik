@@ -18,7 +18,8 @@ cdef class parametric:
   cdef readonly object varpar,parvalues,defaults
   cdef void* initfunc
   cdef readonly object rename,emaner,voidmask,name
-
+  cdef readonly object _template
+  
 cdef class parametric_template(parametric):
   cdef object template_name
   cdef object plugin_name

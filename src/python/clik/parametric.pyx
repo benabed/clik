@@ -321,8 +321,10 @@ cdef class parametric_template(parametric):
 
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
-
+    
+    self._template=None
     tmp = self.get_template(data_dir,data_path,data_file,data)
+    self._template = tmp
     template = <double*> nm.PyArray_DATA(tmp)
     
     if self.initfunc==NULL:
@@ -339,6 +341,8 @@ cdef class parametric_template(parametric):
 
   
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
+    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
+      return self._template
     if data is None:
       if data_path:
         pth = data_path
@@ -354,6 +358,7 @@ cdef class parametric_template(parametric):
         pth = [osp.join(bpth,fpthI) for fpthI in fpth]
       if isinstance(pth,str):
         pth = [pth]
+      
       tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
     else:
       tmp = nm.array(data)
@@ -465,33 +470,8 @@ def register_all(gl=sys.modules[__name__],verb=False):
       #print e
       pass
 
-def rename_machine_(component, bdefs, rename_func):
-  def rename_update(defs,vars,rename):
-    rups = {}
-    bdef = bdefs.copy()
-    bdef.update(defs)
-    vv = tuple(vars)+tuple(bdef.keys())+tuple(rename.values())
-    for v in vv:
-      rename_func(v,rups)
-    for k in rename:
-      if rename[k] in rups:
-        oo = rename[k]
-        rename[k] = oo
-        del(rups[k])
-    rename.update(rups)
-    return rename,bdef
 
-  if issubclass(component,parametric_pol):
-    def rmch(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
-      rename,bdef = rename_update(defs,vars,rename)
-      return component(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
-  else:
-    def rmch(detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
-      rename,bdef = rename_update(defs,vars,rename)
-      return component(detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
-  return rmch
-
-def rename_machine(component, bdefs, rename_func):
+def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_file="",data=None):
   import types
   def rename_update(defs,vars,rename):
     rups = {}
@@ -510,17 +490,37 @@ def rename_machine(component, bdefs, rename_func):
 
   rmch = type(component.__name__,(component,),{})
 
+  rdata_dir = data_dir
+  rdata_path = data_path
+  rdata_file = data_file
+  rdata = data
+
+  
   if issubclass(component,parametric_pol):  
-    def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
-      rename,bdef = rename_update(defs,vars,rename)
-      component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
-    
+    if issubclass(component,parametric_template):
+      def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+        rename,bdef = rename_update(defs,vars,rename)
+        component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename, rdata_dir, rdata_path, rdata_file, rdata)
+    else:      
+      def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+        rename,bdef = rename_update(defs,vars,rename)
+        component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)    
   else:
-    def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
-      rename,bdef = rename_update(defs,vars,rename)
-      component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
+    if issubclass(component,parametric_template):
+      def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+        rename,bdef = rename_update(defs,vars,rename)
+        component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename, rdata_dir, rdata_path, rdata_file, rdata)
+    else:
+      def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+        rename,bdef = rename_update(defs,vars,rename)
+        component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
   rmch.__init__ = types.UnboundMethodType(__init__,None,rmch)
+  
   return rmch
+
+
+def norename(v,rups):
+  return
 
 
 register_all()
