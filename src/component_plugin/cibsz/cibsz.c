@@ -501,7 +501,7 @@ parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char *
   conv[3] = parametric_get_value(egl,"gib_muK_MJ-2sr_353",err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"gib_rigid",1,err); 
+  parametric_set_default(egl,"gib_rigid",217,err); 
   forwardError(*err,__LINE__,NULL);
 
   parametric_set_default(egl,"gib_l_pivot",3000,err); 
@@ -516,7 +516,7 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
   int m1,m2,ell;
   double nrm;
   int *mv;
-  int rigid;
+  int rigid,irigid;
   double *conv,*A;
   pfchar name;
   
@@ -535,9 +535,33 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
   index = parametric_get_value(egl,"gib_index",err);
   forwardError(*err,__LINE__,);
 
-  nrm = parametric_get_value(egl,"A_gib_217",err);
-  forwardError(*err,__LINE__,);
+  if (rigid==0) {
+    sprintf(name,"A_gib_%d",217);    
+    irigid = 2;
+  } else {
+    double dreq[4];
 
+    dreq[0] = 100;
+    dreq[1] = 143;
+    dreq[2] = 217;
+    dreq[3] = 353;
+
+    sprintf(name,"A_gib_%d",(int) rigid);  
+    irigid=-1;
+    for(m1=0;m1<4;m1++) {
+      if (fabs(rigid-dreq[m1])<1e-6) {
+        irigid=m1;
+      }
+    }
+    testErrorRet(irigid==-1,-55214,"AAAAAAA",*err,__LINE__,);
+    rigid = 1;
+    
+  }
+
+  nrm = parametric_get_value(egl,name,err);
+  forwardError(*err,__LINE__,);
+  
+  
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
@@ -547,7 +571,7 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
       }
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
-      A[m1*egl->nfreq+m2] = (v/template[((int) l_pivot)*16+mv[m1]*4+mv[m2]]*(1-rigid) +  nrm/template[((int)l_pivot)*16+2*4+2]*rigid*conv[mv[m1]]*conv[mv[m2]]/conv[2]/conv[2]) /l_pivot/(l_pivot+1)*2*M_PI ;
+      A[m1*egl->nfreq+m2] = (v/template[((int) l_pivot)*16+mv[m1]*4+mv[m2]]*(1-rigid) +  nrm/template[((int)l_pivot)*16+irigid*4+irigid]*rigid*conv[mv[m1]]*conv[mv[m2]]/conv[irigid]/conv[irigid]) /l_pivot/(l_pivot+1)*2*M_PI ;
       A[m2*egl->nfreq+m1] = A[m1*egl->nfreq+m2];
     }
   }
