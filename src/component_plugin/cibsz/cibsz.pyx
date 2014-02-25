@@ -46,7 +46,7 @@ cdef class tcib(parametric_template):
 
 cdef class gcib(parametric_template):
   def __cinit__(self):
-    self.initfunc = <void*> tcib_init;
+    self.initfunc = <void*> gcib_init;
     self.template_name = "cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat"
     self.plugin_name = "cibsz"
 
@@ -89,9 +89,9 @@ cdef class cibr(parametric):
 
     
 
-cib_1h_2h = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
-cib_1h_2h_SN = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
-cibsz_1h_2h = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cibsz_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
+cib_1h_2h = rename_machine(gcib,{},rename_replace("gib","cib"),data_file="cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
+cib_1h_2h_SN = rename_machine(gcib,{},rename_replace("gib","cib"),data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
+cibsz_1h_2h = rename_machine(gcib,{},rename_replace("gib","cibsz"),data_file="cibsz_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
 
 
 

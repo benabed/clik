@@ -498,7 +498,7 @@ def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_f
   
   if issubclass(component,parametric_pol):  
     if issubclass(component,parametric_template):
-      def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
         rename,bdef = rename_update(defs,vars,rename)
         component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename, rdata_dir, rdata_path, rdata_file, rdata)
     else:      
@@ -507,7 +507,7 @@ def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_f
         component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)    
   else:
     if issubclass(component,parametric_template):
-      def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
+      def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
         rename,bdef = rename_update(defs,vars,rename)
         component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename, rdata_dir, rdata_path, rdata_file, rdata)
     else:
@@ -523,10 +523,10 @@ def norename(v,rups):
   return
 
 def rename_replace(before,after):
-  def rename(c,rups):
+  def rename(v,rups):
     if after in v:
       rv = v.replace(after,before)
       rups[v]=rv
   return rename
-  
+
 register_all()

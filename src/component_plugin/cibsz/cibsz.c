@@ -463,48 +463,48 @@ parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char *
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
-        sprintf(name,"A_cib_%d",(int)egl->freqlist[m1]);  
+        sprintf(name,"A_gib_%d",(int)egl->freqlist[m1]);  
       } else {
-        sprintf(name,"A_cib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+        sprintf(name,"A_gib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
       parametric_set_default(egl,name,70,err);
       forwardError(*err,__LINE__,NULL);
     }
   }  
 
-  parametric_set_default(egl,"cib_index",-1.3,err); 
+  parametric_set_default(egl,"gib_index",-1.3,err); 
   forwardError(*err,__LINE__,NULL);
 
   // conversion factor from table 6
   //4096.68168783,  2690.05218701,  2067.43988919,  3478.86588972
-  parametric_set_default(egl,"cib_muK_MJ-2sr_100",4096.68168783/1e6,err); 
+  parametric_set_default(egl,"gib_muK_MJ-2sr_100",4096.68168783/1e6,err); 
   forwardError(*err,__LINE__,NULL);
   
-  conv[0] = parametric_get_value(egl,"cib_muK_MJ-2sr_100",err);
+  conv[0] = parametric_get_value(egl,"gib_muK_MJ-2sr_100",err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"cib_muK_MJ-2sr_143",2690.05218701/1e6,err); 
+  parametric_set_default(egl,"gib_muK_MJ-2sr_143",2690.05218701/1e6,err); 
   forwardError(*err,__LINE__,NULL);
 
-  conv[1] = parametric_get_value(egl,"cib_muK_MJ-2sr_143",err);
+  conv[1] = parametric_get_value(egl,"gib_muK_MJ-2sr_143",err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"cib_muK_MJ-2sr_217",2067.43988919/1e6,err); 
+  parametric_set_default(egl,"gib_muK_MJ-2sr_217",2067.43988919/1e6,err); 
   forwardError(*err,__LINE__,NULL);
 
-  conv[2] = parametric_get_value(egl,"cib_muK_MJ-2sr_217",err);
+  conv[2] = parametric_get_value(egl,"gib_muK_MJ-2sr_217",err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"cib_muK_MJ-2sr_353",3478.86588972/1e6,err); 
+  parametric_set_default(egl,"gib_muK_MJ-2sr_353",3478.86588972/1e6,err); 
   forwardError(*err,__LINE__,NULL);
 
-  conv[3] = parametric_get_value(egl,"cib_muK_MJ-2sr_353",err);
+  conv[3] = parametric_get_value(egl,"gib_muK_MJ-2sr_353",err);
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"cib_rigid",1,err); 
+  parametric_set_default(egl,"gib_rigid",1,err); 
   forwardError(*err,__LINE__,NULL);
 
-  parametric_set_default(egl,"cib_l_pivot",3000,err); 
+  parametric_set_default(egl,"gib_l_pivot",3000,err); 
   forwardError(*err,__LINE__,NULL);
 
   return egl;
@@ -526,24 +526,24 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
   A = egl->payload + sizeof(double)* (10001*4*4)+sizeof(double)*4;
 
   template = egl->payload;
-  l_pivot = parametric_get_value(egl,"cib_l_pivot",err);
+  l_pivot = parametric_get_value(egl,"gib_l_pivot",err);
   forwardError(*err,__LINE__,);;
 
-  rigid = parametric_get_value(egl,"cib_rigid",err);
+  rigid = parametric_get_value(egl,"gib_rigid",err);
   forwardError(*err,__LINE__,);
 
-  index = parametric_get_value(egl,"cib_index",err);
+  index = parametric_get_value(egl,"gib_index",err);
   forwardError(*err,__LINE__,);
 
-  nrm = parametric_get_value(egl,"A_cib_217",err);
+  nrm = parametric_get_value(egl,"A_gib_217",err);
   forwardError(*err,__LINE__,);
 
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
-        sprintf(name,"A_cib_%d",(int)egl->freqlist[m1]);  
+        sprintf(name,"A_gib_%d",(int)egl->freqlist[m1]);  
       } else {
-        sprintf(name,"A_cib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+        sprintf(name,"A_gib_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
