@@ -1,5 +1,5 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template
-from clik.parametric import norename,rename_machine
+from clik.parametric import norename,rename_machine,rename_replace
 
 cdef extern double c_sz_spectrum "sz_spectrum" (double nu, double nu0)
 cdef extern c_parametric *cib_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -89,8 +89,11 @@ cdef class cibr(parametric):
 
     
 
-cib_1h_2h = rename_machine(gcib,{},norename,data_file="cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
-cib_1h_2h_SN = rename_machine(gcib,{},norename,data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
+cib_1h_2h = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cib_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
+cib_1h_2h_SN = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
+cibsz_1h_2h = rename_machine(gcib,{},rename_replace("gcib","cib"),data_file="cibsz_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
+
+
 
       
-component_list = ["cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib"]
+component_list = ["cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib"]

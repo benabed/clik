@@ -522,5 +522,11 @@ def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_f
 def norename(v,rups):
   return
 
-
+def rename_replace(before,after):
+  def rename(c,rups):
+    if after in v:
+      rv = v.replace(after,before)
+      rups[v]=rv
+  return rename
+  
 register_all()
