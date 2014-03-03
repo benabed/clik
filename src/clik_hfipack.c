@@ -530,12 +530,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
   return cing;  
 }
 
-int mtot(int mT,int mP,int *has_cl) {
-  int nr_channels = mT * (has_cl[0] | has_cl[3] | has_cl[4])
-                  + mP * (has_cl[1] | has_cl[3] | has_cl[5])
-                  + mP * (has_cl[2] | has_cl[4] | has_cl[5]);
-  return nr_channels;
-}
+
 
 SmicaComp * clik_smica_comp_1d_init(cldf *df,int nb, int mT, int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   double *someA;

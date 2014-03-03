@@ -373,6 +373,7 @@ long cldf_readint(cldf *df, char *key, error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 double cldf_readfloat_default(cldf *df, char *key,double def, error **err) {
@@ -429,6 +430,7 @@ double cldf_readfloat(cldf *df, char *key, error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
@@ -533,6 +535,7 @@ char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 
@@ -563,6 +566,7 @@ cldf* cldf_openchild(cldf *df, char* key, error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 void cldf_close(cldf** pdf) {
@@ -756,6 +760,7 @@ double* cldf_readfloatarray(cldf *df, char *key, int* sz, error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 int* cldf_readintarray(cldf *df, char *key, int* sz, error **err) {
@@ -891,6 +896,7 @@ long* cldf_readlongarray(cldf *df, char *key, int* sz, error **err) {
     }
   }
   testErrorRetVA(1==1,-1234,"unknown element '%s'",*err,__LINE__,0,key);
+  return 0;
 }
 
 void cldf_external(cldf* df, char *dirname, char* pwd, error **err) {

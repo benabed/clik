@@ -1,5 +1,6 @@
 #include "clik_parametric.h"
 #include "clik_helper.h"
+#include "clik_parametric_addon.h"
 
 typedef struct {
   parametric *p_model;
@@ -280,16 +281,16 @@ int base_parametric_cldf_init(cldf *df,int m, double** detlist,int *ndef, char *
   
   dz = -1;
   hk = cldf_haskey(df,"dfreq",err);
-  forwardError(*err,__LINE__,);
+  forwardError(*err,__LINE__,0);
   if (hk ==1) {
     *detlist = cldf_readfloatarray(df,"dfreq",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
   } else {
     int * ietlist;
     ietlist = cldf_readintarray(df,"freq",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     *detlist = malloc_err(sizeof(double)*dz,err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,0);
     
     for(i=0;i<dz;i++) {
       (*detlist)[i]=ietlist[i];
@@ -333,10 +334,10 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
     forwardError(*err,__LINE__,NULL);   
     dz = -1;
     rename_from = cldf_readstr(df,"rename_from",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,NULL);
     dz = -1;
     rename_to = cldf_readstr(df,"rename_to",&dz, err);
-    forwardError(*err,__LINE__,);
+    forwardError(*err,__LINE__,NULL);
   }
 
   hk = cldf_haskey(df,"color",err);
@@ -494,5 +495,5 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   return SC;    
 }
 
-CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_init);
+//CREATE_PARAMETRIC_FILE_INIT(powerlaw_free_emissivity,powerlaw_free_emissivity_init);
 

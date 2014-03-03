@@ -56,4 +56,7 @@ typedef SmicaComp * clik_smica_comp_init_func(cldf * df,int nb, int mT,int mP, i
 
 double* wcmblkl_lkl(void* data, double *pars, error **err);
 */
+
+int mtot(int mT,int mP,int *has_cl);
+
 #endif
