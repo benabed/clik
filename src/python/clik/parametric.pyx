@@ -474,6 +474,7 @@ def register_all(gl=sys.modules[__name__],verb=False):
 def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_file="",data=None):
   import types
   def rename_update(defs,vars,rename):
+    rename = rename.copy()
     rups = {}
     bdef = bdefs.copy()
     bdef.update(defs)

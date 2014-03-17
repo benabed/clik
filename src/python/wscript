@@ -37,6 +37,7 @@ def build(ctx):
     
   ctx.load("execconfig","waf_tools")
   if ctx.env.CYTHON:
+    
     ctx(
       features = "c cshlib pyext",
       source = "clik/lkl.pyx",
@@ -94,6 +95,12 @@ def build(ctx):
     source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/cldf.py clik/crayola.py",
     install_path = "${PYTHONDIR}/clik"
   )
+
+  ctx(
+    source = "../bicep/bicep_util.py",
+    install_path = "${PYTHONDIR}"
+  )
+  
   
   # python execs
 
@@ -118,7 +125,7 @@ def build(ctx):
               "clik_extract_external",
               "prepare_CAMspec",
               "clik_smica_add_gcal",
-              "clik_remove_smica_component","prepare_plig","clik_cldf_dump","clik_cldf_ls","clik_lensing_norenorm"]
+              "clik_remove_smica_component","prepare_plig","clik_cldf_dump","clik_cldf_ls","clik_lensing_norenorm","prepare_bicep"]
   old =   [
               "synthetic_smica",
               "create_lowl_problem",
@@ -136,3 +143,10 @@ def build(ctx):
       target = cde,
       install_path = ctx.env.BINDIR
       )    
+
+  ctx(
+    execrule = injectpath,
+    source = "../bicep/bicep_main.py",
+    target = "bicep_main",
+    install_path = ctx.env.BINDIR
+    )    

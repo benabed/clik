@@ -11,6 +11,8 @@ def build(bld):
   source_clik += ['clik_actspt.c']*(bool(bld.env.has_actspt))
   source_clik += ['clik_gibbs.c']*(bool(bld.env.has_gibbs))
   
+  source_clik += ["bicep/bicep_call.c"]
+
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
   source_clik += ['cldf/cldf.c']

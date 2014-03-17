@@ -433,6 +433,76 @@ double cldf_readfloat(cldf *df, char *key, error **err) {
   return 0;
 }
 
+/*char *cldf_readstrarray(cldf *df, char *key, int *sz, error **err) {
+  int hk;
+  char kt[1000];
+  char *typ;
+  int tsz;
+  char **res;
+  char *ves;
+  int vsz;
+  int i;
+
+  sprintf(kt,"%s__type__",key);
+  hk =  cldf_haskey(df, kt, err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    typ = cldf_readstr(df,kt,NULL,err);
+    forwardError(*err,__LINE__,NULL);
+    testErrorRetVA(strcmp(typ,"str_array"),-24235,"%s not a str array",*err,__LINE__,NULL,key);
+    ves = cldf_readstr(df,key,&vsz,err);
+    forwardError(*err,__LINE__,NULL);
+    for(i=0;i<vsz;i++) {
+      if (ves[i]=='\n') {
+        ves[i] = '\0';
+        sscanf(ves,"%d",sz);
+        i++;
+        break;
+      }
+    }
+    testErrorRetVA(i==vsz,-22311,"%d not a str array",*err,__LINE__,NULL,key);
+    res = malloc_err(sizeof(char)*vsz+sizeof(char*)**sz,err);
+    cn = 0;
+    ci = 0;
+    res[cn] = (((void*) res) + *sz*sizeof(char*) + ci*sizeof(char));
+    ip = i;
+    for(;i<vsz;i++) {
+      if (ves[i]=='\n') {
+        ves[i] = '\0';
+        sscanf(&(ves[ip]),"%d",&gn);
+        i++;
+        ves[i+gn]='\0'
+        memcpy(&(res(cn)),&(ves[i]),sizeof(char)*(gn+1));
+        i+=gn;
+        cn++;
+        ci+=gn+1;
+        ip=i+1;
+        res[cn] = (((void*) res) + *sz*sizeof(char*) + ci*sizeof(char));    
+      }
+    }
+    free(ves);
+    return res;    
+  }
+
+
+  ves = cldf_readstr(df,key,&vsz,err);
+  forwardError(*err,__LINE__,NULL);
+  testErrorRetVA(vsz%256!=0,-242352,"%s is not a str array (size %d)",*err,__LINE__,NULL,key,vsz);
+
+  *sz = vsz/256;
+  res = malloc_err(sizeof(char)*vsz+sizeof(char*)**sz,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(i=0;i<*sz;i++) {
+    res[i] = (((void*) res) + *sz*sizeof(char*) + i*256*sizeof(char));
+    sprintf(res[i],"%s",&(ves[i*256]));
+  }    
+  free(ves);
+  return res;
+
+  
+}
+*/
 char* cldf_readstr(cldf *df, char *key, int *sz,error **err) {
   char kp[256];
   int i;
