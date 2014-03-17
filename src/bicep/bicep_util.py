@@ -17,7 +17,13 @@
 
 import numpy as np
 from numpy import linalg as LA
-from scipy.linalg import sqrtm
+try:
+    from scipy.linalg import sqrtm
+    raise ImportError("a")
+except ImportError:
+    def sqrtm(mat):
+        U,s,V = np.linalg.svd(mat)
+        return np.dot(U,np.dot(np.diag(np.sqrt(s)),V))
 
 #####################################################################
 def get_bpwf(exp = 'bicep1'):
