@@ -183,9 +183,9 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
     //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
     smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
     forwardError(*err,__LINE__,0);
-    //sprintf(nn,"pq_%d.la",isc);
-    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    //forwardError(*err,__LINE__,-1);
+    sprintf(nn,"pq_%d.la",isc);
+    write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    forwardError(*err,__LINE__,-1);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);

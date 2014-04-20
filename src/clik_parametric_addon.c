@@ -408,7 +408,8 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   p_pay->bins = NULL;
   if (bins !=NULL) {
     int li,bi,bn;
-    ncl = p_model->has_TEB[0] + p_model->has_TEB[1] + p_model->has_TEB[2] + p_model->has_TEB[0] * p_model->has_TEB[1] + p_model->has_TEB[0] * p_model->has_TEB[2] +p_model->has_TEB[1] * p_model->has_TEB[2];
+    //ncl = p_model->has_TEB[0] + p_model->has_TEB[1] + p_model->has_TEB[2] + p_model->has_TEB[0] * p_model->has_TEB[1] + p_model->has_TEB[0] * p_model->has_TEB[2] +p_model->has_TEB[1] * p_model->has_TEB[2];
+    ncl = has_cl[0] + has_cl[1] + has_cl[2] + has_cl[3] + has_cl[4] + has_cl[5]; 
     //_DEBUGHERE_("ncl %d",ncl);
     p_pay->nbins = nbins;
     p_pay->bins = malloc_err(sizeof(double)*(ncl*nell*nbins),err);
