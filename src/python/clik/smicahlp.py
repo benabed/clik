@@ -413,7 +413,7 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
     for j in range(i,ndet):
       mask[qmins[i,j]:qmaxs[i,j],i,j]=1
       mask[qmins[i,j]:qmaxs[i,j],j,i]=1
-      if i<nT and j>=nT and i>j-nT:
+      if i<nT and j>=nT and i>j-nT and i<nP:
         # cas TE dessous
         mask[qmins[i,j]:qmaxs[i,j],i,j]=0
         mask[qmins[i,j]:qmaxs[i,j],j,i]=0
