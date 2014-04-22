@@ -96,10 +96,11 @@ def build(ctx):
     install_path = "${PYTHONDIR}/clik"
   )
 
-  ctx(
-    source = "../bicep/bicep_util.py",
-    install_path = "${PYTHONDIR}"
-  )
+  if osp.exists("../bicep"):
+    ctx(
+      source = "../bicep/bicep_util.py",
+      install_path = "${PYTHONDIR}"
+    )
   
   
   # python execs
