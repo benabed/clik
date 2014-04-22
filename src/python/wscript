@@ -145,9 +145,10 @@ def build(ctx):
       install_path = ctx.env.BINDIR
       )    
 
-  ctx(
-    execrule = injectpath,
-    source = "../bicep/bicep_main.py",
-    target = "bicep_main",
-    install_path = ctx.env.BINDIR
-    )    
+  if osp.exists("../bicep"):
+    ctx(
+      execrule = injectpath,
+      source = "../bicep/bicep_main.py",
+      target = "bicep_main",
+      install_path = ctx.env.BINDIR
+      )    
