@@ -357,6 +357,7 @@ def dist(ctx):
   dist_list += "src/bopix/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
+  dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   
   ctx.files = ctx.path.ant_glob(dist_list)
