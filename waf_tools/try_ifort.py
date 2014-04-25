@@ -39,7 +39,7 @@ def configure(ctx):
   ctx.env.append_value("FCFLAGS_fcshlib",ctx.env.LINKFLAGS_fcshlib)  
   ctx.env["FCFLAGS_fpic"]=[]
   ctx.env.append_value("FCFLAGS_fpic",[flg for flg in ctx.env.FCFLAGS_fcshlib if "-fpic" in flg.lower()])
-  
+  #ctx.env.append_value("FCFLAGS_fpic","-fpe0")
 def show_linkline(ctx):
   ctx.start_msg("fortran link line")
   ctx.end_msg(" ".join(["-L%s"%vv for vv in ctx.env.LIBPATH_fc_runtime])+" "+" ".join(["-l%s"%vv for vv in ctx.env.LIB_fc_runtime]))
