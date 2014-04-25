@@ -12,6 +12,15 @@
 #define _clik_FORTRAN_
 
 
+char* fortran_clik_protect_string(char* string, int len) {
+  char *tmpstring;
+  
+  tmpstring = malloc(sizeof(char)*(len+1));
+  memcpy(tmpstring,string,sizeof(char)*len);
+  tmpstring[len]='\0';
+
+  return tmpstring;
+}
 // in each of the following functions, if err is set to NULL the code exit as soon as it encounters an error (with a call to exit, bad for you if you're using mpi...)
 
 // initialize the planck likelihood from an hdf file
@@ -24,15 +33,8 @@ void fortran_clik_init_(long* pself,char* hdffilepath,int* fpathlen) {
 #endif
   clik_object* self;
   char *tmpchain;
-  int i,ln;
-  ln = *fpathlen;
-  ln ++;
-
-  tmpchain = malloc(sizeof(char)*(ln));
-  for(i=0;i<ln-1;i++) {
-    tmpchain[i] = hdffilepath[i];
-  }
-  tmpchain[ln-1]='\0';
+  
+  tmpchain = fortran_clik_protect_string(hdffilepath,*fpathlen);
   self = clik_init(tmpchain,NULL);
   *pself = (long) self; 
   free(tmpchain);
@@ -217,9 +219,12 @@ void fortran_clik_lensing_init__(long *pself,char *fpath, int* fpathlen) {
 void fortran_clik_lensing_init_(long *pself,char *fpath, int* fpathlen) {
 #endif
   clik_lensing_object* self;
-  fpath[*fpathlen]='\0';
-  self = clik_lensing_init(fpath,NULL);
+  char *tmpchain;
+
+  tmpchain = fortran_clik_protect_string(fpath,*fpathlen);
+  self = clik_lensing_init(tmpchain,NULL);
   *pself = (long) self; 
+  free(tmpchain);
 }
 
 #ifdef ADD0US
@@ -229,9 +234,11 @@ void fortran_clik_try_lensing__(int *isl,char *fpath, int* fpathlen) {
 #else
 void fortran_clik_try_lensing_(int *isl,char *fpath, int* fpathlen) {
 #endif
-  fpath[*fpathlen]='\0';
+  char *tmpchain;
+
+  tmpchain = fortran_clik_protect_string(fpath,*fpathlen);
   *isl = clik_try_lensing(fpath,NULL);
-  
+  free(tmpchain);
 }
 
 #ifdef ADD0US
