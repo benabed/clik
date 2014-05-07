@@ -113,3 +113,64 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
 
   return cing;
 }
+
+
+//void free_comm_lowl(void **phandle) {
+//  
+//  comm_lowl_extra_free_(*phandle);
+//}
+//
+//double comm_lowl_lkl(void* handle, double* pars, error **err) {
+//  double lkl;
+//  
+//  comm_lowl_extra_lkl_(&lkl,handle,pars);
+//  
+//  return lkl;
+//}
+//
+//cmblkl* clik_comm_lowl_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+//  char directory_name[4096],pwd[4096],pwd2[4096];
+//  int status;
+//  int bok;
+//  cmblkl *cing;
+//  int mlmax;
+//  char parfile[2048];
+//  int ldd;
+//  int lmin,lmax;
+//  int firstchain,lastchain,firstsample,lastsample,step;
+//  int hk;
+//  gibbs *gb;
+//
+//  lmin = ell[0];
+//  lmax = ell[nell-1];
+//  
+//  // get data and change dir
+//  cldf_external(df,directory_name,pwd,err);
+//  forwardError(*err,__LINE__,NULL);
+//
+//  memset(parfile,' ',sizeof(char)*2048);
+//  sprintf(parfile,"comm_lowl.par");
+//  parfile[13] = ' ';
+//  ldd = 13;
+//  
+//  gb = malloc_err(sizeof(int),err);
+//  forwardError(*err,__LINE__,NULL);
+//  
+//  *((int*) gb) =0;
+//
+//  //call
+//  comm_lowl_extra_parameter_init_(gb,parfile,&ldd,&lmin,&lmax);
+//  testErrorRetVA(*((int*) gb) <=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
+//
+//  cldf_external_cleanup(directory_name,pwd,err);
+//  forwardError(*err,__LINE__,NULL);
+//  
+//  cing = init_cmblkl(gb, &comm_lowl_lkl, 
+//                     &free_comm_lowl,
+//                     nell,ell,
+//                     has_cl,ell[nell-1],unit,wl,0,bins,nbins,0,err);
+//  forwardError(*err,__LINE__,NULL);
+//
+//  return cing;
+//}
+//

@@ -108,6 +108,7 @@ def build(ctx):
   execlist = ["clik_add_free_calib",
               "clik_hdf2cldf",
               "prepare_gibbs",
+              "prepare_comm_lowl",
               "clik_smica_changelmax",
               "clik_smica_change_criterion",
               "clik_explore_1d",

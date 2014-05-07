@@ -69,3 +69,76 @@ SUBROUTINE GIBBS_EXTRA_PARAMETER_INIT(handle,datadir,l_datadir,lmin,lmax,firstch
 	clik_lmax(handle) = lmax
 		
 END SUBROUTINE 	GIBBS_EXTRA_PARAMETER_INIT
+
+!!!MODULE COMM_LOWL_EXTRA
+!!!
+!!!	IMPLICIT NONE
+!!!
+!!!	INTEGER,dimension(100):: CLIK_LMAX, CLIK_LMIN
+!!!	real(8),dimension(0:1000,1:6) :: cl_
+!!!
+!!!END MODULE COMM_LOWL_EXTRA
+!!!
+!!!SUBROUTINE COMM_LOWL_EXTRA_PARAMETER_INIT(handle,parfile,l_parfile,lmin,lmax)
+!!!use comm_lowl_mod_dist
+!!!use COMM_LOWL_EXTRA
+!!!character(len=l_parfile)::parfile
+!!!integer,intent(OUT)::handle
+!!!integer,intent(IN)::l_parfile,lmax
+!!!
+!!!call comm_lowl_initialize_object(parfile,handle)
+!!!clik_lmax(handle) = lmax
+!!!clik_lmax(handle) = lmin
+!!!
+!!!END SUBROUTINE COMM_LOWL_EXTRA_PARAMETER_INIT
+!!!
+!!!SUBROUTINE COMM_LOWL_EXTRA_LKL(LKL,handle,CL)
+!!!use comm_lowl_mod_dist
+!!!use COMM_LOWL_EXTRA
+!!!REAL(8),INTENT(OUT)::LKL
+!!!INTEGER,intent(in)::handle
+!!!REAL(8),INTENT(IN),DIMENSION(0:(CLIK_LMAX(handle)-clik_lmin(handle)+1)*6-1)::CL
+!!!integer::zero
+!!!
+!!!cl_ = 0
+!!!
+!!!!TT
+!!!zero = 0
+!!!cl_(clik_lmin(handle):clik_lmax(handle),1) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!!EE
+!!!zero = zero + clik_lmax(handle)+1-clik_lmin(handle)
+!!!cl_(clik_lmin(handle):clik_lmax(handle),4) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!!BB
+!!!zero = zero + clik_lmax(handle)+1-clik_lmin(handle)
+!!!cl_(clik_lmin(handle):clik_lmax(handle),6) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!!TE
+!!!zero = zero + clik_lmax(handle)+1-clik_lmin(handle)
+!!!cl_(clik_lmin(handle):clik_lmax(handle),2) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!!TB
+!!!zero = zero + clik_lmax(handle)+1-clik_lmin(handle)
+!!!cl_(clik_lmin(handle):clik_lmax(handle),3) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!!EB
+!!!zero = zero + clik_lmax(handle)+1-clik_lmin(handle)
+!!!cl_(clik_lmin(handle):clik_lmax(handle),5) = CL(zero:zero+clik_lmax(handle)-clik_lmin(handle))
+!!!
+!!!LKL = comm_lowl_compute_lnL(cls=cl_, handle=handle)
+!!!
+!!!
+!!!END SUBROUTINE COMM_LOWL_EXTRA_LKL
+!!!
+!!!SUBROUTINE COMM_LOWL_EXTRA_FREE(handle)
+!!!	use comm_lowl_mod_dist
+!!!	use COMM_LOWL_EXTRA
+!!!	INTEGER,intent(in)::handle
+!!!	
+!!!	call comm_lowl_deallocate_object(handle)
+!!!	
+!!!	clik_lmax(handle) = -1
+!!!	
+!!!END SUBROUTINE 	COMM_LOWL_EXTRA_FREE
+!!!
