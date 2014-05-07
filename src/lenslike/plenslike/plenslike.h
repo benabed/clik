@@ -98,6 +98,45 @@ typedef struct {
   int    *qe34;
 } plenslike_dat_qecl;
 
+typedef struct {
+  int     nbins;
+  int     lmaxcmb;
+  int     lmaxphi;
+  int     n1lqbins;
+  int     n1lpbins;
+  int     nqe;
+  int     nx;
+
+  double  s4fid;
+  double  s4std;
+
+  int    *bin_lmins;
+  int    *bin_lmaxs;
+  double *bin_vals;
+  double *mat_sigma;
+  double *mat_sigma_inv;
+
+  double *cltt_fid;
+  double *clee_fid;
+  double *clte_fid;
+
+  double *clpp_fid;
+  double *qlpp_fid;
+  double *qlss_fid;
+  double *n1pp_fid;
+  double *vlpp_inv;
+  double *qlpp_inv;
+
+  double *n1lqs;
+  double *n1lps;
+  double *mat_n1;
+
+  qest  **qes;
+  int    *qefs;
+  int    *qe12;
+  int    *qe34;
+} plenslike_dat_full;
+
 // qest.c
 void free_qe( qest *qe );
 
@@ -122,6 +161,9 @@ void switch_qe( qest *qe );
 void init_qe_plm_et( qest *qe, int lmax, double *clte);
 void init_qe_plm_bt( qest *qe, int lmax, double *clte);
 void init_qe_plm_be( qest *qe, int lmax, double *clee);
+
+void init_qls( qest **qls, int lmaxcmb, double *cltt, double *clee, double *clte );
+void free_qls( qest **qls );
 
 // wignerd.c
 void init_gauss_legendre_quadrature( int n, double *x, double *w );
@@ -158,12 +200,26 @@ int  load_plenslike_dat_qecl( plenslike_dat_qecl *dat, char *tfname );
 void free_plenslike_dat_qecl( plenslike_dat_qecl *dat );
 void fill_plenslike_qecl_bins( plenslike_dat_qecl *dat, double *bins, double *clpp );
 
-void init_qls( qest **qls, int lmaxcmb, double *cltt, double *clee, double *clte );
-void free_qls( qest **qls );
 void fill_qecl_resp_pp_qls( int lmax, double *rl, plenslike_dat_qecl *dat, qest **qls );
 void full_qecl_resp_pp_cls( int lmax, double *rl, plenslike_dat_qecl *dat, double *cltt, double *clee, double *clte);
 
 double calc_plenslike_qecl( plenslike_dat_qecl *dat, double *clpp );
 double calc_plenslike_qecl_renorm( plenslike_dat_qecl *dat, double *clpp, double *cltt, double *clee, double *clte );
+
+// plenslike_dat_full.c
+void fill_full_n1( int lmax, double *n1, plenslike_dat_full *dat, double *clpp );
+int  load_plenslike_dat_full( plenslike_dat_full *dat, char *tfname );
+void free_plenslike_dat_full( plenslike_dat_full *dat );
+void fill_plenslike_full_bins( plenslike_dat_full *dat, double *bins, double *clpp );
+
+void fill_full_resp_pp_qls( int lmax, double *rl, plenslike_dat_full *dat, qest **qls );
+void full_full_resp_pp_cls( int lmax, double *rl, plenslike_dat_full *dat, double *cltt, double *clee, double *clte);
+void fill_full_n1( int lmax, double *n1, plenslike_dat_full *dat, double *clpp );
+
+double calc_plenslike_full( plenslike_dat_full *dat, double *clpp );
+double calc_plenslike_full_renorm( plenslike_dat_full *dat, double *clpp, double *cltt, double *clee, double *clte );
+
+double calc_plenslike_full_ren1( plenslike_dat_full *dat, double *clpp );
+double calc_plenslike_full_renorm_ren1( plenslike_dat_full *dat, double *clpp, double *cltt, double *clee, double *clte );
 
 #endif

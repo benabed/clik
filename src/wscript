@@ -61,7 +61,7 @@ def build(bld):
   if bld.env.has_lenslike:
     bld.objects(
       features = 'c',
-      source = [osp.join("lenslike/plenslike/",v) for v in "plenslike_dat_mono.c plenslike_dat_quad.c plenslike_dat_qecl.c qest.c wignerd.c".split() if v.strip()],
+      source = [osp.join("lenslike/plenslike/",v) for v in "plenslike_dat_mono.c plenslike_dat_quad.c plenslike_dat_qecl.c plenslike_dat_full.c qest.c wignerd.c".split() if v.strip()],
       includes = "lenslike/plenslike/",
       cflags = bld.env.CFLAGS_cpic,
       target = 'lenslike'

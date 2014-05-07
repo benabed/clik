@@ -86,6 +86,14 @@ def main_CMB(argv):
 def main_lensing(argv):
   lkl = clik.clik_lensing(sys.argv[1])
   print "clik lensing file = %s"%sys.argv[1]
+  if hpy.cldf.is_cldf(argv[1]):
+    ff = hpy.File(argv[1])
+    renorm = ff["clik_lensing/renorm"]
+    ren1 = ff["clik_lensing/ren1"]
+  else:
+    renorm = 1
+    ren1 = 1
+  print "  Renormalization: %s\n  N1 computation: %s"%(["Off","On"][renorm],["Off","On"][ren1])
   print "  lmax = %s (PP TT EE BB TE TB EB)"%lkl.lmax
   print "  number of extra parameters %d"%len(lkl.extra_parameter_names)
   for nn in lkl.extra_parameter_names:

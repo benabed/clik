@@ -47,6 +47,8 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
   plid = malloc_err(sizeof(clik_lensing_object),err);
   forwardError(*err,__LINE__,NULL);
   plid->renorm = 1;
+  plid->ren1 = 1;
+  plid->has_check = 0;
 
   for(cnt=0;cnt<7;cnt++) {
     plid->lmax[cnt] = -1;
@@ -86,9 +88,14 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
       fclose(f);
       plid->type=2;
     }
+    if (strcmp(buf,"full")==0) {
+      fclose(f);
+      plid->type=3;
+    }
 
     testErrorRetVA(plid->type==0,-2432,"%s is not a clik lensing file (can't find format %s)\n",*err,__LINE__,NULL,fpath,buf);
   } else {
+    int hk;
     plid->type = cldf_readint(df,"clik_lensing/itype",err);
     forwardError(*err,__LINE__,NULL);
     int sz=-1;
@@ -98,6 +105,15 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
     npath = buf;
     plid->renorm = cldf_readint(df,"clik_lensing/renorm",err);
     forwardError(*err,__LINE__,NULL);
+    plid->ren1 = cldf_readint_default(df,"clik_lensing/ren1",1,err);
+    forwardError(*err,__LINE__,NULL);
+    hk = cldf_haskey(df,"clik_lensing/check",err);
+    forwardError(*err,__LINE__,NULL);
+    if (hk==1) {
+      plid->check = cldf_readfloat(df,"clik_lensing/check",err);
+      forwardError(*err,__LINE__,NULL);
+      plid->has_check = 1;
+    }
   }
     
   if (plid->type==1) {
@@ -120,6 +136,17 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
     plid->lmax[2] = plid->lmax[1];
     plid->lmax[4] = plid->lmax[1];
   }
+  if (plid->type==3) {
+    plid->plens_payload = malloc_err(sizeof(plenslike_dat_full),err);
+    forwardError(*err,__LINE__,NULL);
+    good = load_plenslike_dat_full(plid->plens_payload, npath);
+    testErrorRetVA(good!=0,-2432,"can't read %s\n",*err,__LINE__,NULL,fpath);
+    plid->lmax[0] = ((plenslike_dat_full*) (plid->plens_payload))->lmaxphi;
+    plid->lmax[1] = ((plenslike_dat_full*) (plid->plens_payload))->lmaxcmb;
+    plid->lmax[2] = plid->lmax[1];
+    plid->lmax[4] = plid->lmax[1];
+  }
+
 
   return plid;
 }
@@ -138,8 +165,6 @@ clik_lensing_object* clik_lensing_init(char *fpath, error **_err) {
 }
 
 double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_err) {
-  plenslike_dat_mono *pmono;
-  plenslike_dat_qecl *pqecl;
   double *cltt,*clte,*clee, *clphi,*clbb;
   int nextra,lmax[7];
   double lkl;
@@ -157,6 +182,7 @@ double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_er
   clte = clbb + lclik->lmax[3]+1;
 
   if (lclik->type==1) {
+    plenslike_dat_mono *pmono;
     pmono = lclik->plens_payload;
     if (lclik->renorm==1) {
       lkl = calc_plenslike_mono_renorm( pmono, clphi, cltt, pmono->bl_fid);    
@@ -165,6 +191,7 @@ double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_er
     }
   }
   if (lclik->type==2) {
+    plenslike_dat_qecl *pqecl;
     pqecl = lclik->plens_payload;
     if (lclik->renorm==1) {
       lkl = calc_plenslike_qecl_renorm( pqecl, clphi, cltt, clee,clte);
@@ -172,19 +199,47 @@ double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_er
       lkl = calc_plenslike_qecl( pqecl, clphi);
     }
   }
+  if (lclik->type==3) {
+    plenslike_dat_full *pfull;
+    pfull = lclik->plens_payload;
+    if (lclik->renorm==1) {
+      if (lclik->ren1==1) {
+        //_DEBUGHERE_("n0 n1","");
+        lkl = calc_plenslike_full_renorm_ren1( pfull, clphi, cltt, clee,clte);
+      } else {
+        //_DEBUGHERE_("n0","");
+        lkl = calc_plenslike_full_renorm( pfull, clphi, cltt, clee,clte);  
+      }
+    } else {
+      if (lclik->ren1==1) {
+        //_DEBUGHERE_("n1","");
+        lkl = calc_plenslike_full_ren1( pfull, clphi);
+      } else {
+        //_DEBUGHERE_("","");
+        lkl = calc_plenslike_full( pfull, clphi);
+      }
+    }
+  }
+
   return lkl;
 }
 
 void clik_lensing_cleanup(clik_lensing_object **plclik) {
-  plenslike_dat_mono *pmono;
-  plenslike_dat_qecl *pqecl;
+  
   if ((*plclik)->type==1) {
+    plenslike_dat_mono *pmono;
     pmono = (*plclik)->plens_payload;
     free_plenslike_dat_mono(pmono);  
   }
   if ((*plclik)->type==2) {
+    plenslike_dat_qecl *pqecl;
     pqecl = (*plclik)->plens_payload;
     free_plenslike_dat_qecl(pqecl);  
+  }
+  if ((*plclik)->type==3) {
+    plenslike_dat_full *pfull;
+    pfull = (*plclik)->plens_payload;
+    free_plenslike_dat_full(pfull);  
   }
 
   free(*plclik);
@@ -242,8 +297,7 @@ int clik_lensing_get_extra_parameter_names(clik_lensing_object* lclik, parnam **
 }
 
 double* clik_lensing_clcmb_fid(clik_lensing_object* lclik, error **_err) {
-  plenslike_dat_mono *pmono;
-  plenslike_dat_qecl *pqecl;
+  
   _dealwitherr;
 
   double *cltt;
@@ -261,14 +315,23 @@ double* clik_lensing_clcmb_fid(clik_lensing_object* lclik, error **_err) {
   _forwardError(*err,__LINE__,NULL);
 
   if ((lclik)->type==1) {
+    plenslike_dat_mono *pmono;
     pmono = (lclik)->plens_payload;
     memcpy(cltt,pmono->cltt_fid,sizeof(double)*(tot));    
   }
   if ((lclik)->type==2) {
+    plenslike_dat_qecl *pqecl;
     pqecl = (lclik)->plens_payload;
     memcpy(cltt,pqecl->cltt_fid,sizeof(double)*(lmax[1]+1));
     memcpy(cltt+(lmax[1]+1),pqecl->clee_fid,sizeof(double)*(lmax[2]+1));
     memcpy(cltt+(lmax[1]+1+lmax[2]+1+lmax[3]+1),pqecl->clte_fid,sizeof(double)*(lmax[4]+1));
+  }
+  if ((lclik)->type==3) {
+    plenslike_dat_full *pfull;
+    pfull = (lclik)->plens_payload;
+    memcpy(cltt,pfull->cltt_fid,sizeof(double)*(lmax[1]+1));
+    memcpy(cltt+(lmax[1]+1),pfull->clee_fid,sizeof(double)*(lmax[2]+1));
+    memcpy(cltt+(lmax[1]+1+lmax[2]+1+lmax[3]+1),pfull->clte_fid,sizeof(double)*(lmax[4]+1));
   }
 
   return cltt;
@@ -286,8 +349,6 @@ double* clik_lensing_cltt_fid(clik_lensing_object* lclik, error **_err) {
 
 
 double* clik_lensing_clpp_fid(clik_lensing_object* lclik, error **_err) {
-  plenslike_dat_mono *pmono;
-  plenslike_dat_qecl *pqecl;
   double *cltt;
   int lmax[7];
   _dealwitherr;
@@ -300,12 +361,19 @@ double* clik_lensing_clpp_fid(clik_lensing_object* lclik, error **_err) {
   _forwardError(*err,__LINE__,NULL);
 
   if ((lclik)->type==1) {
+    plenslike_dat_mono *pmono;
     pmono = (lclik)->plens_payload;
     memcpy(cltt,pmono->clpp_fid,sizeof(double)*(lmax[0]+1));    
   }
   if ((lclik)->type==2) {
+    plenslike_dat_qecl *pqecl;
     pqecl = (lclik)->plens_payload;
     memcpy(cltt,pqecl->clpp_fid,sizeof(double)*(lmax[0]+1));
+  }
+  if ((lclik)->type==3) {
+    plenslike_dat_full *pfull;
+    pfull = (lclik)->plens_payload;
+    memcpy(cltt,pfull->clpp_fid,sizeof(double)*(lmax[0]+1));
   }
 
   return cltt;
@@ -352,7 +420,9 @@ void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err)
 
   res = clik_lensing_compute(lclik,clt,err);
   forwardError(*err,__LINE__,);
-
+  if (lclik->has_check==1) {
+    printf("Checking lensing likelihood '%s' on test data. got %g (expected %g)\n",fpath,res,lclik->check);  
+  }
   printf("Checking lensing likelihood '%s' on test data. got %g\n",fpath,res);
 
   free(clt);

@@ -233,12 +233,12 @@ class qecl():
         return ret
 
     def calc_like(self, clpp):
-        assert( len(clpp) >= self.dat.lmaxpp )
+        assert( len(clpp) >= self.dat.lmaxpphi )
         return pll.calc_plenslike_qecl( ct.byref(self.dat),
                                         clpp.ctypes.data_as( ct.POINTER(ct.c_double) ) )
 
     def calc_like_renorm_cltt(self, clpp, cltt, clee, clte):
-        assert( len(clpp) >= self.dat.lmaxp )
+        assert( len(clpp) >= self.dat.lmaxphi )
         assert( len(cltt) >= self.dat.lmaxcmb )
         assert( len(clee) >= self.dat.lmaxcmb )
         assert( len(clte) >= self.dat.lmaxcmb )
@@ -257,6 +257,110 @@ class qecl():
         bins = np.zeros( self.dat.nbins )
 
         pll.fill_plenslike_qecl_bins( ct.byref(self.dat),
+                                      bins.ctypes.data_as( ct.POINTER(ct.c_double) ),
+                                      clpp.ctypes.data_as( ct.POINTER(ct.c_double) ) )
+
+        return bins
+
+# full
+class plenslike_dat_full(ct.Structure):
+    _fields_ = [ ("nbins",         ct.c_int),
+                 ("lmaxcmb",       ct.c_int),
+                 ("lmaxphi",       ct.c_int),
+                 ("n1lqbins",      ct.c_int),
+                 ("n1lpbins",      ct.c_int),
+                 ("nqe",           ct.c_int),
+                 ("nx",            ct.c_int),
+                 ("s4fid",         ct.c_double),
+                 ("s4std",         ct.c_double),
+                 ("bin_lmins",     ct.POINTER(ct.c_int)),
+                 ("bin_lmaxs",     ct.POINTER(ct.c_int)),
+                 ("bin_vals",      ct.POINTER(ct.c_double)),
+                 ("mat_sigma",     ct.POINTER(ct.c_double)),
+                 ("mat_sigma_inv", ct.POINTER(ct.c_double)),
+                 ("cltt_fid",      ct.POINTER(ct.c_double)),
+                 ("clee_fid",      ct.POINTER(ct.c_double)),
+                 ("clte_fid",      ct.POINTER(ct.c_double)),
+                 ("clpp_fid",      ct.POINTER(ct.c_double)),
+                 ("qlpp_fid",      ct.POINTER(ct.c_double)),
+                 ("qlss_fid",      ct.POINTER(ct.c_double)),
+                 ("n1pp_fid",      ct.POINTER(ct.c_double)),
+                 ("vlpp_inv",      ct.POINTER(ct.c_double)),
+                 ("qlpp_inv",      ct.POINTER(ct.c_double)),
+                 ("n1lqs",         ct.POINTER(ct.c_double)),
+                 ("n1lps",         ct.POINTER(ct.c_double)),
+                 ("mat_n1",        ct.POINTER(ct.c_double)),
+                 ("qes",           ct.POINTER(ct.POINTER(qest))),
+                 ("qefs",          ct.POINTER(ct.c_int)),
+                 ("qe12",          ct.POINTER(ct.c_int)),
+                 ("qe34",          ct.POINTER(ct.c_int)) ]
+
+pll.load_plenslike_dat_full.argtypes   = [ ct.POINTER(plenslike_dat_full), ct.c_char_p ]
+pll.free_plenslike_dat_full.argtypes   = [ ct.POINTER(plenslike_dat_full) ]
+
+pll.calc_plenslike_full.restype        = ct.c_double
+pll.calc_plenslike_full_renorm.restype = ct.c_double
+
+class full():
+    def __init__(self, fname):
+        print "plenslike:: loading full likelihood from ", fname
+
+        self.fname = fname
+        self.dat = plenslike_dat_full()
+        ret = pll.load_plenslike_dat_full( ct.byref(self.dat), fname )
+        if ret != 0:
+            self.dat = None
+            assert(0)
+
+    def __del__(self):
+        if self.dat != None:
+            pll.free_plenslike_dat_full(self.dat)
+
+    def calc_n1(self, lmax, clpp):
+        assert( len(clpp) >= self.dat.lmaxphi )
+
+        ret = np.zeros(lmax+1)
+        pll.fill_full_n1( lmax, ret.ctypes.data_as(ct.POINTER(ct.c_double)),
+                          ct.byref(self.dat),
+                          clpp.ctypes.data_as(ct.POINTER(ct.c_double)) )
+        return ret
+
+    def calc_qc_resp_pp(self, lmax, cltt, clee, clte):
+        assert( len(cltt) >= self.dat.lmaxcmb )
+
+        ret = np.zeros(lmax+1)
+        pll.fill_full_resp_pp_cls( lmax, ret.ctypes.data_as(ct.POINTER(ct.c_double)),
+                                   ct.byref(self.dat),
+                                   cltt.ctypes.data_as(ct.POINTER(ct.c_double)),
+                                   clee.ctypes.data_as(ct.POINTER(ct.c_double)),
+                                   clte.ctypes.data_as(ct.POINTER(ct.c_double)) )
+        return ret
+
+    def calc_like(self, clpp):
+        assert( len(clpp) >= self.dat.lmaxpphi )
+        return pll.calc_plenslike_full( ct.byref(self.dat),
+                                        clpp.ctypes.data_as( ct.POINTER(ct.c_double) ) )
+
+    def calc_like_renorm_cltt(self, clpp, cltt, clee, clte):
+        assert( len(clpp) >= self.dat.lmaxphi )
+        assert( len(cltt) >= self.dat.lmaxcmb )
+        assert( len(clee) >= self.dat.lmaxcmb )
+        assert( len(clte) >= self.dat.lmaxcmb )
+
+        return pll.calc_plenslike_full_renorm( ct.byref(self.dat),
+                                               clpp.ctypes.data_as( ct.POINTER(ct.c_double) ),
+                                               cltt.ctypes.data_as( ct.POINTER(ct.c_double) ),
+                                               clee.ctypes.data_as( ct.POINTER(ct.c_double) ),
+                                               clte.ctypes.data_as( ct.POINTER(ct.c_double) ) )
+
+    def calc_clpp_renorm(self, clpp, cltt):
+        resp = self.calc_qc_resp_pp_cls( len(clpp)-1, cltt )
+        return resp * np.array( [ self.dat.rlpp_inv[l] for l in xrange(0, len(clpp)) ] ) * clpp
+
+    def calc_bins_clpp(self, clpp):
+        bins = np.zeros( self.dat.nbins )
+
+        pll.fill_plenslike_full_bins( ct.byref(self.dat),
                                       bins.ctypes.data_as( ct.POINTER(ct.c_double) ),
                                       clpp.ctypes.data_as( ct.POINTER(ct.c_double) ) )
 

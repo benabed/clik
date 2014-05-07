@@ -427,12 +427,56 @@ def ordering_from_smica(dffile,jac=True):
   msk = fi["clik/lkl_0/criterion_gauss_mask"]
   ord = fi["clik/lkl_0/criterion_gauss_ordering"]
   hascl = fi["clik/lkl_0/has_cl"]
-  m = fi["clik/lkl_0/m_channel_T"]*hascl[0]+fi["clik/lkl_0/m_channel_P"]*hascl[1]+fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  mT = fi["clik/lkl_0/m_channel_T"]
+  mP = fi["clik/lkl_0/m_channel_P"]
+  mE = mT*hascl[0]
+  mB = mE + mP*hascl[1]
+  m =  mB + mP*hascl[2]
+  print mT,mP,mE,mB,m
+  print hascl
   nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   m2 = m*m
   ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
   if jac==True:
-    return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
+    Jt = []
+    ps = ordr//m2
+    ii = (ordr%m2)//m
+    jj = (ordr%m2)%m
+    ii_T = ii < mE
+    jj_T = jj < mE
+    ii_E = (ii >= mE) * (ii < mB)
+    jj_E = (jj >= mE) * (jj < mB)
+    ii_B = (ii >= mB) * (ii < m)
+    jj_B = (jj >= mB) * (jj < m)
+
+    if hascl[0]:
+      print (ii_T)[ps==0]
+      print (jj_T)[ps==0]      
+      print (ii_T*jj_T)[ps==0]
+      jac = nm.array([(ps==i) * ii_T * jj_T for i in range(nb)],dtype=nm.int)
+      print jac.sum(1)
+      Jt += [jac]
+    if hascl[1]:
+      jac = nm.array([(ps==i) * ii_E * jj_E for i in range(nb)],dtype=nm.int)
+      Jt += [jac]
+    if hascl[2]:
+      jac = nm.array([(ps==i) * ii_B * jj_B for i in range(nb)],dtype=nm.int)
+      Jt += [jac]
+    if hascl[3]:
+      TE = (ii_T * jj_E) + (ii_E * jj_T) 
+      jac = nm.array([(ps==i) * TE for i in range(nb)],dtype=nm.int)
+      Jt += [jac]
+    if hascl[4]:
+      TB = (ii_T * jj_B) + (ii_B * jj_T) 
+      jac = nm.array([(ps==i) * TB for i in range(nb)],dtype=nm.int)
+      Jt += [jac]
+    if hascl[5]:
+      EB = (ii_E * jj_B) + (ii_B * jj_E) 
+      jac = nm.array([(ps==i) * EB for i in range(nb)],dtype=nm.int)
+      Jt += [jac]
+    
+    return ordr,nm.concatenate(Jt)
+    #return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
   fi.close()
 
 def get_bestfit_and_cl(dffile,bffile):
@@ -645,7 +689,7 @@ def best_fit_cmb(dffile,bestfit):
   import parobject as php
   import hpy
 
-  oo,Jt = ordering_from_smica(dffile)
+  oo,Jt0 = ordering_from_smica(dffile)
 
   fi = hpy.File(dffile)
 
@@ -653,10 +697,25 @@ def best_fit_cmb(dffile,bestfit):
   siginv.shape=(len(oo),len(oo))
 
   lm,oqb,nrms,rqh = get_binned_calibrated_model_and_data(dffile,bestfit)
+  hascl = fi["clik/lkl_0/has_cl"]
+  tm = nm.concatenate([lm for h in hascl if h])
+
+  good = Jt0.sum(1)!=0
+
+  Jt = Jt0[good]
+
 
   Yo = nm.sum(oqb,0)-rqh
   Yo = Yo.flat[oo]
   Jt_siginv = nm.dot(Jt,siginv)
   Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
   Jt_siginv_J = nm.dot(Jt_siginv,Jt.T)
-  return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+
+  rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+
+  tVec = nm.zeros(len(tm))
+  tVec[good] = rVec
+  tm.shape = (-1,len(lm))
+  tVec.shape = tm.shape
+  return tm,tVec
+  #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())

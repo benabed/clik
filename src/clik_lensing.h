@@ -12,6 +12,9 @@ typedef struct {
   int lmax[7];
   int type;
   int renorm;
+  int ren1;
+  double check;
+  int has_check;
 } clik_lensing_object;
 
 clik_lensing_object* clik_lensing_init(char *fpath, error **err);

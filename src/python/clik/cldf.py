@@ -15,6 +15,14 @@ def pack256(*li):
     rr += l+'\0'*(256-len(l))
   return rr
 
+def is_cldf(name):
+  f = open(name)
+  try:
+    f.keys()
+    return True
+  except Exception,e:
+    return False
+
 def open(name,mode="r"):
   return File(name,mode)
 

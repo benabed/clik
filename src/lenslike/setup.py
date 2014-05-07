@@ -9,6 +9,7 @@ def configuration(parent_package='',top_path=None):
                                         'plenslike/plenslike_dat_mono.c',
                                         'plenslike/plenslike_dat_quad.c',
                                         'plenslike/plenslike_dat_qecl.c',
+                                        'plenslike/plenslike_dat_full.c',
                                         'plenslike/plenslike.pyf'], undef_macros=['NDEBUG'])
     return config
 

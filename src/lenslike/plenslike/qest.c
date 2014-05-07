@@ -449,3 +449,32 @@ void init_qe_plm_be( qest *qe, int lmax, double *clee) {
   init_qe_plm_eb( qe, lmax, clee );
   switch_qe(qe);
 }
+
+void free_qls( qest **qls ) {
+  int i;
+  for (i=0; i<9; i++) {
+    if (qls[i] != NULL) {
+      free_qe(qls[i]);
+      free(qls[i]);
+    }
+  }
+}
+
+void init_qls( qest **qls, int lmaxcmb, double *cltt, double *clee, double *clte ) {
+  int i;
+  for (i=0; i<9; i++) {
+    qls[i] = malloc( sizeof(qest) );
+  }
+
+  init_qe_plm_tt( qls[0*3 + 0], lmaxcmb, cltt );
+  init_qe_plm_te( qls[0*3 + 1], lmaxcmb, clte );
+  init_qe_plm_tb( qls[0*3 + 2], lmaxcmb, clte );
+
+  init_qe_plm_et( qls[1*3 + 0], lmaxcmb, clte );
+  init_qe_plm_ee( qls[1*3 + 1], lmaxcmb, clee );
+  init_qe_plm_eb( qls[1*3 + 2], lmaxcmb, clee );
+
+  init_qe_plm_bt( qls[2*3 + 0], lmaxcmb, clte );
+  init_qe_plm_be( qls[2*3 + 1], lmaxcmb, clee );
+  free( qls[2*3+2] ); qls[2*3+2] = NULL;
+}
