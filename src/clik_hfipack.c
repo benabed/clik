@@ -332,15 +332,15 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     clik_smica_comp_init_func *smica_dl_init;
     void* dlhandle;
     char init_func_name[256];
-    
+    parname comp_type;
+    cldf *comp_df;
+
 #ifdef HAS_RTLD_DEFAULT 
     dlhandle = RTLD_DEFAULT;
 #else
     dlhandle = NULL;
 #endif
-    parname comp_type;
-    cldf *comp_df;
-
+    
     SCs[ic] = NULL;
     
     sprintf(cur_cmp,"component_%d",ic);
@@ -361,6 +361,7 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
 
     SCs[ic] = smica_dl_init(comp_df,nb,mT,mP, nell, ell, has_cl, unit, wl, bins,nb,err);
     forwardError(*err,__LINE__,NULL);
+    sprintf(comp_type,"%s_%d",comp_type,ic);
     SC_set_compname(SCs[ic],comp_type);
       
     cldf_close(&comp_df);

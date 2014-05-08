@@ -35,7 +35,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   
   //sprintf(nm,"rq_%s.dat",SC->comp_name);
   //write_bin_vector(p_pay->rq, nm, sizeof(double)*(p_pay->nell*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
-  //forwardError(*err,__LINE__,0);
+  //forwardError(*err,__LINE__,);
   
   m = p_pay->m;
   ndet = p_pay->p_model->ndet;
@@ -158,7 +158,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   }
  //sprintf(nm,"rq_after_%s.dat",SC->comp_name);
  //write_bin_vector(rq, nm, sizeof(double)*(p_pay->nbins*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
- //forwardError(*err,__LINE__,0);
+ //forwardError(*err,__LINE__,);
     
 }
 void free_comp_parametric(void** data) {

@@ -531,6 +531,7 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
 
   rigid = parametric_get_value(egl,"gib_rigid",err);
   forwardError(*err,__LINE__,);
+  //_DEBUGHERE_("rigid %d",rigid);
 
   index = parametric_get_value(egl,"gib_index",err);
   forwardError(*err,__LINE__,);
@@ -558,9 +559,11 @@ void gcib_compute(parametric *egl, double *Rq, error **err) {
     
   }
 
+
   nrm = parametric_get_value(egl,name,err);
   forwardError(*err,__LINE__,);
-  
+  //_DEBUGHERE_("%s %g",name,nrm);
+    
   
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
