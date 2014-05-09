@@ -127,7 +127,7 @@ subroutine main_lensing
   real(kind=8) :: lkl
 
   nargc = iargc()
-  if (nargc < 2) then
+  if (nargc < 1) then
      print*,'usage: clik_example_f90 hdffile clfile1 [clfile2 ...]'
      stop
   end if

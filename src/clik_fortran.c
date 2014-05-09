@@ -237,7 +237,7 @@ void fortran_clik_try_lensing_(int *isl,char *fpath, int* fpathlen) {
   char *tmpchain;
 
   tmpchain = fortran_clik_protect_string(fpath,*fpathlen);
-  *isl = clik_try_lensing(fpath,NULL);
+  *isl = clik_try_lensing(tmpchain,NULL);
   free(tmpchain);
 }
 

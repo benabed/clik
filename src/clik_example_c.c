@@ -40,7 +40,6 @@ int main_lensing(int argc, char **argv) {
     ndim += lmax[i]+1;
   }
   
-  _DEBUGHERE_("%d",ndim);
   for(i=2;i<argc;i++) {
     // read cl as ascii file
     cl_and_pars = read_double_vector(argv[i],ndim,err);

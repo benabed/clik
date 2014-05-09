@@ -88,11 +88,27 @@ def main_lensing(argv):
   print "clik lensing file = %s"%sys.argv[1]
   if hpy.cldf.is_cldf(argv[1]):
     ff = hpy.File(argv[1])
-    renorm = ff["clik_lensing/renorm"]
-    ren1 = ff["clik_lensing/ren1"]
+    ty = ff["clik_lensing/itype"]
+    if ty==0:
+      renorm = 1
+      ren1 = 0
+    else:
+      renorm = ff["clik_lensing/renorm"]
+      ren1 = 0
+      if ty==3:
+        ren1 = ff["clik_lensing/ren1"]
   else:
-    renorm = 1
-    ren1 = 1
+    rr = file(argv[1]).read()
+    if ("# format: mono") in rr:
+      renorm = 1
+      ren1 = 0
+    elif ("# format: qecl") in rr:
+      renorm = 1
+      ren1 = 0
+    else:
+      renorm = 1
+      ren1 = 1
+    
   print "  Renormalization: %s\n  N1 computation: %s"%(["Off","On"][renorm],["Off","On"][ren1])
   print "  lmax = %s (PP TT EE BB TE TB EB)"%lkl.lmax
   print "  number of extra parameters %d"%len(lkl.extra_parameter_names)
