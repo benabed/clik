@@ -1,17 +1,18 @@
 !===========================================================================
-MODULE spt_reichardt_likelihood ! Parameters are defined in options module
-
+MODULE spt_reichardt_likelihood
+! Parameters are defined in Highell_options module
 ! ===========================================================================
 
   use highell_options
   use highell_subroutines
   use foregrounds_loading
 
+  implicit none
   logical :: initialise_spt=.true.
   REAL(8), dimension(:,:) :: btt_dat(nspec_r,0:bmax0_r-1)
   REAL(8), dimension(:,:,:) :: btt_var(nspec_r,nspec_r,0:bmax0_r-1)
   REAL(8) ::  bval(nspec_r,0:bmax0_r-1), inverse(1:datap_r,1:datap_r)
-  REAL(8), dimension (:), allocatable :: cl_src,cl_c
+  REAL(8), dimension (:), allocatable :: cl_c
   REAL(8) :: win_func(1:10000,0:bmax0_r-1,nspec_r)
   
   PRIVATE
@@ -31,7 +32,7 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     CHARACTER(LEN=240) :: ttfilename(nspec_r),winfilename(nspec_r),invcovfilename
     LOGICAL  :: good
 
-    allocate(cl_c(2:tt_lmax),cl_src(2:tt_lmax))
+    allocate(cl_c(2:tt_lmax))
 
 #ifdef TIMING
        call spt_timing_start( 'spt_reichardt_likelihood_init' )
@@ -59,7 +60,7 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     !-----------------------------------------------
     ! load TT data 
     !----------------------------------------------
-    win_func=0
+    win_func=0.d0
     do j=1,nspec_r
 
        inquire(file=ttfilename(j),exist = good)
@@ -123,11 +124,12 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     REAL(8) :: f1_sz,f1_synch,f1_dust,f2_sz,f2_synch,f2_dust,f3_sz,f3_synch,f3_dust
     REAL(8) :: planckratiod1,planckratiod2,planckratiod3,fluxtempd1,fluxtempd2,fluxtempd3
 
-
+    !Define nominal frequencies 
     fp1 = 100.0d0
     fp2 = 143.0d0
     fp3 = 217.0d0
  
+    !Set effective frequencies for each component
     f1_sz     =97.6d0
     f1_synch  =95.3d0
     f1_dust   =97.9d0
@@ -159,9 +161,12 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     call flux2tempratio(f3_dust,fp3,flux2tempratio_corr)
     fluxtempd3 = flux2tempratio_corr
 
+    !Set Cirrus levels as in Reichardt et al 2012
     gc1 = 0.16d0
     gc2 = 0.21d0
     gc3 = 2.19d0
+
+    !Set CIB index
     beta_c = 2.20d0
 
 
@@ -174,34 +179,62 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     enddo
 
 
-    !----------------------------------------------------------------
-    ! Calculate theory
-    !----------------------------------------------------------------
+    !-------------------------------------------------------------------------
+    ! Calculate theory as C^CMB + C^sec. 
+    ! C^sec terms are Poisson (CIB+radio) + CIB + Cirrus + tSZ + kSZ + tSZ-CIB
+    !-------------------------------------------------------------------------
 
     do j=1,nspec_r
        cltt_temp(2:tt_lmax)=0.d0
        do il=2,tt_lmax
-          if(j==1) then
-             cl_src(il) = aps95*cl_p(il)
-             cltt_temp(il) = cltt(il)+cl_src(il)+f1*f1/f0/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)+gc1*cl_cirspt(il)
-           else if (j==2) then
-             cl_src(il) = rps0*sqrt(aps95*aps150)*cl_p(il)
-             cltt_temp(il) = cltt(il)+cl_src(il)+f1/f0*f2/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)-sqrt(acib150*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)+sqrt(gc2*gc1)*cl_cirspt(il)
-           else if (j==3) then
-             cl_src(il) = rps1*sqrt(aps95*aps220)*cl_p(il)
-             cltt_temp(il) = cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc1*gc3)*cl_cirspt(il)
-           else if (j==4) then
-             cl_src(il) = aps150*cl_p(il)+acib150*cl_c(il)*(f2_dust/fp2)**(2.0*beta_c)*(planckratiod2*fluxtempd2)**2.0 &
-                          -2.0*sqrt(acib150*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
-             cltt_temp(il) =cltt(il)+cl_src(il)+f2*f2/f0/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)+gc2*cl_cirspt(il)
-          else if (j==5) then
-             cl_src(il) = rps*sqrt(aps150*aps220)*cl_p(il)+rcib*sqrt(acib150*acib220)*cl_c(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)
-             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)+sqrt(gc2*gc3)*cl_cirspt(il)
-          else if(j ==6) then
-             cl_src(il) = aps220*cl_p(il)+acib220*cl_c(il)*(f3_dust/fp3)**(2.0*beta_c)*(planckratiod3*fluxtempd3)**2.0
-             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)+gc3*cl_cirspt(il)
+          if(j==1) then !95 GHZ
+             cltt_temp(il) = cltt(il) &
+                             +aps95*cl_p(il) &
+                             +gc1*cl_cirspt(il) &
+                             +f1*f1/f0/f0*amp_tsz*cl_tsz(il) &
+                             +amp_ksz*cl_ksz(il)
+
+           else if (j==2) then !95x150 GHz
+             cltt_temp(il) = cltt(il) &
+                             +rps0*sqrt(aps95*aps150)*cl_p(il) &
+                             +sqrt(gc2*gc1)*cl_cirspt(il) &
+                             +f1/f0*f2/f0*amp_tsz*cl_tsz(il) &
+                             +amp_ksz*cl_ksz(il) &
+                             -sqrt(acib150*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
+
+           else if (j==3) then !95x220 GHz
+             cltt_temp(il) = cltt(il) &
+                             +rps1*sqrt(aps95*aps220)*cl_p(il) &
+                             +sqrt(gc1*gc3)*cl_cirspt(il) &
+                             +amp_ksz*cl_ksz(il) &
+                             -sqrt(acib220*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)
+
+           else if (j==4) then !150x150 GHz
+             cltt_temp(il) = cltt(il) &
+                             +aps150*cl_p(il) &
+                             +acib150*cl_c(il)*(f2_dust/fp2)**(2.d0*beta_c)*(planckratiod2*fluxtempd2)**2.d0 &
+                             +gc2*cl_cirspt(il) &
+                             +f2*f2/f0/f0*amp_tsz*cl_tsz(il) &
+                             +amp_ksz*cl_ksz(il) &
+                             -2.d0*sqrt(acib150*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
+
+          else if (j==5) then !150x220 GHz
+             cltt_temp(il) = cltt(il) &
+                             +rps*sqrt(aps150*aps220)*cl_p(il) &
+                             +rcib*sqrt(acib150*acib220)*cl_c(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3) &
+                             +sqrt(gc2*gc3)*cl_cirspt(il) &
+                             +amp_ksz*cl_ksz(il) &
+                             -sqrt(acib220*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f3_dust/fp3)**beta_c*(planckratiod3*fluxtempd3)
+
+          else if(j ==6) then !220x220 GHz
+             cltt_temp(il) = cltt(il) &
+                             +aps220*cl_p(il) &
+                             +acib220*cl_c(il)*(f3_dust/fp3)**(2.d0*beta_c)*(planckratiod3*fluxtempd3)**2.d0 &
+                             +gc3*cl_cirspt(il) &
+                             +amp_ksz*cl_ksz(il)
           endif
        enddo
+     !Multiply by window functions
      btt_th(j,0:bmax0_r-1)=MATMUL(cltt_temp(2:tt_lmax),win_func(2:tt_lmax,0:bmax0_r-1,j))
     enddo
    
@@ -238,7 +271,7 @@ MODULE spt_reichardt_likelihood ! Parameters are defined in options module
     tmp(:,:) = matmul(inverse(:,:),diffs(:,:))
     chi2(:,:) = matmul(diffs2(:,:),tmp(:,:)) 
 
-    like_sptr = like_sptr+chi2(1,1)/2.0
+    like_sptr = like_sptr+chi2(1,1)/2.d0
 
 
    10  continue

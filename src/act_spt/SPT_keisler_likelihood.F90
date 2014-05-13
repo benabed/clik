@@ -1,16 +1,16 @@
 ! ===========================================================================
 MODULE spt_keisler_likelihood
-! Erminia : likelihood AR1 SPT Keisler
-! Parameters are defined in SPT_keisler_options module
+! Parameters are defined in Highell_options module
 ! ===========================================================================
 
   use highell_options
   use highell_subroutines
   use foregrounds_loading
 
+  implicit none
   REAL(8) ::  btt_dat(0:bmax0_k-1),btt_var(0:bmax0_k-1)
   REAL(8) ::  inverse(1:bmax0_k,1:bmax0_k),bval(0:bmax0_k-1)
-  REAL(8), dimension (:), allocatable :: cl_src, cl_c
+  REAL(8), dimension (:), allocatable :: cl_c
   REAL(8), dimension(:,:), allocatable :: win_func
   
   PRIVATE
@@ -23,13 +23,12 @@ MODULE spt_keisler_likelihood
   ! ===========================================================================
     
     IMPLICIT NONE
-    
     INTEGER  :: i,j,lun,il
     REAL(8)  :: dummy,ii
     CHARACTER(LEN=240) :: ttfilename, bblfilename, invcovfilename
     LOGICAL  :: good
     
-    allocate(cl_c(2:tt_lmax),cl_src(2:tt_lmax_k))
+    allocate(cl_c(2:tt_lmax))
 
     !-----------------------------------------------
     ! set file names
@@ -92,13 +91,13 @@ MODULE spt_keisler_likelihood
     REAL(8) :: planckratiod2,fluxtempd2
     REAL(8) :: sz_corr, planckfunctionratio_corr, flux2tempratio_corr
 
+    !Define nominal frequency
     fp2  = 143.d0
 
+    !Set effective frequencies for each component
     f2_sz     =152.9d0
     f2_synch  =150.2d0
     f2_dust   =153.8d0
-
-    beta_c = 2.20d0
 
     call sz_func(f2_sz,sz_corr)
     f2 = sz_corr
@@ -108,6 +107,9 @@ MODULE spt_keisler_likelihood
     planckratiod2 = planckfunctionratio_corr
     call flux2tempratio(f2_dust,fp2,flux2tempratio_corr)
     fluxtempd2 = flux2tempratio_corr
+
+    !Set CIB index
+    beta_c = 2.20d0
 
     !----------------------------------------------------------------
     ! Define CIB term
@@ -119,17 +121,22 @@ MODULE spt_keisler_likelihood
 
 
     !----------------------------------------------------------------
-    ! Calculate theory
+    ! Calculate theory as C^CMB + C^sec. 
+    ! C^sec terms are Poisson (CIB+radio) + CIB + tSZ + kSZ + tSZ-CIB
     !----------------------------------------------------------------
 
     do il=2,tt_lmax_k
-       cl_src(il) = (aps150+9.2)*cl_p(il)+acib150*cl_c(il)*(f2_dust/fp2)**(2.0*beta_c)*(planckratiod2*fluxtempd2)**2.0 &
-                    -2.0*sqrt(acib150*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
-       cltt_temp(il) =cltt(il)+cl_src(il)+f2*f2/(f0*f0)*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)
+       cltt_temp(il) = cltt(il) &
+                       +(aps150+9.2d0)*cl_p(il) & 
+                       +acib150*cl_c(il)*(f2_dust/fp2)**(2.d0*beta_c)*(planckratiod2*fluxtempd2)**2.0 &
+                       +f2*f2/(f0*f0)*amp_tsz*cl_tsz(il) &
+                       +amp_ksz*cl_ksz(il) &
+                       -2.0*sqrt(acib150*amp_tsz*f2*f2/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp2)**beta_c*(planckratiod2*fluxtempd2)
 
        ! Calibrate theory
-       cltt_temp(il) =cltt_temp(il)/(cal_2**2.0)
+       cltt_temp(il) =cltt_temp(il)/(cal_2**2.d0)
     enddo
+    !Multiply by window functions
     btt_th(0:bmax0_k-1)=MATMUL(win_func(0:bmax0_k-1,2:tt_lmax_k),cltt_temp(2:tt_lmax_k))
     
 
@@ -147,7 +154,7 @@ MODULE spt_keisler_likelihood
     tmp(:,:) = matmul(inverse(:,:),diffs(:,:))
     chi2(:,:) = matmul(diffs2(:,:),tmp(:,:))
 
-    like_sptk = like_sptk+chi2(1,1)/2.0
+    like_sptk = like_sptk+chi2(1,1)/2.d0
 
    10  continue
     

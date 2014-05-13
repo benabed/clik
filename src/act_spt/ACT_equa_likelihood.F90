@@ -7,11 +7,12 @@ MODULE act_equa_likelihood
   use highell_subroutines
   use foregrounds_loading
 
+  implicit none
   logical :: initialise_act=.true.
   REAL(8), dimension(:,:) :: btt_dat1(nsp11_e,0:nbin11-1),btt_dat12(nsp12_e,0:nbin12-1),btt_dat2(nsp22_e,0:nbin22-1)
   REAL(8), dimension(:,:) :: bval1(nsp11_e,0:nbin11-1),bval12(nsp12_e,0:nbin12-1),bval2(nsp22_e,0:nbin22-1)
   REAL(8) ::  inverse(1:datap_e,1:datap_e)
-  REAL(8), dimension (:), allocatable :: cl_src, cl_c
+  REAL(8), dimension (:), allocatable :: cl_c
   REAL(8) :: win_func(nspec,0:tbin-1,1:10000)
   
   PRIVATE
@@ -33,7 +34,7 @@ contains
     CHARACTER(LEN=240) :: ttfilename(nspec_e), winfilename(nspec)
     LOGICAL  :: good
 
-    allocate(cl_c(2:tt_lmax),cl_src(2:tt_lmax))
+    allocate(cl_c(2:tt_lmax))
 
 #ifdef TIMING
     call act_equa_timing_start('act_likelihood_init')
@@ -89,6 +90,7 @@ contains
     !----------------------------------------------
     ! read windows for theory 
     !----------------------------------------------
+    win_func = 0.d0
     do j=1,nspec
        inquire (file=winfilename(j),exist = good)
        if(.not.good)then
@@ -97,7 +99,6 @@ contains
        endif
        call get_free_lun( lun )
        open(unit=lun,file=winfilename(j),form='formatted',status='unknown',action='read')
-       win_func(j,0:tbin-1,1:10000)=0.d0
        do il = 2, tt_lmax
           read(lun,*) ii, (win_func(j,i,il), i=0,tbin-1)       
        enddo
@@ -139,10 +140,12 @@ contains
     REAL(8) :: f1_sz,f1_synch,f1_dust,f2_sz,f2_synch,f2_dust,fp2,fp3
     REAL(8) :: sz_corr, planckfunctionratio_corr,flux2tempratio_corr
     REAL(8) :: planckratiod1,planckratiod2,fluxtempd1,fluxtempd2
- 
+
+    !Define nominal frequencies 
     fp2  = 143.d0
     fp3  = 217.d0
-    
+
+    !Set effective frequencies for each component    
     f1_sz     =146.9d0
     f1_synch  =147.6d0
     f1_dust   =149.7d0
@@ -165,6 +168,7 @@ contains
     call flux2tempratio(f2_dust,fp3,flux2tempratio_corr)
     fluxtempd2 = flux2tempratio_corr
 
+    !Set CIB and Cirrus indices
     beta_c = 2.2d0
     beta_g = 3.8d0
 
@@ -176,26 +180,41 @@ contains
        cl_c(il)=(il/3000.d0)**ncib
     enddo
 
-    !----------------------------------------------------------------
-    ! Calculate theory
-    !----------------------------------------------------------------
+    !-------------------------------------------------------------------------
+    ! Calculate theory as C^CMB + C^sec. 
+    ! C^sec terms are Poisson (CIB+radio) + CIB + Cirrus + tSZ + kSZ + tSZ-CIB
+    !-------------------------------------------------------------------------     
     
     do j=1,nspec
        cltt_temp(2:tt_lmax)=0.d0
        do il=2,tt_lmax
-          if(j==1) then
-             cl_src(il) = aps148*cl_p(il)+acib150*cl_c(il)*(f1_dust/fp2)**(2.0*beta_c)*(planckratiod1*fluxtempd1)**2.0 &
-                          -2.0*sqrt(acib150*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f1_dust/fp2)**beta_c*(planckratiod1*fluxtempd1)
-             cltt_temp(il) =cltt(il)+cl_src(il)+f1*f1/f0/f0*amp_tsz*cl_tsz(il)+amp_ksz*cl_ksz(il)+age*cl_cir(il)*(f1_dust**2.0/fp2**2.0)**beta_g*fluxtempd1**2.0
-          else if (j==2) then
-             cl_src(il) = rps*sqrt(aps148*aps217)*cl_p(il)+rcib*sqrt(acib150*acib220)*cl_c(il)*(f1_dust/fp2)**beta_c*(planckratiod1*fluxtempd1)*(f2_dust/fp3)**beta_c*(planckratiod2*fluxtempd2)
-             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)-sqrt(acib220*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp3)**beta_c*(planckratiod2*fluxtempd2)+age*cl_cir(il)*(f2_dust*f1_dust/fp2/fp3)**beta_g*fluxtempd2*fluxtempd1
-          else if(j ==3) then
-             cl_src(il) = aps217*cl_p(il)+acib220*cl_c(il)*(f2_dust/fp3)**(2.0*beta_c)*(planckratiod2*fluxtempd2)**2.0
-             cltt_temp(il) =cltt(il)+cl_src(il)+amp_ksz*cl_ksz(il)+age*cl_cir(il)*(f2_dust**2.0/fp3**2.0)**beta_g*fluxtempd2**2.0
+          if(j==1) then !148 GHz
+             cltt_temp(il) = cltt(il) &
+                             +aps148*cl_p(il) &
+                             +acib150*cl_c(il)*(f1_dust/fp2)**(2.d0*beta_c)*(planckratiod1*fluxtempd1)**2.d0 &
+                             +age*cl_cir(il)*(f1_dust**2.d0/fp2**2.d0)**beta_g*fluxtempd1**2.d0 &
+                             +f1*f1/f0/f0*amp_tsz*cl_tsz(il) &
+                             +amp_ksz*cl_ksz(il) &
+                             -2.d0*sqrt(acib150*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f1_dust/fp2)**beta_c*(planckratiod1*fluxtempd1)
+
+          else if (j==2) then !148x218 GHz
+             cltt_temp(il) = cltt(il) &
+                             +rps*sqrt(aps148*aps217)*cl_p(il) &
+                             +rcib*sqrt(acib150*acib220)*cl_c(il)*(f1_dust/fp2)**beta_c*(planckratiod1*fluxtempd1)*(f2_dust/fp3)**beta_c*(planckratiod2*fluxtempd2) &
+                             +age*cl_cir(il)*(f2_dust*f1_dust/fp2/fp3)**beta_g*fluxtempd2*fluxtempd1 &
+                             +amp_ksz*cl_ksz(il) &
+                             -sqrt(acib220*amp_tsz*f1*f1/f0/f0)*xi*cl_szcib(il)*(f2_dust/fp3)**beta_c*(planckratiod2*fluxtempd2)
+
+          else if(j ==3) then !218 GHz
+             cltt_temp(il) = cltt(il) &
+                             +aps217*cl_p(il) &
+                             +acib220*cl_c(il)*(f2_dust/fp3)**(2.d0*beta_c)*(planckratiod2*fluxtempd2)**2.d0 &
+                             +age*cl_cir(il)*(f2_dust**2.d0/fp3**2.d0)**beta_g*fluxtempd2**2.d0 &
+                             +amp_ksz*cl_ksz(il)
           endif
-          cltt_temp(il) = cltt_temp(il)/((dble(il)*(dble(il)+1.0))/(2*PI))
+          cltt_temp(il) = cltt_temp(il)/((dble(il)*(dble(il)+1.d0))/(2.d0*PI))
       enddo
+     !Multiply by window functions
       btt_th(j,0:tbin-1)=MATMUL(win_func(j,0:tbin-1,2:tt_lmax),cltt_temp(2:tt_lmax))
     enddo
  
@@ -221,17 +240,17 @@ contains
 
     do i =0,nbin11-1
        do j=0,nsp11_e-1
-          diffs(i+1+j*nbin11,1) = btt_dat1(j+1,i) - btt_th(1,i+4)
+          diffs(i+1+j*nbin11,1) = btt_dat1(j+1,i) - btt_th(1,i+3)
        enddo
     enddo
     do i =0,nbin12-1
        do j=0,nsp12_e-1
-          diffs(i+1+nsp11_e*nbin11+j*nbin12,1) = btt_dat12(j+1,i) - btt_th(2,i+14)
+          diffs(i+1+nsp11_e*nbin11+j*nbin12,1) = btt_dat12(j+1,i) - btt_th(2,i+13)
        enddo
     enddo
     do i =0,nbin22-1
        do j =0,nsp22_e-1
-          diffs(i+1+nsp11_e*nbin11+nsp12_e*nbin12+j*nbin22,1) = btt_dat2(j+1,i) - btt_th(3,i+14)
+          diffs(i+1+nsp11_e*nbin11+nsp12_e*nbin12+j*nbin22,1) = btt_dat2(j+1,i) - btt_th(3,i+13)
        enddo
     enddo
 
@@ -242,7 +261,7 @@ contains
     tmp(:,:) = matmul(inverse(:,:),diffs(:,:))
     chi2(:,:) = matmul(diffs2(:,:),tmp(:,:))
 
-    like_acte = like_acte+chi2(1,1)/2.0
+    like_acte = like_acte+chi2(1,1)/2.d0
 
 10  continue
     
@@ -326,13 +345,13 @@ contains
       enddo
    enddo
 
-   bmin(1) = bmin(1)-4
-   bmin(2) = bmin(2)-14
-   bmin(3) = bmin(3)-14
+   bmin(1) = bmin(1)-3
+   bmin(2) = bmin(2)-13
+   bmin(3) = bmin(3)-13
 
-   bmax(1) = bmax(1)-4
-   bmax(2) = bmax(2)-14
-   bmax(3) = bmax(3)-14
+   bmax(1) = bmax(1)-3
+   bmax(2) = bmax(2)-13
+   bmax(3) = bmax(3)-13
 
    !------------------------------------------------- 
    !Change covmat to select the ell range
@@ -344,12 +363,12 @@ contains
          if( k .ge. nbin11*(i-1) .and. k .lt. nbin11*(i-1)+bmin(1)+1) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
          if( k .gt. nbin11*(i-1)+bmax(1)+1 .and. k .le. nbin11*(i+1)) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
       enddo
    enddo
@@ -359,12 +378,12 @@ contains
          if( k .ge. nbin11*nsp11_e+nbin12*(i-1) .and. k .lt. nbin11*nsp11_e+nbin12*(i-1)+bmin(2)+1) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
          if( k .gt. nbin11*nsp11_e+nbin12*(i-1)+bmax(2)+1 .and. k .le. nbin11*nsp11_e+nbin12*(i+1)) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
       enddo
    enddo
@@ -375,12 +394,12 @@ contains
          if( k .ge. nbin11*nsp11_e+nbin12*nsp12_e+nbin22*(i-1) .and. k .lt. nbin11*nsp11_e+nbin12*nsp12_e+nbin22*(i-1)+bmin(3)+1) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
          if( k .gt. nbin11*nsp11_e+nbin12*nsp12_e+nbin22*(i-1)+bmax(3)+1 .and. k .le. nbin11*nsp11_e+nbin12*nsp12_e+nbin22*(i+1)) then
              covmat_e(k,1:datap_e) = 0
              covmat_e(1:datap_e,k) = 0
-             covmat_e(k,k) = 1E+10
+             covmat_e(k,k) = 1d+10
          end if
       enddo
    enddo

@@ -23,6 +23,9 @@ print *,"==================================="
 !---------------------------------------------------
 ! read in test Cls
 !---------------------------------------------------
+data_dir = '/Users/benabed/Boulot/actspt/highL_clean_finalACT/data/'
+ACT_data_dir = trim(data_dir)//"data_act/"
+SPT_data_dir = trim(data_dir)//"data_spt/"
 filename = trim(data_dir)//'wmap7_act_lcdm_bestfit_lensedCls_6000.dat'
 write(*,*)"Reading in Cls from: ",trim(filename)
 open(unit=557,file=filename,action='read',status='old')
@@ -37,34 +40,36 @@ close(557)
 
 call highell_likelihood_init
 
-amp_tsz = 4.796 
-amp_ksz = 2.05697
-xi      = 0.2
-aps148  = 10.0
-aps217  = 75.0
-aps95   = 8.0
-aps150  = 10.0
-aps220  = 75.0
-acib150 = 5.7
-acib220 = 61.3
-ncib    = 0.8
-rps0    = 0.90
-rps1    = 0.71
-rps     = 1.00
-rcib    = 0.92
-ags     = 0.4
-age     = 0.8
-cas1    = 1.00
-cas2    = 1.01
-cae1    = 1.00
-cae2    = 0.99
-cal_1   = 1.00
-cal_2   = 1.01
-cal_3   = 1.01
+amp_tsz = 4.80d0 !tSZ 
+amp_ksz = 2.10d0 !kSZ
+xi      = 0.20d0 !tSZxCIB
+aps148  = 10.0d0 !ACT PS 148 GHz
+aps217  = 75.0d0 !ACT PS 218 GHz
+aps95   = 8.00d0 !SPT PS 95 GHz
+aps150  = 10.0d0 !SPT PS 150 GHz
+aps220  = 75.0d0 !SPT PS 220 GHz
+acib150 = 5.70d0 !CIB 150 GHz
+acib220 = 61.3d0 !CIB 220 GHz
+ncib    = 0.80d0 !CIB index 
+rps0    = 0.90d0 !rPS 95/150
+rps1    = 0.71d0 !rPS 95/220
+rps     = 1.00d0 !rPS 150/220
+rcib    = 0.92d0 !rCIB 150/220
+ags     = 0.40d0 !ACT-S dust
+age     = 0.80d0 !ACT-E dust
+cas1    = 1.00d0 !ACT-S 148 GHz cal
+cas2    = 1.01d0 !ACT-S 218 GHz cal
+cae1    = 1.00d0 !ACT-E 148 GHz cal
+cae2    = 0.99d0 !ACT-E 218 GHz cal
+cal_1   = 1.00d0 !SPT 95 GHz cal
+cal_2   = 1.01d0 !SPT 150 GHz cal
+cal_3   = 1.01d0 !SPT 220 GHz cal
 
 call highell_likelihood_compute(cl_tt,amp_tsz,amp_ksz,xi,aps148,aps217,aps95,aps150,aps220,acib150,acib220,ncib,rps0,rps1,rps,rcib,ags,age,cas1,cas2,cae1,cae2,cal_1,cal_2,cal_3,like_tot)
 print *, "----------------------------------------" 
-print *, 'Total High ell chi2  =', 2*like_tot, -like_tot
+print *, 'Total High ell chi2  =', 2.d0*like_tot
+print *, "----------------------------------------"
+print *, 'Expected -2lnL = 776.357229802025' 
 print *, "----------------------------------------"
 
 end program test_likelihood

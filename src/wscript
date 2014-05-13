@@ -107,11 +107,11 @@ def build(bld):
       #  source = osp.join("act_spt",'test_actspt.f90'),
       #  use = 'actspt',
       #  target = 'test_actspt')
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join("act_spt",'test.f90'),
-        use = 'actspt',
-        target = 'test_actspt2')
+      #bld(
+      #  features = 'fc fcprogram',
+      #  source = osp.join("act_spt",'test.f90'),
+      #  use = 'actspt',
+      #  target = 'test_actspt2')
       uselib_actspt = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
 
       
