@@ -70,11 +70,12 @@ def ifort_conf(ctx):
       rL = set()
       rl = set()
       for Li in L:
-        oli = os.listdir(Li)
-        for li in l:
-          if ctx.env.cshlib_PATTERN%li in oli:
-            rl.add(li)
-            rL.add(Li)
+        if osp.exists(Li):
+          oli = os.listdir(Li)
+          for li in l:
+            if ctx.env.cshlib_PATTERN%li in oli:
+              rl.add(li)
+              rL.add(Li)
     except:
       ctx.end_msg(False)
       raise
