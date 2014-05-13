@@ -10,7 +10,7 @@ import waflib
 
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
-lapack_funcs = "dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot"     
+lapack_funcs = "dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot dsyevd"     
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
@@ -257,6 +257,7 @@ void dsymm(const char *side, const char *uplo, const int *m, const int *n,
            const double *beta, double *c, const int *ldc);
 double ddot(int* N,double *DX, int* INCX,double *DY,int* INCY);
 void dpotrs(char* UPLO,int * N,int * NRHS,double* A,int* LDA,double* B,int* LDB,int* INFO );
+void dsyevd(char *jobz, char *uplo, int *n, double *a, int *lda, double *w, double *work, int *lwork, int *iwork, int *liwork, int *info)
            
          
 """
