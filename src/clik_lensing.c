@@ -252,7 +252,7 @@ int clik_try_lensing(char *fpath,error **_err) {
 
   plid = _clik_lensing_init(fpath,err);
   if (isError(*err)) {
-    printError(stderr,*err);
+    //printError(stderr,*err);
     purgeError(err);
   
     return 0;

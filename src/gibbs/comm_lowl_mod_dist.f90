@@ -78,6 +78,7 @@ module comm_lowl_mod_dist
   public :: comm_lowl_deallocate_object
   public :: comm_lowl_compute_lnL
   public :: comm_lowl_get_recent_value
+  public :: read_fiducial_spectrum
 
 contains
 
@@ -132,6 +133,7 @@ contains
     call read_lowl_datafile(datafile, comm_lowl(id)%n, comm_lowl(id)%n_d, comm_lowl(id)%n_h, &
          & comm_lowl(id)%lmax, comm_lowl(id)%nmaps, comm_lowl(id)%d, comm_lowl(id)%N_cov, &
          & comm_lowl(id)%beam, comm_lowl(id)%P_harm, comm_lowl(id)%w)
+    ncomp               = (comm_lowl(id)%lmax+1)**2
     nmode = comm_lowl(id)%n
     nmaps = comm_lowl(id)%nmaps
     n_h   = comm_lowl(id)%n_h
@@ -774,5 +776,73 @@ contains
     end do
 
   end function comm_cls_posdef
+
+  subroutine cl2s(cl, S)
+    implicit none
+
+    real(dp), dimension(1:),    intent(in)  :: cl
+    real(dp), dimension(1:,1:), intent(out) :: S
+
+    integer(i4b) :: i, j, k, nmaps
+
+    nmaps = size(S,1)
+
+    S = 0.d0
+    k = 1
+    do i = 1, nmaps
+       do j = i, nmaps
+          S(i,j) = cl(k)
+          S(j,i) = cl(k)
+          k      = k+1
+       end do
+    end do
+
+  end subroutine cl2s
+
+  subroutine comm_get_eigenvalues(A, eigenvals)
+    
+    real(dp), dimension(1:,1:), intent(in)            :: A
+    real(dp), dimension(1:),    intent(out)           :: eigenvals
+
+    integer(i4b)     :: n, liwork, lwork, lda, info
+    character(len=1) :: job, uplo
+    real(dp),     allocatable, dimension(:,:) :: A_copy
+    real(dp),     allocatable, dimension(:)   :: W, work
+    integer(i4b), allocatable, dimension(:)   :: iwork    
+
+    n      = size(eigenvals)
+
+    if (n == 1) then
+
+       eigenvals(1) = A(1,1)
+
+    else if (n == 2) then
+
+       eigenvals(1) = 0.5d0*(A(1,1)+A(2,2) + sqrt(4.d0*A(1,2)*A(2,1)+(A(1,1)-A(2,2))**2))
+       eigenvals(2) = 0.5d0*(A(1,1)+A(2,2) - sqrt(4.d0*A(1,2)*A(2,1)+(A(1,1)-A(2,2))**2))
+
+    else
+
+       job    = 'n'
+       uplo   = 'l'
+       lda    = n
+       liwork = 1
+       lwork  = 2*n+1
+
+       ! Perform eigenvalue decomposition
+       allocate(work(lwork))
+       allocate(iwork(liwork))
+       allocate(A_copy(n,n))
+       A_copy = A
+       call dsyevd(job, uplo, n, A_copy, lda, eigenvals, work, lwork, iwork, liwork, info)
+       if (info /= 0) write(*,*) 'get_eigenvalues -- dsyevd info = ', info
+       
+       deallocate(work)
+       deallocate(iwork)
+       deallocate(A_copy)
+
+    end if
+
+  end subroutine comm_get_eigenvalues
 
 end module comm_lowl_mod_dist

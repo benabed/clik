@@ -16,8 +16,8 @@ def main(argv):
   #mcl[:,2:] = (test_cl[:1201-2,1:].T)/llp1s2pi[2:]
   parfile = pars.comm_lowl_parfile.strip()
   clw_pars = clik.miniparse(parfile)
-  lmin = clw_pars.LMIN
-  lmax = clw_pars.LMAX
+  lmin = clw_pars.int.LMIN
+  lmax = clw_pars.int.LMAX
   datafile = clw_pars.DATAFILE.strip()
   fid_cl = clw_pars.FIDUCIAL_CL_FILE.strip()
 
@@ -33,7 +33,7 @@ def main(argv):
   dr = tempfile.mkdtemp()
   print dr
   import shutil
-  shutil.copy(parfile,dr+"/"+parfile)
+  shutil.copy(parfile,dr+"/comm_lowl.par")
   shutil.copy(datafile,dr+"/"+datafile)
   shutil.copy(fid_cl,dr+"/"+fid_cl)
   

@@ -129,8 +129,8 @@ def build(bld):
     if bld.env.has_gibbs:
       bld.objects(
         features = 'fc',
-        #source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90 comm_lowl_mod_dist.f90'.split()],
-        source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90'.split()],
+        source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90 comm_lowl_mod_dist.f90'.split()],
+        #source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90'.split()],
         target = 'gibbs',
         uselib = 'healpix_f90 pmc cfitsio lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
@@ -138,7 +138,7 @@ def build(bld):
         )
       #bld(
       #  features = 'fc fcprogram',
-      #  source = osp.join("gibbs",'test_comm.f90'),
+      #  source = osp.join("gibbs",'validate_comm_lowl_mod.f90'),
       #  use = 'gibbs',
       #  target = 'test_comm')
       uselib_gibbs = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
