@@ -107,6 +107,87 @@ parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char *
 }
 CREATE_PARAMETRIC_FILE_INIT(hgal,hgal_init);
 
+void kgal_compute(parametric *egl, double *Rq, error **err) {
+  double *A;
+  int nfreq,m1,m2,ell;
+  double a,b,v,l_pivot,lA,ns,nl;
+  pfchar name;
+  int mell;
+
+  A = egl->payload;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"kgal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"kgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      v = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      A[m1*nfreq+m2] = v;
+      A[m2*nfreq+m1] = v;
+    }
+  }
+
+  nl = parametric_get_value(egl,"kgal_n_large",err);
+  forwardError(*err,__LINE__,);
+  ns = parametric_get_value(egl,"kgal_n_small",err);
+  forwardError(*err,__LINE__,);
+  l_pivot = parametric_get_value(egl,"kgal_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    //_DEBUGHERE_("%g %g %g %g %g %d %d",ell/l_pivot,nl,ns,pow(ell/l_pivot,nl),pow(ell/l_pivot,ns),(ell<l_pivot),(ell>=l_pivot))
+    v = pow(ell/l_pivot,nl) * (ell<l_pivot) + pow(ell/l_pivot,ns) * (ell>=l_pivot);
+    v = v/l_pivot/(l_pivot+1.)*2*M_PI;
+    mell = (ell-egl->lmin)*nfreq*nfreq;
+    for(m1=0;m1<nfreq;m1++) {
+      for(m2=m1;m2<nfreq;m2++) {
+        lA = A[m1*nfreq+m2];
+        Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
+        Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
+      }  
+    }
+  }
+}
+
+parametric *kgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  int m1,m2;
+  pfchar name;
+
+  egl = parametric_init( ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
+  egl->eg_compute = &kgal_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  egl->payload = malloc_err(sizeof(double)*egl->nfreq*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"kgal_l_pivot",250,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"kgal_n_large",-2.2,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  parametric_set_default(egl,"kgal_n_small",-2.8,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"kgal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"kgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,50,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  
+  return egl;
+}
+CREATE_PARAMETRIC_FILE_INIT(kgal,kgal_init);
+
 void galactic_component_compute(parametric* egl, double *Rq, error **err) {
   int ell,m1,m2,mell,nfreq,iv,mv;
   double norm,l_pivot,index,alpha_non_thermal,beta_dust,T_dust;

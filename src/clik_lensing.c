@@ -1,4 +1,5 @@
 #include "clik_lensing.h"
+#include "lenslike/plenslike/plenslike.h"
 
 #define _dealwitherr error *lerr,**err; if(_err==NULL) {lerr=NULL;err=&lerr;} else {err=_err;}
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}
