@@ -24,6 +24,13 @@ def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   
   return lkl_grp
 
+def remove_component(lkl_grp,position):
+  nc = lkl_grp.attrs["n_component"]
+  assert position <=nc
+  for ic in range(position,nc-1):
+    del lkl_grp["component_%d"%(ic)]
+    lkl_grp.copy("component_%d"%(ic+1),"component_%d"%ic)
+  
 def add_component(lkl_grp,typ,position=-1):
   nc = lkl_grp.attrs["n_component"]
   if position ==-1:

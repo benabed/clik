@@ -10,6 +10,7 @@ cdef extern double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, dou
 cdef extern double c_dBdT "dBdT" (double nu, double nu0)
 cdef extern c_parametric *gal_TE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gal_EE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *t1gal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
 def dust_spectrum(nu,T_dust=18.0,beta_dust=1.8,nu0=143.0):
@@ -46,6 +47,12 @@ cdef class kgal(parametric):
   def __cinit__(self):
     self.initfunc = <void*> kgal_init;
 
+cdef class t1gal(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> t1gal_init;
+    self.template_name = "y1y2_temp_50pc.dat[1]"
+    self.plugin_name = "dust"
+
 def galf_rename_func(v,rups):
   if v.startswith("galf"):
     rv = v.replace("galf","pwfe")
@@ -56,5 +63,5 @@ def galf_rename_func(v,rups):
 
 galf = rename_machine(powerlaw_free_emissivity,{"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"},galf_rename_func)
   
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal"]
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal"]
 

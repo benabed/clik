@@ -1,2 +1,3 @@
 source : dust.c, dust_tools.c
 python : dust.pyx
+data : y1y2_temp_50pc.dat

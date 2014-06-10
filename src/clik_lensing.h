@@ -1,5 +1,4 @@
 #include "pmc.h"
-#include "lenslike/plenslike/plenslike.h"
 #include "cldf/cldf.h"
 
 #ifndef CLIK_LENSING_

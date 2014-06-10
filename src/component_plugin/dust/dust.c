@@ -650,3 +650,91 @@ void gpe_dust_compute(parametric *egl, double *Rq, error **err) {
 
 CREATE_PARAMETRIC_FILE_INIT(gpe_dust,gpe_dust_init);
 
+
+void t1gal_compute(parametric* egl, double *Rq, error **err);
+
+parametric *t1gal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  int lmin_t1gal_template= 0; //CHECK
+  int lmax_t1gal_template= 3499; // CHECK
+  int m1,m2;
+  int l;
+  pfchar name;
+  
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  egl->eg_compute = &t1gal_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  egl->payload = malloc_err(sizeof(double)*(lmax_t1gal_template-lmin_t1gal_template+1)+sizeof(double)*egl->nfreq*egl->nfreq,err);
+
+  memcpy(egl->payload+sizeof(double)*egl->nfreq*egl->nfreq,template,sizeof(double)*(lmax_t1gal_template-lmin_t1gal_template+1));
+  
+  // Declare payload, allocate it and fill it
+  parametric_set_default(egl,"t1gal_l_pivot",250,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"t1gal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"t1gal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,0,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  
+  return egl;
+}
+
+
+void t1gal_compute(parametric* egl, double *Rq, error **err) {
+  int nfreq,m1,m2,ell;
+  double a,b,v,l_pivot,lA,ns,nl;
+  pfchar name;
+  int mell;
+  int lmin_t1gal_template = 0; // CHECK
+  int lmax_t1gal_template = 3499; // CHECK
+  double *cl,*A;
+  double nrm;
+  
+  nfreq = egl->nfreq;
+  A = (double*) egl->payload;
+  cl = A + egl->nfreq*egl->nfreq;
+  
+  l_pivot = parametric_get_value(egl,"t1gal_l_pivot",err);
+  forwardError(*err,__LINE__,);
+  
+  nrm = cl[(int)l_pivot-lmin_t1gal_template]*l_pivot*(l_pivot+1.)/2./M_PI;
+  nfreq = egl->nfreq;
+  for(m1=0;m1<nfreq;m1++) {
+    for(m2=m1;m2<nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"t1gal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"t1gal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      v = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      A[m1*nfreq+m2] = v/nrm;
+      A[m2*nfreq+m1] = v/nrm;
+    }
+  }
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    mell = (ell-lmin_t1gal_template);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+      Rq[IDX_R(egl,ell,m1,m2)] = A[m1*nfreq+m2] * cl[mell];
+      Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+
+  return;
+
+}
+
+CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(t1gal,t1gal_init);
