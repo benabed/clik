@@ -348,7 +348,8 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     except Exception,e:
       color = None
     try:
-      data = hgrp["component_%d/data"%i][:]
+      data = hgrp["component_%d/template"%i][:]
+      
     except Exception,e:
       data = None
     if lmin==-1:
@@ -439,8 +440,8 @@ def ordering_from_smica(dffile,jac=True):
   mE = mT*hascl[0]
   mB = mE + mP*hascl[1]
   m =  mB + mP*hascl[2]
-  print mT,mP,mE,mB,m
-  print hascl
+  #print mT,mP,mE,mB,m
+  #print hascl
   nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   m2 = m*m
   ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
@@ -457,11 +458,11 @@ def ordering_from_smica(dffile,jac=True):
     jj_B = (jj >= mB) * (jj < m)
 
     if hascl[0]:
-      print (ii_T)[ps==0]
-      print (jj_T)[ps==0]      
-      print (ii_T*jj_T)[ps==0]
+      #print (ii_T)[ps==0]
+      #print (jj_T)[ps==0]      
+      #print (ii_T*jj_T)[ps==0]
       jac = nm.array([(ps==i) * ii_T * jj_T for i in range(nb)],dtype=nm.int)
-      print jac.sum(1)
+      #print jac.sum(1)
       Jt += [jac]
     if hascl[1]:
       jac = nm.array([(ps==i) * ii_E * jj_E for i in range(nb)],dtype=nm.int)
@@ -721,8 +722,11 @@ def best_fit_cmb(dffile,bestfit):
   rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
   tVec = nm.zeros(len(tm))
-  tVec[good] = rVec
+  eVec = tVec*0.
+  tVec[good] = rVec[0]
+  eVec[good] = rVec[1]
   tm.shape = (-1,len(lm))
   tVec.shape = tm.shape
-  return tm,tVec
+  eVec.shape = tm.shape
+  return tm,tVec,eVec
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())

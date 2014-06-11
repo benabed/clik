@@ -324,8 +324,8 @@ cdef class parametric_template(parametric):
     
     self._template=None
     tmp = self.get_template(data_dir,data_path,data_file,data)
-    self._template = tmp
-    template = <double*> nm.PyArray_DATA(tmp)
+    self._template = tmp*1.
+    template = <double*> nm.PyArray_DATA(self._template)
     
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
@@ -361,6 +361,7 @@ cdef class parametric_template(parametric):
       
       tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
     else:
+      
       tmp = nm.array(data)
     return tmp
 
