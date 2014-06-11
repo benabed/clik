@@ -50,7 +50,7 @@ cdef class kgal(parametric):
 cdef class t1gal(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> t1gal_init;
-    self.template_name = "y1y2_temp_50pc.dat[1]"
+    self.template_name = "y1y2_temp2_50pc.dat[1]"
     self.plugin_name = "dust"
 
 def galf_rename_func(v,rups):
