@@ -264,6 +264,8 @@ def dump_colorcorrections(color_corr, mask_TP, pars):
   return pars
 
 def add_calibration(channel, pars):
+  if "calib" in pars and pars.calib.strip():
+    return pars
   ref = '143'
   if ((any('T' in entry for entry in channel) and (not ref + 'T' in channel)) or
       (any('P' in entry for entry in channel) and (not ref + 'P' in channel))):
