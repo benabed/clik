@@ -13,6 +13,7 @@ def loadcolumn(pth):
     col = int(reg.group(2))
     return nm.loadtxt(pth)[:,col]
   else:
+    #print pth
     return nm.loadtxt(pth)
 
 cdef extern from "errorlist.h":
@@ -440,7 +441,93 @@ cdef class parametric_pol(parametric):
     self._post_init_2(prs,lmin,lmax)
 
 cdef class parametric_pol_template(parametric_pol):
-  pass
+  def __cinit__(self):
+    self.initfunc = NULL
+    self.template_name = ""
+    self.plugin_name = ""
+
+  def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
+    """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None)"""
+    cdef double p_detlist[2000]
+    cdef char *defkey[2000],*defvalue[2000],*key[2000]
+    cdef double *template
+    cdef error *_err,**err
+    cdef int p_has_TEB[3]
+    
+    _err = NULL
+    err = &_err
+    
+    ndef = len(defs)
+    ndet_T = len(detlist_T)
+    ndet_P = len(detlist_P)
+
+    for i in range(ndet_T):
+      p_detlist[i] = detlist_T[i]
+    for i in range(ndet_P):
+      p_detlist[i+ndet_T] = detlist_P[i]
+
+    i = 0
+    for k,v in defs.items():
+      nk = rename.get(k,k)
+      defkey[i] = nk
+      defvalue[i] = v
+      i+=1
+    
+    p_has_TEB[0] = int(has_TEB[0])
+    p_has_TEB[1] = int(has_TEB[1])
+    p_has_TEB[2] = int(has_TEB[2])
+
+    nvar = len(vars)
+    for i in range(nvar):
+      nk = rename.get(vars[i],vars[i])
+      key[i] = nk
+
+    self.rename = rename
+    self.emaner = dict([(rename[k],k) for k in rename])
+
+    
+    self._template=None
+    tmp = self.get_template(data_dir,data_path,data_file,data)
+    self._template = tmp*1.
+    template = <double*> nm.PyArray_DATA(self._template)
+    
+    if self.initfunc==NULL:
+      raise NotImplementedError("Must fill self.initfunc with a valid c function")
+      #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
+    else:
+      self.celf = (<pol_template_init>self.initfunc)(ndet_T,ndet_P,p_has_TEB,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,template,err)
+        
+    er=doError(err)
+    if er:
+      raise er
+
+    self._post_init(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs,dnofail,color,voidmask,rename,data_dir,data_path,data_file,data)
+
+  
+  def get_template(self,data_dir="",data_path="",data_file="",data=None):
+    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
+      return self._template
+    if data is None:
+      if data_path:
+        pth = data_path
+      else:
+        bpth = get_data_path(self.plugin_name)
+        if data_dir:
+          bpth = data_dir
+        fpth = self.template_name
+        if data_file:
+          fpth = data_file  
+        if isinstance(fpth,str):
+          fpth = [fpth]
+        pth = [osp.join(bpth,fpthI) for fpthI in fpth]
+      if isinstance(pth,str):
+        pth = [pth]
+      
+      tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
+    else:
+      
+      tmp = nm.array(data)
+    return tmp
 
 component_list = ["powerlaw","powerlaw_free_emissivity"]
 simple_parametric_list = component_list

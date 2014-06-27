@@ -138,7 +138,7 @@ SmicaComp * clik_smica_comp_##NAME##_init(cldf* df,int nb, int mT, int mP, int n
   return SC;                                                                                             \
 }
 
-#define CREATE_PARAMETRIC_POL__TEMPLATE_FILE_INIT(NAME,INIT_FUNC)                                             \
+#define CREATE_PARAMETRIC_POL_TEMPLATE_FILE_INIT(NAME,INIT_FUNC)                                             \
 SmicaComp * clik_smica_comp_##NAME##_init(cldf * df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {  \
   parametric* p_model;                                                                                   \
   SmicaComp *SC;                                                                                         \
