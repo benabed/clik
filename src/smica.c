@@ -612,17 +612,17 @@ double smica_crit_gauss(void *vsmic, error **err) {
   dzero = 0;
   uplo = 'L';
   //printMat(smic->crit_cor,smic->quad_sn,smic->quad_sn);
-  //_DEBUGHERE_("%d",smic->quad_sn);
+  //_DEBUGHER_("%d",smic->quad_sn);
   //write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
   //write_bin_vector(smic->crit_cor, "crit_cor.dat", sizeof(double)*(smic->quad_sn)*(smic->quad_sn), err);   
   //_DEBUGHERE_("","");
-  for(i=0;i<smic->quad_sn;i++) {
-    smic->gvec[smic->quad_sn+i] = smic->crit_cor[i*smic->quad_sn]*smic->gvec[0];
-    for(j=1;j<smic->quad_sn;j++) {
-      smic->gvec[smic->quad_sn+i] += smic->crit_cor[i*smic->quad_sn+j]*smic->gvec[j];
-    }
-  }
-  //dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
+  //for(i=0;i<smic->quad_sn;i++) {
+  //  smic->gvec[smic->quad_sn+i] = smic->crit_cor[i*smic->quad_sn]*smic->gvec[0];
+  //  for(j=1;j<smic->quad_sn;j++) {
+  //    smic->gvec[smic->quad_sn+i] += smic->crit_cor[i*smic->quad_sn+j]*smic->gvec[j];
+  //  }
+  //}
+  dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
 
   //write_bin_vector(smic->gvec, "gvecCC.dat", sizeof(double)*(smic->quad_sn), err);   
   

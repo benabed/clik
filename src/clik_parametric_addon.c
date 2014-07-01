@@ -461,6 +461,7 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   }
   p_pay->rq = malloc_err(sizeof(double)*(lmax+1-lmin)*m*m,err);
   forwardError(*err,__LINE__,NULL);
+  memset(p_pay->rq,0,sizeof(double)*(lmax+1-lmin)*m*m);
   
   SC = alloc_SC(p_model->nvar,nb,m,p_pay,&comp_parametric_update,&free_comp_parametric,err);
   forwardError(*err,__LINE__,NULL);

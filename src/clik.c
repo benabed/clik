@@ -370,8 +370,21 @@ void clik_cleanup(clik_object** pclikid) {
 
 double clik_compute(clik_object* clikid, double* cl_and_pars,error **_err) {
   double res;
+  //int i,n,lmax[6],lm;
+  //parname *names;
   _dealwitherr;
-  
+
+  //_DEBUGHERE_("","");
+  //clik_get_lmax(clikid,  lmax,err);
+  //_forwardError(*err,__LINE__,-1);
+  //lm = lmax[0]+lmax[1]+lmax[2]+lmax[3]+lmax[4]+lmax[5]+6;
+  //n = clik_get_extra_parameter_names(clikid, &names, err);
+  //_forwardError(*err,__LINE__,-1);
+  //for(i=0;i<n;i++) {
+  //  _DEBUGHERE_("%s = %g",names[i],cl_and_pars[lm+i]);
+  //}
+  //free(names);
+
   res = distribution_lkl(clikid, cl_and_pars,err);
   _forwardError(*err,__LINE__,-1);
   return res;

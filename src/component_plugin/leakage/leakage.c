@@ -243,7 +243,7 @@ void bleak_compute(parametric* egl, double *Rq, error **err) {
   epsilon_coeff = dlata->epsilon_coeff;
 
   l_pivot = parametric_get_value(egl,"bleak_l_pivot",err);
-  forwardError(*err,__LINE__,NULL);
+  forwardError(*err,__LINE__,);
 
   for(i=0;i<mtot;i++) {
     if (i<egl->nfreq_T*egl->has_TEB[0]) {
