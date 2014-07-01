@@ -97,6 +97,9 @@ parametric *bleak_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
 
   testErrorRet(lmax>=template_lmax,-24342,"lmax too big",*err,__LINE__,NULL);
 
+  parametric_set_default(egl,"bleak_l_pivot",2e4,err);
+  forwardError(*err,__LINE__,NULL);
+
   parametric_set_default(egl,"bleak_np",1,err);
   forwardError(*err,__LINE__,NULL);        
   
@@ -227,6 +230,7 @@ void bleak_compute(parametric* egl, double *Rq, error **err) {
   double tmp;
   double epsilon,beta;
   bleak_data *dlata;
+  double l_pivot;
 
   dlata = egl->payload;
 
@@ -237,6 +241,9 @@ void bleak_compute(parametric* egl, double *Rq, error **err) {
   templ         = dlata->templ;
   beta_coeff    = dlata->beta_coeff;
   epsilon_coeff = dlata->epsilon_coeff;
+
+  l_pivot = parametric_get_value(egl,"bleak_l_pivot",err);
+  forwardError(*err,__LINE__,NULL);
 
   for(i=0;i<mtot;i++) {
     if (i<egl->nfreq_T*egl->has_TEB[0]) {
@@ -290,11 +297,11 @@ void bleak_compute(parametric* egl, double *Rq, error **err) {
           continue;
         }
         if (cli==1 || cli ==3 || cli==5) {
-          epsilon = bleak_polynomial(np,&(epsilon_coeff[m1*mtot*np+m2*np]),ell);
+          epsilon = bleak_polynomial(np,&(epsilon_coeff[m1*mtot*np+m2*np]),ell/l_pivot);
         }
         //_DEBUGHERE_("beta %d %d %g",m1,m2,epsilon_coeff[m1*mtot*np+m2*np])
         if (cli==2 || cli ==4 || cli==5) {
-          beta    = bleak_polynomial(np,&(beta_coeff[m1*mtot*np+m2*np]),ell);
+          beta    = bleak_polynomial(np,&(beta_coeff[m1*mtot*np+m2*np]),ell/l_pivot);
         }
         tmp = bleak_apply_t2pmatrix(epsilon,beta, cli, &(templ[ell*mtot*mtot*6+m1*mtot*6+m2*6]));
         Rq[IDX_R(egl,ell,m1,m2)] = tmp;
