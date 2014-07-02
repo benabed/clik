@@ -56,6 +56,14 @@ def ifort_conf(ctx):
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
+  ctx.start_msg("Check ifort version") 
+  v90 = ctx.cmd_and_log(ctx.env.FC+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  v90 = v90.split("\n")[0].strip().split(" ")[2]
+  ctx.end_msg(v90)
+  majver = int(v90.split(".")[0])
+  rl0 = []
+  if majver>13:
+    rl0 = ["irc"]
   ctx.check_cc(
     errmsg="failed",msg='Compile a test code with ifort',
     mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
@@ -68,7 +76,7 @@ def ifort_conf(ctx):
       L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
       l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
       rL = set()
-      rl = set()
+      rl = set(rl0)
       for Li in L:
         if osp.exists(Li):
           oli = os.listdir(Li)
@@ -98,6 +106,7 @@ def ifort_conf_(ctx):
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
+  
   ctx.check_cc(
     errmsg="failed",msg='Compile a test code with ifort',
     mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
