@@ -152,6 +152,8 @@ def configure(ctx):
   else:
     lapack_libs = []
     lapack_includes = ["lapack_clik.h"]
+    ctx.options.lapack_include = osp.join(ctx.env.PREFIX,"include")
+    lapack_libs = ["lapack","blas"]
     lapack_extradefs = ["HAS_LAPACK"]
     lapack_extradefs += ["LAPACK_CLIK"]
     do_include(ctx)
