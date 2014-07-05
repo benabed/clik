@@ -632,6 +632,10 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   for p in prms:
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
+    if oq[-1].shape[1:]!=rqh.shape[1:]:
+      bet = nm.zeros((oq[-1].shape[0],rqh.shape[1],rqh.shape[1]))
+      bet[:,:oq[-1].shape[1],:oq[-1].shape[1]]=oq[-1]
+      oq[-1]=bet
     nrms += [p.__class__.__name__]
   oq = nm.array(oq)
   blmin = fi["clik/lkl_0/bin_lmin"]
