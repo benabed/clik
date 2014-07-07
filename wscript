@@ -411,7 +411,7 @@ def post(ctx):
     # install the module file. This is a cheap trick... grml
     shutil.copy('build/clik.mod',ctx.env.INCDIR)
     # go around a waf bug which set the wrong chmod to fortran exec
-    os.chmod("bin/clik_example_f90",Utils.O755)
+    os.chmod("%s/bin/clik_example_f90"%ctx.env["PREFIX"],Utils.O755)
     build_env_files(ctx)
     
 def build_env_files(ctx):

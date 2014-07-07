@@ -382,6 +382,7 @@ contains
     integer::ntot,i
 
     call clik_lensing_get_lmaxs(clikid,lmax)
+    ntot = lmax(2)
     do i=3,7
       ntot = ntot + lmax(i)+1
     enddo
@@ -397,7 +398,7 @@ contains
     integer,dimension(7)::lmax
 
     call clik_lensing_get_lmaxs(clikid,lmax)
-    allocate(cltt(0:lmax(0)))
+    allocate(cltt(0:lmax(1)))
     call fortran_clik_lensing_clpp_fid(clikid,cltt)
   end subroutine clik_lensing_clpp_fid
 
