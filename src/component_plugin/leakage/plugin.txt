@@ -1,3 +1,0 @@
-source : leakage.c
-python : leakage.pyx
-data   : sky_template_M40404000_F100_143_217_353.dat

@@ -71,7 +71,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   // apply binning if needed
   //sprintf(nm,"rq_before_%s.dat",SC->comp_name);
   //write_bin_vector(rq, nm, sizeof(double)*(p_pay->nbins*p_pay->p_model->ndet*p_pay->p_model->ndet), err);   
-  //forwardError(*err,__LINE__,0);
+  //forwardError(*err,__LINE__,);
   
   if (p_pay->bins!=NULL) {
     char transa,transb;

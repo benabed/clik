@@ -1,0 +1,3 @@
+source : leakage.c, corrnoise.c
+python : systematics.pyx
+data   : sky_template_M40404000_F100_143_217_353.dat, cnoise_F100_143_217_353.dat

@@ -2,11 +2,18 @@ from clik.parametric cimport c_parametric, error, doError, parametric, parametri
 from clik.parametric import norename,rename_machine,rename_replace
 
 cdef extern c_parametric *bleak_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *cnoise_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 cdef class bleak(parametric_pol_template):
   def __cinit__(self):
     self.initfunc = <void*> bleak_init;
     self.template_name = "sky_template_M40404000_F100_143_217_353.dat"
-    self.plugin_name = "leakage"
+    self.plugin_name = "systematics"
 
-component_list = ["bleak"]
+cdef class cnoise(parametric_pol_template):
+  def __cinit__(self):
+    self.initfunc = <void*> cnoise_init;
+    self.template_name = "cnoise_F100_143_217_353.dat"
+    self.plugin_name = "systematics"
+
+component_list = ["bleak","cnoise"]
