@@ -38,13 +38,13 @@ parametric *cnoise_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, i
   egl->eg_compute = &cnoise_compute;
   egl->eg_free = &parametric_simple_payload_free;
 
-  egl->payload = malloc_err(sizeof(double)* (3001*12*12) + sizeof(double)*(12*12)+sizeof(int)*egl->nfreq*egl->nfreq,err);
+  egl->payload = malloc_err(sizeof(double)* (3001*12*12 + 12*12) + sizeof(int)*egl->nfreq*egl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
 
 
   memcpy(egl->payload,template,sizeof(double)* (3001*12*12));
 
-  mv = egl->payload + sizeof(double)* (3001*12*12) + sizeof(double)*(12*12);
+  mv = egl->payload + sizeof(double)* (3001*12*12 + 12*12);
 
   dreq[0] = 100;
   dreq[1] = 143;
@@ -107,8 +107,8 @@ void cnoise_compute(parametric *egl, double *Rq, error **err) {
   teb[1] = 'E';
   teb[2] = 'B';
 
-  mv = egl->payload + sizeof(double)* (3001*12*12) + sizeof(double)*(12*12);
-  A = egl->payload + sizeof(double)* (3001*4*4);
+  mv = egl->payload + sizeof(double)* (3001*12*12 + 12*12);
+  A = egl->payload + sizeof(double)* (3001*12*12);
 
   template = egl->payload;
   l_pivot = parametric_get_value(egl,"cnoise_l_pivot",err);
@@ -130,11 +130,14 @@ void cnoise_compute(parametric *egl, double *Rq, error **err) {
           rm1 = m1 + f1*4;
           rm2 = m2 + f2*4;
           A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI);  
-          A[rm1*12+rm2] = A[rm2*12+rm1];
+          A[rm2*12+rm1] = A[rm1*12+rm2];
+          //_DEBUGHERE_("%s %g %g %d %d %g",name,v,(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI),rm1,rm2,A[rm1*12+rm2]);
           rm1 = m1 + f2*4;
           rm2 = m2 + f1*4;
           A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI);  
-          A[rm1*12+rm2] = A[rm2*12+rm1];
+          A[rm2*12+rm1] = A[rm1*12+rm2];
+          //_DEBUGHERE_("%s %g %g %d %d %g",name,v,(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI),rm1,rm2,A[rm1*12+rm2]);
+                
         }
       }
     }
@@ -143,8 +146,11 @@ void cnoise_compute(parametric *egl, double *Rq, error **err) {
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
-        //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*16+mv[m1]*4+mv[m2]]);
-        Rq[IDX_R(egl,ell,m1,m2)] = template[ell*12*12+mv[m1]*12+mv[m2]] * A[mv[m1]*12+mv[m1]];
+        if(ell==egl->lmin) {
+          //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*12*12+mv[m1]*12+mv[m2]]);  
+        }
+        
+        Rq[IDX_R(egl,ell,m1,m2)] = template[ell*12*12+mv[m1]*12+mv[m2]] * A[mv[m1]*12+mv[m2]];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }  
     }
