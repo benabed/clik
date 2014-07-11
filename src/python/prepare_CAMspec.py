@@ -53,8 +53,13 @@ class forfile:
     self.fi.close()
   
     
-
 def main(argv):
+  pars = clik.miniparse(argv[1])
+  if pars.int(default=1).camspec_version == 1:
+    return main_v1(argv)
+  return main_v2(argv)
+
+def main_v1(argv):
   pars = clik.miniparse(argv[1])
   fcs = forfile(pars.input_likefile)
 
@@ -154,6 +159,74 @@ def main(argv):
 
   hf.close()
   
+def main_v2(argv):
+  pars = clik.miniparse(argv[1])
+
+  root_grp,hf = php.baseCreateParobject(pars.res_object)
+  hascl = pars.bool_array.hascl
+  lmin = pars.int.lmin
+  lmax = pars.int.lmax
+
+  lkl_grp = php.add_lkl_generic(root_grp,"CAMspec",1,hascl,lmax,lmin)
+
+  lkl_grp.attrs["camspec_version"] = 2
+
+  if "pre_marged" in pars:
+    lkl_grp.attrs["pre_marged"] = pars.int.pre_marged
+
+  if "spec_flag" in pars:
+    spec_flag = pars.bool_array.spec_flag
+    assert len(spec_flag)==6,"argh len spec_flag !=6"
+    lkl_grp.attrs["spec_flag"] = [int(v) for v in spec_flag]
+
+    lmins = pars.int_array.lmins
+    assert len(lmins)==6,"argh len lmins !=6"
+    lkl_grp.attrs["lmins"] = lmins
+    lmaxs = pars.int_array.lmaxs
+    assert len(lmaxs)==6,"argh len lmaxs !=6"
+    lkl_grp.attrs["lmaxs"] = lmaxs
+
+  lkl_grp.attrs["camspec_beam_mcmc_num"] = pars.int(default=1).camspec_beam_mcmc_num
+
+  lkl_grp.attrs["bs_factor"] = pars.float(default=2.7).bs_factor
+
+  nuisance_pars = ["aps100",  "aps143",  "aps217",  "acib143",  "acib217",  
+                   "asz143",  "psr",  "cibr",  "ncib143",  "ncib",  "cibrun",  
+                   "xi",  "aksz",  "wig1_143",  "wig1_217",  "wig1_r",  
+                   "wig1_L",  "wig1_sigma",  "wig2_143",  "wig2_217",  "wig2_r",
+                   "wig2_L",  "wig2_sigma",  "cal0",  "cal1",  "cal2",  "calTE",
+                   "calEE",  "bm_1_1",  "bm_1_2",  "bm_1_3",  "bm_1_4",  
+                   "bm_1_5",  "bm_2_1",  "bm_2_2",  "bm_2_3",  "bm_2_4",  
+                   "bm_2_5",  "bm_3_1",  "bm_3_2",  "bm_3_3",  "bm_3_4",  
+                   "bm_3_5",  "bm_4_1",  "bm_4_2",  "bm_4_3",  "bm_4_4",  
+                   "bm_4_5"]
+  lkl_grp.attrs["n_nuisance"] = len(nuisance_pars)
+  lkl_grp.attrs["nuisance"] = php.pack256(*nuisance_pars)
+
+  import tempfile
+  dr = tempfile.mkdtemp()
+  print dr
+  import shutil
+  like_file[20], sz143_file[20], tszxcib_file[20], ksz_file[20], beam_file[20],data_vector[20]
+
+  shutil.copy(pars.like_file.strip(),dr+"/like_file")
+  shutil.copy(pars.sz143_file.strip(),dr+"/sz143_file")
+  shutil.copy(pars.tszxcib_file.strip(),dr+"/tszxcib_file")
+  shutil.copy(pars.ksz_file.strip(),dr+"/ksz_file")
+  shutil.copy(pars.beam_file.strip(),dr+"/beam_file")
+  if "data_vector" in pars:
+    lkl_grp.attrs["data_vector_flag"] = 1
+    shutil.copy(pars.data_vector.strip(),dr+"/data_vector")
+  if "camspec_fiducial_cl" in pars:
+    shutil.copy(pars.camspec_fiducial_cl.strip(),dr+"/camspec_fiducial_cl")
+    shutil.copy(pars.camspec_fiducial_foregrounds.strip(),dr+"/camspec_fiducial_foregrounds")
+    
+  php.add_external_data(dr,lkl_grp,tar=True)
+
+  hf.close()
+
+  shutil.rmtree(dr)
+
 import sys
 if __name__=="__main__":
   main(sys.argv)

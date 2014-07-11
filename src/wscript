@@ -10,13 +10,14 @@ def build(bld):
   source_clik += ['clik_lowlike.c']*(bool(bld.env.has_lowlike))
   source_clik += ['clik_actspt.c']*(bool(bld.env.has_actspt))
   source_clik += ['clik_gibbs.c']*(bool(bld.env.has_gibbs))
-  
+  if osp.exists("mspec"):
+    source_clik += ['mspec/clik_mspec.c']
   if osp.exists("bicep"):
     source_clik += ["bicep/bicep_call.c"]
 
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
-  source_clik += ['cldf/cldf.c']
+  source_clik += ['cldf/cldf.c','cldf/cfrd.c']
   for plg in bld.env.PLG:
     for prc in getattr(bld.env,"PLG_%s_SRC"%plg):
       source_clik += [osp.join("component_plugin",plg,prc)]
@@ -81,7 +82,7 @@ def build(bld):
     if bld.env.has_camspec:
       bld.objects(
         features = 'fc',
-        source = ["CAMspec/"+vv for vv in ['CAMspec.f90','clik_CAMspec.f90']], 
+        source = ["CAMspec/"+vv for vv in ['CAMspec.f90','clik_CAMspec.f90','temp_like.f90']], 
         target = 'CAMspec',
         uselib = 'fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,

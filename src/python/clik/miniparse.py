@@ -179,11 +179,11 @@ class miniparse(object):
 
   @property
   def bool(self):
-    return transformme(lambda val:str(val).lower() in ("t","0","true"),self)
+    return transformme(lambda val:str(val).lower() in ("t","1","true"),self)
 
   @property
   def bool_array(self):
-    return transformme(lambda val:str(val).lower() in ("t","0","true"),self,True)
+    return transformme(lambda val:str(val).lower() in ("t","1","true"),self,True)
     
   @property
   def int(self):
