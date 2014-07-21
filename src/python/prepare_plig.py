@@ -86,6 +86,7 @@ def read_full_cov_mat(fname):
   bin_TT  = hdulist['BIN_TT'].data
   bin_EE  = hdulist['BIN_EE'].data
   bin_TE  = hdulist['BIN_TE'].data
+  
   header  = hdulist[0].header
   hdulist.close()
   for key in header.keys():

@@ -88,8 +88,8 @@ SUBROUTINE   camspec_extra_init_v2(ipre_marged,like_file,l_like_file,sz143_file,
     logical::pre_marged
     integer::i
     real*8::bs_factor
-
-
+    
+    n_nuisance = xdim
     do i=1,6
         want_spec(i) = spec_flag(i)==1
         camspec_lmins(i) = lmins(i)
@@ -251,6 +251,7 @@ SUBROUTINE CAMSPEC_EXTRA_LKL_V2(LKL,CL)
     
     do i=1,n_nuisance
         nuisance(i) = CL(offset + i-1)
+    
     enddo
     
     call calc_like(tlkl,  cltt,clte,clee,nuisance)

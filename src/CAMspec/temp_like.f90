@@ -156,6 +156,7 @@
         do i=1,Nspec
             print *, 'spec ',i, 'lmin,lmax, start ix = ', lminX(i),lmaxX(i), npt(i)
         end do
+        
     else
         !Chop L ranges/frequencies if requested
         allocate(indices(nX))
@@ -165,7 +166,7 @@
         read(48) cov !((c_inv(i, j), j = 1, nX), i = 1,  nX) !covariance
         read(48) !((c_inv(i, j), j = 1, nX), i = 1,  nX) !inver covariance
         close(48)
-
+        write(*,*) "no kidding"
         !Cut on L ranges
         print *,'Determining L ranges'
         j=0
@@ -201,6 +202,7 @@
         !    call Matrix_inverse(c_inv)
         deallocate(cov)
     end if
+    
     CAMspec_lmax = maxval(lmaxX)
 
     if (data_vector/='') then
@@ -227,7 +229,7 @@
             end do
         end do
     end if
-
+    
     if (.not. pre_marged) then
         allocate(fid_cl(CAMspec_lmax,Nspec))
         call ReadFiducialCl(fid_cl)
@@ -236,18 +238,23 @@
     call CAMspec_ReadNormSZ(sz143_file, sz_143_temp)
     call CAMspec_ReadNormSZ(ksz_file, ksz_temp)
     call CAMspec_ReadNormSZ(tszxcib_file, tszxcib_temp)
-
+    
     open(48, file=beam_file, form='unformatted', status='unknown')
+    
     read(48) beam_Nspec,num_modes_per_beam,beam_lmax
     ! removed until we decide about how to handle beam errors for TE & EE
     !    if(beam_Nspec.ne.Nspec) stop 'Problem: beam_Nspec != Nspec'
     allocate(beam_modes(num_modes_per_beam,0:beam_lmax,beam_Nspec))
     cov_dim=beam_Nspec*num_modes_per_beam
     allocate(beam_cov_full(cov_dim,cov_dim))
+    
     read(48) (((beam_modes(i,l,j),j=1,beam_Nspec),l=0,beam_lmax),i=1,num_modes_per_beam)
     allocate(beam_cov_inv(cov_dim,cov_dim))
+    
     read(48) ((beam_cov_full(i,j),j=1,cov_dim),i=1,cov_dim)  ! beam_cov
+    
     read(48) ((beam_cov_inv(i,j),j=1,cov_dim),i=1,cov_dim) ! beam_cov_inv
+    
     close(48)
 
     allocate(want_marge(cov_dim))
@@ -383,6 +390,7 @@
     nrun_cib = freq_params(11)
     xi = freq_params(12)
     A_ksz = freq_params(13)
+        
     f_ix = 14
 
     do l=1, maxval(lmax)
@@ -476,7 +484,9 @@
         allocate(C_foregrounds(CAMspec_lmax,Nspec))
         C_foregrounds=0
     end if
+    
     if (camspec_has_TT) then
+    
         call compute_fg(C_foregrounds,freq_params, 0)
 
         cal0 = freq_params(24)

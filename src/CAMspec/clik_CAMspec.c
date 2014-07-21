@@ -65,7 +65,13 @@ cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double u
   } else {
     spec_flag = malloc_err(sizeof(int)*6,err);
     forwardError(*err,__LINE__,NULL);
-    memset(spec_flag,1,sizeof(int)*6);
+    spec_flag[0]=1;
+    spec_flag[1]=1;
+    spec_flag[2]=1;
+    spec_flag[3]=1;
+    spec_flag[4]=1;
+    spec_flag[5]=1;
+    //memset(spec_flag,1,sizeof(int)*6);
     lmins = malloc_err(sizeof(int)*6,err);
     forwardError(*err,__LINE__,NULL);
     memset(lmins,0,sizeof(int)*6);
@@ -73,12 +79,12 @@ cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double u
     forwardError(*err,__LINE__,NULL);
     memset(lmaxs,0,sizeof(int)*6);
   }
-
+  //_DEBUGHERE_("%d %d %d %d %d %d",spec_flag[0],spec_flag[1],spec_flag[2],spec_flag[3],spec_flag[4],spec_flag[5]);
   l_like_file = _set_str(like_file,"like_file",_flen_);
-  l_sz143_file = _set_str(like_file,"sz143_file",_flen_);
-  l_tszxcib_file = _set_str(like_file,"tszxcib_file",_flen_);
-  l_ksz_file = _set_str(like_file,"ksz_file",_flen_);
-  l_beam_file = _set_str(like_file,"beam_file",_flen_);
+  l_sz143_file = _set_str(sz143_file,"sz143_file",_flen_);
+  l_tszxcib_file = _set_str(tszxcib_file,"tszxcib_file",_flen_);
+  l_ksz_file = _set_str(ksz_file,"ksz_file",_flen_);
+  l_beam_file = _set_str(beam_file,"beam_file",_flen_);
 
   l_data_vector = _set_str(data_vector," ",_flen_);
   hk = cldf_haskey(df,"data_vector_flag",err);
@@ -119,8 +125,9 @@ cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double u
     l_camspec_fiducial_foregrounds = _set_str(camspec_fiducial_foregrounds,"camspec_fiducial_foregrounds",_flen_);
     l_camspec_fiducial_cl = _set_str(camspec_fiducial_cl,"camspec_fiducial_cl",_flen_);
   }
-
+  
   // call the init fortran code here  
+  //_DEBUGHERE_("%d",xdim);
   camspec_extra_init_v2_(&pre_marged,like_file,&l_like_file,sz143_file,&l_sz143_file,tszxcib_file,&l_tszxcib_file,ksz_file,&l_ksz_file,beam_file,&l_beam_file,data_vector,&l_data_vector,camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,bs_factor);
 
   cldf_external_cleanup(directory_name,pwd,err);
@@ -298,7 +305,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
 
   bs_factor = cldf_readfloat_default(df,"bs_factor",1,err);
   forwardError(*err,__LINE__,NULL);
-
+  
   camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior,marge_flag,marge_mode,&marge_num,&keep_num,&bs_factor);    
   
   //camspec_extra_getcase_(&xcase);

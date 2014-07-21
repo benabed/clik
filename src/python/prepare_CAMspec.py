@@ -163,10 +163,10 @@ def main_v2(argv):
   pars = clik.miniparse(argv[1])
 
   root_grp,hf = php.baseCreateParobject(pars.res_object)
-  hascl = pars.bool_array.hascl
+  hascl = nm.array(pars.bool_array.hascl,dtype=nm.int)
   lmin = pars.int.lmin
   lmax = pars.int.lmax
-
+  print hascl,hascl.dtype
   lkl_grp = php.add_lkl_generic(root_grp,"CAMspec",1,hascl,lmax,lmin)
 
   lkl_grp.attrs["camspec_version"] = 2
@@ -207,7 +207,7 @@ def main_v2(argv):
   dr = tempfile.mkdtemp()
   print dr
   import shutil
-  like_file[20], sz143_file[20], tszxcib_file[20], ksz_file[20], beam_file[20],data_vector[20]
+  #like_file[20], sz143_file[20], tszxcib_file[20], ksz_file[20], beam_file[20],data_vector[20]
 
   shutil.copy(pars.like_file.strip(),dr+"/like_file")
   shutil.copy(pars.sz143_file.strip(),dr+"/sz143_file")
