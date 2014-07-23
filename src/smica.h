@@ -185,14 +185,14 @@ void comp_gcal2_update(void* data,double* locpars, double* rq, error **err);
 void comp_gcal2_free(void** data);
 
 typedef struct {
-  double *calvec;
-  int *im;
+  double *calvec,*w;
+  int *im,*other;
   int npar,mT,mP;
   int TEB[3];
 
 } SC_calTP;
 
-SmicaComp* comp_calTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im, error **err );
+SmicaComp* comp_calTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im,double*w,int*other, error **err );
 void comp_calTP_update(void* data,double* locpars, double* rq, error **err);
 void comp_calTP_free(void** data);
 

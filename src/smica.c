@@ -690,6 +690,7 @@ void free_Smica(void **psmic) {
   
   smic = *psmic;
   
+  
   free(smic->wq);
   free(smic->rq_hat);
   free(smic->offset_nc);
@@ -698,11 +699,11 @@ void free_Smica(void **psmic) {
       free(smic->SC[isc]->names);
     }
     if (smic->SC[isc]->free!=NULL) {
-      smic->SC[isc]->free((void**)&(smic->SC[isc]));      
+      smic->SC[isc]->free((void**)&(smic->SC[isc]));          
     }
   }
   free(smic->SC);
-  
+    
   if (smic->gvec!=NULL) {
     free(smic->gvec);
   }
@@ -719,7 +720,6 @@ void free_Smica(void **psmic) {
   }
   
   free(smic);
-  //_DEBUGHERE_("","");
   *psmic=NULL;
 }
 
@@ -1618,18 +1618,18 @@ void comp_gcal2_free(void** data) {
 }
 
 
-SmicaComp* comp_calTP_init(int q, int mT, int mP, int *TEB, int npar, int *im, error **err ) {
+SmicaComp* comp_calTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,double *w,int *other, error **err ) {
   SC_calTP *gc;
   SmicaComp *SC;
   int m;
   int i;
 
-  gc = malloc_err(sizeof(SC_gcal2),err);
+  gc = malloc_err(sizeof(SC_calTP),err);
   forwardError(*err,__LINE__,NULL);
 
   gc->npar = npar;
 
-  
+
   m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
   gc->mT = mT;
   gc->mP = mP;
@@ -1649,6 +1649,13 @@ SmicaComp* comp_calTP_init(int q, int mT, int mP, int *TEB, int npar, int *im, e
   forwardError(*err,__LINE__,NULL);
   memcpy(gc->im,im,sizeof(int)*npar);
 
+  gc->w = malloc_err(sizeof(double)*m*m*2,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->w,w,sizeof(double)*m*m*2);
+
+  gc->other = malloc_err(sizeof(int)*m*m*2,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->other,other,sizeof(int)*m*m*2);
 
   SC = alloc_SC(npar,q,m,gc, &comp_calTP_update, &comp_calTP_free,err);
   forwardError(*err,__LINE__,NULL);
@@ -1685,8 +1692,20 @@ void comp_calTP_update(void* data,double* locpars, double* rq, error **err) {
       k1 = gc->calvec[im1];
       imo = iqo+im1*m;
       for(im2=im1;im2<SC->m;im2++) {
+        int mpos,im1_prime,im2_prime;
+        double w,w_prime;
+        mpos = (im1*m+im2)*2;
         //_DEBUGHERE_("%d %d %d %g %g %g",iq,im1,im2,k1,gc->calvec[im2],rq[imo+im2]);
-        rq[imo+im2] *= k1*gc->calvec[im2];
+        w = gc->w[mpos];
+        w_prime = gc->w[mpos+1];
+        im1_prime = gc->other[mpos];
+        im2_prime = gc->other[mpos+1];
+        //if (iq==0) {
+        //  _DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
+        //  _DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
+        // }
+        rq[imo+im2] *= w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime];
+        //rq[imo+im2] *= gc->calvec[im1]*gc->calvec[im2];
       } 
     }
   }
@@ -1698,10 +1717,15 @@ void comp_calTP_free(void** data) {
   
   SC = *data;
   gc = SC->data;
+
+  
   free(gc->im);
   free(gc->calvec);
+  free(gc->w);
+  free(gc->other);
   free(gc);
 
   free(SC);
+  
   *data = NULL;
 }

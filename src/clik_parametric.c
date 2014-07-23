@@ -279,21 +279,25 @@ void parametric_free(void** pegl) {
   
   egl = *pegl;
   if(egl->eg_free!=NULL) {
+    //_DEBUGHERE_("","");
     egl->eg_free(&(egl->payload));
   }
-    
+  //_DEBUGHERE_("","");
   free(egl->varkey); 
   free(egl->ikey); 
+  //_DEBUGHERE_("","");
   if (egl->ndet_T!=0) {
     free(egl->det2freq_T);  
     free(egl->freqlist_T);
     free(egl->detlist_T);
   }
+  //_DEBUGHERE_("","");
   if (egl->ndet_P!=0) {
     free(egl->det2freq_P);
     free(egl->freqlist_P);
     free(egl->detlist_P);
   }
+  //_DEBUGHERE_("","");
   free(egl->det2freq);
   free(egl->freqlist);
   free(egl->detlist);
@@ -303,15 +307,16 @@ void parametric_free(void** pegl) {
   pflist_free((void**)&(egl->pf));
   pflist_free((void**)&(egl->default_settings));
   if (egl->nderiv!=0) {
+    //_DEBUGHERE_("","");
     free(egl->eg_deriv);
     free(egl->deriv_key);
   }
   if (egl->nvoid!=0) {
+    //_DEBUGHERE_("","");
     free(egl->voidlist);
   }
-
+  //_DEBUGHERE_("","");
   free(egl);
-
   *pegl = NULL;
 }
 

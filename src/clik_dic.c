@@ -47,8 +47,10 @@ cdic* cdic_init(error **err) {
  
   pf->nmax = 20;
   pf->nkey = 0;
+
   pf->key = malloc_err(sizeof(char*)*pf->nmax,err);
   forwardError(*err,__LINE__,NULL);
+  //_DEBUGHERE_("%p %d %p",pf,pf->nmax,pf->key);
   pf->value = malloc_err(sizeof(char*)*pf->nmax,err);
   forwardError(*err,__LINE__,NULL);
   pf->dvalue = malloc_err(sizeof(double)*pf->nmax,err);
@@ -69,8 +71,11 @@ void cdic_free(void **ppf) {
   int i;
 
   pf = *ppf;
+  //_DEBUGHERE_("%p %d %p",pf,pf->nmax,pf->key);
   if (pf->nmax !=0) {
     for(i=0;i<pf->nkey;i++) {
+      //_DEBUGHERE_("%p",pf->key[i]);
+      //_DEBUGHERE_("%s",pf->key[i]);
       free(pf->key[i]);
       free(pf->value[i]);
     }
@@ -78,6 +83,7 @@ void cdic_free(void **ppf) {
     free(pf->value);
     free(pf->hash);
   }
+  //_DEBUGHERE_("","");
   free(pf);
   *ppf = NULL;
 }
@@ -106,6 +112,7 @@ void cdic_add_item(cdic* pf,int nit, char** key, char **value,error **err) {
   for(i=0;i<nit;i++) {
     int idx;
     //_DEBUGHERE_("%s",key[i]);
+    //_DEBUGHERE_("%d",strlen(key[i]));
     idx = cdic_key_index(pf,key[i],err);
     forwardError(*err,__LINE__,);
     //_DEBUGHERE_("cur %d idx %d",cur,idx)
@@ -117,6 +124,8 @@ void cdic_add_item(cdic* pf,int nit, char** key, char **value,error **err) {
     //_DEBUGHERE_("%p",value);
     //_DEBUGHERE_("%p",value[i]);
     //_DEBUGHERE_("%s",value[i]);
+    //_DEBUGHERE_("","");
+    //_DEBUGHERE_("%s (%d) -> %s (%d)",key[i],strlen(key[i]),value[i],strlen(value[i]));
     pf->hash[idx] = cdic_hash(key[i]);
     pf->key[idx] = cdic_newchar(key[i],err);
     forwardError(*err,__LINE__,);

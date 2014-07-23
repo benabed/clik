@@ -72,7 +72,6 @@ pw_XX_payload*  init_pw_XX_payload(int kind,int nT,int nP,error **err) {
 
 void pw_XX_free(void **PP) {
   pw_XX_payload *P;
-
   P = *PP;
   free(P->nrm);
   free(P->m1);

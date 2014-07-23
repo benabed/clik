@@ -6,23 +6,20 @@
 
 typedef struct {
   int pipin,pipout;
-  } bicep;
+  int ntot;
+  } mspec;
 
 
 double mspec_lkl(void* pbic, double* pars, error **err) {
   double lkl;
-  bicep *bic;
+  mspec *bic;
   char cmd[500];
   bic = pbic;
   int i;
 
-  for(i=0;i<601;i++) {
+
+  for(i=0;i<bic->ntot;i++) {
     sprintf(cmd,"%g\n",pars[i]);
-    cfrd_send(bic->pipin,cmd,-1,err);
-    forwardError(*err,__LINE__,0);
-  }
-  for(i=0;i<601;i++) {
-    sprintf(cmd,"%g\n",pars[601+i]);
     cfrd_send(bic->pipin,cmd,-1,err);
     forwardError(*err,__LINE__,0);
   }
@@ -41,6 +38,7 @@ double mspec_lkl(void* pbic, double* pars, error **err) {
 
 }
 
+
 void free_mspec(void **pbic) {
   mspec *bic;
   error *_err,**err;
@@ -54,10 +52,6 @@ void free_mspec(void **pbic) {
   close(bic->pipout);
 }
 
-typedef struct {
-  int pipin,pipout;
-  int ntot;
-  } mspec;
 
 cmblkl* clik_mspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   char directory_name[4096],pwd[4096],pwd2[4096],cmd[4096];
@@ -68,6 +62,7 @@ cmblkl* clik_mspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   int xdim;
   char *xnames_tot[300];
   char *nuisance;
+  int i;
   
   bic = malloc_err(sizeof(mspec),err);
   forwardError(*err,__LINE__,NULL);
@@ -99,47 +94,30 @@ cmblkl* clik_mspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   for(i=0;i<xdim;i++) {
     xnames_tot[i] = &(nuisance[i*256]);
   }  
- 
+  
   cing = init_cmblkl(bic, &mspec_lkl, 
                      &free_mspec,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,xdim,err);
   forwardError(*err,__LINE__,NULL);
 
-  cmblkl_set_names(cing, xnames_tot,err);
-  forwardError(*err,__LINE__,NULL);
-  
-  free(nuisance);
-
-  bic->ntot = xdim + 6 + nell*has_cl[0] + nell*has_cl[1] + nell*has_cl[2] + nell*has_cl[3] + nell*has_cl[4] + nell*has_cl[5];
-
-  return cing;
-}
-
-double mspec_lkl(void* pbic, double* pars, error **err) {
-  double lkl;
-  mspec *bic;
-  char cmd[500];
-  bic = pbic;
-  int i;
-
-  for(i=0;i<ntot;i++) {
-    sprintf(cmd,"%g\n",pars[i]);
-    cfrd_send(bic->pipin,cmd,-1,err);
-    forwardError(*err,__LINE__,0);
-  }
   while(1) {
+    //_DEBUGHERE_("waiting for the child","");
     cfrd_read_err(bic->pipout,cmd,err);
     forwardError(*err,__LINE__,0);
     if (strcmp(cmd,"READY")==0) {
       break;
     }
   }
-  cfrd_read_err(bic->pipout,cmd,err);
-  forwardError(*err,__LINE__,0);
+  //_DEBUGHERE_("OK","");
+  cmblkl_set_names(cing, xnames_tot,err);
+  forwardError(*err,__LINE__,NULL);
   
-  sscanf(cmd,"%lg",&lkl);
-  return lkl;
+  free(nuisance);
 
+  bic->ntot = xdim + (ell[nell-1]+1)*has_cl[0] + (ell[nell-1]+1)*has_cl[1] + (ell[nell-1]+1)*has_cl[2] + (ell[nell-1]+1)*has_cl[3] + (ell[nell-1]+1)*has_cl[4] + (ell[nell-1]+1)*has_cl[5];
+  
+  return cing;
 }
+
 

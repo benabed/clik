@@ -439,7 +439,14 @@ def main(argv):
   # a gcal component ?
   if "calib" in pars and pars.calib.strip():
     names = ["calib_"+v for v in pars.str_array.calib]
-    smh.add_calTP_component(lkl_grp,names)
+    calib_order = "abcdefghijklmnopqrstuvwxyz"[:nT]+"abcdefghijklmnopqrstuvwxyz"[:nP]
+    if "calib.order" in pars:
+      calib_order = pars.str.calib_dot_order
+    P_track_T = pars.int(default=0).calib_dot_P_track_T
+    calib_symetrize = pars.int(default=0).calib_dot_symetrize
+
+    smh.add_calTP_component(lkl_grp,names,calib_order,P_track_T,calib_symetrize)
+
   if "beammode.select" in pars:
     names = ["beammode_"+v for v in pars.str_array.beammode_dot_select]
     tpl = [read_array(v) for v in pars.str_array.beammode_dot_data]
