@@ -166,12 +166,12 @@
         read(48) cov !((c_inv(i, j), j = 1, nX), i = 1,  nX) !covariance
         read(48) !((c_inv(i, j), j = 1, nX), i = 1,  nX) !inver covariance
         close(48)
-        write(*,*) "no kidding"
         !Cut on L ranges
         print *,'Determining L ranges'
         j=0
         ix=0
         npt(1)=1
+        
         if(.not. want_spec(1) .and. marge_num>0) stop 'One beam mode may not be right here'
         do i=1,Nspec
             do l = lminX(i), lmaxX(i)

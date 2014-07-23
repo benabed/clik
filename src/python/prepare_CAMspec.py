@@ -181,10 +181,10 @@ def main_v2(argv):
 
     lmins = pars.int_array.lmins
     assert len(lmins)==6,"argh len lmins !=6"
-    lkl_grp.attrs["lmins"] = lmins
+    lkl_grp.attrs["spec_lmins"] = lmins
     lmaxs = pars.int_array.lmaxs
     assert len(lmaxs)==6,"argh len lmaxs !=6"
-    lkl_grp.attrs["lmaxs"] = lmaxs
+    lkl_grp.attrs["spec_lmaxs"] = lmaxs
 
   lkl_grp.attrs["camspec_beam_mcmc_num"] = pars.int(default=1).camspec_beam_mcmc_num
 
