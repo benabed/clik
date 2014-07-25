@@ -14,6 +14,9 @@ def build(bld):
     source_clik += ['mspec/clik_mspec.c']
   if osp.exists("bicep"):
     source_clik += ["bicep/bicep_call.c"]
+  if osp.exists("lollipop") or True:
+    source_clik += ["lollipop/lollipop_lib.c","lollipop/clik_lollipop.c"]
+
 
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
   source_clik += ['CAMspec/clik_CAMspec.c']*bool(bld.env.has_camspec and bld.env.has_f90)
@@ -58,6 +61,14 @@ def build(bld):
     use = 'clik',
     includes = '.'+" minipmc/"*(not bld.env.has_pmc)
     )
+  
+  ##bld(
+  ##  features = 'c cprogram',
+  ##  source = 'lollipop/lollipop_main.c',
+  ##  target = 'lollipop_test',
+  ##  use = 'clik',
+  ##  includes = '.'+" minipmc/"*(not bld.env.has_pmc)
+  ##  )
   
   if bld.env.has_lenslike:
     bld.objects(
