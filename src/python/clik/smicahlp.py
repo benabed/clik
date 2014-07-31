@@ -576,43 +576,43 @@ def calTP_from_smica(dffile):
   return cal
 
 def beamTP_from_smica(dffile):
-    import hpy
-    
-    fi = hpy.File(dffile)
-    hascl = fi["clik/lkl_0/has_cl"]
-    nb = fi["clik/lkl_0/nbins"]/hascl.sum()
-    mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
-    me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
-    mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
-    m = mt+me+mb
-    hgrp = fi["clik/lkl_0"]
-    nc = hgrp.attrs["n_component"]
-    prms = []
-    fnd=False
-    for i in range(1,nc):
-      compot = hgrp["component_%d"%i].attrs["component_type"]
-      if not (compot=="beamTP"):
-        continue
-      fnd=True
-      break
-    if not fnd:
-      def cal(vals):
-        return nm.ones((nb,m,m))
-      cal.varpar = []
-      return cal
-    names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
-    neigen = fi["clik/lkl_0/component_%d/neigen"%i]
-    im = fi["clik/lkl_0/component_%d/im"%i]
-    im.shape = (m,m,neigen)
-    modes = fi["clik/lkl_0/component_%d/modes"%i]
-    modes.shape = (nb,m,m,neigen)
+  import hpy
+  
+  fi = hpy.File(dffile)
+  hascl = fi["clik/lkl_0/has_cl"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  hgrp = fi["clik/lkl_0"]
+  nc = hgrp.attrs["n_component"]
+  prms = []
+  fnd=False
+  for i in range(1,nc):
+    compot = hgrp["component_%d"%i].attrs["component_type"]
+    if not (compot=="beamTP"):
+      continue
+    fnd=True
+    break
+  if not fnd:
     def cal(vals):
-      nals = nm.concatenate(([0.],vals))
-      calpars = nals[im]
-      return nm.exp(nm.sum(calpars[nm.newaxis,:,:,:]*modes,3))
-    cal.varpar = names
+      return nm.ones((nb,m,m))
+    cal.varpar = []
     return cal
-    
+  names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
+  neigen = fi["clik/lkl_0/component_%d/neigen"%i]
+  im = fi["clik/lkl_0/component_%d/im"%i]
+  im.shape = (m,m,neigen)
+  modes = fi["clik/lkl_0/component_%d/modes"%i]
+  modes.shape = (nb,m,m,neigen)
+  def cal(vals):
+    nals = nm.concatenate(([0.],vals))
+    calpars = nals[im]
+    return nm.exp(nm.sum(calpars[nm.newaxis,:,:,:]*modes,3))
+  cal.varpar = names
+  return cal
+
 
 def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored
