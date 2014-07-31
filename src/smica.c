@@ -257,7 +257,7 @@ double smica_crit_mgauss(void *vsmic, error **err) {
   dsymv(&uplo, &pld->vec_size, &done, pld->sigma_inverse, &pld->vec_size, pld->vec, &one, &dzero, pld->vec_buf, &one);
 
   //write_bin_vector(pld->vec, "gvecCC.dat", sizeof(double)*(pld->vec_size), err);   
-  _DEBUGHERE_("","");
+  
   res = 0;
   for(iq=0;iq<pld->vec_size;iq++) {
     //_DEBUGHERE_("%g %g %g",res,pld->vec[iq],pld->vec_buf[iq])
@@ -272,7 +272,7 @@ void free_smica_crit_mgauss(void **ppld) {
   free(pld->vec);
   free(pld->sigma_inverse);
   free(pld);
-  _DEBUGHERE_("","");
+  
   *ppld = NULL;
 }
 
@@ -1927,14 +1927,16 @@ void comp_beamTP_update(void* data,double* locpars, double* rq, error **err) {
   
   for(iq=0;iq<SC->nq;iq++) {
     for(im1=0;im1<m;im1++) {
-      for(im2=0;im2<m;im2++) {
+      for(im2=im1;im2<m;im2++) {
         cal = 0;
         offm = im1*m+im2;
-        offq = offm*m;
+        offq = iq*m2+ offm;
         for(t=0;t<neigen;t++) {
-          cal += gc->pars[gc->im[offm*neigen + t]] * gc->modes[offq*neigen + t];
+          cal += gc->pars[gc->im[offm*neigen + t]] * gc->modes[offq*neigen + t]; 
+	  //if(iq==0) _DEBUGHERE_("%d %d %d -> %d %g %d %g | %g",im1,im2,t,gc->im[offm*neigen + t], gc->pars[gc->im[offm*neigen + t]],offq*neigen+t,gc->modes[offq*neigen + t],cal);
         }
         rq[offq] *= exp(cal);
+	rq[iq*m2 + im2*m + im1] = rq[offq];
       }
     }
   }
@@ -1966,14 +1968,13 @@ SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,i
 
   gc = malloc_err(sizeof(SC_beamTP),err);
   forwardError(*err,__LINE__,NULL);
-
+   
   m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
   
   gc->pars = malloc_err(sizeof(double)*(npar+1),err);
   forwardError(*err,__LINE__,NULL);
   gc->pars[0] = 0;
-
-  
+   
   gc->neigen = neigen;
   gc->modes = malloc_err(sizeof(double)*neigen*m*m*q,err);
   forwardError(*err,__LINE__,NULL);

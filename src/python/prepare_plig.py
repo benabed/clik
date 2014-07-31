@@ -12,6 +12,7 @@ import re
 import clik.hpy as h5py
 import clik.smicahlp as smh
 import pyfits as pf
+import os.path as osp
 
 def read_array(fname):
   try:
@@ -457,6 +458,7 @@ def main(argv):
     m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
     bdir = pars.str.beam_dot_path.strip()
     modes = pars.str_array.beam_dot_modes
+    neigen = pars.int(default=10).beam_dot_neigen
     if len(modes) == nT*nT:
       assert nT == nP or np==0,"not ready yet"
       rmodes = []
@@ -464,14 +466,14 @@ def main(argv):
         for j in range(m):
           rmodes +=[modes[(i%nT)*nT+(j%nT)]]
       modes = rmodes
-    tmodes = nm.zeros((nq,m,m,pars.int(default=10).beams_dot_neigen))
+    tmodes = nm.zeros((nq,m,m,neigen))
     for i in range(m):
       for j in range(i,m):
         lmo = nm.loadtxt(osp.join(bdir,modes[i*m+j]))
         lmo.shape=(10,-1)
-        for t in range(pars.int(default=10).beams_dot_neigen):
-          tmodes[:,i,j,t] = nm.dot(bins,lmo[t,lmin:lmax+1])
-
+        for t in range(neigen):
+          tmodes[:,i,j,t] = nm.dot(bins[:nq,:lmax+1-lmin],lmo[t,lmin:lmax+1])
+          tmodes[:,j,i,t] = tmodes[:,i,j,t]
     smh.add_beamTP_component(lkl_grp,names,neigen,tmodes)
 
   # Some noise ?

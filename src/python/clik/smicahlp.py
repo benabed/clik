@@ -77,9 +77,9 @@ def get_dnames(lkl_grp):
     raise Exception("argl")
 
 def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
-  typ = "calTP"
+  typ = "beamTP"
   im = []
-
+  hascl = lkl_grp.attrs["has_cl"]
   mt = lkl_grp.attrs["m_channel_T"]*hascl[0]
   mp = lkl_grp.attrs["m_channel_P"]*(hascl[1] or hascl[2])
   me = lkl_grp.attrs["m_channel_P"]*hascl[1]
@@ -101,25 +101,38 @@ def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
       if idx1<mt and idx2<mt:
         # easy
         lbm = len(bm_names)
-        im[idx1,idx2,bm] = ldm
+        im[idx1,idx2,bm] = lbm
+        im[idx2,idx1,bm] = im[idx1,idx2,bm]
         if me:
-          im[idx2,idx1+mt,bm] = ldm
-          im[idx1,idx2+mt,bm] = ldm
+          im[idx2,idx1+mt,bm] = lbm
+          im[idx1+mt,idx2,bm] = im[idx2,idx1+mt,bm]
+          im[idx1,idx2+mt,bm] = lbm
+          im[idx2+mt,idx1,bm] = im[idx1,idx2+mt,bm]
           im[idx1+mt,idx2+mt,bm] = lbm
+          im[idx2+mt,idx1+mt,bm] = im[idx1+mt,idx2+mt,bm]
         if mb:
-          im[idx2,idx1+mt+me,bm] = ldm
-          im[idx1,idx2+mt+me,bm] = ldm
+          im[idx2,idx1+mt+me,bm] = lbm
+          im[idx1+mt+me,idx2,bm] = im[idx2,idx1+mt+me,bm]
+          im[idx1,idx2+mt+me,bm] = lbm
+          im[idx2+mt+me,idx1,bm] = im[idx1,idx2+mt+me,bm]
           im[idx1+mt+me,idx2+mt+me,bm] = lbm
+          im[idx2+mt+me,idx1+mt+me,bm] = im[idx1+mt+me,idx2+mt+me,bm]
         if me and mb:
-          im[idx2+mt,idx1+mt+me,bm] = ldm
-          im[idx1+mt,idx2+mt+me,bm] = ldm
+          im[idx2+mt,idx1+mt+me,bm] = lbm
+          im[idx1+mt+me,idx2+mt,bm] = im[idx2+mt,idx1+mt+me,bm]
+          im[idx1+mt,idx2+mt+me,bm] = lbm
+          im[idx2+mt+me,idx1+mt,bm] = im[idx1+mt,idx2+mt+me,bm]
       if idx1>=mt and idx2>=mt:
         # deal with it !
-        im[idx1,idx2,t] = lbm
+        im[idx1,idx2,bm] = lbm
+        im[idx2,idx1,bm] = im[idx1,idx2,bm]
         if mb:
-          im[idx1+me,idx2+me,t] = lbm
-          im[idx1,idx2+me,t] = lbm
-          im[idx2,idx1+me,t] = lbm
+          im[idx1+me,idx2+me,bm] = lbm
+          im[idx2+me,idx1+me,bm] = im[idx1+me,idx2+me,bm]
+          im[idx1,idx2+me,bm] = lbm
+          im[idx2+me,idx1,bm] = im[idx1,idx2+me,bm]
+          im[idx2,idx1+me,bm] = lbm
+          im[idx1+me,idx2,bm] = im[idx2,idx1+me,bm]
       if idx2>=mt and idx1<mt:
         raise NotImplementedError("not done yet. It's late...")
   if len(bm_names):
@@ -562,7 +575,7 @@ def calTP_from_smica(dffile):
   cal.varpar = names
   return cal
 
-  def calTP_from_smica(dffile):
+def beamTP_from_smica(dffile):
     import hpy
     
     fi = hpy.File(dffile)
@@ -578,7 +591,7 @@ def calTP_from_smica(dffile):
     fnd=False
     for i in range(1,nc):
       compot = hgrp["component_%d"%i].attrs["component_type"]
-      if not (compot=="calTP"):
+      if not (compot=="beamTP"):
         continue
       fnd=True
       break
@@ -593,7 +606,7 @@ def calTP_from_smica(dffile):
     im.shape = (m,m,neigen)
     modes = fi["clik/lkl_0/component_%d/modes"%i]
     modes.shape = (nb,m,m,neigen)
-    def cals(vals):
+    def cal(vals):
       nals = nm.concatenate(([0.],vals))
       calpars = nals[im]
       return nm.exp(nm.sum(calpars[nm.newaxis,:,:,:]*modes,3))
@@ -814,6 +827,10 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   cal = calTP_from_smica(dffile)
   cvec = [bestfit[nn] for nn in cal.varpar]
   g = cal(cvec)
+  bal = beamTP_from_smica(dffile)
+  cvec = [bestfit[nn] for nn in bal.varpar]
+  bg = bal(cvec)
+  g *=bg
   acmb = fi["clik/lkl_0/A_cmb"]
   g *= nm.outer(acmb,acmb)[nm.newaxis,:,:]
   rqh = fi["clik/lkl_0/Rq_hat"]

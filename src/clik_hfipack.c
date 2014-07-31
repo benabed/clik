@@ -304,7 +304,6 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     forwardError(*err,__LINE__,NULL);  
   }
   
-
   // how many components ?
   nc = cldf_readint(df,"n_component",err);
   forwardError(*err,__LINE__,NULL);
@@ -358,8 +357,9 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     sprintf(init_func_name,"clik_smica_comp_%s_init",comp_type);
     smica_dl_init = dlsym(dlhandle,init_func_name);
     testErrorRetVA(smica_dl_init==NULL,-1111,"Cannot initialize smica component type %s from %s dl error : %s",*err,__LINE__,NULL,comp_type,df->root,dlerror()); 
-
+ 
     SCs[ic] = smica_dl_init(comp_df,nb,mT,mP, nell, ell, has_cl, unit, wl, bins,nb,err);
+ 
     forwardError(*err,__LINE__,NULL);
     sprintf(comp_type,"%s_%d",comp_type,ic);
     SC_set_compname(SCs[ic],comp_type);
@@ -367,7 +367,8 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     cldf_close(&comp_df);
     
     xdim += SCs[ic]->ndim;
-    
+ 
+  
   }
   
   // deal with names and xdims
@@ -823,7 +824,6 @@ SmicaComp * clik_smica_comp_beamTP_init(cldf *df,int nb, int mT,int mP, int nell
   npar = cldf_readint(df,"npar",err);
   forwardError(*err,__LINE__,NULL);
 
-
   dsz = m*m*neigen;
   im =  cldf_readintarray(df,"im",&dsz,err);
   forwardError(*err,__LINE__,NULL);    
@@ -832,10 +832,9 @@ SmicaComp * clik_smica_comp_beamTP_init(cldf *df,int nb, int mT,int mP, int nell
   modes = cldf_readfloatarray(df,"modes",&dsz,err);
   forwardError(*err,__LINE__,NULL);    
 
-
   SC = comp_beamTP_init(nb, mT,mP,has_cl,npar, im, neigen, modes ,err);
   forwardError(*err,__LINE__,NULL);    
-  
+
   free(im);
   free(modes);
 
@@ -850,7 +849,7 @@ SmicaComp * clik_smica_comp_beamTP_init(cldf *df,int nb, int mT,int mP, int nell
   forwardError(*err,__LINE__,NULL);
   free(xnames); 
   free(bnames); 
-  
+
   return SC;
 }
 
