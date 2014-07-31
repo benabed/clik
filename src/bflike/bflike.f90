@@ -499,7 +499,7 @@ contains
     !    cholesky:  C^-1*X
     call dposv('L',ntot,1,S,ntot,auxdt,ntot,info)
     !    cholesky: X*(C^-1*X)
-    write(0,*) 'Info: ',info
+    !write(0,*) 'Info: ',info
     
     if (info.eq.0) then
        argexp = sum(dt*auxdt)
