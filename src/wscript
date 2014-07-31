@@ -10,12 +10,14 @@ def build(bld):
   source_clik += ['clik_lowlike.c']*(bool(bld.env.has_lowlike))
   source_clik += ['clik_actspt.c']*(bool(bld.env.has_actspt))
   source_clik += ['clik_gibbs.c']*(bool(bld.env.has_gibbs))
-  if osp.exists("mspec") or True:
+  if bld.env.has_mspec:
     source_clik += ['mspec/clik_mspec.c']
-  if osp.exists("bicep"):
+  if bld.env.has_bicep:
     source_clik += ["bicep/bicep_call.c"]
-  if osp.exists("lollipop") or True:
+  if bld.env.has_lollipop:
     source_clik += ["lollipop/lollipop_lib.c","lollipop/clik_lollipop.c"]
+  if bld.env.has_bflike:
+    source_clik += ["bflike/clik_bflike.c"]
 
 
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
@@ -32,6 +34,7 @@ def build(bld):
   uselib_bopix = []
   uselib_wmap = []
   uselib_lowlike = []
+  uselib_bflike = []
   use_clik = []
   use_clik += ["mybopix"]* bool(bld.env.has_bopix)
   use_clik += ["mylowlike"]* bool(bld.env.has_lowlike)
@@ -41,6 +44,7 @@ def build(bld):
   use_clik += ["actspt"]*bool(bld.env.has_camspec)
   use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
   use_clik += ["lenslike"]*bool(bld.env.has_lenslike)
+  use_clik += ["bflike"]*bool(bld.env.has_bflike)
   
   bld.shlib(
     source   = source_clik,
@@ -155,10 +159,25 @@ def build(bld):
       #  target = 'test_comm')
       uselib_gibbs = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
     
+    if not bld.env.has_bopix and (bld.env.has_lowlike or bld.env.wmap_src or bld.env.has_bflike):
+      if bld.env.has_bflike:
+        ssrc = ["bflike/healpix_types.f90"]
+      elif bld.env.has_lowlike:
+        ssrc = ["lowlike/healpix_types.f90"]
+      else:
+        ssrc = [osp.join(bld.env.wmap_src,"healpix_types.f90")]
+      bld.objects(
+        features = 'fc',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
+        source = ssrc,
+        target = 'healpixtypes_c_obj'
+        )
+
     if bld.env.has_lowlike or bld.env.wmap_src:
       wsrcs = "read_archive_map.f90 read_fits.f90  br_mod_dist.f90".split()
-      if not bld.env.has_bopix:
-        wsrcs += ["healpix_types.f90"]
+      #if not bld.env.has_bopix:
+      #  wsrcs += ["healpix_types.f90"]
       if bld.env.wmap_src:
         oo_source = [osp.join(bld.env.wmap_src,vv) for vv in wsrcs]
       else:
@@ -176,7 +195,7 @@ def build(bld):
         features = 'fc',
         source = lowlike_source,
         target = 'mylowlike',
-        use = 'wmap_c_obj',
+        use = 'wmap_c_obj healpixtypes_c_obj',
         uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
@@ -197,7 +216,7 @@ def build(bld):
       bld.objects(
          features = 'fc',
          source = wmap_src,
-         use = 'wmap_c_obj ',
+         use = 'wmap_c_obj healpixtypes_c_obj',
          target = 'mywmap',
          uselib = 'lapack healpix_f90 cfitsio fc_omp fc_runtime',
           fcflags = bld.env.FCFLAGS_fpic,
@@ -211,6 +230,19 @@ def build(bld):
       #  use = 'mywmap',
       #  target = 'test_wmap')
 
+    if bld.env.has_bflike:
+      bflike_source = [osp.join("bflike",vv) for vv in "clik_bflike.f90 bflike.f90 long_intrinsic.f90 fitstools.f90".split()]
+      bld.objects(
+        features = 'fc',
+        source = bflike_source,
+        target = 'bflike',
+        use = 'healpixtypes_c_obj',
+        uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
+        )
+      uselib_bflike = [ff for ff in ('healpix_f90 cfitsio pmc lapack fc_omp fc_runtime').split() if ff]
+      
   
     bld(
       features = "fc cshlib c fcshlib",
