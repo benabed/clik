@@ -76,6 +76,64 @@ def get_dnames(lkl_grp):
   else:
     raise Exception("argl")
 
+def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
+  typ = "calTP"
+  im = []
+
+  mt = lkl_grp.attrs["m_channel_T"]*hascl[0]
+  mp = lkl_grp.attrs["m_channel_P"]*(hascl[1] or hascl[2])
+  me = lkl_grp.attrs["m_channel_P"]*hascl[1]
+  mb = lkl_grp.attrs["m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  
+  im = nm.zeros((m,m,neigen),dtype=nm.int)
+  bm_names = []
+  dnames = get_dnames(lkl_grp)
+  
+  for i,n in enumerate(names):
+    if "beam" in n:
+      det1,det2,bm = re.findall("beam_(.+)x(.+)_(\d)",n)[0]
+      idx1 = dnames.index(det1)
+      idx2 = dnames.index(det2)
+      if idx2<idx1:
+        idx2,idx1 = idx1,idx2
+      bm_names += [n]
+      if idx1<mt and idx2<mt:
+        # easy
+        lbm = len(bm_names)
+        im[idx1,idx2,bm] = ldm
+        if me:
+          im[idx2,idx1+mt,bm] = ldm
+          im[idx1,idx2+mt,bm] = ldm
+          im[idx1+mt,idx2+mt,bm] = lbm
+        if mb:
+          im[idx2,idx1+mt+me,bm] = ldm
+          im[idx1,idx2+mt+me,bm] = ldm
+          im[idx1+mt+me,idx2+mt+me,bm] = lbm
+        if me and mb:
+          im[idx2+mt,idx1+mt+me,bm] = ldm
+          im[idx1+mt,idx2+mt+me,bm] = ldm
+      if idx1>=mt and idx2>=mt:
+        # deal with it !
+        im[idx1,idx2,t] = lbm
+        if mb:
+          im[idx1+me,idx2+me,t] = lbm
+          im[idx1,idx2+me,t] = lbm
+          im[idx2,idx1+me,t] = lbm
+      if idx2>=mt and idx1<mt:
+        raise NotImplementedError("not done yet. It's late...")
+  if len(bm_names):
+    agrp = add_component(lkl_grp,typ,position)
+    agrp.create_dataset("im",data=nm.array(im.flat[:],dtype=nm.int))
+    agrp["neigen"] = neigen
+    agrp["npar"] = len(bm_names)
+    agrp.create_dataset("modes",data=nm.array(modes.flat[:],dtype=nm.double))
+    setnames(agrp,bm_names)
+
+    
+      
+
+
 def add_calTP_component(lkl_grp,names,calib_order,P_track_T,symetrize,position=-1):
   typ = "calTP"
   im = []
@@ -503,6 +561,45 @@ def calTP_from_smica(dffile):
     return nm.ones((nb,m,m))*gmat[nm.newaxis,:,:]
   cal.varpar = names
   return cal
+
+  def calTP_from_smica(dffile):
+    import hpy
+    
+    fi = hpy.File(dffile)
+    hascl = fi["clik/lkl_0/has_cl"]
+    nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+    mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+    me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+    mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+    m = mt+me+mb
+    hgrp = fi["clik/lkl_0"]
+    nc = hgrp.attrs["n_component"]
+    prms = []
+    fnd=False
+    for i in range(1,nc):
+      compot = hgrp["component_%d"%i].attrs["component_type"]
+      if not (compot=="calTP"):
+        continue
+      fnd=True
+      break
+    if not fnd:
+      def cal(vals):
+        return nm.ones((nb,m,m))
+      cal.varpar = []
+      return cal
+    names = fi["clik/lkl_0/component_%d/names"%i].replace("\0"," ").split()
+    neigen = fi["clik/lkl_0/component_%d/neigen"%i]
+    im = fi["clik/lkl_0/component_%d/im"%i]
+    im.shape = (m,m,neigen)
+    modes = fi["clik/lkl_0/component_%d/modes"%i]
+    modes.shape = (nb,m,m,neigen)
+    def cals(vals):
+      nals = nm.concatenate(([0.],vals))
+      calpars = nals[im]
+      return nm.exp(nm.sum(calpars[nm.newaxis,:,:,:]*modes,3))
+    cal.varpar = names
+    return cal
+    
 
 def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored

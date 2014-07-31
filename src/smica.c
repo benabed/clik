@@ -103,61 +103,52 @@ Smica* Smica_init(int nq, double *wq, int m, double *rq_hat, double* rq_0, int n
   smic->eig_lwork = 0;
   smic->eig_nrm = 0;
 
+  smic->lkl_data = NULL;
+  smic->lkl_data_free = NULL;
   return smic;
   
 }
 
-
-
-
-double kld(int n, double* rq_hat, double* rq, error **err) {
-  char uplo,trans,diag,side;
-  int nn, info,i;
-  double *z;
-  double done;
-  double res;
+void free_Smica(void **psmic) {
+  Smica *smic;
+  int isc;
   
-  // suppose que rq_hat et la chol rq_hat
-  // rq_hat et rq sont detruits en sortie
+  smic = *psmic;
   
-  //_DEBUGHERE_("","");
-  //printMat(rq_hat,n,n);
-  //_DEBUGHERE_("","");
-  //printMat(rq,n,n);
-         
-  // chol rq
-  uplo = 'L';
-  nn = n;
-  dpotrf(&uplo,&nn,rq,&nn,&info);
-  testErrorRetVA(info!=0,lowly_chol,"Could not cholesky decompose rq using dpotrf (%d)",*err,__LINE__,0,info);
-  //printMat(rq,nn,nn);
   
-  // solve rq z = rq_hat
-  side = 'L';
-  trans = 'N';
-  diag = 'N';
-  done = 1;
-  dtrsm(&side, &uplo, &trans, &diag, &nn, &nn, &done, rq, &nn, rq_hat, &nn);
-  
-  z = rq_hat;
-  //printMat(z,n,n);
-  
-  // calcule sum(z^2)
-  res = 0;
-  //_DEBUGHERE_(": %g",res);
-  for(i=0;i<n*n;i++) {
-    res += z[i]*z[i];
-    //_DEBUGHERE_(": %g",res);
+  free(smic->wq);
+  free(smic->rq_hat);
+  free(smic->offset_nc);
+  for(isc=0;isc<smic->nc;isc++) {
+    if (smic->SC[isc]->names!=NULL) {
+      free(smic->SC[isc]->names);
+    }
+    if (smic->SC[isc]->free!=NULL) {
+      smic->SC[isc]->free((void**)&(smic->SC[isc]));          
+    }
   }
-  //_DEBUGHERE_(": %g",res);
-  for(i=0;i<n;i++) {
-    res -= 2 * log(z[i*n+i]);
-    //_DEBUGHERE_(": %g",res);
+  free(smic->SC);
+    
+  if (smic->gvec!=NULL) {
+    free(smic->gvec);
   }
-  //_DEBUGHERE_(": %g",res);
-  res -=n;
-  //_DEBUGHERE_(": %g",res);
-  return 0.5*res;  
+  if (smic->quad_mask!=NULL) {
+    free(smic->quad_mask);
+  }
+  if (smic->crit_cor!=NULL) {
+    free(smic->crit_cor);
+  }
+  
+  if (smic->eig_buf!=NULL) {
+    free(smic->eig_buf);
+    free(smic->eig_nrm);
+  }
+  
+  if (smic->lkl_data_free!=NULL) {
+    smic->lkl_data_free(&(smic->lkl_data));
+  }
+  free(smic);
+  *psmic=NULL;
 }
 
 double Smica_lkl(void* vsmic, double* pars, error **err) {
@@ -210,6 +201,233 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
 
   return res;
 }
+
+// modified gaussian criterion
+typedef struct {
+  int vec_size;
+  int *vec_select;
+  double *vec_buf,*vec;
+  double *sigma_inverse;
+} gauss_lkl_data;
+
+double smica_crit_mgauss(void *vsmic, error **err) {
+  int iq,im1,im2,iv,m2,m;
+  double res;
+  Smica *smic;
+  char uplo;
+  double done,dzero;
+  int one,i,j;
+  gauss_lkl_data *pld;
+
+  smic = vsmic;
+  pld = smic->lkl_data;
+  //_DEBUGHERE_("%d %d",smic->nq,smic->m);
+  //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  //forwardError(*err,__LINE__,0);
+  //write_bin_vector(smic->rq_hat, "rq_hat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  //forwardError(*err,__LINE__,0);
+  // reorganize data
+  //write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);   
+  m = smic->m;
+  m2 = m*m;
+  iv = 0;
+  for (iv=0;iv<pld->vec_size;iv++) {
+    //int civ;
+    pld->vec[iv] = smic->rq[pld->vec_select[iv]] - smic->rq_hat[pld->vec_select[iv]];
+    //civ = pld->vec_select[iv];
+    //_DEBUGHERE_("%d (%d %d %d) %d %g %g %g",iv,civ/m2,(civ-(civ/m2)*m2)/m,(civ-(civ/m2)*m2)%m, pld->vec_select[iv],smic->rq[pld->vec_select[iv]], smic->rq_hat[pld->vec_select[iv]],pld->vec[iv]);
+  }
+  //_DEBUGHERE_("%d",iv);
+  
+  one = 1;
+  done = 1;
+  dzero = 0;
+  uplo = 'L';
+  //printMat(smic->crit_cor,pld->vec_size,pld->vec_size);
+  //_DEBUGHER_("%d",pld->vec_size);
+  //write_bin_vector(pld->vec, "gvec.dat", sizeof(double)*(pld->vec_size), err);   
+  //write_bin_vector(smic->crit_cor, "crit_cor.dat", sizeof(double)*(pld->vec_size)*(pld->vec_size), err);   
+  //_DEBUGHERE_("","");
+  //for(i=0;i<pld->vec_size;i++) {
+  //  pld->vec_buf[i] = smic->crit_cor[i*pld->vec_size]*pld->vec[0];
+  //  for(j=1;j<pld->vec_size;j++) {
+  //    pld->vec_buf[i] += smic->crit_cor[i*pld->vec_size+j]*pld->vec[j];
+  //  }
+  //}
+  dsymv(&uplo, &pld->vec_size, &done, pld->sigma_inverse, &pld->vec_size, pld->vec, &one, &dzero, pld->vec_buf, &one);
+
+  //write_bin_vector(pld->vec, "gvecCC.dat", sizeof(double)*(pld->vec_size), err);   
+  _DEBUGHERE_("","");
+  res = 0;
+  for(iq=0;iq<pld->vec_size;iq++) {
+    //_DEBUGHERE_("%g %g %g",res,pld->vec[iq],pld->vec_buf[iq])
+    res += pld->vec[iq]*pld->vec_buf[iq];
+  }
+  return -.5*res;  
+}
+
+void free_smica_crit_mgauss(void **ppld) {
+  gauss_lkl_data *pld;
+  pld = *ppld;
+  free(pld->vec);
+  free(pld->sigma_inverse);
+  free(pld);
+  _DEBUGHERE_("","");
+  *ppld = NULL;
+}
+
+void smica_set_crit_mgauss(Smica *smic, int select_size, double *sigma, int *ordering,int* qmin, int* qmax, error **err) {
+  int iv,jv,iq,ic;
+  int nv,info;
+  gauss_lkl_data *pld;
+  char uplo;
+
+  pld = malloc_err(sizeof(gauss_lkl_data),err);
+  forwardError(*err,__LINE__,);
+  _DEBUGHERE_("","");
+  
+  pld->vec_size = select_size;
+
+  pld->vec_select = malloc_err(sizeof(int)*select_size,err);
+  forwardError(*err,__LINE__,);
+  
+  nv = 0;
+  for (ic=0;ic<(smic->m*(smic->m+1))/2;ic++) {
+    iv = ordering[ic*2];
+    jv = ordering[ic*2+1];
+    for (iq=qmin[iv*smic->m+jv];iq<qmax[iv*smic->m+jv];iq++) {
+      pld->vec_select[nv] = iq*smic->m*smic->m+iv*smic->m+jv;
+      nv++;
+      testErrorRet(nv>pld->vec_size,-2422,"number of line in covariance matrix smaller than number of selected Cl !",*err,__LINE__,);
+    }
+  }
+
+  pld->vec = malloc_err(sizeof(double)*pld->vec_size*2,err);
+  forwardError(*err,__LINE__,);
+  pld->vec_buf = pld->vec + pld->vec_size;
+  
+  pld->sigma_inverse = malloc_err(sizeof(double)*pld->vec_size*pld->vec_size,err);
+  forwardError(*err,__LINE__,);
+  memcpy(pld->sigma_inverse,sigma,sizeof(double)*pld->vec_size*pld->vec_size);
+  uplo = 'L';
+  dpotri(&uplo,&select_size,pld->sigma_inverse,&select_size,&info);
+  testErrorRetVA(info!=0,-432432,"cannot inverse covariance with dpotri (info = %d)",*err,__LINE__,,info);
+
+  smic->crit = &smica_crit_mgauss;
+  smic->lkl_data = pld;
+  smic->lkl_data_free = free_smica_crit_mgauss;
+}
+
+//void smica_set_crit_mgauss(Smica *smic, double *crit_cor, int *mask,int *ordering,error **err) {
+//  int iv,jv,iq;
+//  int nv;
+//  gauss_lkl_data *pld;
+//
+//  pld = malloc_err(sizeof(gauss_lkl_data),err);
+//  forwardError(*err,__LINE__,);
+//
+//  _DEBUGHERE_("","");
+//  nv = (smic->nq * smic->m * (smic->m+1))/2;
+//  pld->vec_select = malloc_err(sizeof(int)*smic->nq*smic->m*smic->m,err);
+//  forwardError(*err,__LINE__,);
+//
+//  // mask is both in spectra an ell !!!
+//  nv = 0;
+//  if (ordering == NULL) {
+//    for (iv=0;iv<smic->m;iv++) {
+//      for (jv=iv;jv<smic->m;jv++) {
+//        for (iq=0;iq<smic->nq;iq++) {
+//          //_DEBUGHERE_("%d %d %d %d (%d)",iq,iv,jv,mask[iq*smic->m*smic->m+iv*smic->m+jv],nv);
+//          if (mask == NULL || mask[iq*smic->m*smic->m+iv*smic->m+jv]!=0) {
+//            pld->vec_select[nv] = iq*smic->m*smic->m+iv*smic->m+jv;
+//            nv++;
+//          }
+//        }
+//      }
+//    }
+//  } else {
+//    int ic;
+//    for (ic=0;ic<(smic->m*(smic->m+1))/2;ic++) {
+//      iv = ordering[ic*2];
+//      jv = ordering[ic*2+1];
+//      for (iq=0;iq<smic->nq;iq++) {
+//        if (mask == NULL || mask[iq*smic->m*smic->m+iv*smic->m+jv]!=0) {
+//          //_DEBUGHERE_("%d %d %d %d (%d)",iq,iv,jv,mask[iq*smic->m*smic->m+iv*smic->m+jv],nv);
+//          pld->vec_select[nv] = iq*smic->m*smic->m+iv*smic->m+jv;
+//          nv++;
+//        }
+//      }
+//    }
+//  }
+//
+//  pld->vec_size = nv;
+//
+//  pld->vec = malloc_err(sizeof(double)*pld->vec_size*2,err);
+//  forwardError(*err,__LINE__,);
+//  pld->vec_buf = pld->vec + pld->vec_size;
+//
+//  pld->sigma_inverse = malloc_err(sizeof(double)*pld->vec_size*pld->vec_size,err);
+//  forwardError(*err,__LINE__,);
+//  
+//  memcpy(pld->sigma_inverse,crit_cor,sizeof(double)*pld->vec_size*pld->vec_size);
+//
+//  smic->crit = &smica_crit_mgauss;
+//  smic->lkl_data = pld;
+//  smic->lkl_data_free = free_smica_crit_mgauss;
+//}
+
+// classic criterion
+
+double kld(int n, double* rq_hat, double* rq, error **err) {
+  char uplo,trans,diag,side;
+  int nn, info,i;
+  double *z;
+  double done;
+  double res;
+  
+  // suppose que rq_hat et la chol rq_hat
+  // rq_hat et rq sont detruits en sortie
+  
+  //_DEBUGHERE_("","");
+  //printMat(rq_hat,n,n);
+  //_DEBUGHERE_("","");
+  //printMat(rq,n,n);
+         
+  // chol rq
+  uplo = 'L';
+  nn = n;
+  dpotrf(&uplo,&nn,rq,&nn,&info);
+  testErrorRetVA(info!=0,lowly_chol,"Could not cholesky decompose rq using dpotrf (%d)",*err,__LINE__,0,info);
+  //printMat(rq,nn,nn);
+  
+  // solve rq z = rq_hat
+  side = 'L';
+  trans = 'N';
+  diag = 'N';
+  done = 1;
+  dtrsm(&side, &uplo, &trans, &diag, &nn, &nn, &done, rq, &nn, rq_hat, &nn);
+  
+  z = rq_hat;
+  //printMat(z,n,n);
+  
+  // calcule sum(z^2)
+  res = 0;
+  //_DEBUGHERE_(": %g",res);
+  for(i=0;i<n*n;i++) {
+    res += z[i]*z[i];
+    //_DEBUGHERE_(": %g",res);
+  }
+  //_DEBUGHERE_(": %g",res);
+  for(i=0;i<n;i++) {
+    res -= 2 * log(z[i*n+i]);
+    //_DEBUGHERE_(": %g",res);
+  }
+  //_DEBUGHERE_(": %g",res);
+  res -=n;
+  //_DEBUGHERE_(": %g",res);
+  return 0.5*res;  
+}
+
 
 void smica_set_crit_eig(Smica *smic, double *nrm, error **err) {
   char uplo,jobz;
@@ -351,6 +569,8 @@ double smica_crit_classic(void *vsmic,error **err) {
   //_DEBUGHERE_(" --> %g (%g)",res);  
   return -res; 
 }
+
+// quad criterion
 
 void smica_set_crit_quad(Smica *smic, double *fid,int *mask,error **err) {
   int iq,m,nq;
@@ -579,6 +799,7 @@ double smica_crit_quad(void *vsmic,error **err) {
   return -res;  
 }
 
+//gaussian approx criterion
 
 double smica_crit_gauss(void *vsmic, error **err) {
   int iq,im1,im2,iv,m2,m;
@@ -683,47 +904,6 @@ void smica_set_crit_gauss(Smica *smic, double *crit_cor, int *mask,int *ordering
 
   smic->crit = &smica_crit_gauss;
 }
-
-void free_Smica(void **psmic) {
-  Smica *smic;
-  int isc;
-  
-  smic = *psmic;
-  
-  
-  free(smic->wq);
-  free(smic->rq_hat);
-  free(smic->offset_nc);
-  for(isc=0;isc<smic->nc;isc++) {
-    if (smic->SC[isc]->names!=NULL) {
-      free(smic->SC[isc]->names);
-    }
-    if (smic->SC[isc]->free!=NULL) {
-      smic->SC[isc]->free((void**)&(smic->SC[isc]));          
-    }
-  }
-  free(smic->SC);
-    
-  if (smic->gvec!=NULL) {
-    free(smic->gvec);
-  }
-  if (smic->quad_mask!=NULL) {
-    free(smic->quad_mask);
-  }
-  if (smic->crit_cor!=NULL) {
-    free(smic->crit_cor);
-  }
-  
-  if (smic->eig_buf!=NULL) {
-    free(smic->eig_buf);
-    free(smic->eig_nrm);
-  }
-  
-  free(smic);
-  *psmic=NULL;
-}
-
-
 
 
 // Simple components
@@ -1728,4 +1908,84 @@ void comp_calTP_free(void** data) {
   free(SC);
   
   *data = NULL;
+}
+
+
+void comp_beamTP_update(void* data,double* locpars, double* rq, error **err) {
+  SmicaComp *SC;
+  SC_beamTP *gc;
+  int t,iq,im1,im2,m,m2,neigen,offm,offq;
+  double cal;
+
+  SC = data;
+  gc = SC->data;
+  memcpy(gc->pars+1,locpars,sizeof(double)*SC->ndim);
+
+  m = SC->m;
+  m2 = m*m;
+  neigen = gc->neigen;
+  
+  for(iq=0;iq<SC->nq;iq++) {
+    for(im1=0;im1<m;im1++) {
+      for(im2=0;im2<m;im2++) {
+        cal = 0;
+        offm = im1*m+im2;
+        offq = offm*m;
+        for(t=0;t<neigen;t++) {
+          cal += gc->pars[gc->im[offm*neigen + t]] * gc->modes[offq*neigen + t];
+        }
+        rq[offq] *= exp(cal);
+      }
+    }
+  }
+}
+
+void comp_beamTP_free(void** data) {
+  SmicaComp *SC;
+  SC_beamTP *gc;
+  
+  SC = *data;
+  gc = SC->data;
+
+  
+  free(gc->im);
+  free(gc->pars);
+  free(gc->modes);
+  free(gc);
+
+  free(SC);
+  
+  *data = NULL;
+}
+
+SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,int neigen, double *modes,error **err ) {
+  SC_beamTP *gc;
+  SmicaComp *SC;
+  int m;
+  int i;
+
+  gc = malloc_err(sizeof(SC_beamTP),err);
+  forwardError(*err,__LINE__,NULL);
+
+  m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
+  
+  gc->pars = malloc_err(sizeof(double)*(npar+1),err);
+  forwardError(*err,__LINE__,NULL);
+  gc->pars[0] = 0;
+
+  
+  gc->neigen = neigen;
+  gc->modes = malloc_err(sizeof(double)*neigen*m*m*q,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->modes,modes,sizeof(double)*neigen*m*m*q);  
+  
+  gc->im = malloc_err(sizeof(int)*neigen*m*m,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->im,im,sizeof(int)*neigen*m*m);
+
+  SC = alloc_SC(npar,q,m,gc, &comp_beamTP_update, &comp_beamTP_free,err);
+  forwardError(*err,__LINE__,NULL);
+
+  return SC;
+
 }

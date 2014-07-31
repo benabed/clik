@@ -83,16 +83,20 @@ typedef struct {
   double* eig_nrm;
   int *quad_mask;
   int quad_sn;
+  void * lkl_data;
+  posterior_log_free *lkl_data_free;
 } Smica;
 
 Smica* Smica_init(int nq, double *wq, int m, double *rq_hat, double* rq_0, int nc, SmicaComp **SC,error **err);
 double smica_crit_classic(void *vsmic,error **err);
 double smica_crit_gauss(void *vsmic, error **err);
+double smica_crit_mgauss(void *vsmic, error **err);
 double smica_crit_eig(void *vsmic, error **err);
 double smica_crit_quad(void *vsmic,error **err);
 double smica_crit_quadfid(void *vsmic,error **err);
 double smica_crit_quad_mask(void *vsmic,error **err);
 
+void smica_set_crit_mgauss(Smica *smic, int select_size, double *sigma, int *ordering,int* qmin, int* qmax, error **err);
 void smica_set_crit_gauss(Smica *smic, double *crit_cor, int *mask, int *ordering,error **err);
 void smica_set_crit_eig(Smica *smic, double *nrm, error **err);
 void smica_set_crit_quad(Smica *smic,double *fid, int *mask, error **err);
@@ -189,8 +193,15 @@ typedef struct {
   int *im,*other;
   int npar,mT,mP;
   int TEB[3];
-
 } SC_calTP;
+
+typedef struct {
+  double *modes,*pars;
+  int *im;
+  int neigen;
+} SC_beamTP;
+
+SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,int neigen, double *modes,error **err );
 
 SmicaComp* comp_calTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im,double*w,int*other, error **err );
 void comp_calTP_update(void* data,double* locpars, double* rq, error **err);

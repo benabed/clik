@@ -179,7 +179,7 @@ parametric *kgal_init(int ndet, double *detlist, int ndef, char** defkey, char *
       } else {
         sprintf(name,"kgal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
-      parametric_set_default(egl,name,50,err);
+      parametric_set_default(egl,name,0,err);
       forwardError(*err,__LINE__,NULL);
     }
   }  

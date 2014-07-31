@@ -406,6 +406,53 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
     forwardError(*err,__LINE__,NULL);
     if(strcmp(crit_name,"classic")==0) {
       //nothing to do here, we are fine
+    } else if(strcmp(crit_name,"mgauss")==0) {
+      int select_size,sz2;
+      double *sigma;
+      int *ordering,*qmin,*qmax;
+      int hk,lsz;
+
+      select_size = cldf_readint(df,"mgauss/select_size",err);
+      forwardError(*err,__LINE__,NULL);
+      
+      sz2 = select_size * select_size;
+      sigma = cldf_readfloatarray(df,"mgauss/sigma",&sz2,err);
+      forwardError(*err,__LINE__,NULL);
+      
+      hk = cldf_haskey(df,"mgauss/ordering",err);
+      forwardError(*err,__LINE__,NULL);
+      if (hk == 1) { 
+        int i;
+        lsz = m*(m+1);
+        ordering = cldf_readintarray(df,"mgauss/ordering",&lsz,err);
+        forwardError(*err,__LINE__,NULL);
+        //_DEBUGHERE_("","");
+      } else {
+        int iv,jv,nv;
+        ordering = malloc_err(sizeof(int)*m*(m+1),err);
+        forwardError(*err,__LINE__,NULL);
+        for(iv=0;iv<m;iv++) {
+          for(jv=iv;jv<m;jv++) {
+            ordering[nv] = iv;
+            ordering[nv+1] = jv;
+            nv+=2;
+          }
+        }
+      }
+
+      lsz = m*m;
+      qmin = cldf_readintarray(df,"mgauss/qmin",&lsz,err);
+      forwardError(*err,__LINE__,NULL);
+      qmax = cldf_readintarray(df,"mgauss/qmax",&lsz,err);
+      forwardError(*err,__LINE__,NULL);
+
+      smica_set_crit_mgauss(smic,select_size,sigma,ordering,qmin,qmax,err);
+      forwardError(*err,__LINE__,NULL);      
+      free(sigma);
+      free(ordering);
+      free(qmin);
+      free(qmax);
+
     } else if(strcmp(crit_name,"gauss")==0) {
       double *quad_crit;
       int *mask;
@@ -737,6 +784,60 @@ SmicaComp * clik_smica_comp_calTP_init(cldf *df,int nb, int mT,int mP, int nell,
   free(im);
   free(w);
   free(other);
+
+  dsz = -1;
+  bnames = cldf_readstr(df,"names",&dsz, err);
+  forwardError(*err,__LINE__,NULL); 
+  xnames = malloc_err(sizeof(char*)*npar,err);
+  for(i=0;i<npar;i++) {
+    xnames[i] =&(bnames[i*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  free(xnames); 
+  free(bnames); 
+  
+  return SC;
+}
+
+SmicaComp * clik_smica_comp_beamTP_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  SmicaComp *SC; 
+  int npar,i;
+  int *im,*jm;
+  double *tpl;
+  int tot_tpl;
+  char *bnames, **xnames;
+  int m;
+  int dsz;
+  double *w;
+  int *other;
+  int hk,im1,im2;
+  int neigen;
+  double *modes;
+
+  m = mtot(mT,mP,has_cl);
+  
+  neigen = cldf_readint(df,"neigen",err);
+  forwardError(*err,__LINE__,NULL);    
+
+  npar = cldf_readint(df,"npar",err);
+  forwardError(*err,__LINE__,NULL);
+
+
+  dsz = m*m*neigen;
+  im =  cldf_readintarray(df,"im",&dsz,err);
+  forwardError(*err,__LINE__,NULL);    
+
+  dsz = m*m*neigen*nb;
+  modes = cldf_readfloatarray(df,"modes",&dsz,err);
+  forwardError(*err,__LINE__,NULL);    
+
+
+  SC = comp_beamTP_init(nb, mT,mP,has_cl,npar, im, neigen, modes ,err);
+  forwardError(*err,__LINE__,NULL);    
+  
+  free(im);
+  free(modes);
 
   dsz = -1;
   bnames = cldf_readstr(df,"names",&dsz, err);

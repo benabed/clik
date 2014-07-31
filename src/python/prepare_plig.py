@@ -447,10 +447,32 @@ def main(argv):
 
     smh.add_calTP_component(lkl_grp,names,calib_order,P_track_T,calib_symetrize)
 
-  if "beammode.select" in pars:
-    names = ["beammode_"+v for v in pars.str_array.beammode_dot_select]
-    tpl = [read_array(v) for v in pars.str_array.beammode_dot_data]
-    smh.add_gcal2_component(lkl_grp,names,tpl)
+  #if "beammode.select" in pars:
+  #  names = ["beammode_"+v for v in pars.str_array.beammode_dot_select]
+  #  tpl = [read_array(v) for v in pars.str_array.beammode_dot_data]
+  #  smh.add_gcal2_component(lkl_grp,names,tpl)
+
+  if "beam" in pars and pars.beam.strip():
+    names = ["beam_"+v for v in pars.str_array.beam]
+    m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
+    bdir = pars.str.beam_dot_path.strip()
+    modes = pars.str_array.beam_dot_modes
+    if len(modes) == nT*nT:
+      assert nT == nP or np==0,"not ready yet"
+      rmodes = []
+      for i in range(m):
+        for j in range(m):
+          rmodes +=[modes[(i%nT)*nT+(j%nT)]]
+      modes = rmodes
+    tmodes = nm.zeros((nq,m,m,pars.int(default=10).beams_dot_neigen))
+    for i in range(m):
+      for j in range(i,m):
+        lmo = nm.loadtxt(osp.join(bdir,modes[i*m+j]))
+        lmo.shape=(10,-1)
+        for t in range(pars.int(default=10).beams_dot_neigen):
+          tmodes[:,i,j,t] = nm.dot(bins,lmo[t,lmin:lmax+1])
+
+    smh.add_beamTP_component(lkl_grp,names,neigen,tmodes)
 
   # Some noise ?
   if "rq_noise" in pars:
