@@ -124,7 +124,10 @@ contains
     allocate(NCVM(ntot,ntot))
     
     write(*,'(a)') 'BFLIKE: Reading covmat'
-    open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
+    ! this fails on old intel fortran !!!!
+    !open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
+    unit = 30
+    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
     read(unit) NCVMfull
     close(unit)
     
@@ -140,7 +143,8 @@ contains
     allocate(Tvec(ntemp,3))
     allocate(Pvec(npol,3))
     
-    open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(anglesfile),form='formatted',status='old')
+    !open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(anglesfile),form='formatted',status='old')
+    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(anglesfile),form='formatted',status='old')
     allocate(alltheta(0:npixtot-1),allphi(0:npixtot-1))
     do i=0,npixtot-1
        read(unit,*) dummy,alltheta(i),allphi(i)
@@ -206,7 +210,8 @@ contains
     
     write(*,'(a)')'BFLIKE: Reading Fiducial'
     
-    open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(clfiducial),status='old')
+    !open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(clfiducial),status='old')
+    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(clfiducial),status='old')
     do l=2,lmax
        read(unit,*)ell,clfid(l,:)
     enddo
