@@ -835,7 +835,8 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   g *= nm.outer(acmb,acmb)[nm.newaxis,:,:]
   rqh = fi["clik/lkl_0/Rq_hat"]
   rqh.shape = g.shape
-  rqh/=g
+  # don't rescale the data
+  #rqh/=g
   prms = parametric_from_smica(dffile)
   oq = []
   nrms = []
@@ -884,6 +885,11 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
           rq[b,mt+me:mb+mt+me,mt:mt+me]+=nm.sum(cls[5,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
       if mb:
         rq[b,mt+me:mt+me+mb,mt+me:mb+mt+me]+=nm.sum(cls[2,lmin+blmin[b]:lmin+blmax[b]+1]*b_ws[blmin[b]:blmax[b]+1])
+    
+    #rescale le model stupid !
+    oqb = nm.array([g*oo for oo in oqb])
+    rq = rq*g
+    
     res = lm,oqb,nrms,rqh,rq
   return res
 
