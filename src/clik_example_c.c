@@ -57,7 +57,7 @@ int main_lensing(int argc, char **argv) {
   return 0;
   
 }
-
+void* clik_must_be_plik(clik_object* clikid,error **_err);
 int main(int argc, char **argv) {
   error *_err,**err;
   clik_object* clikid;
@@ -90,6 +90,9 @@ int main(int argc, char **argv) {
   clikid = clik_init(argv[1],err);
   quitOnError(*err,__LINE__,stderr);
   
+  _DEBUGHERE_("%p",clik_must_be_plik(clikid,err));
+  quitOnError(*err,__LINE__,stderr);
+
   // retrieve has_cl and lmax
   clik_get_has_cl(clikid,has_cl,err);
   quitOnError(*err,__LINE__,stderr);

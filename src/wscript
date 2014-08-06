@@ -3,7 +3,7 @@ import os.path as osp
 
 def build(bld):
   
-  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c'.split()
+  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c clik_plik.c'.split()
   source_clik += 'smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c'.split()*bool(bld.env.has_plik)
   source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
@@ -246,7 +246,7 @@ def build(bld):
   
     bld(
       features = "fc cshlib c fcshlib",
-      source = 'clik_fortran.c clik.F90',
+      source = 'clik_fortran.c clik.F90 clik_plik.f90',
       target = 'clik_f90',
       includes = '.'+" minipmc/"*(not bld.env.has_pmc),
       use = 'clik',

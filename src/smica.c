@@ -151,6 +151,151 @@ void free_Smica(void **psmic) {
   *psmic=NULL;
 }
 
+void Smica_fg(void* vsmic, double* pars, double* fgvec, error **err) {
+  int isc;
+  Smica *smic;
+  double res;
+  int iq,i,j;
+  int iv;
+  smic = vsmic;
+
+  // init rq matrix
+  memset(smic->rq,0,sizeof(double)*smic->m*smic->m*smic->nq);
+  
+  // update rq matrix according to each component
+  for(isc=0;isc<smic->nc;isc++) {
+    char nn[40];
+    if (smic->SC[isc]->isfg==0) {
+      _DEBUGHERE_("jump %d",isc);
+      continue;
+    }
+    //_DEBUGHERE_("comp %d update (off %d)",isc,smic->offset_nc[isc]);
+    //printMat(smic->rq, smic->m, smic->m);
+    //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
+    smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
+    forwardError(*err,__LINE__,);
+    //sprintf(nn,"pq_%d.la",isc);
+    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    //forwardError(*err,__LINE__,-1);
+  
+    //_DEBUGHERE_("comp %d update done",isc);
+    //printMat(smic->rq, smic->m, smic->m);
+  }
+  
+  //symetrize matrix
+  
+  for (iq=0;iq<smic->nq;iq++) {
+    double *rq;
+    rq = smic->rq+iq*smic->m*smic->m;
+    for(i=0;i<smic->m;i++) {
+      for (j=0;j<i;j++) {
+        rq[j+i*smic->m] = rq[j*smic->m+i];
+      }
+    }
+  }
+  //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+  //write_bin_vector(smic->rq_hat, "rqhat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  // ici calculer la vraissemblance a partir de rq et rq_hat
+
+  testErrorRet(smic->crit!=smica_crit_gauss,-24324,"not implemented",*err,__LINE__,);
+
+  for (iv=0;iv<smic->quad_sn;iv++) {
+    int civ;
+    fgvec[iv] = smic->rq[smic->quad_mask[iv]];
+  }
+  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+}
+
+void Smica_data(void* vsmic, double* fgvec, error **err) {
+  int isc;
+  Smica *smic;
+  double res;
+  int iq,i,j;
+  int iv;
+  smic = vsmic;
+
+  testErrorRet(smic->crit!=&smica_crit_gauss,-24324,"not implemented",*err,__LINE__,);
+
+  for (iv=0;iv<smic->quad_sn;iv++) {
+    int civ;
+    fgvec[iv] = smic->rq_hat[smic->quad_mask[iv]];
+  }
+  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+}
+
+int Smica_vecsize(void* vsmic, error **err) {
+  int isc;
+  Smica *smic;
+  double res;
+  int iq,i,j;
+  int iv;
+  smic = vsmic;
+
+  _DEBUGHERE_("%p %p %p",smic,smic->crit,&smica_crit_gauss);
+  
+  testErrorRet(smic->crit!=&smica_crit_gauss,-24324,"not implemented",*err,__LINE__,0);
+
+  _DEBUGHERE_("","");
+  return smic->quad_sn;
+}
+
+void Smica_gcal(void* vsmic, double* pars, double* fgvec, error **err) {
+  int isc;
+  Smica *smic;
+  double res;
+  int iq,i,j;
+  int iv;
+  smic = vsmic;
+
+  // init rq matrix
+  for(i=0;i<smic->nq*smic->m*smic->m;i++) {
+    smic->rq[i] = 1;
+  }
+  
+  // update rq matrix according to each component
+  for(isc=0;isc<smic->nc;isc++) {
+    char nn[40];
+    if (smic->SC[isc]->ismul==0) {
+      _DEBUGHERE_("jump %d",isc);
+      continue;
+    }
+    //_DEBUGHERE_("comp %d update (off %d)",isc,smic->offset_nc[isc]);
+    //printMat(smic->rq, smic->m, smic->m);
+    //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
+    smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
+    forwardError(*err,__LINE__,);
+    //sprintf(nn,"pq_%d.la",isc);
+    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    //forwardError(*err,__LINE__,-1);
+  
+    //_DEBUGHERE_("comp %d update done",isc);
+    //printMat(smic->rq, smic->m, smic->m);
+  }
+  
+  //symetrize matrix
+  
+  for (iq=0;iq<smic->nq;iq++) {
+    double *rq;
+    rq = smic->rq+iq*smic->m*smic->m;
+    for(i=0;i<smic->m;i++) {
+      for (j=0;j<i;j++) {
+        rq[j+i*smic->m] = rq[j*smic->m+i];
+      }
+    }
+  }
+  //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+  //write_bin_vector(smic->rq_hat, "rqhat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
+  // ici calculer la vraissemblance a partir de rq et rq_hat
+
+  testErrorRet(smic->crit!=smica_crit_gauss,-24324,"not implemented",*err,__LINE__,);
+
+  for (iv=0;iv<smic->quad_sn;iv++) {
+    int civ;
+    fgvec[iv] = smic->rq[smic->quad_mask[iv]];
+  }
+  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+}
+
 double Smica_lkl(void* vsmic, double* pars, error **err) {
   int isc;
   Smica *smic;
@@ -985,6 +1130,8 @@ SmicaComp* alloc_SC(int ndim,int nq,int m,void* data, update_rq* update, posteri
   SC->free = pfree;
   SC->names=NULL;
   SC_set_compname(SC,"UNK");
+  SC->isfg = 0;
+  SC->ismul = 0;
   return SC;
 }
 
@@ -992,6 +1139,12 @@ void SC_set_compname(SmicaComp *SC, char *name) {
   sprintf(SC->comp_name,"%s",name);
 }
 
+void SC_isfg(SmicaComp *SC) {
+  SC->isfg = 1;
+}
+void SC_ismul(SmicaComp *SC) {
+  SC->ismul = 1;
+}
 
 void SC_setnames(SmicaComp *SC, char** names, error **err) {
   int i;
@@ -1839,7 +1992,7 @@ SmicaComp* comp_calTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,do
 
   SC = alloc_SC(npar,q,m,gc, &comp_calTP_update, &comp_calTP_free,err);
   forwardError(*err,__LINE__,NULL);
-
+  SC_ismul(SC);
   return SC;
 
 }
@@ -1986,7 +2139,7 @@ SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,i
 
   SC = alloc_SC(npar,q,m,gc, &comp_beamTP_update, &comp_beamTP_free,err);
   forwardError(*err,__LINE__,NULL);
-
+  SC_ismul(SC);
   return SC;
 
 }

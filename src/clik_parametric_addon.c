@@ -466,6 +466,7 @@ SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, i
   SC = alloc_SC(p_model->nvar,nb,m,p_pay,&comp_parametric_update,&free_comp_parametric,err);
   forwardError(*err,__LINE__,NULL);
   
+  SC_isfg(SC);  
   
 
   if (p_model->nvar!=0) {

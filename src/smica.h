@@ -63,6 +63,8 @@ typedef struct {
   posterior_log_free *free;
   _smicanames *names;
   _smicanames comp_name;
+  int isfg;
+  int ismul;
 } SmicaComp;
 
 typedef struct {
@@ -113,6 +115,9 @@ double kld(int n, double* rq_hat, double* rq, error **err);
 SmicaComp* alloc_SC(int ndim,int nq,int m,void* data, update_rq* update, posterior_log_free* pfree, error **err);
 void SC_setnames(SmicaComp *Sc, char** names, error **err);
 void SC_set_compname(SmicaComp *SC, char *name);
+void SC_isfg(SmicaComp *SC);
+void SC_ismul(SmicaComp *SC);
+
 
 typedef struct {
   int Acst;
