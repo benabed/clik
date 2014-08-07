@@ -460,7 +460,7 @@ def main(argv):
     modes = pars.str_array.beam_dot_modes
     neigen = pars.int(default=10).beam_dot_neigen
     if len(modes) == nT*nT:
-      assert nT == nP or np==0,"not ready yet"
+      assert nT == nP or nP==0,"not ready yet"
       rmodes = []
       for i in range(m):
         for j in range(m):
