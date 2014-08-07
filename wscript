@@ -192,7 +192,8 @@ def configure(ctx):
   ctx.env.has_camspec = osp.exists("src/CAMspec")
 
   #actspt
-  ctx.env.has_actspt = osp.exists("src/act_spt")
+  #ctx.env.has_actspt = osp.exists("src/act_spt")
+  ctx.env.has_actspt = False
 
   #gibbs
   ctx.env.has_gibbs = osp.exists("src/gibbs")
@@ -426,6 +427,7 @@ def post(ctx):
   if ctx.cmd == 'install':
     # install the module file. This is a cheap trick... grml
     shutil.copy('build/clik.mod',ctx.env.INCDIR)
+    shutil.copy('build/clik_plik.mod',ctx.env.INCDIR)
     # go around a waf bug which set the wrong chmod to fortran exec
     os.chmod("%s/bin/clik_example_f90"%ctx.env["PREFIX"],Utils.O755)
     build_env_files(ctx)
