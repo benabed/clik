@@ -41,8 +41,6 @@ subroutine main_CMB
   real(kind=8), dimension(:), allocatable :: cl_and_pars, cls
   real(kind=8) :: lkl
   
-  integer::sz
-  real(8),dimension(:),allocatable::vec
 
   nargc = iargc()
   if (nargc < 1) then
@@ -52,13 +50,6 @@ subroutine main_CMB
   call getarg(1,hdffilename)
 
   call clik_init(pself,hdffilename)
-
-  call plik_get_vecsize(pself,sz)
-  print *,sz
-
-  call plik_allocate_vec(pself,vec)
-  call plik_get_data(pself,vec)
-  print *,vec(1),vec(2),vec(sz-1),vec(sz)
 
   call clik_get_has_cl(pself,has_cl)
 
@@ -116,12 +107,6 @@ subroutine main_CMB
       lkl = clik_compute(pself,cl_and_pars)
       print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
       close(unit=100)
-
-      call plik_get_fg(pself,cl_and_pars,vec)
-      print *,vec(1),vec(2),vec(sz-1),vec(sz)
-
-      call plik_get_cal_beam(pself,cl_and_pars,vec)
-      print *,vec(1),vec(2),vec(sz-1),vec(sz)
 
       deallocate(cl_and_pars)
     enddo

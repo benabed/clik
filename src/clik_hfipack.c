@@ -565,7 +565,6 @@ cmblkl* clik_smica_init(cldf * df, int nell, int* ell, int* has_cl, double unit,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,xdim,err);
   forwardError(*err,__LINE__,NULL);
-  _DEBUGHERE_("%p %p",cing,smic);
   if (xdim!=0) {
     cmblkl_set_names(cing, xnames,err);
     forwardError(*err,__LINE__,NULL);

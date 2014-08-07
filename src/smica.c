@@ -166,7 +166,7 @@ void Smica_fg(void* vsmic, double* pars, double* fgvec, error **err) {
   for(isc=0;isc<smic->nc;isc++) {
     char nn[40];
     if (smic->SC[isc]->isfg==0) {
-      _DEBUGHERE_("jump %d",isc);
+      //_DEBUGHERE_("jump %d",isc);
       continue;
     }
     //_DEBUGHERE_("comp %d update (off %d)",isc,smic->offset_nc[isc]);
@@ -203,7 +203,7 @@ void Smica_fg(void* vsmic, double* pars, double* fgvec, error **err) {
     int civ;
     fgvec[iv] = smic->rq[smic->quad_mask[iv]];
   }
-  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+  //_DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
 }
 
 void Smica_data(void* vsmic, double* fgvec, error **err) {
@@ -220,7 +220,7 @@ void Smica_data(void* vsmic, double* fgvec, error **err) {
     int civ;
     fgvec[iv] = smic->rq_hat[smic->quad_mask[iv]];
   }
-  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+  //_DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
 }
 
 int Smica_vecsize(void* vsmic, error **err) {
@@ -231,11 +231,10 @@ int Smica_vecsize(void* vsmic, error **err) {
   int iv;
   smic = vsmic;
 
-  _DEBUGHERE_("%p %p %p",smic,smic->crit,&smica_crit_gauss);
+  //_DEBUGHERE_("%p %p %p",smic,smic->crit,&smica_crit_gauss);
   
   testErrorRet(smic->crit!=&smica_crit_gauss,-24324,"not implemented",*err,__LINE__,0);
 
-  _DEBUGHERE_("","");
   return smic->quad_sn;
 }
 
@@ -256,7 +255,7 @@ void Smica_gcal(void* vsmic, double* pars, double* fgvec, error **err) {
   for(isc=0;isc<smic->nc;isc++) {
     char nn[40];
     if (smic->SC[isc]->ismul==0) {
-      _DEBUGHERE_("jump %d",isc);
+      //_DEBUGHERE_("jump %d",isc);
       continue;
     }
     //_DEBUGHERE_("comp %d update (off %d)",isc,smic->offset_nc[isc]);
@@ -293,7 +292,7 @@ void Smica_gcal(void* vsmic, double* pars, double* fgvec, error **err) {
     int civ;
     fgvec[iv] = smic->rq[smic->quad_mask[iv]];
   }
-  _DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
+  //_DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
 }
 
 double Smica_lkl(void* vsmic, double* pars, error **err) {
