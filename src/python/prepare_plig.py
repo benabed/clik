@@ -454,6 +454,7 @@ def main(argv):
   #  smh.add_gcal2_component(lkl_grp,names,tpl)
 
   if "beam" in pars and pars.beam.strip():
+    print "add beam eigenmodes"
     names = ["beam_"+v for v in pars.str_array.beam]
     m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
     bdir = pars.str.beam_dot_path.strip()
@@ -471,8 +472,12 @@ def main(argv):
       for j in range(i,m):
         lmo = nm.loadtxt(osp.join(bdir,modes[i*m+j]))
         lmo.shape=(10,-1)
+        bmo = nm.array([nm.dot(bins[:nq,:lmax+1-lmin],lmo[t,lmin:lmax+1]) for t in range(neigen)])
+        if pars.bool(default=False).beam_dot_ortho:
+          a,b,c = nm.linalg.svd(bmo,False)
+          bmo = b[:,nm.newaxis]*c
         for t in range(neigen):
-          tmodes[:,i,j,t] = nm.dot(bins[:nq,:lmax+1-lmin],lmo[t,lmin:lmax+1])
+          tmodes[:,i,j,t] = bmo[t]
           tmodes[:,j,i,t] = tmodes[:,i,j,t]
     smh.add_beamTP_component(lkl_grp,names,neigen,tmodes)
 
