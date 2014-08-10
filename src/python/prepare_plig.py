@@ -454,7 +454,10 @@ def main(argv):
   #  smh.add_gcal2_component(lkl_grp,names,tpl)
 
   if "beam" in pars and pars.beam.strip():
-    print "add beam eigenmodes"
+    print "add beam eigenmodes",
+    if pars.bool(default=False).beam_dot_ortho:
+      print "and ensure orthogonality",
+    print ""
     names = ["beam_"+v for v in pars.str_array.beam]
     m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
     bdir = pars.str.beam_dot_path.strip()
