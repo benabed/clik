@@ -377,6 +377,7 @@ def dist(ctx):
   #dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   
+  print ctx.path.ant_glob(dist_list)
   ctx.files = ctx.path.ant_glob(dist_list)
   
 import waflib

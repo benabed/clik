@@ -47,6 +47,8 @@ contains
     
     character(len=256) :: mapTQU,maskTQU,ncvmfile,anglesfile,clfiducial,beamfile
     
+    namelist /inputs/ mapTQU,maskTQU,ncvmfile,anglesfile,clfiducial,beamfile,lmax,lswitch,calibration
+    
     write(*,'(a)') 'BFLIKE: Reading parameter file'
     !setting defaults
     mapTQU='mapTQU.fits'    
@@ -58,7 +60,7 @@ contains
     lmax=64
     lswitch=33
     calibration=1e6
-    namelist /inputs/ mapTQU,maskTQU,ncvmfile,anglesfile,clfiducial,beamfile,lmax,lswitch,calibration
+    
     !read   
     open(11,file=trim(clik_bflike_dir)//'/params_bflike.ini',status='old')
     read(11,inputs)
@@ -70,9 +72,9 @@ contains
     write(*,'(a)') 'BFLIKE: anglesfile: '//trim(anglesfile)
     write(*,'(a)') 'BFLIKE: clfiducial: '//trim(clfiducial)
     write(*,'(a)') 'BFLIKE: beamfile: '//trim(beamfile)
-    write(*,'(a,i)') 'BFLIKE: lmax: ',lmax
-    write(*,'(a,i)') 'BFLIKE: lswitch: ',lsw
-    write(*,'(a,e)') 'BFLIKE: calibration: ',calibration
+    write(*,'(a,i6)') 'BFLIKE: lmax: ',lmax
+    write(*,'(a,i6)') 'BFLIKE: lswitch: ',lsw
+    write(*,'(a,e13.3)') 'BFLIKE: calibration: ',calibration
     
     write(*,'(a)') 'BFLIKE: Done'
     
@@ -127,7 +129,7 @@ contains
     ! this fails on old intel fortran !!!!
     !open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
     unit = 30
-    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
+    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='unformatted',status='old')
     read(unit) NCVMfull
     close(unit)
     
