@@ -54,7 +54,7 @@ SUBROUTINE GIBBS_EXTRA_PARAMETER_INIT(handle,datadir,l_datadir,lmin,lmax,firstch
 	use comm_br_mod
 	use GIBBS_EXTRA
 	
-	INTEGER,INTENT(IN)::l_datadir,lmin,lmax,firstchain,lastchain,firstsample,lastsample,step
+	INTEGER,INTENT(IN)::l_datadir,lmin,lmax,firstchain,lastchain,firstsample,lastsample,step,approx_chi2
 	character(len=l_datadir)::datadir
 	INTEGER,INTENT(OUT)::handle
 	character(len=1000)::sigma_file,cl_file,data_dir
