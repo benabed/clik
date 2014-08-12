@@ -42,7 +42,7 @@ SUBROUTINE GIBBS_EXTRA_LKL(LKL,handle,CL)
 
 	LKL = comm_br_compute_lnL(cltt(2:clik_lmax(handle)),handle)		
 	
-	if (clik_approx_chi2==1) then
+	if (clik_approx_chi2(handle)==1) then
 		LKL = LKL - 0.5d0 * (clik_lmax(handle)-clik_lmin(handle)+1)
 	endif
 
