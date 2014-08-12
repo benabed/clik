@@ -129,7 +129,7 @@ contains
     ! this fails on old intel fortran !!!!
     !open(newunit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='binary',status='old')
     unit = 30
-    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),form='unformatted',status='old')
+    open(unit=unit,file=trim(clik_bflike_dir)//'/'//trim(ncvmfile),access='stream',status='old')
     read(unit) NCVMfull
     close(unit)
     
