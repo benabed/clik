@@ -2,7 +2,7 @@ MODULE GIBBS_EXTRA
 
 	IMPLICIT NONE
 
-	INTEGER,dimension(100):: CLIK_LMAX,CLIK_LMIN
+	INTEGER,dimension(100):: CLIK_LMAX,CLIK_LMIN,clik_approx_chi2
 	real(8),dimension(2:1000) :: cltt
 	real(8),parameter:: PI    = 3.141592653589793238462643383279502884197
 
@@ -42,11 +42,15 @@ SUBROUTINE GIBBS_EXTRA_LKL(LKL,handle,CL)
 
 	LKL = comm_br_compute_lnL(cltt(2:clik_lmax(handle)),handle)		
 	
+	if (clik_approx_chi2==1) then
+		LKL = LKL - 0.5d0 * (clik_lmax(handle)-clik_lmin(handle)+1)
+	endif
+
 END SUBROUTINE 	GIBBS_EXTRA_LKL
 
 
 
-SUBROUTINE GIBBS_EXTRA_PARAMETER_INIT(handle,datadir,l_datadir,lmin,lmax,firstchain,lastchain,firstsample,lastsample,step)
+SUBROUTINE GIBBS_EXTRA_PARAMETER_INIT(handle,datadir,l_datadir,lmin,lmax,firstchain,lastchain,firstsample,lastsample,step,approx_chi2)
 	use comm_br_mod
 	use GIBBS_EXTRA
 	
@@ -67,6 +71,7 @@ SUBROUTINE GIBBS_EXTRA_PARAMETER_INIT(handle,datadir,l_datadir,lmin,lmax,firstch
 	
 	clik_lmin(handle) = lmin
 	clik_lmax(handle) = lmax
+	clik_approx_chi2(handle) = approx_chi2
 		
 END SUBROUTINE 	GIBBS_EXTRA_PARAMETER_INIT
 

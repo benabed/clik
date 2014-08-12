@@ -47,7 +47,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   char dir_data[2048];
   int ldd;
   int lmin,lmax;
-  int firstchain,lastchain,firstsample,lastsample,step;
+  int firstchain,lastchain,firstsample,lastsample,step,approx_chi2;
   int hk;
   gibbs *gb;
 
@@ -69,6 +69,14 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   step = cldf_readint(df,"step",err);
   forwardError(*err,__LINE__,NULL);
 
+  approx_chi2 = 0;
+  hk = cldf_haskey(df,"approx_chi2");
+  forwardError(*err,__LINE__,NULL);
+  if (hk == 1) {
+    approx_chi2 = cldf_readint(df,"approx_chi2",err);
+    forwardError(*err,__LINE__,NULL);    
+  }
+  
 
   memset(dir_data,' ',sizeof(char)*2048);
   sprintf(dir_data,"data/");
@@ -83,7 +91,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
 
 
   //call
-  gibbs_extra_parameter_init_(&(gb->handle),dir_data,&ldd,&lmin,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
+  gibbs_extra_parameter_init_(&(gb->handle),dir_data,&ldd,&lmin,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step,&approx_chi2);
   testErrorRetVA(gb->handle<=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
 
   hk = cldf_haskey(df,"ltrans",err);
@@ -97,7 +105,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
     gb->lmin = lmin;
     gb->ltrans = ltrans;
     
-    gibbs_extra_parameter_init_(&(gb->handle_transition),dir_data,&ldd,&ltrans,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step);
+    gibbs_extra_parameter_init_(&(gb->handle_transition),dir_data,&ldd,&ltrans,&lmax,&firstchain,&lastchain,&firstsample,&lastsample,&step,&approx_chi2);
     testErrorRetVA(gb->handle<=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
 
   }

@@ -35,7 +35,8 @@ def main(argv):
   lkl_grp.attrs["firstchain"] = firstchain
   lkl_grp.attrs["lastchain"] = lastchain
   lkl_grp.attrs["step"] = step
-  
+  if "approx_chi2" in pars:
+    lkl_grp.attrs["approx_chi2"] = pars.int.approx_chi2
   if "ltrans" in pars:
     lkl_grp.attrs["ltrans"] = pars.int.ltrans
     print pars.ltrans

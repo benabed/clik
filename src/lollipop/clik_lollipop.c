@@ -40,7 +40,7 @@ double clik_lollipop_lkl(void* vlol, double* pars, error **err) {
     }
   }
   res = Lollipop_computeLikelihood( lol->ell, lol->cls[0], lol->cls[3], lol->cls[1], lol->cls[2], lol->data, lol->lmin, lol->lmax, lol->fsky, lol->dl);
-  return res*2;
+  return -res;
 }
 
 cmblkl* clik_lollipop_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
