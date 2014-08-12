@@ -68,13 +68,14 @@
     subroutine CAMspec_ReadNormSZ(fname, templt)
     character(LEN=*), intent(in) :: fname
     real(campc) :: templt(lmax_sz)
-    integer i, dummy
+    integer i
+    real(campc)::dummy
     real(campc) :: renorm
 
     open(48, file=fname, form='formatted', status='old')
     do i=2,lmax_sz
         read(48,*) dummy,templt(i)
-        if (dummy/=i) stop 'CAMspec_ReadNormSZ: inconsistency in file read'
+        if (int(dummy)/=i) stop 'CAMspec_ReadNormSZ: inconsistency in file read'
     enddo
     close(48)
 
