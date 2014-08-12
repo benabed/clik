@@ -70,7 +70,7 @@ cmblkl* clik_gibbs_init(cldf *df, int nell, int* ell, int* has_cl, double unit,d
   forwardError(*err,__LINE__,NULL);
 
   approx_chi2 = 0;
-  hk = cldf_haskey(df,"approx_chi2");
+  hk = cldf_haskey(df,"approx_chi2",err);
   forwardError(*err,__LINE__,NULL);
   if (hk == 1) {
     approx_chi2 = cldf_readint(df,"approx_chi2",err);
