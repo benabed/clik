@@ -38,9 +38,9 @@ subroutine main_CMB
   integer(kind=4), dimension(6) :: has_cl,lmax
   character(len=256), dimension(:), pointer :: names
   integer(kind=4) :: numnames, counter, nl, i, j, l, nargc
-  real(kind=8), dimension(:), allocatable :: cl_and_pars, cls
+  real(kind=8), dimension(:), allocatable :: cl_and_pars, cls,vec
   real(kind=8) :: lkl
-  
+    
 
   nargc = iargc()
   if (nargc < 1) then
@@ -104,10 +104,18 @@ subroutine main_CMB
         read(100,*),cl_and_pars(counter)
         counter = counter + 1
       enddo
+      
       lkl = clik_compute(pself,cl_and_pars)
       print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
       close(unit=100)
 
+      !call plik_allocate_vec(pself,vec)
+      !call plik_get_fg(pself,cl_and_pars,vec)
+      !open(unit=120,file="fgtest.dat",form='formatted')
+      !write (120,*) vec
+      !close(unit=120)
+
+      
       deallocate(cl_and_pars)
     enddo
   endif

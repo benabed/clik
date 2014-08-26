@@ -176,7 +176,7 @@ void Smica_fg(void* vsmic, double* pars, double* fgvec, error **err) {
     forwardError(*err,__LINE__,);
     //sprintf(nn,"pq_%d.la",isc);
     //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    //forwardError(*err,__LINE__,-1);
+    //forwardError(*err,__LINE__,);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);

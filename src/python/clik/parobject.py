@@ -116,6 +116,7 @@ def compress_bins(bins,has_cl):
   return b_ws,blmin,blmax
   
 def uncompress_bins(shape,b_ws,blmin,blmax):
+  print shape,b_ws,blmin,blmax
   bins = nm.zeros(shape)
   lc = 0
   for i in range(shape[0]):
@@ -125,7 +126,7 @@ def uncompress_bins(shape,b_ws,blmin,blmax):
   return bins
 
 def read_ell(lkl_grp):
-  if ell in lkl_grp.attrs:
+  if "ells" in lkl_grp.attrs:
     return lkl_grp.attrs["ells"]
   else:
     lmax = lkl_grp.attrs["lmax"]
@@ -141,7 +142,7 @@ def read_bins(lkl_grp):
     bins.shape = (lkl_grp.attrs["nbins"],-1)
   else:
     ell = read_ell(lkl_grp)
-    shape = (lkl_grp.attrs["nbins"],len(ell))
+    shape = (lkl_grp.attrs["nbins"],len(ell)*nm.sum(lkl_grp["has_cl"]))
     return uncompress_bins(shape,lkl_grp["bin_ws"],lkl_grp["bin_lmin"],lkl_grp["bin_lmax"])
 
 def add_selfcheck(fname,pars):

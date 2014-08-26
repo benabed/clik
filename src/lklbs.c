@@ -141,6 +141,45 @@ int lklbs_get_par_id(lklbs* self,extraname name, error **err) {
 
 
 
+void lklbs_bs_compute(lklbs *self,double* pars, error **err) {
+  self->rbs->bs_compute(self->rbs->bs,pars,self->cl_theo,err);
+  if (isError(*err)) {
+    char *problem;
+    int iii;
+    problem = malloc(sizeof(char)*(50+10*self->ndim));
+    sprintf(problem,"Problem in cl code at :\n    ");
+    for (iii=0;iii<self->ndim;iii++) {
+      sprintf(problem,"%s %g",problem,pars[iii]);
+    }
+    sprintf(problem,"%s\n",problem);
+    //_DEBUGHERE_("%s",problem);
+    free(problem);
+  }
+  forwardError(*err,__LINE__,);
+  
+}
+
+double * lklbs_get_cls(lklbs *self,int ilkl, double *pars, error **err) {
+  double calib;
+  cmblkl *llkl;
+  double *cls;
+
+  llkl = self->lkls[ilkl];
+  calib = 1;
+  if (llkl->free_calib_id !=-1) {
+    calib = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->free_calib_id]];
+  }
+  cls = cmblkl_select_cls(llkl,self,calib);
+  //_DEBUGHERE_("ilkl %d xdim %d ndim %d nbins %d",ilkl,llkl->xdim,llkl->ndim,llkl->nbins);
+  if (llkl->xdim!=0) {
+    int ii;
+    for(ii=0;ii<llkl->xdim;ii++) {
+      //_DEBUGHERE_("ilkl %d ixdim %d self->ndim %d ofx+i %d rx %d %g ->",ilkl,ii,self->ndim,self->ofx[ilkl]+ii,self->rx[self->ofx[ilkl]+ii],pars[self->ndim+self->rx[self->ofx[ilkl]+ii]]);
+      cls[llkl->nbins+ii] = pars[self->ndim+self->rx[self->ofx[ilkl]+ii]];
+    }
+  }
+  return cls;
+}
 double lklbs_lkl(void* pelf, double* pars, error **err) {
   lklbs* self;
   double res;
@@ -159,39 +198,15 @@ double lklbs_lkl(void* pelf, double* pars, error **err) {
   }*/
   //_DEBUGHERE_("%s",spars);
   
-  self->rbs->bs_compute(self->rbs->bs,pars,self->cl_theo,err);
-  if (isError(*err)) {
-    char *problem;
-    int iii;
-    problem = malloc(sizeof(char)*(50+10*self->ndim));
-    sprintf(problem,"Problem in cl code at :\n    ");
-    for (iii=0;iii<self->ndim;iii++) {
-      sprintf(problem,"%s %g",problem,pars[iii]);
-    }
-    sprintf(problem,"%s\n",problem);
-    //_DEBUGHERE_("%s",problem);
-    free(problem);
-  }
-  forwardError(*err,__LINE__,0);
-  
+  lklbs_bs_compute(self,pars,err);
+  forwardError(*err,__LINE__,-1);
+
   res=0;
   
   for (ilkl=0;ilkl<self->nlkl;ilkl++) {
-    llkl = self->lkls[ilkl];
-    calib = 1;
-    if (llkl->free_calib_id !=-1) {
-      calib = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->free_calib_id]];
-    }
-    cls = cmblkl_select_cls(llkl,self,calib);
-    //_DEBUGHERE_("ilkl %d xdim %d ndim %d nbins %d",ilkl,llkl->xdim,llkl->ndim,llkl->nbins);
-    if (llkl->xdim!=0) {
-      int ii;
-      for(ii=0;ii<llkl->xdim;ii++) {
-        //_DEBUGHERE_("ilkl %d ixdim %d self->ndim %d ofx+i %d rx %d %g ->",ilkl,ii,self->ndim,self->ofx[ilkl]+ii,self->rx[self->ofx[ilkl]+ii],pars[self->ndim+self->rx[self->ofx[ilkl]+ii]]);
-        cls[llkl->nbins+ii] = pars[self->ndim+self->rx[self->ofx[ilkl]+ii]];
-      }
-    }
-    res += llkl->lkl_func(llkl->lkl_data,cls,err);
+    cls = lklbs_get_cls(self,ilkl,pars,err);
+    forwardError(*err,__LINE__,-1);
+    res += self->lkls[ilkl]->lkl_func(self->lkls[ilkl]->lkl_data,cls,err);
     forwardError(*err,__LINE__,0);
   }
   //_DEBUGHERE_("%g",res);
