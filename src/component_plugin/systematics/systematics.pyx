@@ -20,5 +20,7 @@ cdef class cnoise(parametric_pol_template):
 cdef class dip(parametric):
   def __cinit__(self):
     self.initfunc = <void*> dip_init;
+
+cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
     
-component_list = ["bleak","cnoise","dip"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe"]

@@ -318,9 +318,9 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
     //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
     smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
     forwardError(*err,__LINE__,0);
-    //sprintf(nn,"pq_%d.la",isc);
-    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    //forwardError(*err,__LINE__,-1);
+    sprintf(nn,"pq_%d.la",isc);
+    write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    forwardError(*err,__LINE__,-1);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);
@@ -428,7 +428,6 @@ void smica_set_crit_mgauss(Smica *smic, int select_size, double *sigma, int *ord
 
   pld = malloc_err(sizeof(gauss_lkl_data),err);
   forwardError(*err,__LINE__,);
-  _DEBUGHERE_("","");
   
   pld->vec_size = select_size;
 
@@ -2085,10 +2084,10 @@ void comp_beamTP_update(void* data,double* locpars, double* rq, error **err) {
         offq = iq*m2+ offm;
         for(t=0;t<neigen;t++) {
           cal += gc->pars[gc->im[offm*neigen + t]] * gc->modes[offq*neigen + t]; 
-	  //if(iq==0) _DEBUGHERE_("%d %d %d -> %d %g %d %g | %g",im1,im2,t,gc->im[offm*neigen + t], gc->pars[gc->im[offm*neigen + t]],offq*neigen+t,gc->modes[offq*neigen + t],cal);
+	        //if(iq==0) _DEBUGHERE_("%d %d %d -> %d %g %d %g | %g %g",im1,im2,t,gc->im[offm*neigen + t], gc->pars[gc->im[offm*neigen + t]],offq*neigen+t,gc->modes[offq*neigen + t],cal,exp(cal));
         }
-        rq[offq] *= exp(cal);
-	rq[iq*m2 + im2*m + im1] = rq[offq];
+        rq[offq] *= exp(2*cal);
+	      rq[iq*m2 + im2*m + im1] = rq[offq];
       }
     }
   }

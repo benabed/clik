@@ -584,9 +584,8 @@ def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_f
   rdata_file = data_file
   rdata = data
 
-  
   if issubclass(component,parametric_pol):  
-    if issubclass(component,parametric_template):
+    if issubclass(component,parametric_pol_template):
       def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
         rename,bdef = rename_update(defs,vars,rename)
         component.__init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename, rdata_dir, rdata_path, rdata_file, rdata)

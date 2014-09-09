@@ -127,7 +127,10 @@ cdef class clik:
   def get_extra_parameter_names(self):
     cdef parname *names
     
-    n_names = clik_get_extra_parameter_names(self.celf, &names, self.err)    
+    n_names = clik_get_extra_parameter_names(self.celf, &names, self.err)  
+    er=doError(self.err)
+    if er:
+      raise er  
     res = ["%s"%names[i] for i in range(n_names)]
     res = tuple(res)
     stdlib.free(names)
@@ -144,6 +147,57 @@ cdef class clik:
   property extra_parameter_names:
     def __get__(self):
       return self.get_extra_parameter_names()
+
+###  def plik_get_fg(self,nuis):
+###    cdef double *res,*clp
+###    cdef void* smic
+###    cdef lklbs *lbs;
+###    cdef double *cls;
+###
+###    lm = self.lmax
+###    nl = nm.sum(lm)+6
+###    _clp = nm.zeros(nl+len(nuis))
+###    _clp[nl:] = nuis
+###    clp = <double*> nm.PyArray_DATA(_clp)
+###
+###    lbs = _clik_dig(self.celf,self.err);
+###    er=doError(self.err)
+###    if er:
+###      raise er
+###    
+###    ir = clik_must_be_plik(self.celf,self.err);  
+###    er=doError(self.err)
+###    if er:
+###      raise er
+###    
+###    smic = lbs->lkls[ir]->lkl_data;
+###        
+###    dr = Smica_vecsize(smic,self.err)
+###    er=doError(self.err)
+###    if er:
+###      raise er
+###    
+###    _res = nm.zeros(dr)
+###    res = <double*> nm.PyArray_DATA(_res)
+###
+###    error *_err;
+###    error **err;
+###    _err = NULL;
+###    err = &_err;
+###    
+###    lbs = _clik_dig(self,err);
+###    quitOnError(*err,__LINE__,stderr);
+###    
+###    lklbs_bs_compute(lbs,cl_and_pars, err);
+###    quitOnError(*err,__LINE__,stderr);
+###    
+###    cls = lklbs_get_cls(lbs,ir,cl_and_pars,err);
+###    quitOnError(*err,__LINE__,stderr);
+###    
+###    smic = lbs->lkls[ir]->lkl_data;
+###    
+###    Smica_fg(smic,cls,vec,err);
+###    quitOnError(*err,__LINE__,stderr);
 
 cdef extern:
   double*   c_camspec_get_fg "camspec_get_fg" (void* camclik,double *par,int lmax,error **err) 
