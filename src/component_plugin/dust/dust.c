@@ -650,6 +650,126 @@ void gpe_dust_compute(parametric *egl, double *Rq, error **err) {
 
 CREATE_PARAMETRIC_FILE_INIT(gpe_dust,gpe_dust_init);
 
+void gpe_gal_compute(parametric *egl, double *Rq, error **err);
+
+parametric *gpegal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  double fac;
+  int ell, m1, m2;
+  double dell;
+  template_payload *payload;
+  pfchar name;
+  
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  
+  parametric_set_default(egl,"gpegal_A",9.17742,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_alpha",0.650544,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_B",310.596,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_beta",2.6311,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_ell_c",1000,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_gamma",2.30962,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gpegal_delta",27.2319,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gpegal_l_pivot",200,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"gpegal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"gpegal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,0,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  
+
+  // Declare payload, allocate it and fill it  
+
+  egl->eg_compute = &gpe_gal_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  egl->payload = malloc_err(sizeof(double)*sizeof(double)*egl->nfreq*egl->nfreq,err);
+
+  return egl;
+}
+
+void gpe_gal_compute(parametric *egl, double *Rq, error **err) {
+
+  int ell, m1, m2, m2ll, nfreq;
+  int *ind_freq;
+  int ind1, ind2;
+  double *template;
+  template_payload *payload;
+  double dell;
+  double gpe_dust_norm;
+  double A,alpha,B,beta,ell_c,gamma,delta,l_pivot;
+  double *AA;
+  double nrm,v;
+  pfchar name;
+  
+  nfreq = egl->nfreq;
+  
+  l_pivot = parametric_get_value(egl,"gpegal_l_pivot",err);
+  forwardError(*err,__LINE__,);
+
+  A = parametric_get_value(egl,"gpegal_A",err);
+  forwardError(*err,__LINE__,);
+  alpha = parametric_get_value(egl,"gpegal_alpha",err);
+  forwardError(*err,__LINE__,);
+  B = parametric_get_value(egl,"gpegal_B",err);
+  forwardError(*err,__LINE__,);
+  beta = parametric_get_value(egl,"gpegal_beta",err);
+  forwardError(*err,__LINE__,);
+  ell_c = parametric_get_value(egl,"gpegal_ell_c",err);
+  forwardError(*err,__LINE__,);
+  gamma = parametric_get_value(egl,"gpegal_gamma",err);
+  forwardError(*err,__LINE__,);
+  delta = parametric_get_value(egl,"gpegal_delta",err);
+  forwardError(*err,__LINE__,);
+  
+  AA = (double*) egl->payload;
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"gpegal_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"gpegal_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      AA[m1*nfreq+m2] = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      AA[m2*nfreq+m1] = AA[m1*nfreq+m2];      
+    }
+  }
+
+  nrm = A * pow(100./l_pivot,alpha)+ B * pow(l_pivot/1000.,beta) * pow(1.+pow(l_pivot/ell_c,gamma),-delta);
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = A * pow(100./ell,alpha)+ B * pow(ell/1000.,beta) * pow(1.+pow(ell/ell_c,gamma),-delta);
+    v /= (ell*(ell+1)/2./M_PI);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+      Rq[IDX_R(egl,ell,m1,m2)] = AA[m1*nfreq+m2] * v/nrm;
+      Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+
+  return;
+}
+
+CREATE_PARAMETRIC_FILE_INIT(gpegal,gpegal_init);
 
 void t1gal_compute(parametric* egl, double *Rq, error **err);
 
