@@ -6,6 +6,7 @@ cdef extern c_parametric *hgal_init(int ndet, double *detlist, int ndef, char** 
 cdef extern c_parametric *kgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gpe_dust_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gpegal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *gal545_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern double c_dust_spectrum "dust_spectrum" (double nu, double T_dust, double beta_dust, double nu0)
 cdef extern double c_non_thermal_spectrum "non_thermal_spectrum" (double nu, double alpha_non_thermal, double nu0)
 cdef extern double c_dBdT "dBdT" (double nu, double nu0)
@@ -52,6 +53,10 @@ cdef class gpegal(parametric):
   def __cinit__(self):
     self.initfunc = <void*> gpegal_init;
 
+cdef class gal545(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*> gal545_init;
+
 cdef class t1gal(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> t1gal_init;
@@ -68,5 +73,5 @@ def galf_rename_func(v,rups):
 
 galf = rename_machine(powerlaw_free_emissivity,{"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"},galf_rename_func)
   
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal"]
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545"]
 

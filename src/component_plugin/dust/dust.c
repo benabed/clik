@@ -771,6 +771,117 @@ void gpe_gal_compute(parametric *egl, double *Rq, error **err) {
 
 CREATE_PARAMETRIC_FILE_INIT(gpegal,gpegal_init);
 
+void gal545_compute(parametric *egl, double *Rq, error **err);
+
+parametric *gal545_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err) {
+  parametric *egl;
+  double fac;
+  int ell, m1, m2;
+  double dell;
+  template_payload *payload;
+  pfchar name;
+  
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  
+  parametric_set_default(egl,"gal545_h",2.3e-11,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gal545_k",5.05,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gal545_t",56,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"gal545_index",-2.63,err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gal545_l_pivot",200,err);
+  forwardError(*err,__LINE__,NULL);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"gal545_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"gal545_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      parametric_set_default(egl,name,0,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+  }  
+  
+
+  // Declare payload, allocate it and fill it  
+
+  egl->eg_compute = &gal545_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  egl->payload = malloc_err(sizeof(double)*sizeof(double)*egl->nfreq*egl->nfreq,err);
+
+  return egl;
+}
+
+void gal545_compute(parametric *egl, double *Rq, error **err) {
+
+  int ell, m1, m2, m2ll, nfreq;
+  int *ind_freq;
+  int ind1, ind2;
+  double *template;
+  template_payload *payload;
+  double dell;
+  double gpe_dust_norm;
+  double h,k,t,n,l_pivot;
+  double *AA;
+  double nrm,v;
+  pfchar name;
+  
+  nfreq = egl->nfreq;
+  
+  l_pivot = parametric_get_value(egl,"gal545_l_pivot",err);
+  forwardError(*err,__LINE__,); 
+
+  h = parametric_get_value(egl,"gal545_h",err);
+  forwardError(*err,__LINE__,);
+  
+  k = parametric_get_value(egl,"gal545_k",err);
+  forwardError(*err,__LINE__,);
+
+  t = parametric_get_value(egl,"gal545_t",err);
+  forwardError(*err,__LINE__,);
+
+  n = parametric_get_value(egl,"gal545_index",err);
+  forwardError(*err,__LINE__,);
+
+  AA = (double*) egl->payload;
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      if (m1==m2) {
+        sprintf(name,"gal545_A_%d",(int)egl->freqlist[m1]);  
+      } else {
+        sprintf(name,"gal545_A_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
+      }
+      AA[m1*nfreq+m2] = parametric_get_value(egl,name,err);
+      forwardError(*err,__LINE__,);
+      AA[m2*nfreq+m1] = AA[m1*nfreq+m2];      
+    }
+  }
+
+  nrm = (h * pow(l_pivot,k) * exp(-l_pivot/t) + 1) * 200*201/2./M_PI;
+
+  for (ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = (h * pow(ell,k) * exp(-ell/t) + 1) * pow(ell/l_pivot,n);
+    for (m1=0;m1<nfreq;m1++) {
+      for (m2=m1;m2<nfreq;m2++) {
+      Rq[IDX_R(egl,ell,m1,m2)] = AA[m1*nfreq+m2] * v/nrm;
+      Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+      }
+    }
+  }
+
+  return;
+}
+
+CREATE_PARAMETRIC_FILE_INIT(gal545,gal545_init);
+
 void t1gal_compute(parametric* egl, double *Rq, error **err);
 
 parametric *t1gal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
