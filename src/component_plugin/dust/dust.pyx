@@ -73,5 +73,14 @@ def galf_rename_func(v,rups):
 
 galf = rename_machine(powerlaw_free_emissivity,{"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"},galf_rename_func)
   
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545"]
+def gal545_80pc_rename_func(v,rups):
+  if v.startswith("gal545_80pc"):
+    rv = v.replace("gal545_80pc","gal545")
+    print v,rv
+    rups[v]=rv
+
+gal545_80pc = rename_machine(gal545,{"gal545_80pc_index":"-2.68","gal545_80pc_h":"3.03e-10","gal545_80pc_k":"4.87","gal545_80pc_t":"47.98"},gal545_80pc_rename_func)
+
+
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545","gal545_80pc"]
 
