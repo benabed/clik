@@ -105,6 +105,8 @@ Smica* Smica_init(int nq, double *wq, int m, double *rq_hat, double* rq_0, int n
 
   smic->lkl_data = NULL;
   smic->lkl_data_free = NULL;
+
+  smic->cnt=0;
   return smic;
   
 }
@@ -318,9 +320,9 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
     //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
     smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
     forwardError(*err,__LINE__,0);
-    sprintf(nn,"pq_%d.la",isc);
-    write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    forwardError(*err,__LINE__,-1);
+    //sprintf(nn,"pq_%d.la",isc);
+    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    //forwardError(*err,__LINE__,-1);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);
@@ -343,6 +345,8 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
   res = smic->crit(smic,err);
   forwardError(*err,__LINE__,0);
 
+  //testErrorRet(smic->cnt==1,-24324,"not implemented",*err,__LINE__,0);
+  smic->cnt+=1;
   return res;
 }
 

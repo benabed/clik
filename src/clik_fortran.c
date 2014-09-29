@@ -11,6 +11,11 @@
 #ifndef _clik_FORTRAN_
 #define _clik_FORTRAN_
 
+#ifdef clik_fortran_nan_is_nan
+  #define clik_fortran_nan(a) nan(a)
+#else
+  #define clik_fortran_nan(a) 1e30
+#endif
 
 char* fortran_clik_protect_string(char* string, int len) {
   char *tmpstring;
@@ -166,8 +171,9 @@ void fortran_clik_compute_(long* pself, double* cl_and_pars, double* lkl) {
   if (isError(*err)) {
     printError(stderr,*err);
     purgeError(err);
-    *lkl = nan("");
+    *lkl = clik_fortran_nan("");
   }
+
 }
 
 #ifdef ADD0US
@@ -188,7 +194,7 @@ void fortran_clik_compute_with_error_(long* pself, double* cl_and_pars, double* 
   if (isError(*err)) {
     printError(stderr,*err);
     purgeError(err);
-    *lkl = nan("");
+    *lkl = clik_fortran_nan("");
     *ier = 1;
   }
   *ier = 0;
@@ -284,7 +290,7 @@ void fortran_clik_lensing_compute_(double* res, long *pself, double *pars) {
   if (isError(*err)) {
     printError(stderr,*err);
     purgeError(err);
-    *res = nan("");
+    *res = clik_fortran_nan("");
   }
   
 }

@@ -87,6 +87,7 @@ typedef struct {
   int quad_sn;
   void * lkl_data;
   posterior_log_free *lkl_data_free;
+  int cnt;
 } Smica;
 
 Smica* Smica_init(int nq, double *wq, int m, double *rq_hat, double* rq_0, int nc, SmicaComp **SC,error **err);

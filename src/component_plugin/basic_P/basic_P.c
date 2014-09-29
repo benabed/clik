@@ -1,3 +1,4 @@
+
 #include "clik_parametric.h"
 #include "clik_parametric_addon.h"
 
@@ -58,13 +59,13 @@ pw_XX_payload*  init_pw_XX_payload(int kind,int nT,int nP,error **err) {
 
   payload->nrm_names = NULL;
 
-  mx = nT + nP;
+  //mx = nT + nP;
+  //
+  //if (mx < payload->n) {
+  //  mx = payload->n;
+  //} 
 
-  if (mx < payload->n) {
-    mx = payload->n;
-  } 
-
-  payload->nrm = malloc_err(sizeof(double)*mx,err);
+  payload->nrm = malloc_err(sizeof(double)*(nT+nP)*(nT+nP),err);
   forwardError(*err,__LINE__,NULL);
   
   return payload;
@@ -545,7 +546,19 @@ void powerlaw_free_emissivity_EE_compute(parametric* egl, double *Rq,  error **e
     }
     v = 1;
     v = parametric_get_value(egl,name,err);
-    A[i] = v/nrmit;
+    A[m1*nfreq+m2] = v/nrmit;
+    A[m2*nfreq+m1] = A[m1*nfreq+m2];
+  }
+  for(m1=0;m1<egl->nfreq;m1++) {
+    if (A[m1*nfreq+m1]==0) {
+      continue;
+    }
+    for(m2=m1+1;m2<egl->nfreq;m2++) {
+    if (A[m2*nfreq+m2]==0) {
+      continue;
+    }
+    testErrorRetVA(A[m1*nfreq+m2]>sqrt(A[m1*nfreq+m1] * A[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+    }
   }
 
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -554,7 +567,7 @@ void powerlaw_free_emissivity_EE_compute(parametric* egl, double *Rq,  error **e
     for(i=0;i<payload->n;i++) {
       m1 = payload->m1[i];
       m2 = payload->m2[i];
-      lA = A[i];
+      lA = A[m1*nfreq+m2];
       Rq[IDX_R(egl,ell,m1,m2)] = lA*v;
       Rq[IDX_R(egl,ell,m2,m1)] = lA*v;
     }  
