@@ -10,7 +10,7 @@ import waflib
 
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
-lapack_funcs = "dposv dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot dsyevd"     
+lapack_funcs = "dposv dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot dsyevd dlamch dsyevr"     
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
