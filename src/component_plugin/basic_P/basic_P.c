@@ -490,6 +490,9 @@ parametric *powerlaw_free_emissivity_EE_init(int ndet_T, int ndet_P, int *has_TE
   parametric_set_default(egl,"pwfe_EE_index",0,err);
   forwardError(*err,__LINE__,NULL);
   
+  parametric_set_default(egl,"pwfe_EE_check_defpo",0,err);
+  forwardError(*err,__LINE__,NULL);
+  
   for(i=0;i<payload->n;i++) {
     m1 = payload->m1[i];
     m2 = payload->m2[i];
@@ -515,6 +518,7 @@ void powerlaw_free_emissivity_EE_compute(parametric* egl, double *Rq,  error **e
   pw_XX_payload *payload;
   double nrmit;
   int l2norm,i;
+  int defpo;
 
   l_pivot = parametric_get_value(egl,"pwfe_EE_l_pivot",err);
   forwardError(*err,__LINE__,);
@@ -549,18 +553,24 @@ void powerlaw_free_emissivity_EE_compute(parametric* egl, double *Rq,  error **e
     A[m1*nfreq+m2] = v/nrmit;
     A[m2*nfreq+m1] = A[m1*nfreq+m2];
   }
-  for(m1=0;m1<egl->nfreq;m1++) {
-    if (A[m1*nfreq+m1]==0) {
-      continue;
-    }
-    for(m2=m1+1;m2<egl->nfreq;m2++) {
-    if (A[m2*nfreq+m2]==0) {
-      continue;
-    }
-    testErrorRetVA(A[m1*nfreq+m2]>sqrt(A[m1*nfreq+m1] * A[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+
+  defpo = parametric_get_value(egl,"pwfe_EE_check_defpo",err);
+  forwardError(*err,__LINE__,);
+
+  if (defpo!=0) {
+    for(m1=0;m1<egl->nfreq;m1++) {
+      if (A[m1*nfreq+m1]==0) {
+        continue;
+      }
+      for(m2=m1+1;m2<egl->nfreq;m2++) {
+      if (A[m2*nfreq+m2]==0) {
+        continue;
+      }
+      testErrorRetVA(A[m1*nfreq+m2]>sqrt(A[m1*nfreq+m1] * A[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+      }
     }
   }
-
+  
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     v = pow(ell/l_pivot,index);
     mell = (ell-egl->lmin)*nfreq*nfreq;

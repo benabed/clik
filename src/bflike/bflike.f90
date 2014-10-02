@@ -4,7 +4,7 @@
 !*************************************************************************
 
 module bflike
-  use healpix_types_smw
+  use healpix_types
   use fitstools_smw
   
   implicit none

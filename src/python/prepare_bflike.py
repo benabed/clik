@@ -17,9 +17,15 @@ def main(argv):
   
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   hascl = [1]*6
+  btype = "bflike"
+  print pars.str(default="").type.lower()
+  if pars.str(default="").type.lower() == "smw":
+    hascl = [1,1,1,1,0,0]
+    btype = "bflike_smw"
+  
   hascl = nm.array(hascl,dtype=nm.int)
   
-  lkl_grp = php.add_lkl_generic(root_grp,"bflike",1,hascl,pars.int.lmax,pars.int.lmin)
+  lkl_grp = php.add_lkl_generic(root_grp,btype,1,hascl,pars.int.lmax,pars.int.lmin)
   
   php.add_external_data(osp.realpath(pars.bflike_data),lkl_grp,tar=bool(pars.int(default=1).include))
   #assert os.system("cd %s;tar cvf data.tar *"%dr)==0

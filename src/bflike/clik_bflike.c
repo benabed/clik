@@ -58,12 +58,12 @@ cmblkl* clik_bflike_init(cldf *df, int nell, int* ell, int* has_cl, double unit,
 
 double bflike_smw_lkl(void* none, double* pars, error **err) {
   double lkl;
+
   bflike_smw_extra_lkl_(&lkl,pars);
-  
   return lkl;
 }
 
-void free_smw_bflike(void **none) {
+void free_bflike_smw(void **none) {
   
   bflike_smw_extra_free_();
 }
@@ -99,8 +99,8 @@ cmblkl* clik_bflike_smw_init(cldf *df, int nell, int* ell, int* has_cl, double u
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
   
-  cing = init_cmblkl(NULL, &bflike_lkl, 
-                     &free_bflike,
+  cing = init_cmblkl(NULL, &bflike_smw_lkl, 
+                     &free_bflike_smw,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,0,err);
   forwardError(*err,__LINE__,NULL);

@@ -256,12 +256,16 @@ def build(bld):
         source = bflike_source,
         target = 'bflike',
         use = 'healpixtypes_c_obj',
-        uselib = 'healpix_f90 pmc lapack fc_omp fc_runtime',
+        uselib = 'healpix_f90 pmc lapack fc_runtime fc_omp',
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
       uselib_bflike = [ff for ff in ('healpix_f90 cfitsio pmc lapack fc_omp fc_runtime').split() if ff]
-      
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join("bflike",'test_bflike_smw.f90'),
+        use = ('bflike','cfitsio'),
+        target = 'test_bflike_smw')
   
     bld(
       features = "fc cshlib c fcshlib",

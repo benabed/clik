@@ -797,6 +797,9 @@ parametric *gal545_init(int ndet, double *detlist, int ndef, char** defkey, char
   parametric_set_default(egl,"gal545_l_pivot",200,err);
   forwardError(*err,__LINE__,NULL);
 
+  parametric_set_default(egl,"gal545_check_defpo",0,err);
+  forwardError(*err,__LINE__,NULL);
+
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
@@ -833,7 +836,8 @@ void gal545_compute(parametric *egl, double *Rq, error **err) {
   double *AA;
   double nrm,v;
   pfchar name;
-  
+  int defpo;
+
   nfreq = egl->nfreq;
   
   l_pivot = parametric_get_value(egl,"gal545_l_pivot",err);
@@ -864,15 +868,21 @@ void gal545_compute(parametric *egl, double *Rq, error **err) {
       AA[m2*nfreq+m1] = AA[m1*nfreq+m2];      
     }
   }
-  for(m1=0;m1<egl->nfreq;m1++) {
-    if (AA[m1*nfreq+m1]==0) {
-      continue;
-    }
-    for(m2=m1+1;m2<egl->nfreq;m2++) {
-    if (AA[m2*nfreq+m2]==0) {
-      continue;
-    }
-    testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+  
+  defpo = parametric_get_value(egl,"gal545_check_defpo",err);
+  forwardError(*err,__LINE__,);
+
+  if (defpo!=0) {
+    for(m1=0;m1<egl->nfreq;m1++) {
+      if (AA[m1*nfreq+m1]==0) {
+        continue;
+      }
+      for(m2=m1+1;m2<egl->nfreq;m2++) {
+      if (AA[m2*nfreq+m2]==0) {
+        continue;
+      }
+      testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+      }
     }
   }
   nrm = (h * pow(l_pivot,k) * exp(-l_pivot/t) + 1) * 200*201/2./M_PI;
@@ -918,6 +928,9 @@ parametric *gal545_80pc_init(int ndet, double *detlist, int ndef, char** defkey,
   parametric_set_default(egl,"gal545_80pc_l_pivot",200,err);
   forwardError(*err,__LINE__,NULL);
 
+  parametric_set_default(egl,"gal545_check_defpo",0,err);
+  forwardError(*err,__LINE__,NULL);
+
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
@@ -954,7 +967,8 @@ void gal545_80pc_compute(parametric *egl, double *Rq, error **err) {
   double *AA;
   double nrm,v;
   pfchar name;
-  
+  int defpo;
+
   nfreq = egl->nfreq;
   
   l_pivot = parametric_get_value(egl,"gal545_80pc_l_pivot",err);
@@ -972,6 +986,7 @@ void gal545_80pc_compute(parametric *egl, double *Rq, error **err) {
   n = parametric_get_value(egl,"gal545_80pc_index",err);
   forwardError(*err,__LINE__,);
 
+  
   AA = (double*) egl->payload;
   for(m1=0;m1<egl->nfreq;m1++) {
     for(m2=m1;m2<egl->nfreq;m2++) {
@@ -985,18 +1000,24 @@ void gal545_80pc_compute(parametric *egl, double *Rq, error **err) {
       AA[m2*nfreq+m1] = AA[m1*nfreq+m2];      
     }
   }
-  for(m1=0;m1<egl->nfreq;m1++) {
-    if (AA[m1*nfreq+m1]==0) {
-      continue;
-    }
-    for(m2=m1+1;m2<egl->nfreq;m2++) {
-    if (AA[m2*nfreq+m2]==0) {
-      continue;
-    }
-    testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+
+  defpo = parametric_get_value(egl,"gal545_check_defpo",err);
+  forwardError(*err,__LINE__,);
+
+  if (defpo!=0) {
+    for(m1=0;m1<egl->nfreq;m1++) {
+      if (AA[m1*nfreq+m1]==0) {
+        continue;
+      }
+      for(m2=m1+1;m2<egl->nfreq;m2++) {
+      if (AA[m2*nfreq+m2]==0) {
+        continue;
+      }
+      testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
+      }
     }
   }
-
+  
   nrm = (h * pow(l_pivot,k) * exp(-l_pivot/t) + 1) * 200*201/2./M_PI;
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
