@@ -14,7 +14,7 @@
 #ifdef clik_fortran_nan_is_nan
   #define clik_fortran_nan(a) nan(a)
 #else
-  #define clik_fortran_nan(a) 1e30
+  #define clik_fortran_nan(a) -1e30
 #endif
 
 char* fortran_clik_protect_string(char* string, int len) {
