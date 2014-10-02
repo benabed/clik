@@ -25,7 +25,11 @@
 !  For more information about HEALPix see http://healpix.jpl.nasa.gov
 !
 !-----------------------------------------------------------------------------
-module fitstools
+
+!module fitstools
+module fitstools_smw
+!lpl renamed to avoid possible conflicts
+
  
   use healpix_types
   implicit none
@@ -52,12 +56,9 @@ module fitstools
      module procedure map_bad_pixels_s, map_bad_pixels_d
   end interface
 
-
-
-
   private
 
-  public :: fits2cl,read_dbintab,getsize_fits
+  public :: fits2cl ,read_dbintab ,getsize_fits ,printerror
 
 contains
 
@@ -1253,7 +1254,7 @@ contains
 
 
 subroutine map_bad_pixels_d(map, fin, fout, nbads, verbose)
-  use long_intrinsic, only: long_size
+  use long_intrinsic_smw, only: long_size
   real(DP), dimension(0:,1:), intent(inout) :: map
   real(DP),                   intent(in)    :: fin, fout
   integer(I8B),                 intent(out)   :: nbads
@@ -1300,7 +1301,7 @@ end subroutine map_bad_pixels_d
 
 
 subroutine map_bad_pixels_s(map, fin, fout, nbads, verbose)
-  use long_intrinsic, only: long_size
+  use long_intrinsic_smw, only: long_size
   real(SP), dimension(0:,1:), intent(inout) :: map
   real(SP),                   intent(in)    :: fin, fout
   integer(I8B),                 intent(out)   :: nbads
@@ -1345,4 +1346,4 @@ subroutine map_bad_pixels_s(map, fin, fout, nbads, verbose)
 end subroutine map_bad_pixels_s
 
 
-end module fitstools
+end module 

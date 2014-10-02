@@ -191,6 +191,9 @@ def configure(ctx):
   #camspec
   ctx.env.has_camspec = osp.exists("src/CAMspec")
 
+  #cmbonly
+  ctx.env.has_cmbonly = osp.exists("src/cmbonly")
+
   #actspt
   #ctx.env.has_actspt = osp.exists("src/act_spt")
   ctx.env.has_actspt = False

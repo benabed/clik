@@ -25,7 +25,11 @@
 !  For more information about HEALPix see http://healpix.jpl.nasa.gov
 !
 !-----------------------------------------------------------------------------
-module long_intrinsic
+
+!module long_intrinsic
+module long_intrinsic_smw
+!lpl: renamed to avoid possible conflicts
+
   ! If correctly compiled this module redefines 
   ! - the intrisic function SIZE  (renamed long_size)
   ! - the intrisic function COUNT (renamed long_count)
@@ -179,4 +183,4 @@ contains
   end function count_l_1
 
 
-end module long_intrinsic
+end module

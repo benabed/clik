@@ -18,6 +18,8 @@ def build(bld):
     source_clik += ["lollipop/lollipop_lib.c","lollipop/clik_lollipop.c"]
   if bld.env.has_bflike:
     source_clik += ["bflike/clik_bflike.c"]
+  if bld.env.has_cmbonly:
+    source_clik += ["clik_cmbonly.c"]
 
 
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
@@ -45,6 +47,7 @@ def build(bld):
   use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
   use_clik += ["lenslike"]*bool(bld.env.has_lenslike)
   use_clik += ["bflike"]*bool(bld.env.has_bflike)
+  use_clik += ["cmbonly"]*bool(bld.env.has_cmbonly)
   
   bld.shlib(
     source   = source_clik,
@@ -129,6 +132,22 @@ def build(bld):
       #  use = 'actspt',
       #  target = 'test_actspt2')
       uselib_actspt = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
+  
+    if bld.env.has_cmbonly:
+      bld.objects(
+        features = 'fc',
+        source = ['clik_cmbonly.f90'] + [osp.join("cmbonly",vv) for vv in 'plik_cmbonly.f90'.split()],
+        target = 'cmbonly',
+        uselib = 'lapack fc_omp fc_runtime',
+        fcflags = bld.env.FCFLAGS_fpic,
+        cflags = bld.env.CFLAGS_cpic,
+        )
+      bld(
+        features = 'fc fcprogram',
+        source = osp.join("cmbonly",'plik_cmbonly_test.f90'),
+        use = 'cmbonly',
+        target = 'test_plik_cmbonly')
+      uselib_cmbonly = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
 
       
     if bld.env.has_bopix:
@@ -231,7 +250,7 @@ def build(bld):
       #  target = 'test_wmap')
 
     if bld.env.has_bflike:
-      bflike_source = [osp.join("bflike",vv) for vv in "clik_bflike.f90 bflike.f90 long_intrinsic.f90 fitstools.f90".split()]
+      bflike_source = [osp.join("bflike",vv) for vv in "clik_bflike.f90 bflike.f90 long_intrinsic_smw.f90 fitstools_smw.f90 bflike_smw.f90".split()]
       bld.objects(
         features = 'fc',
         source = bflike_source,

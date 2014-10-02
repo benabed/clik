@@ -25,7 +25,11 @@
 !  For more information about HEALPix see http://healpix.jpl.nasa.gov
 !
 !-----------------------------------------------------------------------------
+
+!Module healpix_types
 Module healpix_types
+!lpl: renamed to avoid possible conflicts
+
     ! This module sets the types used in the Fortran 90 modules
     ! of the HEALPIX distribution and follows the example of Numerical Recipes
     !
@@ -92,4 +96,4 @@ Module healpix_types
 
     Real(Kind=dp), Parameter, Public :: iKvS = 1.0_dp / KvS ! inverse of KvS
 
-End Module healpix_types
+  End Module healpix_types
