@@ -203,6 +203,10 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
     beam_factor = bs_factor
     print *,"c",xdim
     
+    print *,"k",has_cl(1)
+    print *,"k",has_cl(2)
+    print *,"k",has_cl(3)
+    
     l_has_cl(1) = has_cl(1)==1
     l_has_cl(2) = has_cl(2)==1
     l_has_cl(3) = has_cl(4)==1
