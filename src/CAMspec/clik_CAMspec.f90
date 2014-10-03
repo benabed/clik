@@ -176,7 +176,6 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
 
     call like_init(pre_marged,like_file, sz143_file, tszxcib_file, ksz_file, beam_file,data_vector,cib217_file,dust100_file,dust143_file,dust217_file,dust143x217_file)
 
-    print *,"a"
     cam_version=3
 
     clik_lmin = iclik_lmin
@@ -188,29 +187,19 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
     lminee = lminX(6)
     lmaxee = lmaxX(6)
 
-    print *,"b"
-    
     ALLOCATE(cltt(0:lmax+1))
     ALLOCATE(clte(0:lmaxte+1))
     ALLOCATE(clee(0:lmaxee+1))
 
-    print *,"c",xdim
-    
     allocate(nuisance(xdim))
-    print *,"c",xdim
-    npar = (clik_lmax+1-clik_lmin)*has_cl(1) + (clik_lmax+1-clik_lmin)*has_cl(2) + (clik_lmax+1-clik_lmin)*has_cl(4) + xdim
-    print *,"c",xdim,"BEAM"
-    beam_factor = bs_factor
-    print *,"c",xdim
     
-    print *,"k",has_cl(1)
-    print *,"k",has_cl(2)
-    print *,"k",has_cl(3)
+    npar = (clik_lmax+1-clik_lmin)*has_cl(1) + (clik_lmax+1-clik_lmin)*has_cl(2) + (clik_lmax+1-clik_lmin)*has_cl(4) + xdim
+    
+    beam_factor = bs_factor
     
     l_has_cl(1) = has_cl(1)==1
     l_has_cl(2) = has_cl(2)==1
     l_has_cl(3) = has_cl(4)==1
-    print *,"d"
     
 END SUBROUTINE
 
