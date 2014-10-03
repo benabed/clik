@@ -224,7 +224,9 @@ def main_v2(argv):
   lkl_grp.attrs["nuisance"] = php.pack256(*nuisance_pars)
 
   import tempfile
-  dr = tempfile.mkdtemp()
+  #dr = tempfile.mkdtemp()
+  dr = "tmp_camspec"
+  os.mkdir(dr)
   print dr
   import shutil
   #like_file[20], sz143_file[20], tszxcib_file[20], ksz_file[20], beam_file[20],data_vector[20]
