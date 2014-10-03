@@ -156,7 +156,7 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
                          beam_file,&l_beam_file,data_vector,&l_data_vector,&l_cib217_file,cib217_file,&l_dust100_file,dust100_file,
                          &l_dust143_file,dust143_file,&l_dust217_file,dust217_file,&l_dust143x217_file,dust143x217_file,
                          camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,
-                         spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,bs_factor);
+                         spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,&bs_factor);
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
@@ -279,7 +279,7 @@ cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double u
   
   // call the init fortran code here  
   //_DEBUGHERE_("%d",xdim);
-  camspec_extra_init_v2_(&pre_marged,like_file,&l_like_file,sz143_file,&l_sz143_file,tszxcib_file,&l_tszxcib_file,ksz_file,&l_ksz_file,beam_file,&l_beam_file,data_vector,&l_data_vector,camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,bs_factor);
+  camspec_extra_init_v2_(&pre_marged,like_file,&l_like_file,sz143_file,&l_sz143_file,tszxcib_file,&l_tszxcib_file,ksz_file,&l_ksz_file,beam_file,&l_beam_file,data_vector,&l_data_vector,camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,&bs_factor);
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
