@@ -168,6 +168,8 @@ double * lklbs_get_cls(lklbs *self,int ilkl, double *pars, error **err) {
   calib = 1;
   if (llkl->free_calib_id !=-1) {
     calib = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->free_calib_id]];
+    // calib is on map. I.e. its square divides the cl_theo
+    calib = 1./(calib*calib);
   }
   cls = cmblkl_select_cls(llkl,self,calib);
   //_DEBUGHERE_("ilkl %d xdim %d ndim %d nbins %d",ilkl,llkl->xdim,llkl->ndim,llkl->nbins);

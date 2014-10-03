@@ -1,4 +1,4 @@
-    module temp_like_camspec
+    module temp_like_camspec3
     implicit none
 
     private
@@ -13,6 +13,14 @@
     real(campc) :: sz_143_temp(lmax_sz)
     real(campc) :: ksz_temp(lmax_sz), tszxcib_temp(lmax_sz)
 
+    real(campc) :: cib_217_temp(lmax_sz)
+    real(campc) :: dust_100_temp(lmax_sz)
+    real(campc) :: dust_143_temp(lmax_sz)
+    real(campc) :: dust_217_temp(lmax_sz)
+    real(campc) :: dust_143x217_temp(lmax_sz)
+    logical :: applydust=.false.
+    logical :: cibfromfile=.false.
+
     real(campc), dimension(:,:), allocatable :: beam_cov,beam_cov_inv
     real(campc), dimension(:,:,:), allocatable :: beam_modes ! mode#, l, spec#
     integer :: num_modes_per_beam,beam_lmax,beam_Nspec,cov_dim
@@ -24,7 +32,7 @@
     integer marge_num, keep_num
 
     logical :: make_cov_marged = .false.
-    real(campc) :: beam_factor = 2.7_campc
+    real(campc) :: beam_factor = 1.0_campc
     integer, parameter :: CamSpec_cib_pivot = 3000
     integer, parameter :: CamSpec_sz_pivot = 3000
 
@@ -42,10 +50,14 @@
     character(LEN=1024) camspec_fiducial_foregrounds, camspec_fiducial_cl
     character(LEN=80) :: marge_file_variant = ''
 
-    character(LEN=*), parameter :: CAMSpec_like_version = 'CamSpec_v2_wig'
+    character(LEN=*), parameter :: CAMSpec_like_version = 'CamSpec_v3_wig'
+
+    logical :: apply_tight_sz_prior=.false.
+
     public like_init,calc_like,CAMSpec_like_version, camspec_beam_mcmc_num, &
         want_spec,camspec_lmins,camspec_lmaxs, make_cov_marged, marge_file_variant,&
-        compute_fg, Nspec,CAMSpec_lmax_foreground,camspec_fiducial_foregrounds,camspec_fiducial_cl,lminX,lmaxX,beam_factor
+        compute_fg, Nspec,CAMSpec_lmax_foreground,camspec_fiducial_foregrounds,camspec_fiducial_cl, apply_tight_sz_prior,lminX,lmaxX,beam_factor
+
     contains
 
     !!Does not seem to be actually faster
@@ -68,20 +80,55 @@
     subroutine CAMspec_ReadNormSZ(fname, templt)
     character(LEN=*), intent(in) :: fname
     real(campc) :: templt(lmax_sz)
-    integer i
-    real(campc)::dummy
+
+    call CAMspec_ReadNorm(fname, templt, lmax_sz)
+    end subroutine CAMspec_ReadNormSZ
+
+    subroutine CAMspec_ReadNorm(fname, templt,thelmax)
+    character(LEN=*), intent(in) :: fname
+    real(campc) :: templt(lmax_sz)
+    integer i, dummy, thelmax
     real(campc) :: renorm
 
+    print *,'reading ', fname, ' in readnorm'
+
+    if(thelmax < CamSpec_sz_pivot) stop 'CAMspec_ReadNorm: lmax too low'
+
     open(48, file=fname, form='formatted', status='old')
-    do i=2,lmax_sz
+    do i=2,thelmax
         read(48,*) dummy,templt(i)
-        if (int(dummy)/=i) stop 'CAMspec_ReadNormSZ: inconsistency in file read'
+        if (dummy/=i) stop 'CAMspec_ReadNorm: inconsistency in file read'
     enddo
     close(48)
 
     renorm=1.d0/templt(CamSpec_sz_pivot)
     templt=templt*renorm
-    end subroutine CAMspec_ReadNormSZ
+    end subroutine CAMspec_ReadNorm
+
+    subroutine CAMspec_Read(fname, templt,thelength)
+    character(LEN=*), intent(in) :: fname
+    real(campc) :: templt(lmax_sz)
+    integer i, dummy, readlmax
+    integer, optional :: thelength
+
+    print *,'reading ', fname, ' in read'
+
+    if(present(thelength)) then
+        readlmax=min(thelength,lmax_sz)
+    else
+        readlmax=lmax_sz
+    endif
+
+    open(48, file=fname, form='formatted', status='old')
+    do i=2,readlmax
+        read(48,*) dummy,templt(i)
+        if (dummy/=i) stop 'CAMspec_Read: inconsistency in file read'
+    enddo
+    close(48)
+    do i=100,readlmax,100
+        print *, i, templt(i)
+    enddo
+    end subroutine CAMspec_Read
 
     subroutine ReadFiducialCl(fid_cl)
     integer i,j
@@ -114,11 +161,13 @@
 
     end subroutine ReadFiducialCl
 
-    subroutine like_init(pre_marged,like_file, sz143_file, tszxcib_file, ksz_file, beam_file,data_vector)
+    subroutine like_init(pre_marged,like_file, sz143_file, tszxcib_file, ksz_file, beam_file,data_vector,&
+        cib217_file,dust100_file,dust143_file,dust217_file,dust143x217_file)
     !use MatrixUtils
     integer :: i, j,k,l
     logical :: pre_marged
     character(LEN=*), intent(in) :: like_file, sz143_file, ksz_file, tszxcib_file, beam_file,data_vector
+    character(LEN=*), intent(in) ::  cib217_file,dust100_file,dust143_file,dust217_file,dust143x217_file
     logical, save :: needinit=.true.
     real(campc) , allocatable:: fid_cl(:,:), beam_cov(:,:), beam_cov_full(:,:)
     integer if1,if2, ie1, ie2, ii, jj, L2
@@ -128,6 +177,15 @@
     integer ix, status
     real(campc) dummy
     real(campc), allocatable :: CL_in(:,:), in_data(:)
+
+    logical :: dustfiles(4)
+
+
+    if(cib217_file /='') print*,'cib217 file present in like_init:',cib217_file
+    if(dust100_file/='') print*,'dust100 file present in like_init:',dust100_file
+    if(dust143_file/='') print*,'dust143 file present in like_init:',dust143_file
+    if(dust217_file/='') print*,'dust217 file present in like_init:',dust217_file
+    if(dust143x217_file/='') print*,'dust143x217 file present in like_init:',dust143x217_file
 
     if(.not. needinit) return
 
@@ -157,7 +215,6 @@
         do i=1,Nspec
             print *, 'spec ',i, 'lmin,lmax, start ix = ', lminX(i),lmaxX(i), npt(i)
         end do
-        
     else
         !Chop L ranges/frequencies if requested
         allocate(indices(nX))
@@ -167,12 +224,12 @@
         read(48) cov !((c_inv(i, j), j = 1, nX), i = 1,  nX) !covariance
         read(48) !((c_inv(i, j), j = 1, nX), i = 1,  nX) !inver covariance
         close(48)
+
         !Cut on L ranges
         print *,'Determining L ranges'
         j=0
         ix=0
         npt(1)=1
-        
         if(.not. want_spec(1) .and. marge_num>0) stop 'One beam mode may not be right here'
         do i=1,Nspec
             do l = lminX(i), lmaxX(i)
@@ -203,7 +260,6 @@
         !    call Matrix_inverse(c_inv)
         deallocate(cov)
     end if
-    
     CAMspec_lmax = maxval(lmaxX)
 
     if (data_vector/='') then
@@ -230,7 +286,7 @@
             end do
         end do
     end if
-    
+
     if (.not. pre_marged) then
         allocate(fid_cl(CAMspec_lmax,Nspec))
         call ReadFiducialCl(fid_cl)
@@ -239,23 +295,54 @@
     call CAMspec_ReadNormSZ(sz143_file, sz_143_temp)
     call CAMspec_ReadNormSZ(ksz_file, ksz_temp)
     call CAMspec_ReadNormSZ(tszxcib_file, tszxcib_temp)
-    
+
+
+    dust_100_temp=0
+    dust_143_temp=0
+    dust_217_temp=0
+    dust_143x217_temp=0
+
+    dustfiles=.false.
+
+    if(dust100_file/='') then
+        call CAMspec_Read(dust100_file, dust_100_temp,3000)
+        dustfiles(1)=.true.
+    endif
+
+    if(dust143_file/='') then
+        call CAMspec_Read(dust143_file, dust_143_temp,3000)
+        dustfiles(2)=.true.
+    endif
+
+    if(dust217_file/='') then
+        call CAMspec_Read(dust217_file, dust_217_temp,3000)
+        dustfiles(3)=.true.
+    endif
+
+    if(dust143x217_file/='') then
+        call CAMspec_Read(dust143x217_file, dust_143x217_temp,3000)
+        dustfiles(4)=.true.
+    endif
+
+    if(any(dustfiles)) applydust=.true.
+
+    if(cib217_file/='') then
+        call CAMspec_ReadNormSZ(cib217_file, cib_217_temp)
+        cibfromfile=.true.
+    endif
+
+
     open(48, file=beam_file, form='unformatted', status='unknown')
-    
     read(48) beam_Nspec,num_modes_per_beam,beam_lmax
     ! removed until we decide about how to handle beam errors for TE & EE
     !    if(beam_Nspec.ne.Nspec) stop 'Problem: beam_Nspec != Nspec'
     allocate(beam_modes(num_modes_per_beam,0:beam_lmax,beam_Nspec))
     cov_dim=beam_Nspec*num_modes_per_beam
     allocate(beam_cov_full(cov_dim,cov_dim))
-    
     read(48) (((beam_modes(i,l,j),j=1,beam_Nspec),l=0,beam_lmax),i=1,num_modes_per_beam)
     allocate(beam_cov_inv(cov_dim,cov_dim))
-    
     read(48) ((beam_cov_full(i,j),j=1,cov_dim),i=1,cov_dim)  ! beam_cov
-    
     read(48) ((beam_cov_inv(i,j),j=1,cov_dim),i=1,cov_dim) ! beam_cov_inv
-    
     close(48)
 
     allocate(want_marge(cov_dim))
@@ -368,6 +455,7 @@
     integer lmin(Nspec), lmax(Nspec)
     real(campc) lnrat, nrun_cib
     real(campc) wigamp(2), wiggle_corr, wiggle_center, wiggle_width, wiggle_cl(CAMspec_lmax)
+    real(campc) dust_100, dust_143, dust_217, dust_143x217
     integer f_ix
 
     if (lmax_compute/=0) then
@@ -391,8 +479,11 @@
     nrun_cib = freq_params(11)
     xi = freq_params(12)
     A_ksz = freq_params(13)
-        
-    f_ix = 14
+    dust_100=freq_params(14)
+    dust_143=freq_params(15)
+    dust_217=freq_params(16)
+    dust_143x217=freq_params(17)
+    f_ix = 18
 
     do l=1, maxval(lmax)
         lnrat = log(real(l,campc)/CamSpec_cib_pivot)
@@ -403,6 +494,23 @@
             cl_cib_143(l)=exp(ncib143*lnrat + nrun_cib/2*lnrat**2)
         end if
     end do
+
+    if(cibfromfile) then
+        !In this case take CIB shape from file; unchanged if ncib=nrun_cib=0, otherwise tilted accordingly
+        !(ncib etc allowed so we can do consistency checks on the model)
+        do l=1,maxval(lmax)
+            cl_cib_143(l)=cib_217_temp(l)*cl_cib_143(l)
+            cl_cib_217(l)=cib_217_temp(l)*cl_cib_217(l)
+        end do
+        if (A_cib_143<-0.99) then
+            A_cib_143=.094*A_cib_217/cib_bandpass143_nom143*cib_bandpass217_nom217
+            !The above came from ratioing Paolo's templates, which were already colour-corrected,
+            !and assumed perfect correlation
+        end if
+        !r_cib=1.0 !assume set in .ini, allow to vary to be able to check consistent with 1
+    elseif (A_cib_143 < 0) then
+        stop 'A_cib_143 < 0 but no cib from file'
+    endif
 
     !   100 foreground
     !
@@ -438,7 +546,35 @@
             ( r_cib*zCIB + A_ksz*ksz_temp(l) -sqrt(A_cib_217_bandpass * A_sz_143_bandpass)*xi*tszxcib_temp(l) )*llp1(l)
     end do
 
+
+    if(applydust) then
+        !  print*,'applying dust...'
+        !  print *,'dust coeffs: ', dust_100, dust_143, dust_217
+        do l=lmin(1),lmax(1)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,1)
+            C_foregrounds(l,1) = C_foregrounds(l,1)+dust_100*dust_100_temp(l)*llp1(l)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,1)
+        enddo
+        do l=lmin(2),lmax(2)
+            !     if(mod(l,100).eq.0) print *,l,C_foregrounds(l,2)
+            C_foregrounds(l,2) = C_foregrounds(l,2)+dust_143*dust_143_temp(l)*llp1(l)
+            !     if(mod(l,100).eq.0) print *,l,C_foregrounds(l,2)
+        enddo
+        do l=lmin(3),lmax(3)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,3)
+            C_foregrounds(l,3) = C_foregrounds(l,3)+dust_217*dust_217_temp(l)*llp1(l)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,3)
+        enddo
+        do l=lmin(4),lmax(4)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,4)
+            C_foregrounds(l,4) = C_foregrounds(l,4)+dust_143x217*dust_143x217_temp(l)*llp1(l)
+            !      if(mod(l,100).eq.0) print *,l,C_foregrounds(l,4)
+        enddo
+    endif
+
+
     do i=1,2
+        ! print*,'doing wiggles...'
         wigamp = freq_params(f_ix:f_ix+1)
         if (any(wigamp/=0)) then
             wiggle_corr = freq_params(f_ix+2)
@@ -465,12 +601,12 @@
     integer ::  j, l, ii,jj
     real(campc) , allocatable, save ::  X_beam_corr_model(:), Y(:),  C_foregrounds(:,:)
     real(campc) cal0, cal1, cal2
-    real(campc) calTE, calEE
+    real(campc) calTE, calEE, calPlanck
     real(campc) zlike, ztemp
     real(campc) beam_params(cov_dim),beam_coeffs(num_modes_per_beam,beam_Nspec)
     integer :: ie1,ie2,if1,if2, ix
     integer num_non_beam
-
+    
     if (.not. allocated(lminX)) then
         print*, 'like_init should have been called before attempting to call calc_like.'
         stop
@@ -485,18 +621,18 @@
         allocate(C_foregrounds(CAMspec_lmax,Nspec))
         C_foregrounds=0
     end if
-    
-    if (camspec_has_TT) then
-    
-        call compute_fg(C_foregrounds,freq_params, 0)
 
-        cal0 = freq_params(24)
-        cal1 = freq_params(25)
-        cal2 = freq_params(26)
-        calTE = freq_params(27)
-        calEE = freq_params(28)
-        
-        num_non_beam = 28
+    if (camspec_has_TT) call compute_fg(C_foregrounds,freq_params, 0)
+
+    calPlanck = freq_params(28) !Total calibration that scales everything
+    cal0 = freq_params(29)*calPlanck
+    cal1 = freq_params(30)*calPlanck
+    cal2 = freq_params(31)*calPlanck
+    calTE = freq_params(32)*calPlanck
+    calEE = freq_params(33)*calPlanck
+    num_non_beam = 33
+
+    if (camspec_has_TT) then
         if (size(freq_params) < num_non_beam +  beam_Nspec*num_modes_per_beam) stop 'CAMspec: not enough parameters'
 
         if (keep_num>0) then
@@ -529,9 +665,6 @@
         do l = lminX(4), lmaxX(4)
             X_beam_corr_model(l-lminX(4)+npt(4)) =  ( cell_cmb(l) + C_foregrounds(l,4))*corrected_beam(4,l)/sqrt(cal1*cal2)
         end do
-    else 
-        calTE=1
-        calEE=1
     end if
 
     if(Nspec.eq.6) then
@@ -574,9 +707,11 @@
         enddo
     end if
 
-    !Moved these hard coded priors in prior[cal0] and prior[cal2] input parameters
-    !    if (want_spec(1)) zlike=zlike+ ((cal0/cal1-1.0006d0)/0.0004d0)**2
-    !    if (any(want_spec(3:4))) zlike=zlike+ ((cal2/cal1-0.9966d0)/0.0015d0)**2
+    if(apply_tight_sz_prior) then
+        !       asz143 = freq_params(6)
+        !       A_ksz = freq_params(13)
+        zlike=zlike+((freq_params(13)+1.6*freq_params(6)-9.5)/3.0)**2
+    endif
 
     contains
 
@@ -607,61 +742,60 @@
       end do
     end subroutine Matrix_inverse_internal
 
-    !Just for checking eigenvalues etc. slower than cholesky
-!    subroutine Matrix_Inverse2(M)
-!    use MpiUtils
-!    use MatrixUtils
-!    !Inverse of symmetric positive definite matrix
-!    real(campc), intent(inout):: M(:,:)
-!    integer i, n
-!    real(campc) w(Size(M,DIM=1))
-!    real(campc), dimension(:,:), allocatable :: tmp, tmp2
-!    real(campc), dimension(:), allocatable :: norm
-!
-!    n = size(M,DIM=1)
-!    do i=1, size(M,DIM=1)
-!        if (abs(M(i,i)) < 1d-30) call MpiStop('Matrix_Inverse: very small diagonal'  )
-!    end do
-!    allocate(tmp(Size(M,DIM=1),Size(M,DIM=1)))
-!
-!    n=Size(M,DIM=1)
-!    if (n<=1) return
-!    if (Size(M,DIM=2)/=n) call MpiStop('Matrix_Inverse: non-square matrix')
-!    
-!    allocate(norm(n))
-!    do i=1, n
-!        norm(i) = sqrt(abs(M(i,i)))
-!        if (norm(i) < 1d-30) &
-!            call MpiStop('Matrix_Inverse: very small diagonal'  )
-!        M(i,:) = M(i,:)/norm(i)
-!        M(:,i) = M(:,i)/norm(i)
-!    end do
-!    
-!    call Matrix_Write('smallmat',M,.true.)
-!
-!    call Matrix_Diagonalize(M,w,n)
-!    call Matrix_Write('eigenvecs',M,.true.)
-!    !print *,'evalues:', w
-!
-!    write (*,*) 'min/max eigenvalues = ', minval(w), maxval(w)
-!    if (any(w<=0)) then
-!        write (*,*) 'min/max eigenvalues = ', minval(w), maxval(w)
-!        call MpiStop('Matrix_Inverse: negative or zero eigenvalues')
-!    end if
-!    do i=1, n
-!        tmp(i,:) = M(:,i)/w(i)
-!    end do
-!    allocate(tmp2(Size(M,DIM=1),Size(M,DIM=1)))
-!    call Matrix_Mult(M,tmp,tmp2)
-!    M = tmp2
-!    do i=1, n
-!        M(i,:) = M(i,:)/norm(i)
-!        M(:,i) = M(:,i)/norm(i)
-!    end do
-!    deallocate(tmp, tmp2)
-!    deallocate(norm)
-!    call Matrix_End('Inverse')
-!
-!    end subroutine Matrix_Inverse2
-
-    end module temp_like_camspec
+!!    !Just for checking eigenvalues etc. slower than cholesky
+!!    subroutine Matrix_Inverse2(M)
+!!    !use MpiUtils
+!!    !use MatrixUtils
+!!    !Inverse of symmetric positive definite matrix
+!!    real(campc), intent(inout):: M(:,:)
+!!    integer i, n
+!!    real(campc) w(Size(M,DIM=1))
+!!    real(campc), dimension(:,:), allocatable :: tmp, tmp2
+!!    real(campc), dimension(:), allocatable :: norm
+!!
+!!    n = size(M,DIM=1)
+!!    do i=1, size(M,DIM=1)
+!!        if (abs(M(i,i)) < 1d-30) call MpiStop('Matrix_Inverse: very small diagonal'  )
+!!    end do
+!!    allocate(tmp(Size(M,DIM=1),Size(M,DIM=1)))
+!!
+!!    n=Size(M,DIM=1)
+!!    if (n<=1) return
+!!    if (Size(M,DIM=2)/=n) call MpiStop('Matrix_Inverse: non-square matrix')
+!!
+!!    allocate(norm(n))
+!!    do i=1, n
+!!        norm(i) = sqrt(abs(M(i,i)))
+!!        if (norm(i) < 1d-30) &
+!!            call MpiStop('Matrix_Inverse: very small diagonal'  )
+!!        M(i,:) = M(i,:)/norm(i)
+!!        M(:,i) = M(:,i)/norm(i)
+!!    end do
+!!
+!!    call Matrix_Write('smallmat',M,.true.)
+!!
+!!    call Matrix_Diagonalize(M,w,n)
+!!    call Matrix_Write('eigenvecs',M,.true.)
+!!    !print *,'evalues:', w
+!!
+!!    write (*,*) 'min/max eigenvalues = ', minval(w), maxval(w)
+!!    if (any(w<=0)) then
+!!        write (*,*) 'min/max eigenvalues = ', minval(w), maxval(w)
+!!        call MpiStop('Matrix_Inverse: negative or zero eigenvalues')
+!!    end if
+!!    do i=1, n
+!!        tmp(i,:) = M(:,i)/w(i)
+!!    end do
+!!    allocate(tmp2(Size(M,DIM=1),Size(M,DIM=1)))
+!!    call Matrix_Mult(M,tmp,tmp2)
+!!    M = tmp2
+!!    do i=1, n
+!!        M(i,:) = M(i,:)/norm(i)
+!!        M(:,i) = M(:,i)/norm(i)
+!!    end do
+!!    deallocate(tmp, tmp2)
+!!    deallocate(norm)
+!!    call Matrix_End('Inverse')
+!!
+!!    end subroutine Matrix_Inverse2
+    end module temp_like_camspec3

@@ -29,6 +29,157 @@ int _set_str(char* ptr, char* val, int mlen) {
 }
 #define _flen_ 100
 
+cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  cmblkl *cing;
+  int hk;
+  int pre_marged;
+  int *spec_flag,*lmins,*lmaxs;
+  char like_file[_flen_], sz143_file[_flen_], tszxcib_file[_flen_], ksz_file[_flen_], beam_file[_flen_],data_vector[_flen_],camspec_fiducial_foregrounds[_flen_],camspec_fiducial_cl[_flen_];
+  char cib217_file[_flen_],dust100_file[_flen_],dust143_file[_flen_],dust217_file[_flen_],dust143x217_file[_flen_]; 
+  int l_like_file, l_sz143_file, l_tszxcib_file, l_ksz_file, l_beam_file,l_data_vector,l_camspec_fiducial_foregrounds,l_camspec_fiducial_cl;
+  int l_cib217_file,l_dust100_file,l_dust143_file,l_dust217_file,l_dust143x217_file ;
+  char directory_name[4096],pwd[4096];
+  char *xnames_tot[300];
+  char *nuisance;
+  double bs_factor;
+  int camspec_beam_mcmc_num, xdim,i;
+
+  pre_marged = 1;
+
+  hk = cldf_haskey(df,"pre_marged",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    pre_marged = cldf_readint(df,"pre_marged",err);
+    forwardError(*err,__LINE__,NULL);
+  }
+  
+  
+  hk = cldf_haskey(df,"spec_flag",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    pre_marged = 0;
+    lmins = cldf_readintarray(df,"spec_lmins",NULL,err);
+    forwardError(*err,__LINE__,NULL);
+    lmaxs = cldf_readintarray(df,"spec_lmaxs",NULL,err);
+    forwardError(*err,__LINE__,NULL);
+    spec_flag = cldf_readintarray(df,"spec_flag",NULL,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+    spec_flag = malloc_err(sizeof(int)*6,err);
+    forwardError(*err,__LINE__,NULL);
+    spec_flag[0]=1;
+    spec_flag[1]=1;
+    spec_flag[2]=1;
+    spec_flag[3]=1;
+    spec_flag[4]=1;
+    spec_flag[5]=1;
+    //memset(spec_flag,1,sizeof(int)*6);
+    lmins = malloc_err(sizeof(int)*6,err);
+    forwardError(*err,__LINE__,NULL);
+    memset(lmins,0,sizeof(int)*6);
+    lmaxs = malloc_err(sizeof(int)*6,err);
+    forwardError(*err,__LINE__,NULL);
+    memset(lmaxs,0,sizeof(int)*6);
+  }
+  //_DEBUGHERE_("%d %d %d %d %d %d",spec_flag[0],spec_flag[1],spec_flag[2],spec_flag[3],spec_flag[4],spec_flag[5]);
+  l_like_file = _set_str(like_file,"like_file",_flen_);
+  l_sz143_file = _set_str(sz143_file,"sz143_file",_flen_);
+  l_tszxcib_file = _set_str(tszxcib_file,"tszxcib_file",_flen_);
+  l_ksz_file = _set_str(ksz_file,"ksz_file",_flen_);
+  l_beam_file = _set_str(beam_file,"beam_file",_flen_);
+
+  hk = cldf_haskey(df,"cib_consistency_flag",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    l_cib217_file = _set_str(cib217_file,"cib_file",_flen_);
+  } else {
+    l_cib217_file = _set_str(cib217_file,"",_flen_);
+  }
+
+  hk = cldf_haskey(df,"dust_flag",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    l_dust100_file = _set_str(dust100_file,"dust100_file",_flen_);
+    l_dust143_file = _set_str(dust143_file,"dust143_file",_flen_);
+    l_dust217_file = _set_str(dust217_file,"dust217_file",_flen_);
+    l_dust143x217_file = _set_str(dust143x217_file,"dust143x217_file",_flen_);
+  } else {
+    l_dust100_file = _set_str(dust100_file,"",_flen_);
+    l_dust143_file = _set_str(dust143_file,"",_flen_);
+    l_dust217_file = _set_str(dust217_file,"",_flen_);
+    l_dust143x217_file = _set_str(dust143x217_file,"",_flen_);
+  }
+
+  l_data_vector = _set_str(data_vector," ",_flen_);
+  hk = cldf_haskey(df,"data_vector_flag",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    int dv;
+
+    dv = cldf_readint(df,"data_vector_flag",err);
+    forwardError(*err,__LINE__,NULL);
+    if (dv==1) {
+      l_data_vector = _set_str(data_vector,"data_vector",_flen_);  
+    }  
+  }
+
+  camspec_beam_mcmc_num = cldf_readint(df,"camspec_beam_mcmc_num",err);
+  forwardError(*err,__LINE__,NULL);
+
+  xdim = cldf_readint(df,"n_nuisance",err);
+  forwardError(*err,__LINE__,NULL);
+  
+
+  nuisance = cldf_readstr(df,"nuisance",NULL,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for(i=0;i<xdim;i++) {
+    xnames_tot[i] = &(nuisance[i*256]);
+  }  
+
+  bs_factor = cldf_readfloat_default(df,"bs_factor",2.7,err);
+  forwardError(*err,__LINE__,NULL);
+
+  cldf_external(df,directory_name,pwd,err);
+  forwardError(*err,__LINE__,NULL);
+
+  l_camspec_fiducial_foregrounds = _set_str(camspec_fiducial_foregrounds," ",_flen_);
+  l_camspec_fiducial_cl = _set_str(camspec_fiducial_foregrounds," ",_flen_);
+  if (pre_marged==0) {
+    l_camspec_fiducial_foregrounds = _set_str(camspec_fiducial_foregrounds,"camspec_fiducial_foregrounds",_flen_);
+    l_camspec_fiducial_cl = _set_str(camspec_fiducial_cl,"camspec_fiducial_cl",_flen_);
+  }
+  
+  // call the init fortran code here  
+  //_DEBUGHERE_("%d",xdim);
+  camspec_extra_init_v3_(&pre_marged,like_file,&l_like_file,sz143_file,&l_sz143_file,tszxcib_file,&l_tszxcib_file,ksz_file,&l_ksz_file,
+                         beam_file,&l_beam_file,data_vector,&l_data_vector,&l_cib217_file,cib217_file,&l_dust100_file,dust100_file,
+                         &l_dust143_file,dust143_file,&l_dust217_file,dust217_file,&l_dust143x217_file,dust143x217_file,
+                         camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,
+                         spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,bs_factor);
+
+  cldf_external_cleanup(directory_name,pwd,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  // get some way to count the number of external parameters and pass them...
+
+  cing = init_cmblkl(NULL, &CAMspec_lkl, 
+                     &free_CAMspec,
+                     nell,ell,
+                     has_cl,ell[nell-1],unit,wl,0,bins,nbins,xdim,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  cmblkl_set_names(cing, xnames_tot,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  free(lmins);
+  free(lmaxs);
+  free(spec_flag);
+  free(nuisance);
+
+  return cing;
+}
+
 cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   cmblkl *cing;
   int hk;

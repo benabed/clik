@@ -2152,8 +2152,7 @@ void comp_totcal_update(void* data,double* locpars, double* rq, error **err) {
   double cal;
 
   SC = data;
-  cal = exp(locpars[0]);
-  cal = cal*cal;
+  cal = 1./(locpars[0]*locpars[0]);
   
   m = SC->m;
   m2 = m*m;

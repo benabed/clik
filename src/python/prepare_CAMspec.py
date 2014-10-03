@@ -162,6 +162,8 @@ def main_v1(argv):
 def main_v2(argv):
   pars = clik.miniparse(argv[1])
 
+  version = pars.int(default=2).camspec_version
+
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   hascl = nm.array(pars.bool_array.hascl,dtype=nm.int)
   lmin = pars.int.lmin
@@ -169,7 +171,7 @@ def main_v2(argv):
   print hascl,hascl.dtype
   lkl_grp = php.add_lkl_generic(root_grp,"CAMspec",1,hascl,lmax,lmin)
 
-  lkl_grp.attrs["camspec_version"] = 2
+  lkl_grp.attrs["camspec_version"] = version
 
   if "pre_marged" in pars:
     lkl_grp.attrs["pre_marged"] = pars.int.pre_marged
@@ -190,7 +192,7 @@ def main_v2(argv):
 
   lkl_grp.attrs["bs_factor"] = pars.float(default=2.7).bs_factor
 
-  nuisance_pars = ["aps100",  "aps143",  "aps217",  "acib143",  "acib217",  
+  nuisance_pars_v2 = ["aps100",  "aps143",  "aps217",  "acib143",  "acib217",  
                    "asz143",  "psr",  "cibr",  "ncib143",  "ncib",  "cibrun",  
                    "xi",  "aksz",  "wig1_143",  "wig1_217",  "wig1_r",  
                    "wig1_L",  "wig1_sigma",  "wig2_143",  "wig2_217",  "wig2_r",
@@ -200,6 +202,24 @@ def main_v2(argv):
                    "bm_2_5",  "bm_3_1",  "bm_3_2",  "bm_3_3",  "bm_3_4",  
                    "bm_3_5",  "bm_4_1",  "bm_4_2",  "bm_4_3",  "bm_4_4",  
                    "bm_4_5"]
+  nuisance_pars_v3 = ["aps100",  "aps143",  "aps217",  "acib143",  "acib217",  
+                      "asz143",  "psr",  "cibr",  "ncib143",  "ncib",  "cibrun",  
+                      "xi",  "aksz",  "dust100",  "dust143",  "dust217",  
+                      "dust143x217",  "wig1_143",  "wig1_217",  "wig1_r",  
+                      "wig1_L",  "wig1_sigma",  "wig2_143",  "wig2_217",  "wig2_r",  
+                      "wig2_L",  "wig2_sigma",  "calPlanck",  "cal0",  "cal1",  
+                      "cal2",  "calTE",  "calEE",  "bm_1_1",  "bm_1_2",  "bm_1_3",
+                        "bm_1_4",  "bm_1_5",  "bm_2_1",  "bm_2_2",  "bm_2_3",  
+                        "bm_2_4",  "bm_2_5",  "bm_3_1",  "bm_3_2",  "bm_3_3",  
+                        "bm_3_4",  "bm_3_5",  "bm_4_1",  "bm_4_2",  "bm_4_3",  
+                        "bm_4_4",  "bm_4_5"]
+
+  if version == 2:
+    nuisance_pars = nuisance_pars_v2
+  else:
+    nuisance_pars = nuisance_pars_v3
+
+
   lkl_grp.attrs["n_nuisance"] = len(nuisance_pars)
   lkl_grp.attrs["nuisance"] = php.pack256(*nuisance_pars)
 
@@ -220,7 +240,15 @@ def main_v2(argv):
   if "camspec_fiducial_cl" in pars:
     shutil.copy(pars.camspec_fiducial_cl.strip(),dr+"/camspec_fiducial_cl")
     shutil.copy(pars.camspec_fiducial_foregrounds.strip(),dr+"/camspec_fiducial_foregrounds")
-    
+  if version == 3:
+    if "cib217_file" in pars:  
+      shutil.copy(pars.cib217_file.strip(),dr+"/cib217_file")
+    if "dust217" in pars:        
+      shutil.copy(pars.dust217_file.strip(),dr+"/dust217_file")
+      shutil.copy(pars.dust143_file.strip(),dr+"/dust143_file")
+      shutil.copy(pars.dust143x217_file.strip(),dr+"/dust143x217_file")
+      shutil.copy(pars.dust100_file.strip(),dr+"/dust100_file")
+      
   php.add_external_data(dr,lkl_grp,tar=True)
 
   hf.close()

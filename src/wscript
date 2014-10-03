@@ -100,7 +100,7 @@ def build(bld):
     if bld.env.has_camspec:
       bld.objects(
         features = 'fc',
-        source = ["CAMspec/"+vv for vv in ['CAMspec.f90','clik_CAMspec.f90','temp_like.f90']], 
+        source = ["CAMspec/"+vv for vv in ['CAMspec.f90','clik_CAMspec.f90','temp_like.f90','temp_like_v3.f90']], 
         target = 'CAMspec',
         uselib = 'fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
