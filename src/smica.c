@@ -2145,3 +2145,49 @@ SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,i
   return SC;
 
 }
+
+void comp_totcal_update(void* data,double* locpars, double* rq, error **err) {
+  SmicaComp *SC;
+  int t,iq,im1,im2,m,m2,neigen,offm,offq;
+  double cal;
+
+  SC = data;
+  cal = exp(locpars[0]);
+  cal = cal*cal;
+  
+  m = SC->m;
+  m2 = m*m;
+  
+  for(iq=0;iq<SC->nq;iq++) {
+    for(im1=0;im1<m;im1++) {
+      for(im2=im1;im2<m;im2++) {
+        rq[iq*m2 + im1*m + im2] *= cal;
+        rq[iq*m2 + im2*m + im1] = rq[iq*m2 + im1*m + im2];
+      }
+    }
+  }
+}
+
+void comp_totcal_free(void** data) {
+  SmicaComp *SC;
+
+  SC = *data;
+  free(SC);
+  
+  *data = NULL;
+}
+
+SmicaComp* comp_totcal_init(int q, int mT, int mP, int *TEB,error **err ) {
+  SC_beamTP *gc;
+  SmicaComp *SC;
+  int m;
+  int i;
+
+  m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
+  
+  SC = alloc_SC(1,q,m,NULL, &comp_totcal_update, &comp_totcal_free,err);
+  forwardError(*err,__LINE__,NULL);
+  SC_ismul(SC);
+  return SC;
+
+}

@@ -485,6 +485,9 @@ def main(argv):
           tmodes[:,j,i,t] = tmodes[:,i,j,t]
     smh.add_beamTP_component(lkl_grp,names,neigen,tmodes)
 
+  if "tot_calib" in pars:
+    smh.add_totcal_component(lkl_grp,pars.tot_calib)
+    
   # Some noise ?
   if "rq_noise" in pars:
     for rqn in pars.str_array.rq_noise:

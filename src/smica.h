@@ -213,6 +213,6 @@ SmicaComp* comp_calTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im,do
 void comp_calTP_update(void* data,double* locpars, double* rq, error **err);
 void comp_calTP_free(void** data);
 
-
-
+void comp_totcal_update(void* data,double* locpars, double* rq, error **err);
+SmicaComp* comp_totcal_init(int q, int mT, int mP, int *TEB,error **err );
 #endif
