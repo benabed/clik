@@ -352,6 +352,11 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
       forwardError(*err,__LINE__,NULL);
       return cing;
     }
+    if (cv==3) {
+      cing = clik_CAMspec_v3_init(df, nell,ell,has_cl,unit,wl,bins,nbins,err);
+      forwardError(*err,__LINE__,NULL);
+      return cing;
+    }
   }
 
   Nspec = cldf_readint(df,"Nspec",err);
