@@ -598,8 +598,7 @@ contains
 !update the NCVM
     allocate(clstmp(2:lmax,6))
     clstmp = 0._dp
-    write(*,*) "t0"
-    !
+    
     if(lswitch .lt. lmax) then
        if(.not. read_cls_from_file(clfiducial,clstmp)) then
           write(0,*) 'WARNING: '//trim(clfiducial)//' not found or not enough columns'
@@ -610,7 +609,7 @@ contains
        call update_ncvm(clstmp,2,2,NCVM,project_mondip=project_mondip)
     end if
     deallocate(clstmp)
-    write(*,*) "t1"
+
 !
     if(3*(lswitch+1)**2 .gt. ntot) then
        write(*,*) 'requested number of modes is higher than the total number of pixels'
@@ -673,10 +672,7 @@ contains
     call dpotrs('L',ntot,neigen,NCVM,ntot,evec,ntot,info)
     write(*,*) 'info = ',info
 
-    print *,"aa"
-    deallocate(NCVM) ;
-    print *,"bb"
-    allocate(NCVM(neigen,neigen))
+    deallocate(NCVM) ;allocate(NCVM(neigen,neigen))
     call dgemm('T','N', neigen, neigen, ntot, 1.d0, S, &
          ntot, evec, ntot, 0.d0, NCVM , neigen)
 
@@ -684,35 +680,26 @@ contains
     do i = 1,neigen
        ncov%column(i)%row(i:neigen) = ncvm(i:neigen,i)
     end do
-
-    print *,"aa"
     deallocate(NCVM)
-    print *,"bb"
-    
+
     deallocate(evec)
-    print *,"cc"
     deallocate(S) ;allocate(S(neigen,neigen))
-    print *,"dd"
     
     !clean up all the stuff we don't need anymore
     do l=2,lswitch
        call fevec(l)%clean()
     end do
-    print *,"ee"
-    
     deallocate(fevec)
-    print *,"ff"
-    
+
     deallocate(Tvec,Uvec,Qvec)
     deallocate(pl,plm,f1,f2)
-    print *,"vv"
-    
+
     call cos1%clean()
     call cos2%clean()
     call sin1%clean()
     call sin2%clean()
     deallocate(clnorm)
-    print *,"dd"
+
   end subroutine init_pix_like_smw
 
   subroutine precompute_rotation_angle()
@@ -1021,7 +1008,7 @@ contains
     end if
 
     cls(2:lsup,smwTT) =clsin(2:lsup,smwTT)*clnorm(2:lsup,smwTT)
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,Tvec,cls,ntemp,lsup,linf,ct1,ct0)
+
     do i=1,ntemp
 ! TT 
        cov(i,i) = sum(cls(linf:lsup,smwTT)) +ct1 +ct0        
@@ -1040,7 +1027,6 @@ contains
 
     if (present(symmetrize) .and. symmetrize) then
        l = size(cov(:,1))
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,l)
        do i=1,l
           do j=1,i-1
              cov(j,i) = cov(i,j)
@@ -1066,7 +1052,6 @@ contains
     cls(2:lsup,smwBB) = clsin(2:lsup,smwBB)*clnorm(2:lsup,smwBB)
     cls(2:lsup,smwEB) = clsin(2:lsup,smwEB)*clnorm(2:lsup,smwEB)
 
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,Qvec,Uvec,cls,nu,nq,ntemp,lsup,linf,cos1,cos2,sin1,sin2)
     do i = 1,nq
 !QQ 
        iq = i +ntemp
@@ -1125,7 +1110,6 @@ contains
        end do
     end do
 
-!$OMP PARALLELDO DEFAULT(PRIVATE) SHARED(cov,Uvec,cls,nu,nq,ntemp,lsup,linf,cos1,cos2,sin1,sin2)
     do i =1,nu
 !UU 
        iu = i+nq+ntemp
@@ -1158,7 +1142,6 @@ contains
 
     if (present(symmetrize) .and. symmetrize) then
        l = size(cov(:,1))
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,l)
        do i=1,l
           do j=1,i-1
              cov(j,i) = cov(i,j)
@@ -1183,7 +1166,6 @@ contains
     cls(2:lsup,smwTB) =clsin(2:lsup,smwTB)*clnorm(2:lsup,smwTB)
 
 
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,Tvec,Qvec,Uvec,cls,nu,nq,ntemp,lsup,linf,cos1,cos2,sin1,sin2)
     do i=1,ntemp
 ! QT
        do j=1,nq
@@ -1223,7 +1205,6 @@ contains
 
     if (present(symmetrize) .and. symmetrize) then
        l = size(cov(:,1))
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(cov,l)
        do i=1,l
           do j=1,i-1
              cov(j,i) = cov(i,j)
@@ -1241,18 +1222,15 @@ contains
     real(dp),intent(in)   :: clsin(2:,1:)
     real(dp),intent(out)  :: alike
 
-!    real(dp),intent(out) ,optional :: argexp(:),logdet(:)
     real(dp)              :: argexp,logdet
 
     integer               :: i ,j ,l ,info ,neigen ,nl ,nl2 ,nl3 ,iu
     integer ,allocatable  :: pinfo(:) ,il(:)
     real(dp) ,allocatable :: tm1(:,:) ,tmplog(:)
-    real(dp)              :: tmp
+    real(dp)              :: tmp ,t1 ,t2
 
     neigen = size(dt(:,1))
     logdet = 0._dp
-
-    print *,1
 
     nl2 = 2*(2*lswitch+1)
     allocate(tm1(nl2,nl2),tmplog(2:lswitch),pinfo(2:lswitch),il(2:lswitch))
@@ -1262,15 +1240,13 @@ contains
        iu = il(l) +6*l+2 !3*(2l+1) for each l
     end do
 
-    print *,2
-!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(S,ncov,neigen)
+    call cpu_time(t1)
     do i=1,neigen
        do j=i,neigen
           S(j,i) = ncov%column(i)%row(j)
        end do
     end do
-    print *,3
-!!$OMP PARALLELDO DEFAULT(PRIVATE) SHARED(S,neigen,lswitch,clsin,tmplog,cblocks,feval,pinfo,il)
+
     do l=2,lswitch
 
        tmplog(l) = 0._dp
@@ -1278,8 +1254,7 @@ contains
        nl = 2*l+1
        nl2 = 2*nl
        nl3 = 3*nl
-      
-      print *,"a"
+ 
        ! TT,TE,EE 
        do i=1,nl
           tm1(i,i)        = clsin(l,smwTT)*feval(l)%m(i,1)
@@ -1290,11 +1265,9 @@ contains
           tm1(i,i)        = clsin(l,smwEE)*feval(l)%m(i,1)
           tm1(i+1:nl2,i)  = 0.d0
        end do
-       print *,"b"
 
        call dpotrf('L',nl2,tm1(1:nl2,1:nl2),nl2,pinfo(l))
 
-       print *,"c"
        do j=1,nl2
           tmplog(l) = tmplog(l) +log(tm1(j,j))
        end do
@@ -1306,16 +1279,17 @@ contains
           end do
        end do
 
-       print *,l,"d"
        !BB is diagonal 
        do i = nl2+1,nl3
           tmp = 1._dp/(max(clsin(l,smwBB),1.d-30)*feval(l)%m(i,1))
           S(il(l)+i-1,il(l)+i-1) = S(il(l)+i-1,il(l)+i-1) +tmp
           tmplog(l) = tmplog(l) -.5_dp*log(tmp) 
        end do
-      print *,l,"d"
+ 
     end do
-    print *,4
+    call cpu_time(t2)
+
+    print*,'build matrix in :',t2-t1
     logdet = sum(tmplog(2:lswitch))
     
     do l=2,lswitch
@@ -1329,8 +1303,11 @@ contains
        end if
     end do
 
+    call cpu_time(t1)
     auxdt = dt
     call dposv('L',neigen,ndata,S,neigen,auxdt,neigen,info)
+    call cpu_time(t2)
+    print*,'dposv in :',t2-t1
 
 !    cholesky: X*(C^-1*X)
     if (info.eq.0) then
@@ -1352,9 +1329,7 @@ contains
        alike = -.5d0*(argexp+logdet)
     endif
 
-    print *,"deal"
     deallocate(tmplog,il,tm1,pinfo)
-    print *,"locate"
   end subroutine get_pix_loglike_smw
 
   subroutine update_ncvm(clsin,linf,lsup,NCM,project_mondip)
@@ -1369,8 +1344,7 @@ contains
 
     integer  :: i ,j ,l ,iu ,iq ,ju ,jq
     real(dp) :: tt ,qq ,uu ,tq ,tu ,qu ,cz ,c1c2 ,s1s2 ,c1s2 ,s1c2 ,ct0 ,ct1
-    INTEGER, EXTERNAL :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
-    print *,1
+
     ct0 = 0._dp
     ct1 = 0._dp
 
@@ -1382,15 +1356,10 @@ contains
     end if
 
     cls(2:lsup,:) =clsin(2:lsup,:)*clnorm(2:lsup,:)
-    print *,size(plm),size(pl)
-    
-    print *,2
-!!!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(NCM,Tvec,Qvec,Uvec,cls,nu,nq,ntemp,linf,lsup,lmax,ct0,ct1,cos1,cos2,sin1,sin2)
+
     do i=1,ntemp
 ! TT 
-    !print *,"nt",OMP_GET_THREAD_NUM(),"i",i,ntemp,"T"
        do j=i,ntemp
-          !print *,"nt",OMP_GET_THREAD_NUM(),"j",j,ntemp
           cz = sum(Tvec(:,j)*Tvec(:,i))
           pl(1) = cz
           pl(2) = 1.5d0*cz*cz -.5d0
@@ -1402,32 +1371,18 @@ contains
        enddo
 
 ! QT
-!print *,"nt",OMP_GET_THREAD_NUM(),"i",i,ntemp,"QT"
-!       do j=ntemp+1,ntq
        do j=1,nq
-       !print *,"nt",OMP_GET_THREAD_NUM(),"j",j,ntemp
           cz = sum(Qvec(:,j)*Tvec(:,i))
-          !print *,cz
-          !print *,size(plm)
-          !print *,size(pl)
           plm(1) = 0.d0
-          !print *,plm(1)
           plm(2) = 3.d0*(1.d0 -cz*cz)
-          !print *,plm(2)
           do l = 3,lsup
              plm(l) =(cz*(2*l -1)*plm(l-1) -(l+1)*plm(l-2))/(l-2)
           enddo
-          !print *,plm(lsup)
           tq = -sum(cls(linf:lsup,smwTE)*plm(linf:lsup))
           tu = -sum(cls(linf:lsup,smwTB)*plm(linf:lsup))
-          !print *,tu,tq
-!          call get_rotation_angle(QVec(:,j),TVec(:,i),a1,a2)
-          jq = j +ntemp
-          !print *,jq
-!          S(jq,i) = Ad2*NCVMd(jq,i)+As2*NCVMs(jq,i) +NCVM(jq,i) +tq*cos(a1) &
-!               -tu*sin(a1)
 
-!          NCM(jq,i) = NCM(jq,i) +tq*cos(a1) +tu*sin(a1)
+          jq = j +ntemp
+
           NCM(jq,i) = NCM(jq,i) +tq*cos1%column(i)%row(jq) +tu*sin1%column(i)%row(jq)
        enddo
 
@@ -1442,16 +1397,13 @@ contains
           tq = -sum(cls(linf:lsup,smwTE)*plm(linf:lsup))
           tu = -sum(cls(linf:lsup,smwTB)*plm(linf:lsup))
 
-!          call get_rotation_angle(UVec(:,j),TVec(:,i),a1,a2)
           ju = j +ntemp +nq
-!          S(ju,i) = Ad2*NCVMd(ju,i) +As2*NCVMs(ju,i) +NCVM(ju,i) +tq*sin(a1) +tu*cos(a1)
 
           NCM(ju,i) = NCM(ju,i) -tq*sin1%column(i)%row(ju) +tu*cos1%column(i)%row(ju)
        enddo
 
     end do
-    print *,4
-!!!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(NCM,Tvec,Qvec,Uvec,cls,nu,nq,ntemp,linf,lsup,lmax,cos1,cos2,sin1,sin2)
+
     do i = 1,nq
 !QQ 
        do j = i,nq
@@ -1469,18 +1421,6 @@ contains
           qq = sum(cls(linf:lsup,smwEE)*f1(linf:lsup) -cls(linf:lsup,smwBB)*f2(linf:lsup))
           uu = sum(cls(linf:lsup,smwBB)*f1(linf:lsup) -cls(linf:lsup,smwEE)*f2(linf:lsup))
           qu = sum((f1(linf:lsup) +f2(linf:lsup))*cls(linf:lsup,smwEB))
-
-!          call get_rotation_angle(QVec(:,j),QVec(:,i),a1,a2) 
-
-!          c1 = cos(a1)
-!          c2 = cos(a2)
-!          s1 = sin(a1)
-!          s2 = sin(a2)
-
-!          c1c2 = c1*c2
-!          s1s2 = s1*s2
-!          c1s2 = c1*s2
-!          s1c2 = s1*c2
 
           jq = j+ntemp
           iq = i+ntemp
@@ -1514,18 +1454,6 @@ contains
           uu = sum(cls(linf:lsup,smwBB)*f1(linf:lsup) -cls(linf:lsup,smwEE)*f2(linf:lsup))
           qu = sum((f1(linf:lsup) +f2(linf:lsup))*cls(linf:lsup,smwEB))
 
-!          call get_rotation_angle(UVec(:,j),QVec(:,i),a1,a2) 
-
-!          c1 = cos(a1)
-!          c2 = cos(a2)
-!          s1 = sin(a1)
-!          s2 = sin(a2)
-
-!          c1c2 = c1*c2
-!          s1s2 = s1*s2
-!          c1s2 = c1*s2
-!          s1c2 = s1*c2
-
           ju = j+ntemp+nq
           iq = i+ntemp
 
@@ -1538,7 +1466,6 @@ contains
        end do
     end do
 
-!!!$OMP PARALLELDO DEFAULT (PRIVATE) SHARED(NCM,Tvec,Qvec,Uvec,cls,nu,nq,ntemp,linf,lsup,lmax,cos1,cos2,sin1,sin2)
     do i =1,nu
 !UU 
        do j=i,nu
@@ -1557,17 +1484,6 @@ contains
           uu = sum(cls(linf:lsup,smwBB)*f1(linf:lsup) -cls(linf:lsup,smwEE)*f2(linf:lsup))
           qu = sum((f1(linf:lsup) +f2(linf:lsup))*cls(linf:lsup,smwEB))
 
-!          call get_rotation_angle(UVec(:,j),UVec(:,i),a1,a2) 
-
-!          c1 = cos(a1)
-!          c2 = cos(a2)
-!          s1 = sin(a1)
-!          s2 = sin(a2)
-
-!          c1c2 = c1*c2
-!          s1s2 = s1*s2
-!          c1s2 = c1*s2
-!          s1c2 = s1*c2
 
           ju = j+ntemp+nq
           iu = i+ntemp+nq
@@ -1580,7 +1496,7 @@ contains
           NCM(ju,iu) = NCM(ju,iu) +qq*s1s2 +uu*c1c2 -qu*(c1s2 +s1c2)
        end do
     end do
-  print *,"here"
+
   end subroutine update_ncvm
 
   pure subroutine get_rotation_angle(r1,r2,a12,a21)
@@ -1680,7 +1596,7 @@ contains
 
     call fid%init()
 
-    open(unit = unit,file=trim(filein),status='old',action='read',&
+    open(newunit = unit,file=trim(filein),status='old',action='read',&
          iostat=istat)
     if(istat .ne. 0) then
        cls(2:lmax,6) = fid%cls(2:lmax,6)
