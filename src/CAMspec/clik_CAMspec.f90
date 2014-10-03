@@ -199,7 +199,7 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
     allocate(nuisance(xdim))
     print *,"c",xdim
     npar = (clik_lmax+1-clik_lmin)*has_cl(1) + (clik_lmax+1-clik_lmin)*has_cl(2) + (clik_lmax+1-clik_lmin)*has_cl(4) + xdim
-    print *,"c",xdim
+    print *,"c",xdim,"BEAM"
     beam_factor = bs_factor
     print *,"c",xdim
     
