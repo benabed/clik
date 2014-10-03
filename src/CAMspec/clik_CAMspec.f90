@@ -194,12 +194,15 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
     ALLOCATE(clte(0:lmaxte+1))
     ALLOCATE(clee(0:lmaxee+1))
 
-    print *,"c"
+    print *,"c",xdim
     
     allocate(nuisance(xdim))
+    print *,"c",xdim
     npar = (clik_lmax+1-clik_lmin)*has_cl(1) + (clik_lmax+1-clik_lmin)*has_cl(2) + (clik_lmax+1-clik_lmin)*has_cl(4) + xdim
+    print *,"c",xdim
     beam_factor = bs_factor
-
+    print *,"c",xdim
+    
     l_has_cl(1) = has_cl(1)==1
     l_has_cl(2) = has_cl(2)==1
     l_has_cl(3) = has_cl(4)==1
