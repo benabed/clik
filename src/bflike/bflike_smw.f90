@@ -1596,7 +1596,7 @@ contains
 
     call fid%init()
 
-    open(newunit = unit,file=trim(filein),status='old',action='read',&
+    open(unit = unit,file=trim(filein),status='old',action='read',&
          iostat=istat)
     if(istat .ne. 0) then
        cls(2:lmax,6) = fid%cls(2:lmax,6)
