@@ -261,7 +261,11 @@ double ddot(int* N,double *DX, int* INCX,double *DY,int* INCY);
 void dpotrs(char* UPLO,int * N,int * NRHS,double* A,int* LDA,double* B,int* LDB,int* INFO );
 void dsyevd(char *jobz, char *uplo, int *n, double *a, int *lda, double *w, double *work, int *lwork, int *iwork, int *liwork, int *info);
 void dposv( char* UPLO, int* N, int* NRHS, double* A, int* LDA, double* B, int* LDB, int* INFO );
-         
+double dlamch_(char *cmach);
+void dsyevr(char jobz, char range, char uplo, int n,  double
+               *a, int lda, double vl, double vu, int il, int iu,
+               double abstol, int *m, double *w, double  *z,  int
+               ldz, int *isuppz, int *info);        
 """
 
 mkl_options = {
