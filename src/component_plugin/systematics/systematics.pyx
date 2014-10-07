@@ -23,5 +23,6 @@ cdef class dip(parametric):
 
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
+cnoise_t3 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t3.dat")
     
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3"]
