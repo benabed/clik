@@ -6,6 +6,7 @@ char* cdic_newchar(char* fromchar,error **err) {
   if (fromchar==NULL || fromchar[0]=='\0') {
     rchar = malloc_err(sizeof(char)*256,err);
     forwardError(*err,__LINE__,NULL);
+    rchar[0]='\0';
     return rchar;
   } 
   len = strlen(fromchar);
