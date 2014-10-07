@@ -134,12 +134,12 @@ END SUBROUTINE
 
 SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,l_sz143_file,tszxcib_file,l_tszxcib_file,ksz_file,l_ksz_file,beam_file,l_beam_file,data_vector,l_data_vector,&
                                    l_cib217_file,cib217_file,l_dust100_file,dust100_file,l_dust143_file,dust143_file,l_dust217_file,dust217_file,l_dust143x217_file,dust143x217_file,&
-                                   icamspec_fiducial_foregrounds,l_camspec_fiducial_foregrounds,icamspec_fiducial_cl,l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,icamspec_beam_mcmc_num,xdim,iclik_lmin,iclik_lmax,has_cl,bs_factor) 
+                                   icamspec_fiducial_foregrounds,l_camspec_fiducial_foregrounds,icamspec_fiducial_cl,l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,icamspec_beam_mcmc_num,xdim,iclik_lmin,iclik_lmax,has_cl,bs_factor,sz_prior) 
     use CAMSPEC_EXTRA
     use temp_like_camspec3
     implicit none
     integer,intent(in)::l_like_file,l_beam_file,l_tszxcib_file,l_sz143_file,l_data_vector,l_ksz_file,xdim,ipre_marged,icamspec_beam_mcmc_num,iclik_lmin,iclik_lmax,l_camspec_fiducial_foregrounds,l_camspec_fiducial_cl
-    integer,intent(in)::l_cib217_file,l_dust100_file,l_dust143_file,l_dust217_file,l_dust143x217_file
+    integer,intent(in)::l_cib217_file,l_dust100_file,l_dust143_file,l_dust217_file,l_dust143x217_file,sz_prior
     
     character(len=l_like_file)::like_file
     character(len=l_sz143_file)::sz143_file
@@ -174,6 +174,7 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
 
     pre_marged = ipre_marged==1
 
+    apply_tight_sz_prior = (sz_prior == 1)
     call like_init(pre_marged,like_file, sz143_file, tszxcib_file, ksz_file, beam_file,data_vector,cib217_file,dust100_file,dust143_file,dust217_file,dust143x217_file)
 
     cam_version=3

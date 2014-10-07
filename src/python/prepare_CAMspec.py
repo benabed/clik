@@ -190,8 +190,10 @@ def main_v2(argv):
 
   lkl_grp.attrs["camspec_beam_mcmc_num"] = pars.int(default=1).camspec_beam_mcmc_num
 
-  lkl_grp.attrs["bs_factor"] = pars.float(default=2.7).bs_factor
+  lkl_grp.attrs["bs_factor"] = pars.float(default=1).bs_factor
 
+  lkl_grp.attrs["sz_prior"] = pars.float(default=1).sz_prior
+  
   nuisance_pars_v2 = ["aps100",  "aps143",  "aps217",  "acib143",  "acib217",  
                    "asz143",  "psr",  "cibr",  "ncib143",  "ncib",  "cibrun",  
                    "xi",  "aksz",  "wig1_143",  "wig1_217",  "wig1_r",  

@@ -42,7 +42,7 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
   char *xnames_tot[300];
   char *nuisance;
   double bs_factor;
-  int camspec_beam_mcmc_num, xdim,i;
+  int camspec_beam_mcmc_num, xdim,i,sz_prior;
 
   pre_marged = 1;
 
@@ -150,13 +150,20 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
     l_camspec_fiducial_cl = _set_str(camspec_fiducial_cl,"camspec_fiducial_cl",_flen_);
   }
   
+  sz_prior = 0;
+  hk = cldf_haskey(df,"sz_prior",err); 
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    sz_prior = cldf_readint(df,"sz_prior",err);
+    forwardError(*err,__LINE__,NULL);    
+  }
   // call the init fortran code here  
   //_DEBUGHERE_("%d",xdim);
   camspec_extra_init_v3_(&pre_marged,like_file,&l_like_file,sz143_file,&l_sz143_file,tszxcib_file,&l_tszxcib_file,ksz_file,&l_ksz_file,
                          beam_file,&l_beam_file,data_vector,&l_data_vector,&l_cib217_file,cib217_file,&l_dust100_file,dust100_file,
                          &l_dust143_file,dust143_file,&l_dust217_file,dust217_file,&l_dust143x217_file,dust143x217_file,
                          camspec_fiducial_foregrounds,&l_camspec_fiducial_foregrounds,camspec_fiducial_cl,&l_camspec_fiducial_cl,lmins,lmaxs,
-                         spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,&bs_factor);
+                         spec_flag,&camspec_beam_mcmc_num,&xdim,&(ell[0]),&(ell[nell-1]),has_cl,&bs_factor,&sz_prior);
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
@@ -462,6 +469,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   bs_factor = cldf_readfloat_default(df,"bs_factor",1,err);
   forwardError(*err,__LINE__,NULL);
   
+
   camspec_extra_init_(&Nspec, &nX,lminX,lmaxX,np,npt,c_inv,X,&lmax_sz, tsz,ksz,tszXcib,&beam_Nspec,&num_modes_per_beam,&beam_lmax,&cov_dim,beam_cov_inv,beam_modes,&has_dust,&has_calib_prior,marge_flag,marge_mode,&marge_num,&keep_num,&bs_factor);    
   
   //camspec_extra_getcase_(&xcase);
