@@ -624,7 +624,7 @@
 
     if (camspec_has_TT) call compute_fg(C_foregrounds,freq_params, 0)
 
-    calPlanck = freq_params(28) !Total calibration that scales everything
+    calPlanck = freq_params(28)**2 !Total calibration that scales everything
     cal0 = freq_params(29)*calPlanck
     cal1 = freq_params(30)*calPlanck
     cal2 = freq_params(31)*calPlanck
