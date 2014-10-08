@@ -7,6 +7,14 @@ import clik.parobject as php
 import clik
 import os.path as osp
 
+def main(argv):
+  pars = clik.miniparse(argv[1])
+  if "version" in pars:
+    if pars.str.version.lower()=="gauss":
+      main_v2(argv)
+      return
+  main_v1(argv)
+
 def main_v1(argv):
   pars = clik.miniparse(argv[1])
   #test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/v2a1s_best_lcdm_6000.txt"))
