@@ -242,7 +242,12 @@ def main_v2(argv):
     lkl_grp.attrs["data_vector_flag"] = 1
     shutil.copy(pars.data_vector.strip(),dr+"/data_vector")
   if "camspec_fiducial_cl" in pars:
-    shutil.copy(pars.camspec_fiducial_cl.strip(),dr+"/camspec_fiducial_cl")
+    ext=""
+    lkl_grp.attrs["minimum.theory_cl"] = 0
+    if "minimum.theory_cl" in pars.camspec_fiducial_cl.strip():
+      ext = ".minimum.theory_cl"
+      lkl_grp.attrs["minimum.theory_cl"] = 1
+    shutil.copy(pars.camspec_fiducial_cl.strip(),dr+"/camspec_fiducial_cl"+ext)
     shutil.copy(pars.camspec_fiducial_foregrounds.strip(),dr+"/camspec_fiducial_foregrounds")
   if version == 3:
     if "cib217_file" in pars:  
