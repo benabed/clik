@@ -155,7 +155,7 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
       hs = cldf_readint(df,"minimum.theory_cl",err);
       forwardError(*err,__LINE__,NULL);
       if (hs==1) {
-        l_camspec_fiducial_cl = _set_str(camspec_fiducial_cl,"camspec_fiducial_clminimum.theory_cl",_flen_);    
+        l_camspec_fiducial_cl = _set_str(camspec_fiducial_cl,"camspec_fiducial_cl.minimum.theory_cl",_flen_);    
       }
     }    
   }
