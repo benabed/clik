@@ -885,6 +885,7 @@ void gal545_compute(parametric *egl, double *Rq, error **err) {
       }
     }
   }
+
   nrm = (h * pow(l_pivot,k) * exp(-l_pivot/t) + 1) * 200*201/2./M_PI;
 
   for (ell=egl->lmin;ell<=egl->lmax;ell++) {
@@ -1115,6 +1116,17 @@ void t1gal_compute(parametric* egl, double *Rq, error **err) {
       Rq[IDX_R(egl,ell,m1,m2)] = A[m1*nfreq+m2] * cl[mell];
       Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }
+    }
+  }
+  for(m1=0;m1<egl->nfreq;m1++) {
+    if (AA[m1*nfreq+m1]==0) {
+      continue;
+    }
+    for(m2=m1+1;m2<egl->nfreq;m2++) {
+    if (AA[m2*nfreq+m2]==0) {
+      continue;
+    }
+    testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
     }
   }
 
