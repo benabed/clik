@@ -90,7 +90,7 @@
     integer i, dummy, thelmax
     real(campc) :: renorm
 
-    print *,'reading ', fname, ' in readnorm'
+    !print *,'reading ', fname, ' in readnorm'
 
     if(thelmax < CamSpec_sz_pivot) stop 'CAMspec_ReadNorm: lmax too low'
 
@@ -111,7 +111,7 @@
     integer i, dummy, readlmax
     integer, optional :: thelength
 
-    print *,'reading ', fname, ' in read'
+    !print *,'reading ', fname, ' in read'
 
     if(present(thelength)) then
         readlmax=min(thelength,lmax_sz)
@@ -125,9 +125,9 @@
         if (dummy/=i) stop 'CAMspec_Read: inconsistency in file read'
     enddo
     close(48)
-    do i=100,readlmax,100
-        print *, i, templt(i)
-    enddo
+    !do i=100,readlmax,100
+    !    print *, i, templt(i)
+    !enddo
     end subroutine CAMspec_Read
 
     subroutine ReadFiducialCl(fid_cl)
@@ -205,6 +205,7 @@
     allocate(npt(Nspec))
 
     read(48) (lminX(i), lmaxX(i), np(i), npt(i), i = 1, Nspec)
+    
     if (pre_marged) then
         print *,'Using pre-beam-marged covariance; L ranges etc ignored'
         allocate(X_data(nX))
@@ -608,6 +609,7 @@
     integer :: ie1,ie2,if1,if2, ix
     integer num_non_beam
     
+    
     if (.not. allocated(lminX)) then
         print*, 'like_init should have been called before attempting to call calc_like.'
         stop
@@ -650,7 +652,8 @@
         else
             beam_coeffs=0
         end if
-
+        
+        
         do l = lminX(1), lmaxX(1)
             X_beam_corr_model(l-lminX(1)+1) = ( cell_cmb(l) + C_foregrounds(l,1) )* corrected_beam(1,l)/cal0
         end do
@@ -680,6 +683,17 @@
         end do
     endif
 
+    open(unit=110,file="data.cl")
+    write(110,*) X_data
+    close(110)
+    open(unit=111,file="theo.cl")
+    write(111,*) X_beam_corr_model
+    close(111)
+
+    open(unit=112,file="icov.dat",form="unformatted",status="unknown")
+    write(112) ((c_inv(ii, jj), jj = 1, nX), ii = 1,  nX)
+    close(112)
+
     Y = X_data - X_beam_corr_model
 
     zlike = 0
@@ -708,6 +722,7 @@
         enddo
     end if
 
+    
     if(apply_tight_sz_prior) then
         !       asz143 = freq_params(6)
         !       A_ksz = freq_params(13)

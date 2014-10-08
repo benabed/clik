@@ -356,7 +356,8 @@ SUBROUTINE CAMSPEC_EXTRA_LKL_V3(LKL,CL)
             ! camspec expects cl/2pi !!! argl !
             !cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
             cltt(l)=CL(l-clik_lmin)/2./3.141592653589793
-        ENDDO
+            !print *,l,cltt(l),CL(l-clik_lmin)
+        ENDDo
         offset = (clik_lmax+1-clik_lmin)
     endif
 
