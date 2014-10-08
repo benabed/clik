@@ -174,6 +174,7 @@ def main_v2(argv):
   lkl_grp.attrs["camspec_version"] = version
 
   if "pre_marged" in pars:
+    print pars.int.pre_marged
     lkl_grp.attrs["pre_marged"] = pars.int.pre_marged
 
   if "spec_flag" in pars:
@@ -221,7 +222,6 @@ def main_v2(argv):
   else:
     nuisance_pars = nuisance_pars_v3
 
-
   lkl_grp.attrs["n_nuisance"] = len(nuisance_pars)
   lkl_grp.attrs["nuisance"] = php.pack256(*nuisance_pars)
 
@@ -246,8 +246,10 @@ def main_v2(argv):
     shutil.copy(pars.camspec_fiducial_foregrounds.strip(),dr+"/camspec_fiducial_foregrounds")
   if version == 3:
     if "cib217_file" in pars:  
-      shutil.copy(pars.cib217_file.strip(),dr+"/cib217_file")
-    if "dust217" in pars:        
+      shutil.copy(pars.cib217_file.strip(),dr+"/cib_file")
+      lkl_grp.attrs["cib_consistency_flag"] = 1
+    if "dust217_file" in pars:
+      lkl_grp.attrs["dust_flag"] = 1
       shutil.copy(pars.dust217_file.strip(),dr+"/dust217_file")
       shutil.copy(pars.dust143_file.strip(),dr+"/dust143_file")
       shutil.copy(pars.dust143x217_file.strip(),dr+"/dust143x217_file")

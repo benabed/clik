@@ -5,6 +5,9 @@
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}
 #define _testErrorRetVA(A,B,C,D,E,F,...) if(_err!=NULL) {testErrorRetVA(A,B,C,D,E,F,__VA_ARGS__);} else {testErrorExitVA(A,B,C,D,E,__VA_ARGS__);}
 
+void* dataset_init(int n_data, double *data, int n_input, double* bin, double* siginv, error **err );
+double dataset_lkl(void *vds, double* pars,error **err);
+
 int find_in_file(FILE* f, char *what, error **err) {
   char *buf;
   int i,cnt,l,j;
@@ -99,21 +102,24 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
     int hk;
     plid->type = cldf_readint(df,"clik_lensing/itype",err);
     forwardError(*err,__LINE__,NULL);
-    int sz=-1;
-    rpath = cldf_readstr(df,"clik_lensing/filename",&sz,err);
-    forwardError(*err,__LINE__,NULL);
-    sprintf(buf,"%s/clik_lensing/%s",fpath,rpath);
-    npath = buf;
-    plid->renorm = cldf_readint(df,"clik_lensing/renorm",err);
-    forwardError(*err,__LINE__,NULL);
-    plid->ren1 = cldf_readint_default(df,"clik_lensing/ren1",1,err);
-    forwardError(*err,__LINE__,NULL);
-    hk = cldf_haskey(df,"clik_lensing/check",err);
-    forwardError(*err,__LINE__,NULL);
-    if (hk==1) {
-      plid->check = cldf_readfloat(df,"clik_lensing/check",err);
+
+    if (plid->type!=4) {
+      int sz=-1;
+      rpath = cldf_readstr(df,"clik_lensing/filename",&sz,err);
       forwardError(*err,__LINE__,NULL);
-      plid->has_check = 1;
+      sprintf(buf,"%s/clik_lensing/%s",fpath,rpath);
+      npath = buf;
+      plid->renorm = cldf_readint(df,"clik_lensing/renorm",err);
+      forwardError(*err,__LINE__,NULL);
+      plid->ren1 = cldf_readint_default(df,"clik_lensing/ren1",1,err);
+      forwardError(*err,__LINE__,NULL);
+      hk = cldf_haskey(df,"clik_lensing/check",err);
+      forwardError(*err,__LINE__,NULL);
+      if (hk==1) {
+        plid->check = cldf_readfloat(df,"clik_lensing/check",err);
+        forwardError(*err,__LINE__,NULL);
+        plid->has_check = 1;
+      }
     }
   }
     
@@ -148,6 +154,43 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
     plid->lmax[4] = plid->lmax[1];
   }
 
+  if (plid->type==4) {
+    int n_data;
+    double *data;
+    int n_input;
+    double *bin;
+    double *siginv;
+    int sz;
+
+    n_data = cldf_readint(df,"clik_lensing/n_data",err);
+    forwardError(*err,__LINE__,NULL);
+    n_input = cldf_readint(df,"clik_lensing/n_input",err);
+    forwardError(*err,__LINE__,NULL);
+    
+    sz = n_data;
+    data = cldf_readfloatarray(df,"clik_lensing/data",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    sz = n_data*n_input;
+    bin = cldf_readfloatarray(df,"clik_lensing/bin",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    sz = n_data*n_data;
+    siginv = cldf_readfloatarray(df,"clik_lensing/siginv",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    plid->plens_payload = dataset_init(n_data, data, n_input, bin, siginv, err );
+    forwardError(*err,__LINE__,NULL);
+    
+    plid->lmax[0] = cldf_readint(df,"clik_lensing/lmaxphi",err);
+    forwardError(*err,__LINE__,NULL);
+    plid->lmax[1] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
+    forwardError(*err,__LINE__,NULL);
+    plid->lmax[2] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
+    forwardError(*err,__LINE__,NULL);
+    plid->lmax[4] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
+    forwardError(*err,__LINE__,NULL);
+  }
 
   return plid;
 }
@@ -221,7 +264,13 @@ double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_er
       }
     }
   }
-
+  if (lclik->type==4) {
+    void *pqecl;
+    pqecl = lclik->plens_payload;
+    lkl = dataset_lkl(pqecl,pars,err);
+    forwardError(*err,__LINE__,0);
+  }
+  
   return lkl;
 }
 

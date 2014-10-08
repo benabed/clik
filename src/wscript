@@ -3,7 +3,7 @@ import os.path as osp
 
 def build(bld):
   
-  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c clik_plik.c'.split()
+  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c clik_datasetlkl.c clik_plik.c'.split()
   source_clik += 'smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c'.split()*bool(bld.env.has_plik)
   source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
   source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
