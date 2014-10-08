@@ -1118,17 +1118,6 @@ void t1gal_compute(parametric* egl, double *Rq, error **err) {
       }
     }
   }
-  for(m1=0;m1<egl->nfreq;m1++) {
-    if (AA[m1*nfreq+m1]==0) {
-      continue;
-    }
-    for(m2=m1+1;m2<egl->nfreq;m2++) {
-    if (AA[m2*nfreq+m2]==0) {
-      continue;
-    }
-    testErrorRetVA(AA[m1*nfreq+m2]>sqrt(AA[m1*nfreq+m1] * AA[m2*nfreq+m2]),-130,"invalid dust amplitude (%d %d)",*err,__LINE__,,m1,m2)
-    }
-  }
 
   return;
 
