@@ -167,9 +167,16 @@ double * lklbs_get_cls(lklbs *self,int ilkl, double *pars, error **err) {
   llkl = self->lkls[ilkl];
   calib = 1;
   if (llkl->free_calib_id !=-1) {
-    calib = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->free_calib_id]];
+    double ical;
+    ical = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->free_calib_id]];
     // calib is on map. I.e. its square divides the cl_theo
-    calib = 1./(calib*calib);
+    calib = 1./(ical*ical);
+  }
+  if (llkl->self_calib_id !=-1) {
+    double ical;
+    ical = pars[self->ndim+self->rx[self->ofx[ilkl]+llkl->self_calib_id]];
+    // calib is on map. I.e. its square divides the cl_theo
+    calib = 1./(ical*ical);
   }
   cls = cmblkl_select_cls(llkl,self,calib);
   //_DEBUGHERE_("ilkl %d xdim %d ndim %d nbins %d",ilkl,llkl->xdim,llkl->ndim,llkl->nbins);
@@ -291,7 +298,7 @@ double* cmblkl_select_cls(cmblkl *llkl,lklbs* self,double calib) {
   xdim = llkl->xdim;
   ell = llkl->ell;
   
-  if (ndim == self->tot_cl && llkl->wl==NULL && xdim==0 && llkl->unit==1 && llkl->free_calib_id==-1) {
+  if (ndim == self->tot_cl && llkl->wl==NULL && xdim==0 && llkl->unit==1 && llkl->free_calib_id==-1 && llkl->self_calib_id==-1) {
     cls = self->cl_theo; 
   } else {
     cls = self->cl_select; 
@@ -475,6 +482,7 @@ cmblkl *init_cmblkl(void* lkl_data, posterior_log_pdf_func* lkl_func,
   self->version[0] = '\0';
 
   self->free_calib_id = -1;
+  self->self_calib_id = -1;
   return self;
 }
   

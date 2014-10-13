@@ -390,6 +390,43 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
 
   }
 
+  hk = cldf_haskey(df,"self_calib",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    char *free_cal_name;
+    char **xnames;
+    parname *xnames_buf;
+    int xdim;
+
+    free_cal_name = cldf_readstr(df,"self_calib",NULL,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    xdim = clkl->xdim;
+    xdim +=1;
+
+    xnames = malloc_err(sizeof(char*)*xdim,err);
+    forwardError(*err,__LINE__,NULL);
+  
+    xnames_buf = malloc_err(sizeof(parname)*xdim,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    for(i=0;i<xdim-1;i++) {
+      sprintf(xnames_buf[i],"%s",clkl->xnames[i]);
+      xnames[i] = (char*) &(xnames_buf[i]);
+    }
+    xnames[xdim-1] = free_cal_name;
+
+    clkl->xdim = xdim;
+    cmblkl_set_names(clkl, xnames,err);
+    forwardError(*err,__LINE__,NULL);
+
+    free(xnames);
+    free(xnames_buf);
+    free(free_cal_name);
+    clkl->self_calib_id = clkl->xdim-1;
+
+  }
+
   // cleanups
   if(wl!=NULL) {
     free(wl);    

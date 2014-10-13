@@ -105,7 +105,7 @@ def build(ctx):
   
   # python execs
 
-  execlist = ["clik_add_free_calib","clik_add_free_calib_PLANCK",
+  execlist = ["clik_add_free_calib","clik_add_free_calib_PLANCK","clik_add_free_calib_PLANCK_self",
               "clik_hdf2cldf",
               "prepare_gibbs",
               "prepare_comm_lowl",

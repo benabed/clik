@@ -235,6 +235,8 @@ def add_prior(root_grp,name,loc,var):
 
 def add_free_calib(root_grp,name):
   root_grp.attrs["free_calib"] = name
+def add_self_calib(root_grp,name):
+  root_grp.attrs["self_calib"] = name
   
 def add_default(root_grp,name,loc,extn=None):
 

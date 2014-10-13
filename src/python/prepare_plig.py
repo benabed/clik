@@ -496,6 +496,8 @@ def main(argv):
 
   if "tot_calib" in pars:
     smh.add_totcal_component(lkl_grp,pars.tot_calib)
+  if "self_calib" in pars:
+    smh.add_totcal_component(lkl_grp,pars.self_calib)
     
   # Some noise ?
   if "rq_noise" in pars:

@@ -49,6 +49,7 @@ typedef struct {
   extraname *xnames;
   char version[100];
   int free_calib_id;
+  int self_calib_id;
   } cmblkl;
 
 typedef struct {
