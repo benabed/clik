@@ -455,7 +455,7 @@ def main(argv):
 
   if "beam" in pars and pars.beam.strip():
     print "add beam eigenmodes",
-    if pars.bool(default=False).beam_dot_ortho:
+    if pars.bool(default=True).beam_dot_ortho:
       print "and ensure orthogonality",
     print ""
     names = ["beam_"+v for v in pars.str_array.beam]
