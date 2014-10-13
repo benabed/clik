@@ -650,7 +650,8 @@ contains
        iu = il +3*(2*l +1)-1
        evec(:,il:iu) = fevec(l)%m
     end do
-    allocate(S,source=evec)
+    !!!allocate(S,source=evec)
+    allocate(S(lbound(evec,1):ubound(evec,1), lbound(evec,2):ubound(evec,2)), source=evec)
 
     auxdt = dt
     call dposv('L',ntot,ndata,NCVM,ntot,auxdt,ntot,info)
@@ -667,7 +668,9 @@ contains
     deallocate(dt)  ;allocate(dt(neigen,ndata))
     call dgemm('T','N', neigen, ndata, ntot, 1.d0, evec, &
          ntot, auxdt, ntot, 0.d0, dt, neigen)
-    deallocate(auxdt) ;allocate(auxdt,source = dt)
+    !deallocate(auxdt) ;allocate(auxdt,source = dt)
+    deallocate(auxdt)
+    allocate(auxdt(lbound(dt,1):ubound(dt,1), lbound(dt,2):ubound(dt,2)), source=dt)
 
     call dpotrs('L',ntot,neigen,NCVM,ntot,evec,ntot,info)
     write(*,*) 'info = ',info
@@ -886,7 +889,9 @@ contains
        clstmp(l,smwTE) = 1._dp
        call get_xx_cov(clstmp,l,l,Z,project_mondip=.false.,symmetrize=.true.)
 
-       allocate(evec,source=fevec(l)%m)
+       !allocate(evec,source=fevec(l)%m)
+       allocate(evec(lbound(fevec(l)%m,1):ubound(fevec(l)%m,1), lbound(fevec(l)%m,2):ubound(fevec(l)%m,2)) &
+        , source=fevec(l)%m)
        blocks(l)%m = 0._dp
        call dgemm('N','N', ntot, 2*(2*l+1), ntot, 1.d0, Z, ntot,&
             fevec(l)%m(:,1:2*(2*l+1)), ntot, 0.d0, evec ,ntot)
@@ -1289,7 +1294,7 @@ contains
     end do
     call cpu_time(t2)
 
-    print*,'build matrix in :',t2-t1
+    !print*,'build matrix in :',t2-t1
     logdet = sum(tmplog(2:lswitch))
     
     do l=2,lswitch
@@ -1307,7 +1312,7 @@ contains
     auxdt = dt
     call dposv('L',neigen,ndata,S,neigen,auxdt,neigen,info)
     call cpu_time(t2)
-    print*,'dposv in :',t2-t1
+    !print*,'dposv in :',t2-t1
 
 !    cholesky: X*(C^-1*X)
     if (info.eq.0) then
