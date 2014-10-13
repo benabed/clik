@@ -459,8 +459,7 @@ def main(argv):
       print "and ensure orthogonality",
     print ""
     names = ["beam_"+v for v in pars.str_array.beam]
-    m = nT*has_cl[0]+nP*has_cl[1]+nP*has_c
-    l[2]
+    m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
     bdir = pars.str.beam_dot_path.strip()
     modes = pars.str_array.beam_dot_modes
     neigen = pars.int(default=10).beam_dot_neigen
@@ -472,11 +471,21 @@ def main(argv):
           rmodes +=[modes[(i%nT)*nT+(j%nT)]]
       modes = rmodes
     tmodes = nm.zeros((nq,m,m,neigen))
+    if "beam.lmax_beam" in pars:
+      lMb = pars.float_array.beam_dot_lmax_beam
+      lMb.shape = (m,m)
+    else:
+      lMb = nm.ones((m,m))*(lmax)
+    if "beam.lmin_beam" in pars:
+      lmb = pars.float_array.beam_dot_lmin_beam
+      lmb.shape = (m,m)
+    else:
+      lmb = nm.ones((m,m))*(lmin)
     for i in range(m):
       for j in range(i,m):
         lmo = nm.loadtxt(osp.join(bdir,modes[i*m+j]))
         lmo.shape=(10,-1)
-        bmo = nm.array([nm.dot(bins[:nq,:lmax+1-lmin],lmo[t,lmin:lmax+1]) for t in range(10)])
+        bmo = nm.array([nm.dot(bins[:nq,:lmax+1-lmin],lmo[t,lmin:lmax+1]*nm.where(nm.arange(lmin,lmax+1)<lMb[i,j]+1,1.,0.)*nm.where(nm.arange(lmin,lmax+1)>lmb[i,j]-1,1.,0.)) for t in range(10)])
         if pars.bool(default=False).beam_dot_ortho:
           a,b,c = nm.linalg.svd(bmo,False)
           bmo = b[:,nm.newaxis]*c
