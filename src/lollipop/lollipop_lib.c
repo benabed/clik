@@ -4,39 +4,87 @@
 
 
 
-
 /* Init routine               */
 /* fill the structure dataset */
-int Lollipop_Init( char *InFileName, int Lmin, int Lmax, int dl, dataset *data)
+int Lollipop_Init( char *DataFile, char *FiducialFile, int Lmin, int Lmax, dataset *data)
 {
-  int nel, n;
+  int nel, n, i, j;
   double *l, *cl, *na, *nb;
-  double var1, var2, var3, var4;
+  double var1, var2, var_l, var_tt, var_ee, var_bb, var_te;
   FILE *fp=NULL;
 
-  nel = (Lmax-Lmin+1)/dl;
+  nel = (Lmax-Lmin+1);
 
-  fp = fopen( InFileName, "r");
+  //read data file
+  fp = fopen( DataFile, "r");
   if( fp == NULL) {
-    printf( "File not found : %s\n", InFileName);
+    printf( "File not found : %s\n", DataFile);
     return( -1);
   }
 
   n=0;
-  while( fscanf(fp,"%lf  %lf  %lf  %lf", &var1, &var2, &var3, &var4) == 4){
-    if( var1 < Lmin ||var1 > Lmax) continue;
-    data[n/dl].l  += var1/dl;
-    data[n/dl].cl += var2/dl;
-    data[n/dl].na += var3/dl;
-    data[n/dl].nb += var4/dl;
+  while( fscanf(fp,"%lf  %lf  %lf", &var_l, &var1, &var2) == 3){
+    if( var_l < Lmin ||var_l > Lmax) continue;
+    data[n].cldata = var1;
+    data[n].offset = var2;
     n++;
   }
   fclose( fp);
+  if( n != nel) {
+    printf( "Wrong number of l in datafile (%d)\n", n);
+    exit(-1);
+  }
 
-  printf( "n=%d\n", n);
+  //read fiducial file
+  fp = fopen( FiducialFile, "r");
+  if( fp == NULL) {
+    printf( "File not found : %s\n", FiducialFile);
+    return( -1);
+  }
 
-  for( n=0; n<nel; n++)
-    printf( "%f %e %e %e\n", data[n].l, data[n].cl, data[n].na, data[n].nb);
+  n=0;
+  while( fscanf(fp,"%lf  %lf  %lf  %lf  %lf", &var_l, &var_tt, &var_ee, &var_bb, &var_te) == 5){
+    if( var_l < Lmin ||var_l > Lmax) continue;
+    data[n].fiducial = var_ee;
+    n++;
+  }
+  fclose( fp);
+  if( n != nel) {
+    printf( "Wrong number of l in fiducialfile (%d)\n", n);
+    exit(-1);
+  }
+
+
+/*   for( n=0; n<nel; n++) */
+/*     printf( "%d %lf %lf %lf\n", Lmin+n, data[n].cldata, data[n].offset, data[n].fiducial); */
+
+
+  return( 0);
+}
+
+
+/* Init routine     */
+/* fill the cov mat */
+int Lollipop_Cov( char *CovFile, int nel, double *invcov)
+{
+  int i, j;
+  FILE *fp=NULL;
+
+  fp = fopen( CovFile, "r");
+  if( fp == NULL) {
+    printf( "File not found : %s\n", CovFile);
+    return( -1);
+  }
+
+  for(i = 0; i < nel; i++) {
+    for(j = 0; j < nel; j++) {
+      if (!fscanf(fp, "%lf", &invcov[i*nel+j])) break;
+/*       printf("%lf\t", invcov[i*nel+j]); */
+    }
+/*     printf( "\n"); fflush(stdout); */
+
+  }
+  fclose( fp);
 
   return( 0);
 }
@@ -46,38 +94,37 @@ int Lollipop_Init( char *InFileName, int Lmin, int Lmax, int dl, dataset *data)
 /* Compute Likelihood                                    */
 /* for a given dataset and cls (in muK2) return the -lnL */
 double Lollipop_computeLikelihood(const unsigned int *l,
-          double *cltt,
-          double *clte,
-          double *clee,
-          double *clbb,
-          dataset *data, 
-          int Lmin, int Lmax, double fsky, int dl)
+				  double *cltt,
+				  double *clte,
+				  double *clee,
+				  double *clbb,
+				  dataset *data, 
+				  double *invcov,
+				  int Lmin, int Lmax)
 //cl in muK2
 {
-  int i, j, b, nel;
-  double bin, model;
-
+  int nel, i, c=0;
   double lnL=0;
+  double *model=NULL;
 
-  nel = (Lmax-Lmin+1)/dl;
-  //Likelihood EE
-  for( i=0; i<Lmax; i+=dl) {
-    bin = 0.;
-    model = 0.;
-      
+  nel = Lmax-Lmin+1;
+
+  model = (double *) malloc( nel*sizeof(double));
+  if( model == NULL) exit(0);
+
+  for( i=0; i<=Lmax; i++) {
     if( l[i] < Lmin || l[i] > Lmax) continue;
-    
-    for( j=i; j<i+dl; j++) {
-      bin   += (double)(l[j])/dl;
-      model += clee[j]/dl;
-    }
-    
-    for( b=0; b<nel; b++) {
-      if( data[b].l == bin)
-  lnL += log( Lollipop_EdgeWorthSeries( dl, fsky, model, data[b]));
-      
-    }
+    model[c] = clee[i];
+/*     printf( "%d l=%d : %lf\n", c, l[i], clee[i]); */
+    c++;
   }
+  if( c != nel) exit(-1);
+
+  //Likelihood EE
+  lnL = Lollipop_oHL( nel, model, data, invcov);
+
+  //free
+  free( model);
 
   //return -ln(L)
   return( -lnL);
@@ -88,40 +135,47 @@ double Lollipop_computeLikelihood(const unsigned int *l,
 
 
 
-double Lollipop_EdgeWorthSeries( int dl, double fsky, double cl0, dataset data)
+double Lollipop_oHL( int nel, double *model, dataset *data, double *invcov)
 {
-  double na = data.na;
-  double nb = data.nb;
+  int i, j, n;
+  double g;
+  double *X=NULL;
 
-  //get cumulants
-  double K1 = cl0;
-  double K2 =     ( 2.*cl0*cl0 +  2.*cl0*(na+nb) + 1.2*na*nb) / ((2.*data.l+1)*fsky*(double)(dl));
-  double K3 = cl0*( 8.*cl0*cl0 + 15.*cl0*(na+nb) + 6.0*na*nb) / ((2.*data.l+1)*(2*data.l+1)*fsky*fsky*fsky*(double)(dl*dl));
-/*   printf( "%e %e %e   fsky=%e  dl=%d\t", K1, K2, K3, fsky, dl); */
+  //alloc
+  X = (double *) calloc( nel, sizeof(double));
+  if( X == NULL) {
+    printf( "LOLLIPOP: Allocation failed\n");
+    exit( -1);
+  }
 
-  K3 /= sqrt(K2)*sqrt(K2)*sqrt(K2);
-
-  //write Edgeworth Serie Expansion
-  double y = (data.cl - K1) / sqrt(K2);
-  double g = 1./sqrt( 2.*M_PI*K2) * exp( -0.5*y*y );
-//   printf( "y=%e g=%e \t", y, g);
+  //change variable
+  for( i=0; i<nel; i++) {
+    if( (data[i].cldata+data[i].offset) > 0.) {
+      g = Lollipop_ghl( (data[i].cldata+data[i].offset) / (model[i]+data[i].offset));
+      
+      X[i] = sqrt(data[i].fiducial+data[i].offset) * g * sqrt(data[i].fiducial+data[i].offset);
+    }
+  }
   
-  double f = g * ( 1. + K3/6. * Lollipop_H3(y));
+  //compute chi2
+  double f = 0.;
+  for( i=0; i<nel; i++)
+    for( j=0; j<nel; j++)
+      f += X[i] * invcov[i*nel+j] * X[j];
 
-  if( f < 0) f = 1e-3;
-
-//   printf( "L[%f]=%e\n", data.l, f);
-
+  //free
+  free( X);
+  
   return(f);
 
 }
 
-double Lollipop_H2( double y)
+
+double Lollipop_ghl( double x)
 {
-  return( y*y-1.);
+  
+  return( sqrt( 2*(x-log(x)-1)));
+
 }
 
-double Lollipop_H3( double y)
-{
-  return( y*y*y - 3.*y);
-}
+

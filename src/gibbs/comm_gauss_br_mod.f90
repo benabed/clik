@@ -11,7 +11,7 @@ module comm_gauss_br_mod
   ! *                                                                   *
   ! *  - H. K. Eriksen et al. 2008, ApJ, 676, 10  (Commander)           *
   ! *  - M. Chu et al. 2005, Phys. Rev. D, 71, 103002 (Blackwell-Rao)   *
-  ! *  - OE. Rudjord et al. 2009, 2009, ApJ, 692, 1669 (Gauss BR)       *
+  ! *  - Ø. Rudjord et al. 2009, 2009, ApJ, 692, 1669 (Gauss BR)        *
   ! *                                                                   *
   ! *********************************************************************
 
@@ -52,13 +52,14 @@ module comm_gauss_br_mod
 
   type comm_gauss_br_data
      integer(i4b) :: lmin, lmax, nbin
+     real(dp)     :: offset
      real(dp), allocatable, dimension(:)     :: mu
      real(dp), allocatable, dimension(:,:)   :: cov, prior
      real(dp), allocatable, dimension(:,:,:) :: cl2x
   end type comm_gauss_br_data
 
-  integer(i4b),             parameter          :: N_gauss = 100
-  type(comm_gauss_br_data), dimension(N_gauss) :: comm_gauss_br
+  integer(i4b),             parameter,         private :: N_gauss = 100
+  type(comm_gauss_br_data), dimension(N_gauss)         :: comm_gauss_br
 
 contains
 
@@ -70,7 +71,8 @@ contains
     character(len=*),  intent(in)  :: gaussfile
     integer(i4b),      intent(out), optional :: handle
     
-    integer(i4b)       :: i, j, l, id, info
+    integer(i4b)       :: i, j, l, pos(1), id, info
+    real(dp)           :: cl
     
     id = 1
     if (present(handle)) then
@@ -129,6 +131,16 @@ contains
        end do
     end do
 
+    ! Compute offset for "chisq"-like normalization
+    comm_gauss_br(id)%offset = 0.d0
+    do l = comm_gauss_br(id)%lmin, comm_gauss_br(id)%lmax
+       pos = minloc(abs(comm_gauss_br(id)%cl2x(:,l,2)))
+       cl  = comm_gauss_br(id)%cl2x(pos(1),l,1)
+       comm_gauss_br(id)%offset = comm_gauss_br(id)%offset + &
+            & log(splint_deriv_gauss_br(comm_gauss_br(id)%cl2x(:,l,1), &
+            & comm_gauss_br(id)%cl2x(:,l,2), comm_gauss_br(id)%cl2x(:,l,3), cl))
+    end do
+    
   end subroutine comm_gauss_br_initialize_object
 
   subroutine comm_gauss_br_deallocate_object(handle)
@@ -145,10 +157,10 @@ contains
     end if
 
     do i = id_min, id_max
-       if (allocated(comm_gauss_br(i)%mu))     deallocate(comm_gauss_br(i)%mu)
-       if (allocated(comm_gauss_br(i)%cov))    deallocate(comm_gauss_br(i)%cov)
-       if (allocated(comm_gauss_br(i)%cl2x))   deallocate(comm_gauss_br(i)%cl2x)
-       if (allocated(comm_gauss_br(i)%prior))  deallocate(comm_gauss_br(i)%prior)
+       if (allocated(comm_gauss_br(i)%mu))    deallocate(comm_gauss_br(i)%mu)
+       if (allocated(comm_gauss_br(i)%cov))   deallocate(comm_gauss_br(i)%cov)
+       if (allocated(comm_gauss_br(i)%cl2x))  deallocate(comm_gauss_br(i)%cl2x)
+       if (allocated(comm_gauss_br(i)%prior)) deallocate(comm_gauss_br(i)%prior)
        comm_gauss_br(i)%lmin        = -1
        comm_gauss_br(i)%lmax        = -1
     end do
@@ -211,7 +223,7 @@ contains
        end if
     end do
 
-    comm_gauss_br_compute_lnL = lnL 
+    comm_gauss_br_compute_lnL = lnL - comm_gauss_br(id)%offset
 
   end function comm_gauss_br_compute_lnL
 

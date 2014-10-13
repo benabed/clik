@@ -4,12 +4,12 @@
 
 typedef struct {
   dataset* data;
-  int dl,nel,lmin,lmax;
-  double fsky;
+  int lmin,lmax;
   unsigned int *ell;
   double *cltt;
   double *cls[6];
   int has_cl[6];
+  double *invcov;
 } lollipop_payload;
 
 void free_clik_lollipop(void **plol) {
@@ -39,7 +39,7 @@ double clik_lollipop_lkl(void* vlol, double* pars, error **err) {
       tot++;
     }
   }
-  res = Lollipop_computeLikelihood( lol->ell, lol->cls[0], lol->cls[3], lol->cls[1], lol->cls[2], lol->data, lol->lmin, lol->lmax, lol->fsky, lol->dl);
+  res = Lollipop_computeLikelihood( lol->ell, lol->cls[0], lol->cls[3], lol->cls[1], lol->cls[2], lol->data, lol->invcov, lol->lmin, lol->lmax);
   return -res;
 }
 
@@ -49,18 +49,20 @@ cmblkl* clik_lollipop_init(cldf *df, int nell, int* ell, int* has_cl, double uni
   int i,status;
   char directory_name[4096],pwd[4096];
   double *cltt;
+  int hk;
+  int nel;
 
   lol = malloc_err(sizeof(lollipop_payload),err);
   forwardError(*err,__LINE__,NULL);
 
-  lol->dl = cldf_readint(df,"dl",err);
+  hk = cldf_haskey(df,"dl",err);
   forwardError(*err,__LINE__,NULL);
-  lol->nel = cldf_readint(df,"nel",err);
-  forwardError(*err,__LINE__,NULL);
-  lol->fsky = cldf_readfloat(df,"fsky",err);
-  forwardError(*err,__LINE__,NULL);
+  testErrorRet(hk==1,-132,"lollipop v1 not supported anymore",*err, __LINE__,NULL);
+
   lol->lmin = ell[0];
   lol->lmax = ell[nell-1];
+
+  nel = lol->lmax-lol->lmin +1;
 
   for(i=0;i<6;i++) {
     lol->has_cl[i] = has_cl[i];
@@ -81,14 +83,21 @@ cmblkl* clik_lollipop_init(cldf *df, int nell, int* ell, int* has_cl, double uni
     lol->cls[i] = cltt + (lol->lmax+1)*i;
   }
 
-  lol->data = calloc_err( lol->nel, sizeof(dataset),err);
+  lol->data = calloc_err( nel, sizeof(dataset),err);
+  forwardError(*err,__LINE__,NULL);
+  lol->invcov = malloc_err(nel*nel*sizeof(double),err);
+  forwardError(*err,__LINE__,NULL);
 
+  
   cldf_external(df,directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
 
-  status = Lollipop_Init( "lollipop_data.dat", lol->lmin, lol->lmax, lol->dl, lol->data);
+  //Init datasets
+  status = Lollipop_Init( "lollipop_data", "lollipop_fid", lol->lmin, lol->lmax, lol->data);
   testErrorRetVA(status!=0,-324324,"bad status after init (reported %d)",*err,__LINE__,NULL,status);
-
+  status = Lollipop_Cov( "lollipop_invcov", nel, lol->invcov);
+  testErrorRetVA(status!=0,-324324,"bad status after cov init (reported %d)",*err,__LINE__,NULL,status);
+  
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
 
