@@ -683,16 +683,6 @@
         end do
     endif
 
-    open(unit=110,file="data.cl")
-    write(110,*) X_data
-    close(110)
-    open(unit=111,file="theo.cl")
-    write(111,*) X_beam_corr_model
-    close(111)
-
-    open(unit=112,file="icov.dat",form="unformatted",status="unknown")
-    write(112) ((c_inv(ii, jj), jj = 1, nX), ii = 1,  nX)
-    close(112)
 
     Y = X_data - X_beam_corr_model
 
