@@ -76,7 +76,7 @@ def get_dnames(lkl_grp):
   else:
     raise Exception("argl")
 
-def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
+def add_beamTP_component(lkl_grp,names,neigen,modes,p_track_t,position=-1):
   typ = "beamTP"
   im = []
   hascl = lkl_grp.attrs["has_cl"]
@@ -89,35 +89,38 @@ def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
   im = nm.zeros((m,m,neigen),dtype=nm.int)
   bm_names = []
   dnames = get_dnames(lkl_grp)
-  
+  #print p_track_t
   for i,n in enumerate(names):
     if "beam" in n:
       det1,det2,bm = re.findall("beam_(.+)x(.+)_(\d)",n)[0]
+      #print det1,det2,bm
       idx1 = dnames.index(det1)
       idx2 = dnames.index(det2)
+      #print idx1,idx2
       if idx2<idx1:
         idx2,idx1 = idx1,idx2
       bm_names += [n]
+      lbm = len(bm_names)
+      #print lbm
       if idx1<mt and idx2<mt:
         # easy
-        lbm = len(bm_names)
         im[idx1,idx2,bm] = lbm
         im[idx2,idx1,bm] = im[idx1,idx2,bm]
-        if me:
+        if me and p_track_t:
           im[idx2,idx1+mt,bm] = lbm
           im[idx1+mt,idx2,bm] = im[idx2,idx1+mt,bm]
           im[idx1,idx2+mt,bm] = lbm
           im[idx2+mt,idx1,bm] = im[idx1,idx2+mt,bm]
           im[idx1+mt,idx2+mt,bm] = lbm
           im[idx2+mt,idx1+mt,bm] = im[idx1+mt,idx2+mt,bm]
-        if mb:
+        if mb and p_track_t:
           im[idx2,idx1+mt+me,bm] = lbm
           im[idx1+mt+me,idx2,bm] = im[idx2,idx1+mt+me,bm]
           im[idx1,idx2+mt+me,bm] = lbm
           im[idx2+mt+me,idx1,bm] = im[idx1,idx2+mt+me,bm]
           im[idx1+mt+me,idx2+mt+me,bm] = lbm
           im[idx2+mt+me,idx1+mt+me,bm] = im[idx1+mt+me,idx2+mt+me,bm]
-        if me and mb:
+        if me and mb and p_track_t:
           im[idx2+mt,idx1+mt+me,bm] = lbm
           im[idx1+mt+me,idx2+mt,bm] = im[idx2+mt,idx1+mt+me,bm]
           im[idx1+mt,idx2+mt+me,bm] = lbm
@@ -134,7 +137,16 @@ def add_beamTP_component(lkl_grp,names,neigen,modes,position=-1):
           im[idx2,idx1+me,bm] = lbm
           im[idx1+me,idx2,bm] = im[idx2,idx1+me,bm]
       if idx2>=mt and idx1<mt:
-        raise NotImplementedError("not done yet. It's late...")
+        im[idx1,idx2,bm] = lbm
+        im[idx1+mt,idx2-mt,bm] = lbm
+        im[idx2,idx1,bm] = lbm
+        im[idx2-mt,idx1+mt,bm] = lbm
+        if mb:
+          im[idx1,idx2+me,bm] = lbm
+          im[idx1+mt+me,idx2-mt,bm] = lbm
+          im[idx2+me,idx1,bm] = lbm
+          im[idx2-mt,idx1+mt+me,bm] = lbm 
+        #raise NotImplementedError("not done yet. It's late...")
   if len(bm_names):
     agrp = add_component(lkl_grp,typ,position)
     agrp.create_dataset("im",data=nm.array(im.flat[:],dtype=nm.int))

@@ -492,7 +492,7 @@ def main(argv):
         for t in range(neigen):
           tmodes[:,i,j,t] = bmo[t]
           tmodes[:,j,i,t] = tmodes[:,i,j,t]
-    smh.add_beamTP_component(lkl_grp,names,neigen,tmodes)
+    smh.add_beamTP_component(lkl_grp,names,neigen,tmodes,pars.bool(default=False).beam_dot_p_track_t)
 
   if "tot_calib" in pars:
     smh.add_totcal_component(lkl_grp,pars.tot_calib)
