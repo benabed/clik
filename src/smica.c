@@ -339,7 +339,7 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
       }
     }
   }
-  write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+  //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);  
   //write_bin_vector(smic->rq_hat, "rqhat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
   // ici calculer la vraissemblance a partir de rq et rq_hat
   res = smic->crit(smic,err);
