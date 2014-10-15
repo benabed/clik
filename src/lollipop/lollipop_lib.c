@@ -104,7 +104,7 @@ double Lollipop_computeLikelihood(const unsigned int *l,
 //cl in muK2
 {
   int nel, i, c=0;
-  double lnL=0;
+  double chi2=0;
   double *model=NULL;
 
   nel = Lmax-Lmin+1;
@@ -121,13 +121,12 @@ double Lollipop_computeLikelihood(const unsigned int *l,
   if( c != nel) exit(-1);
 
   //Likelihood EE
-  lnL = Lollipop_oHL( nel, model, data, invcov);
+  chi2 = Lollipop_oHL( nel, model, data, invcov);
 
   //free
   free( model);
 
-  //return -ln(L)
-  return( -lnL);
+  return( chi2/2.);
   
 }
 
