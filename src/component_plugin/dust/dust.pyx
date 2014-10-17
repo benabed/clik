@@ -1,5 +1,5 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template
-from clik.parametric import powerlaw_free_emissivity,rename_machine
+from clik.parametric import powerlaw_free_emissivity,rename_machine,rename_replace
 
 cdef extern c_parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -77,7 +77,17 @@ def galf_rename_func(v,rups):
     rups[v]="_".join(rvl)
 
 galf = rename_machine(powerlaw_free_emissivity,{"galf_A_143":"0","galf_A_100":"0","galf_A_100_143":"0","galf_A_100_217":"0","galf_A_100_353":"0","galf_A_353":"0","galf_A_143_353":"0","galf_A_217_353":"0"},galf_rename_func)
+
+def ngpegal_rename_func(v,rups):
+  if v.startswith("t1gal"):
+    rv = v.replace("t1gal","gal545")
+    rvl = rv.split("_")
+    if rvl[-1].isdigit() and not rvl[-2].isdigit():
+      rvl+=[rvl[-1]]
+    rups[v]="_".join(rvl)
+
+ngpegal = rename_machine(t1gal,{"gal545_l_pivot":"200"},rename_replace("t1gal","gal545"),data_file="gpe_dust.dat")
   
 
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545","gal545_80pc"]
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545","gal545_80pc","ngpegal"]
 
