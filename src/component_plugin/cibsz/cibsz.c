@@ -1099,6 +1099,7 @@ parametric *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, cha
   parametric_set_default(egl,"xi_sz_cib",0.0,err);
   forwardError(*err,__LINE__,NULL);
   
+
   return egl;
 }
 
@@ -1157,7 +1158,8 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   double *corr_template;
   double dreq[4];
   double *conv;
-
+  int remove_100;
+  
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
 
@@ -1206,6 +1208,17 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
     fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
   }
   
+  parametric_set_default(egl,"no_szxcib_100",1,err); 
+  forwardError(*err,__LINE__,NULL);
+  
+  remove_100 = parametric_get_value(egl,"no_szxcib_100",err);
+  forwardError(*err,__LINE__,NULL);
+  
+  if (remove_100!=0) {
+    conv[0] = 0;
+    // this only removes the 100 auto
+  }
+
   egl->eg_compute = &gibXsz_compute;
   egl->eg_free = &parametric_simple_payload_free;
   
