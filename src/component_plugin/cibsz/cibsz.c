@@ -1102,6 +1102,124 @@ parametric *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, cha
   return egl;
 }
 
+#define gib_lmax_corr_template  10000
+
+void gibXsz_compute(parametric *egl, double *Rq, error **err) {
+  double a_cib,xi_sz_cib,a_sz;
+  double *conv;
+  double *corr_template;
+  double l_pivot,index;
+  int m1,m2,ell;
+  double nrm;
+  int *mv;
+  double *fnu ,*A;
+  double v;
+
+  mv = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4+egl->nfreq+egl->nfreq*egl->nfreq);
+  conv = egl->payload + sizeof(double)* (gib_lmax_corr_template+1);
+  fnu = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4);
+  A = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4+egl->nfreq);
+  corr_template = egl->payload;
+  
+  a_cib = parametric_get_value(egl,"A_cib_217",err);
+  forwardError(*err,__LINE__,);
+  a_sz = parametric_get_value(egl,"A_sz",err);
+  forwardError(*err,__LINE__,);
+  xi_sz_cib = parametric_get_value(egl,"xi_sz_cib",err);
+  forwardError(*err,__LINE__,);
+
+  for(m1=0;m1<egl->nfreq;m1++) {
+    for(m2=m1;m2<egl->nfreq;m2++) {
+      A[m1*egl->nfreq+m2] = - xi_sz_cib * sqrt(a_sz) * ( sqrt(fnu[m1]*a_cib*conv[mv[m2]]) + sqrt(fnu[m2]*a_cib*conv[mv[m1]]));
+    }
+  }
+
+  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
+    v = corr_template[ell];
+    for(m1=0;m1<egl->nfreq;m1++) {
+      for(m2=m1;m2<egl->nfreq;m2++) {
+        Rq[IDX_R(egl,ell,m1,m2)] = A[m1*egl->nfreq+m2] * corr_template[ell] * 2.0*M_PI/(ell*(ell+1.0));
+        Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
+        
+      }  
+    }
+  } 
+}
+
+
+parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
+  parametric *egl;
+  double fac;
+  int l,i;
+  double *fnu;
+  int m1;
+  int *mv;
+  double *corr_template;
+  double dreq[4];
+  double *conv;
+
+  egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
+  forwardError(*err,__LINE__,NULL);
+
+  egl->payload = malloc_err(sizeof(double)*(gib_lmax_corr_template+1 + egl->nfreq + 4 +egl->nfreq*egl->nfreq)+sizeof(int)*egl->nfreq,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  memcpy(egl->payload+sizeof(double)*2,template,sizeof(double)* (gib_lmax_corr_template-1));
+
+  ((double*)egl->payload)[0] = 0;
+  ((double*)egl->payload)[1] = 0;
+  
+  mv = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4+egl->nfreq+egl->nfreq*egl->nfreq);
+  conv = egl->payload + sizeof(double)* (gib_lmax_corr_template+1);
+  fnu = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4);
+  
+  parametric_set_default(egl,"gibXsz_100_to_217",0.022,err); 
+  forwardError(*err,__LINE__,NULL);
+  
+  conv[0] = parametric_get_value(egl,"gibXsz_100_to_217",err);
+  forwardError(*err,__LINE__,NULL);
+
+  parametric_set_default(egl,"gibXsz_143_to_217",0.094,err); 
+  forwardError(*err,__LINE__,NULL);
+  
+  conv[1] = parametric_get_value(egl,"gibXsz_143_to_217",err);
+  forwardError(*err,__LINE__,NULL);
+
+  conv[2] = 1;
+
+  parametric_set_default(egl,"gibXsz_353_to_217",46.8,err); 
+  forwardError(*err,__LINE__,NULL);
+  
+  conv[3] = parametric_get_value(egl,"gibXsz_353_to_217",err);
+  forwardError(*err,__LINE__,NULL);
+  
+  dreq[0] = 100;
+  dreq[1] = 143;
+  dreq[2] = 217;
+  dreq[3] = 353;
+  fill_offset_freq(4,dreq, egl,mv,-1,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  
+  // Compute SZ spectrum
+  for (m1=0;m1<egl->nfreq;m1++) {
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+  }
+  
+  egl->eg_compute = &gibXsz_compute;
+  egl->eg_free = &parametric_simple_payload_free;
+  
+  parametric_set_default(egl,"A_cib_217",70,err); // Millea et al. ref value
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"A_sz",4.0,err);
+  forwardError(*err,__LINE__,NULL);
+  parametric_set_default(egl,"xi_sz_cib",0.0,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  return egl;
+}
+
+
 CREATE_PARAMETRIC_FILE_INIT(cib,cib_init);
 CREATE_PARAMETRIC_FILE_INIT(cibr,cibr_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz,sz_init);
@@ -1113,5 +1231,6 @@ CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(sz_cib_x,sz_cib_x_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ncib,ncib_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(tcib,tcib_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(ncibXsz,ncibXsz_init);
+CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(gibXsz,gibXsz_init);
 CREATE_PARAMETRIC_TEMPLATE_FILE_INIT(gcib,gcib_init);
 

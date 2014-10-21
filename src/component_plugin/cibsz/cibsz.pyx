@@ -13,6 +13,7 @@ cdef extern c_parametric *sz_cib_x_init(int ndet, double *detlist, int ndef, cha
 cdef extern c_parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *tcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric  *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
+cdef extern c_parametric  *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
 cdef extern c_parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 
 
@@ -54,6 +55,12 @@ cdef class ncibXsz(parametric_template):
   def __cinit__(self):
     self.initfunc = <void*> ncibXsz_init;
     self.template_name = ["ratio_cib_model_100_143_217_353.dat","sz_x_cib_template.dat[1]"]
+    self.plugin_name = "cibsz"
+
+cdef class gibXsz(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> gibXsz_init;
+    self.template_name = ["sz_x_cib_template.dat[1]"]
     self.plugin_name = "cibsz"
 
 cdef class sz_cib(parametric_template):
@@ -98,4 +105,4 @@ cibsz_1h_2h_sept14 = rename_machine(gcib,{"cibsz_rigid":"143"},rename_replace("g
 
 
       
-component_list = ["cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14"]
+component_list = ["gibXsz","cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14"]
