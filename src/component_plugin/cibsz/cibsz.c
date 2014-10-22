@@ -9,7 +9,9 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   int l;
   double *fnu;
   int m1;
-
+  double szcolor[4],dreq[4];
+  int mv[100];
+  
   // make sure l(l+1)/(2pi)*C_l template is normalized to 1 at l=3000 
   fac = template[3000-lmin_sz_template];
   for (l=lmin_sz_template;l<=lmax_sz_template;l++) {
@@ -18,6 +20,7 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
 
+
   // Declare payload, allocate it and fill it
 
   egl->payload = malloc_err(sizeof(double)*(lmax_sz_template-lmin_sz_template+1 + egl->nfreq),err);
@@ -25,10 +28,28 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   memcpy(egl->payload,template,sizeof(double)*(lmax_sz_template-lmin_sz_template+1));
   
   fnu = egl->payload + (lmax_sz_template-lmin_sz_template+1)*sizeof(double);
+  parametric_set_default(egl,"sz_color_143_to_143",0.975,err);
+  forwardError(*err,__LINE__,NULL);
   
+  parametric_set_default(egl,"sz_color_100_to_143",0.981,err);
+  forwardError(*err,__LINE__,NULL);
+
+  szcolor[0] = parametric_get_value(egl,"sz_color_100_to_143",err);
+  forwardError(*err,__LINE__,NULL);
+  szcolor[1] = parametric_get_value(egl,"sz_color_143_to_143",err);
+  forwardError(*err,__LINE__,NULL);
+
+  szcolor[2]=1;
+  szcolor[2]=3;
+  dreq[0] = 100;
+  dreq[1] = 143;
+  dreq[2] = 217;
+  dreq[3] = 353;
+  fill_offset_freq(4,dreq, egl,mv,-1,err);
+  forwardError(*err,__LINE__,NULL);
   // Compute SZ spectrum
   for (m1=0;m1<egl->nfreq;m1++) {
-    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0)*szcolor[mv[m1]];
   }
 
   egl->eg_compute = &sz_compute;
@@ -1159,7 +1180,7 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   double dreq[4];
   double *conv;
   int remove_100;
-
+  double szcolor[4];
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
 
@@ -1175,6 +1196,20 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   conv = egl->payload + sizeof(double)* (gib_lmax_corr_template+1);
   fnu = egl->payload + sizeof(double)* (gib_lmax_corr_template+1) + sizeof(double)*(4);
   
+  parametric_set_default(egl,"sz_color_143_to_143",0.975,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  parametric_set_default(egl,"sz_color_100_to_143",0.981,err);
+  forwardError(*err,__LINE__,NULL);
+
+  szcolor[0] = parametric_get_value(egl,"sz_color_100_to_143",err);
+  forwardError(*err,__LINE__,NULL);
+  szcolor[1] = parametric_get_value(egl,"sz_color_143_to_143",err);
+  forwardError(*err,__LINE__,NULL);
+
+  szcolor[2]=1;
+  szcolor[2]=3;
+
   parametric_set_default(egl,"gibXsz_100_to_217",0.022,err); 
   forwardError(*err,__LINE__,NULL);
   
@@ -1205,7 +1240,7 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   
   // Compute SZ spectrum
   for (m1=0;m1<egl->nfreq;m1++) {
-    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0);
+    fnu[m1] = sz_spectrum((double)egl->freqlist[m1],PRM_NU0)*szcolor[mv[m1]];
   }
   
   parametric_set_default(egl,"no_szxcib_100",1,err); 
