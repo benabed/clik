@@ -28,10 +28,10 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   memcpy(egl->payload,template,sizeof(double)*(lmax_sz_template-lmin_sz_template+1));
   
   fnu = egl->payload + (lmax_sz_template-lmin_sz_template+1)*sizeof(double);
-  parametric_set_default(egl,"sz_color_143_to_143",0.975,err);
+  parametric_set_default(egl,"sz_color_143_to_143",1,err);
   forwardError(*err,__LINE__,NULL);
   
-  parametric_set_default(egl,"sz_color_100_to_143",0.981,err);
+  parametric_set_default(egl,"sz_color_100_to_143",1,err);
   forwardError(*err,__LINE__,NULL);
 
   szcolor[0] = parametric_get_value(egl,"sz_color_100_to_143",err);
