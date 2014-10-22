@@ -15,7 +15,8 @@ def main(argv):
   lkl_grp = outhf["clik/lkl_0"]
   php.add_free_calib(lkl_grp,"A_planck")
 
-  outhf["clik/check_param"] = nm.concatenate((outhf["clik/check_param"],[1]))
+  if "clik/check_param" in outhf:
+    outhf["clik/check_param"] = nm.concatenate((outhf["clik/check_param"],[1]))
   #php.remove_selfcheck(root_grp=outhf["clik"])
 
     
