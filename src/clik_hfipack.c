@@ -800,6 +800,81 @@ SmicaComp * clik_smica_comp_calTP_init(cldf *df,int nb, int mT,int mP, int nell,
   return SC;
 }
 
+SmicaComp * clik_smica_comp_icalTP_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
+  SmicaComp *SC; 
+  int npar,i;
+  int *im,*jm;
+  double *tpl;
+  int tot_tpl;
+  char *bnames, **xnames;
+  int m;
+  int dsz;
+  double *w;
+  int *other;
+  int hk,im1,im2;
+
+  m = mtot(mT,mP,has_cl);
+  
+  npar = -1;
+  im =  cldf_readintarray(df,"im",&npar,err);
+  forwardError(*err,__LINE__,NULL);    
+
+
+  hk = cldf_haskey(df,"w",err);
+  forwardError(*err,__LINE__,NULL);
+  //hstat = H5LTfind_attribute(comp_id, "A");
+  if (hk==1) {
+    int sz;
+    sz = m*m*2;
+    w = cldf_readfloatarray(df,"w",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    other = cldf_readintarray(df,"other",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+  } else {
+    //_DEBUGHERE_("%d",m);
+    w = malloc_err(sizeof(double)*m*m*2,err);
+    forwardError(*err,__LINE__,NULL);
+    other = malloc_err(sizeof(int)*m*m*2,err);
+    forwardError(*err,__LINE__,NULL);
+    for(im1=0;im1<m;im1++) {
+      for(im2=im1;im2<m;im2++) {
+        w[(im1*m+im2)*2 + 0] = 1;
+        w[(im1*m+im2)*2 + 1] = 0;
+        w[(im2*m+im1)*2 + 0] = 1;
+        w[(im2*m+im1)*2 + 1] = 0;
+        other[(im1*m+im2)*2 + 0] = im1;
+        other[(im1*m+im2)*2 + 1] = im2;
+        other[(im2*m+im1)*2 + 0] = im2;
+        other[(im2*m+im1)*2 + 1] = im1;
+        //_DEBUGHERE_("%d w %d,%d->%g,%g, other %d,%d->%d,%d",(im1*m+im2)*2,im1,im2,w[(im1*m+im2)*2 + 0],w[(im1*m+im2)*2 + 1],im1,im2,other[(im1*m+im2)*2 + 0],other[(im1*m+im2)*2 + 1])
+        //_DEBUGHERE_("%d %d %d %d | %d",(im1*m+im2)*2 + 0, (im1*m+im2)*2 + 1, (im2*m+im1)*2 + 0, (im2*m+im1)*2 + 1,m*m*2);
+      }
+    }
+  }
+  
+
+  SC = comp_icalTP_init(nb, mT,mP,has_cl, npar, im,w,other,  err);
+  forwardError(*err,__LINE__,NULL);    
+  
+  free(im);
+  free(w);
+  free(other);
+
+  dsz = -1;
+  bnames = cldf_readstr(df,"names",&dsz, err);
+  forwardError(*err,__LINE__,NULL); 
+  xnames = malloc_err(sizeof(char*)*npar,err);
+  for(i=0;i<npar;i++) {
+    xnames[i] =&(bnames[i*256]);
+  } 
+  SC_setnames(SC, xnames, err);
+  forwardError(*err,__LINE__,NULL);
+  free(xnames); 
+  free(bnames); 
+  
+  return SC;
+}
+
 SmicaComp * clik_smica_comp_beamTP_init(cldf *df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err) {
   SmicaComp *SC; 
   int npar,i;

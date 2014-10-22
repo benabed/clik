@@ -1159,7 +1159,7 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   double dreq[4];
   double *conv;
   int remove_100;
-  
+
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
 
@@ -1222,10 +1222,13 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   egl->eg_compute = &gibXsz_compute;
   egl->eg_free = &parametric_simple_payload_free;
   
-  parametric_set_default(egl,"A_cib_217",70,err); // Millea et al. ref value
+  //parametric_declare_mandatory(egl,"A_cib_217",err);
+  parametric_set_default(egl,"A_cib_217",70,err); 
   forwardError(*err,__LINE__,NULL);
+  //parametric_declare_mandatory(egl,"A_sz",err);
   parametric_set_default(egl,"A_sz",4.0,err);
   forwardError(*err,__LINE__,NULL);
+  //parametric_declare_mandatory(egl,"xi_sz_cib",err);
   parametric_set_default(egl,"xi_sz_cib",0.0,err);
   forwardError(*err,__LINE__,NULL);
   

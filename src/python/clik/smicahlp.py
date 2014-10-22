@@ -263,6 +263,107 @@ def add_calTP_component(lkl_grp,names,calib_order,P_track_T,symetrize,position=-
     return agrp
   return None
 
+def add_icalTP_component(lkl_grp,names,calib_order,P_track_T,symetrize,position=-1):
+  typ = "icalTP"
+  im = []
+  dnames = get_dnames(lkl_grp)
+  for i,n in enumerate(names):
+    if "calib" in n:
+      det = re.findall("calib_(.+)",n)[0]
+      idx = dnames.index(det)
+      im += [idx]
+  if len(im):
+    agrp = add_component(lkl_grp,typ,position)
+    agrp.create_dataset("im",data=nm.array(im,dtype=nm.int))
+    hascl = lkl_grp.attrs["has_cl"]
+    mt = lkl_grp.attrs["m_channel_T"]
+    mp = lkl_grp.attrs["m_channel_P"]
+    me = lkl_grp.attrs["m_channel_P"]*hascl[1]
+    mb = lkl_grp.attrs["m_channel_P"]*hascl[2]
+    m = mt+me+mb
+    t_order = calib_order[:mt]
+    p_order = calib_order[mt:]
+    w = nm.zeros((m,m,2),dtype=nm.double)
+    other = nm.zeros((m,m,2),dtype=nm.int)
+
+    for i1 in range(m):
+      alti1 = i1
+      if i1>=mt and i1<mt+me and p_order[i1-mt] in t_order:
+        alti1 = t_order.index(p_order[i1-mt])
+      elif i1>=mt+me and p_order[i1-mt-me] in t_order:
+        alti1 = t_order.index(p_order[i1-mt-me])
+
+      for i2 in range(i1,m):
+        alti2 = i2
+        if i2>=mt and i2<mt+me and p_order[i2-mt] in t_order:
+          alti2 = t_order.index(p_order[i2-mt])
+        elif i2>=mt+me and p_order[i2-mt-me] in t_order:
+          alti2 = t_order.index(p_order[i2-mt-me])
+        
+        # general case, nothing to do
+        w[i1,i2] = [1,0]
+        other[i1,i2] = [i1,i2]
+        w[i2,i1] = [1,0]
+        other[i2,i1] = [i2,i1]
+        if i1<mt and i2>=mt and i2<mt+me:
+          #TE
+          if P_track_T and p_order[i2-mt] in t_order:
+            w[i1,i2] = [0,1]
+            other[i1,i2] = [i1,alti2]
+            w[i2,i1] = [0,1]
+            other[i2,i1] = [alti2,i1]
+          elif symetrize and p_order[i2-mt] in t_order and t_order[i1] in p_order:
+            w[i1,i2] = [0.5,0.5]
+            other[i1,i2] = [p_order.index(t_order[i1])+mt,alti2]
+            w[i2,i1] = [0.5,0.5]
+            other[i2,i1] = [alti2,p_order.index(t_order[i1])+mt]
+        elif i1<mt and i2>=mt+me:
+          #TB
+          if P_track_T and p_order[i2-mt-me] in t_order:
+            w[i1,i2] = [0,1]
+            other[i1,i2] = [i1,alti2]
+            w[i2,i1] = [0,1]
+            other[i2,i1] = [alti2,i1]
+          elif symetrize and p_order[i2-mt-me] in t_order and t_order[i1] in p_order:
+            w[i1,i2] = [0.5,0.5]
+            other[i1,i2] = [p_order.index(t_order[i1])+mt+me,alti2]
+            w[i2,i1] = [0.5,0.5]
+            other[i2,i1] = [alti2,p_order.index(t_order[i1])+mt+me]
+        elif i1>=mt and i1<mt+me and i2<mt+me:
+          #EE
+          if P_track_T:
+            w[i1,i2] = [0,1]
+            other[i1,i2] = [alti1,alti2]
+            w[i2,i1] = [0,1]
+            other[i2,i1] = [alti2,alti1]
+        elif i1>=mt and i1<mt+me and i2>=mt+me:
+          #EB
+          if P_track_T:
+            w[i1,i2] = [0,1]
+            other[i1,i2] = [alti1,alti2]
+            w[i2,i1] = [0,1]
+            other[i2,i1] = [alti2,alti1]
+          elif symetrize:
+            w[i1,i2] = [0.5,0.5]
+            other[i1,i2] = [i1+mp,i2-mp]
+            w[i2,i1] = [0.5,0.5]
+            other[i2,i1] = [i2-mp,i1+mp]
+        elif i1>=mt+me:
+          #BB
+          if P_track_T:
+            w[i1,i2] = [0,1]
+            other[i1,i2] = [alti1,alti2]
+            w[i2,i1] = [0,1]
+            other[i2,i1] = [alti2,alti1]
+
+    agrp.create_dataset("other",data=nm.array(other.flat[:],dtype=nm.int))
+    agrp.create_dataset("w",data=nm.array(w.flat[:],dtype=nm.double))
+      
+    setnames(agrp,names)
+    return agrp
+  return None
+
+
 def add_gcal2_component(lkl_grp,names, tpl,position=-1):
   typ = "gcal2"
   agrp = add_component(lkl_grp,typ,position)
@@ -557,7 +658,7 @@ def calTP_from_smica(dffile):
   fnd=False
   for i in range(1,nc):
     compot = hgrp["component_%d"%i].attrs["component_type"]
-    if not (compot=="calTP"):
+    if not (compot in ("calTP","icalTP")):
       continue
     fnd=True
     break
@@ -577,9 +678,13 @@ def calTP_from_smica(dffile):
     w = nm.zeros((m,m,2),dtype=nm.double)
     w[:,:] = [1,0]
     other =  nm.indices((m,m)).T[:,:,::-1]
+  if compot == "calTP":
+    Mexp = nm.exp
+  else:
+    Mexp = lambda x:-nm.sqrt(x)
   def cal(vals):
     vec = nm.ones(m)
-    evals = nm.exp(vals)
+    evals = Mexp(vals)
     vec[im[im<mt]] = evals[im<mt]
     vec[im[im>=mt]] = evals[im>=mt]
     if mb:

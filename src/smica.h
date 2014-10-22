@@ -210,7 +210,9 @@ typedef struct {
 SmicaComp* comp_beamTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,int neigen, double *modes,error **err );
 
 SmicaComp* comp_calTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im,double*w,int*other, error **err );
+SmicaComp* comp_icalTP_init(int q,int mT, int mP,  int *TEB, int npar, int *im,double*w,int*other, error **err );
 void comp_calTP_update(void* data,double* locpars, double* rq, error **err);
+void comp_icalTP_update(void* data,double* locpars, double* rq, error **err);
 void comp_calTP_free(void** data);
 
 void comp_totcal_update(void* data,double* locpars, double* rq, error **err);

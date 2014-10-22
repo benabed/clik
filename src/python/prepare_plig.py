@@ -446,7 +446,10 @@ def main(argv):
     P_track_T = pars.int(default=0).calib_dot_P_track_T
     calib_symetrize = pars.int(default=0).calib_dot_symetrize
 
-    smh.add_calTP_component(lkl_grp,names,calib_order,P_track_T,calib_symetrize)
+    if "calib.gpelike" in pars and pars.int.calib_dot_gpelike!=0:
+      smh.add_icalTP_component(lkl_grp,names,calib_order,P_track_T,calib_symetrize)  
+    else:
+      smh.add_calTP_component(lkl_grp,names,calib_order,P_track_T,calib_symetrize)
 
   #if "beammode.select" in pars:
   #  names = ["beammode_"+v for v in pars.str_array.beammode_dot_select]

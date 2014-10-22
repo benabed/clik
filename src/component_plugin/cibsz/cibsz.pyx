@@ -101,8 +101,9 @@ cib_1h_2h_sept14 = rename_machine(gcib,{},rename_replace("gib","cib"),data_file=
 cib_1h_2h_SN = rename_machine(gcib,{},rename_replace("gib","cib"),data_file="cib_tot_100_353_Jsr-1_GL_2013_10.dat")
 cibsz_1h_2h = rename_machine(gcib,{"cibsz_rigid":"143"},rename_replace("gib","cibsz"),data_file="cibsz_1h_2h_100_353_Jsr-1_GL_2014_2.dat")
 cibsz_1h_2h_sept14 = rename_machine(gcib,{"cibsz_rigid":"143"},rename_replace("gib","cibsz"),data_file="cibsz_1h_2h_100_353_Jsr-1_PS_2014_09.dat")
+cibsz_consistency_sept14 = rename_machine(gibXsz,{},norename,data_file="cibsz_PS_dl_sept_14.dat[1]")
 
 
 
       
-component_list = ["gibXsz","cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14"]
+component_list = ["cibsz_consistency_sept14","gibXsz","cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14"]

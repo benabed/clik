@@ -2046,6 +2046,99 @@ void comp_calTP_update(void* data,double* locpars, double* rq, error **err) {
   }
 }
 
+SmicaComp* comp_icalTP_init(int q, int mT, int mP, int *TEB, int npar, int *im,double *w,int *other, error **err ) {
+  SC_calTP *gc;
+  SmicaComp *SC;
+  int m;
+  int i;
+
+  gc = malloc_err(sizeof(SC_calTP),err);
+  forwardError(*err,__LINE__,NULL);
+
+  gc->npar = npar;
+
+
+  m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
+  gc->mT = mT;
+  gc->mP = mP;
+  gc->TEB[0] = TEB[0];
+  gc->TEB[1] = TEB[1];
+  gc->TEB[2] = TEB[2];
+
+  gc->calvec = malloc_err(sizeof(double)*m,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  for (i=0;i<m;i++) {
+    gc->calvec[i]=1;
+  }
+
+  
+  gc->im = malloc_err(sizeof(int)*npar,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->im,im,sizeof(int)*npar);
+
+  gc->w = malloc_err(sizeof(double)*m*m*2,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->w,w,sizeof(double)*m*m*2);
+
+  gc->other = malloc_err(sizeof(int)*m*m*2,err);
+  forwardError(*err,__LINE__,NULL);
+  memcpy(gc->other,other,sizeof(int)*m*m*2);
+
+  SC = alloc_SC(npar,q,m,gc, &comp_icalTP_update, &comp_calTP_free,err);
+  forwardError(*err,__LINE__,NULL);
+  SC_ismul(SC);
+  return SC;
+
+}
+
+void comp_icalTP_update(void* data,double* locpars, double* rq, error **err) {
+  SmicaComp *SC;
+  SC_calTP *gc;
+  int i,iq,im1,im2,m,m2;
+
+  SC = data;
+  gc = SC->data;
+
+  for(i=0;i<SC->ndim;i++) {
+    int im;
+    im = gc->im[i];
+    gc->calvec[im] = 1./sqrt(locpars[i]);
+    if (gc->TEB[2]==1 && im>gc->mT) {
+      gc->calvec[im+gc->mP*gc->TEB[1]] = gc->calvec[im];
+    }
+  }
+  m = SC->m;
+  m2 = m*m;
+  
+  for(iq=0;iq<SC->nq;iq++) {
+    int iqo;
+    iqo = iq*m2;
+    for(im1=0;im1<SC->m;im1++) {
+      int imo;
+      double k1;
+      k1 = gc->calvec[im1];
+      imo = iqo+im1*m;
+      for(im2=im1;im2<SC->m;im2++) {
+        int mpos,im1_prime,im2_prime;
+        double w,w_prime;
+        mpos = (im1*m+im2)*2;
+        //_DEBUGHERE_("%d %d %d %g %g %g",iq,im1,im2,k1,gc->calvec[im2],rq[imo+im2]);
+        w = gc->w[mpos];
+        w_prime = gc->w[mpos+1];
+        im1_prime = gc->other[mpos];
+        im2_prime = gc->other[mpos+1];
+        //if (iq==0) {
+        //  _DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
+        //  _DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
+        // }
+        rq[imo+im2] *= w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime];
+        //rq[imo+im2] *= gc->calvec[im1]*gc->calvec[im2];
+      } 
+    }
+  }
+}
+
 void comp_calTP_free(void** data) {
   SmicaComp *SC;
   SC_calTP *gc;

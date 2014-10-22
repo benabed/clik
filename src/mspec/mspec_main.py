@@ -99,14 +99,14 @@ def main(argv):
     cnt = 0
 
     for i in range(6):
-      dls += [cls[cnt:cnt+lmax[i]+1]/llp1[i]]
+      dls += [cls[cnt:cnt+lmax[i]+1]*llp1[i]]
       cnt += lmax[i]+1
 
     nu = cls[cnt:]
 
     lkl = msp.get_lnl(dls,nu)
     print "READY"
-    print lkl
+    print -lkl
     sys.stdout.flush()
     #if resp.strip()!='ok':
     #  print >>sys.stderr,"bad !"
