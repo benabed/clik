@@ -648,6 +648,48 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
   return prms  
 
 def calTP_from_smica(dffile):
+  cal0 = calTP0_from_smica(dffile)
+  import hpy
+  
+  fi = hpy.File(dffile)
+  hascl = fi["clik/lkl_0/has_cl"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  hgrp = fi["clik/lkl_0"]
+  nc = hgrp.attrs["n_component"]
+  fnd=0
+  TP = {"T":"","P":""}
+  for i in range(1,nc):
+    compot = hgrp["component_%d"%i].attrs["component_type"]
+    if compot == "totcal":
+      TP["T"] = hgrp["component_%d"%i].attrs["calname"]
+      fnd+=1
+    if compot == "totcalP":
+      TP["P"] = hgrp["component_%d"%i].attrs["calnameP"]
+      fnd+=1
+    if fnd==2:
+      break
+  if fnd==0:
+    return cal0
+  def cal(vals):
+    rqd = cal0(vals[:-fnd])
+    if TP["P"]:
+      calP = 1./(vals[-fnd])
+      rP = nm.ones((m,m))
+      rP[:mt,mt:] = calP
+      rP[mt:,:mt] = calP
+      rP[mt:,mt:] = calP**2
+      rqd = rqd*rP[nm.newaxis,:,:]
+    if TP["T"]:
+      calT = 1./vals[-1]
+      rqd = rqd*calT**2
+    return rqd
+  cal.varpar = [v for v in list(cal0.varpar) + [TP["P"]] +[TP["T"]] if v]
+
+def calTP0_from_smica(dffile):
   import hpy
   
   fi = hpy.File(dffile)

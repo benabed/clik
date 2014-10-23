@@ -497,10 +497,11 @@ def main(argv):
           tmodes[:,j,i,t] = tmodes[:,i,j,t]
     smh.add_beamTP_component(lkl_grp,names,neigen,tmodes,pars.bool(default=False).beam_dot_p_track_t)
 
-  if "tot_calib" in pars:
-    smh.add_totcal_component(lkl_grp,pars.tot_calib)
   if "P_calib" in pars:
     smh.add_totcalP_component(lkl_grp,pars.P_calib)
+  
+  if "tot_calib" in pars:
+    smh.add_totcal_component(lkl_grp,pars.tot_calib)
   
   if "self_calib" in pars:
     smh.add_totcal_component(lkl_grp,pars.self_calib)
