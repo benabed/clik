@@ -40,7 +40,8 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   forwardError(*err,__LINE__,NULL);
 
   szcolor[2]=1;
-  szcolor[2]=3;
+  szcolor[3]=1;
+
   dreq[0] = 100;
   dreq[1] = 143;
   dreq[2] = 217;
@@ -1208,7 +1209,7 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   forwardError(*err,__LINE__,NULL);
 
   szcolor[2]=1;
-  szcolor[2]=3;
+  szcolor[3]=1;
 
   parametric_set_default(egl,"gibXsz_100_to_217",0.022,err); 
   forwardError(*err,__LINE__,NULL);

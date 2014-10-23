@@ -106,8 +106,8 @@ def configure(ctx):
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
   ctx.load("c_openmp","waf_tools")
-  ctx.check_openmp_cflags()
-  print ctx.env
+  ctx.check_openmp_cflags(mandatory=False)
+
   try:
     ctx.load("try_ifort","waf_tools")
     ctx.env.has_f90 = True
