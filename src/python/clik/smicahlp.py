@@ -681,7 +681,7 @@ def calTP_from_smica(dffile):
   if compot == "calTP":
     Mexp = nm.exp
   else:
-    Mexp = lambda x:-nm.sqrt(x)
+    Mexp = lambda x:1./nm.sqrt(x)
   def cal(vals):
     vec = nm.ones(m)
     evals = Mexp(vals)
