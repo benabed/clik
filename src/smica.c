@@ -2314,3 +2314,75 @@ SmicaComp* comp_totcal_init(int q, int mT, int mP, int *TEB,error **err ) {
   return SC;
 
 }
+
+void comp_totcalP_free(void** data) {
+  SmicaComp *SC;
+
+  SC = *data;
+  free(SC->data);
+  free(SC);
+  
+  *data = NULL;
+}
+
+void comp_totcalP_update(void* data,double* locpars, double* rq, error **err) {
+  SmicaComp *SC;
+  int t,iq,im1,im2,m,m2,neigen,offm,offq,im0;
+  double cal,scal;
+  int *mz;
+
+  SC = data;
+  mz = SC->data;
+
+  cal = 1./(locpars[0]*locpars[0]);
+  scal = 1./(locpars[0]);
+
+  m = SC->m;
+  m2 = m*m;
+  
+  for(iq=0;iq<SC->nq;iq++) {
+    // TP
+    for(im1=0;im1<mz[0];im1++) {
+      im0 = im1;
+      if (im0<mz[0]) {
+        im0 = mz[0];
+      }
+      for(im2=im0;im2<m;im2++) {
+        rq[iq*m2 + im1*m + im2] *= scal;
+        rq[iq*m2 + im2*m + im1] = rq[iq*m2 + im1*m + im2];        
+      }
+    }
+    //PP
+    for(im1=mz[0];im1<m;im1++) {
+      for(im2=im1;im2<m;im2++) {
+        rq[iq*m2 + im1*m + im2] *= cal;
+        rq[iq*m2 + im2*m + im1] = rq[iq*m2 + im1*m + im2];
+      }
+    }
+  }
+}
+
+
+SmicaComp* comp_totcalP_init(int q, int mT, int mP, int *TEB,error **err ) {
+  SC_beamTP *gc;
+  SmicaComp *SC;
+  int m;
+  int i;
+  int *mz;
+
+  m = mT*TEB[0] + mP *TEB[1] + mP*TEB[2];
+  
+  mz = malloc_err(sizeof(int)*3,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  mz[0] = mT*TEB[0];
+  mz[1] = mT*TEB[1];
+  mz[2] = mT*TEB[2];
+
+  SC = alloc_SC(1,q,m,mz, &comp_totcalP_update, &comp_totcalP_free,err);
+  forwardError(*err,__LINE__,NULL);
+  SC_ismul(SC);
+  return SC;
+
+}
+

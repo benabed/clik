@@ -161,6 +161,11 @@ def add_totcal_component(lkl_grp,calname,position=-1):
   agrp = add_component(lkl_grp,typ,position)
   agrp["calname"] = calname
   return agrp
+def add_totcalP_component(lkl_grp,calname,position=-1):
+  typ = "totcalP"
+  agrp = add_component(lkl_grp,typ,position)
+  agrp["calnameP"] = calname
+  return agrp
 
 
 def add_calTP_component(lkl_grp,names,calib_order,P_track_T,symetrize,position=-1):
