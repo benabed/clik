@@ -97,6 +97,7 @@ def configure(ctx):
   import os
   import os.path as osp
   allgood = True
+
   try:
     ctx.load("try_icc","waf_tools")
   except Exception,e:
@@ -104,6 +105,9 @@ def configure(ctx):
     ctx.fatal('The configuration failed') 
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
+  ctx.load("c_openmp","waf_tools")
+  ctx.check_openmp_cflags()
+  print ctx.env
   try:
     ctx.load("try_ifort","waf_tools")
     ctx.env.has_f90 = True

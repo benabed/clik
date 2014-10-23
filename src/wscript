@@ -32,7 +32,8 @@ def build(bld):
   source_clik = [src for src in source_clik if src]
   
   #uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]
-  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra' ).split() if ff]
+  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp' ).split() if ff]
+  
   uselib_bopix = []
   uselib_wmap = []
   uselib_lowlike = []
@@ -56,7 +57,7 @@ def build(bld):
     uselib   = uselib_clik,
     use = use_clik,
     defines = ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['HDF5_COMPAT_MODE']*bool(bld.env.has_hdf5)+['CLIK_LENSING']*bool(bld.env.has_lenslike),
-    cflags = "-fopenmp"
+    cflags = bld.env.CCFLAGS_cc_omp
     )
   bld.install_files('${INCDIR}', 
                     'clik_lensing.h clik.h clik_dic.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h minipmc/maths_base.h'*(not bld.env.has_pmc))

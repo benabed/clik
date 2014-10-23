@@ -297,14 +297,17 @@ void Smica_gcal(void* vsmic, double* pars, double* fgvec, error **err) {
   //_DEBUGHERE_("%g %g %g %g",fgvec[0],fgvec[1],fgvec[smic->quad_sn-2],fgvec[smic->quad_sn-1]);
 }
 
+#define TIMER_MSEC(TIMER_after,TIMER_before) (((TIMER_after.tv_sec-TIMER_before.tv_sec)*1000000+(TIMER_after.tv_usec-TIMER_before.tv_usec))/1000)
 double Smica_lkl(void* vsmic, double* pars, error **err) {
   int isc;
   Smica *smic;
   double res;
   int iq,i,j;
-  
+  struct timeval starttime1,starttime2,starttime3,starttime4,endtime;
+
   smic = vsmic;
 
+  gettimeofday(&starttime1,NULL);
   // init rq matrix
   if (smic->rq_0 == NULL) {
     memset(smic->rq,0,sizeof(double)*smic->m*smic->m*smic->nq);
@@ -312,6 +315,8 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
     memcpy(smic->rq,smic->rq_0,sizeof(double)*smic->m*smic->m*smic->nq);
   }
   
+  gettimeofday(&starttime2,NULL);
+ 
   // update rq matrix according to each component
   for(isc=0;isc<smic->nc;isc++) {
     char nn[40];
@@ -330,6 +335,7 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
   
   //symetrize matrix
   
+  gettimeofday(&starttime3,NULL);
   for (iq=0;iq<smic->nq;iq++) {
     double *rq;
     rq = smic->rq+iq*smic->m*smic->m;
@@ -342,11 +348,15 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
   //write_bin_vector(smic->rq, "rq.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);  
   //write_bin_vector(smic->rq_hat, "rqhat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
   // ici calculer la vraissemblance a partir de rq et rq_hat
+  
+  gettimeofday(&starttime4,NULL);
   res = smic->crit(smic,err);
   forwardError(*err,__LINE__,0);
-
+  gettimeofday(&endtime,NULL);
+ 
   //testErrorRet(smic->cnt==1,-24324,"not implemented",*err,__LINE__,0);
   smic->cnt+=1;
+  _DEBUGHERE_("init %ld, update %ld, sym %ld,crit %ld, total %ld",TIMER_MSEC(starttime2,starttime1),TIMER_MSEC(starttime3,starttime2),TIMER_MSEC(starttime4,starttime3),TIMER_MSEC(endtime,starttime4),TIMER_MSEC(endtime,starttime1));
   return res;
 }
 
@@ -950,11 +960,12 @@ double smica_crit_quad(void *vsmic,error **err) {
 
 double smica_crit_gauss(void *vsmic, error **err) {
   int iq,im1,im2,iv,m2,m;
-  double res;
+  double res,les;
   Smica *smic;
   char uplo;
   double done,dzero;
   int one,i,j;
+  struct timeval starttime1, starttime2,starttime3, endtime;
 
   smic = vsmic;
   //_DEBUGHERE_("%d %d",smic->nq,smic->m);
@@ -964,6 +975,7 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //forwardError(*err,__LINE__,0);
   // reorganize data
   //write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);   
+  gettimeofday(&starttime1,NULL);
   m = smic->m;
   m2 = m*m;
   iv = 0;
@@ -974,8 +986,9 @@ double smica_crit_gauss(void *vsmic, error **err) {
     //_DEBUGHERE_("%d (%d %d %d) %d %g %g %g",iv,civ/m2,(civ-(civ/m2)*m2)/m,(civ-(civ/m2)*m2)%m, smic->quad_mask[iv],smic->rq[smic->quad_mask[iv]], smic->rq_hat[smic->quad_mask[iv]],smic->gvec[iv]);
   }
   //_DEBUGHERE_("%d",iv);
-  
-  one = 1;
+  gettimeofday(&starttime2,NULL);
+ 
+  /*one = 1;
   done = 1;
   dzero = 0;
   uplo = 'L';
@@ -991,15 +1004,33 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //  }
   //}
   dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
-
+  */
   //write_bin_vector(smic->gvec, "gvecCC.dat", sizeof(double)*(smic->quad_sn), err);   
-  
-  res = 0;
+   gettimeofday(&starttime3,NULL);
+ 
+   /*res = 0;
   for(iq=0;iq<iv;iq++) {
     //_DEBUGHERE_("%g %g %g",res,smic->gvec[iq],smic->gvec[iq+iv])
     res += smic->gvec[iq]*smic->gvec[iq+iv];
   }
-  return -.5*res;  
+   */
+  res = 0;
+  int qsn = smic->quad_sn;
+  double *crit_cor = smic->crit_cor;
+  double *gvec = smic->gvec;
+#pragma omp parallel for private(les,i,j) reduction(+:res) firstprivate(crit_cor,gvec) schedule(dynamic,512)
+  //_DEBUGHERE_("tt","");
+  for(i=0;i<qsn;i++) {
+    les = crit_cor[i*qsn+i]*gvec[i];
+    for(j=i+1;j<qsn;j++) {
+      les += 2*gvec[j]*crit_cor[i*qsn+j];
+    }
+    res += les*gvec[i];
+  }
+
+  gettimeofday(&endtime,NULL);
+  _DEBUGHERE_("select %ld, half product %ld, finish %ld, total %ld",TIMER_MSEC(starttime2,starttime1),TIMER_MSEC(starttime3,starttime2),TIMER_MSEC(endtime,starttime3),TIMER_MSEC(endtime,starttime1));
+ return -.5*res;  
 }
 
 void smica_set_crit_gauss(Smica *smic, double *crit_cor, int *mask,int *ordering,error **err) {
