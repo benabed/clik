@@ -251,7 +251,7 @@ def build(bld):
       #  target = 'test_wmap')
 
     if bld.env.has_bflike:
-      bflike_source = [osp.join("bflike",vv) for vv in "clik_bflike.f90 bflike.f90 long_intrinsic_smw.f90 fitstools_smw.f90 bflike_smw.f90".split()]
+      bflike_source = [osp.join("bflike",vv) for vv in "clik_bflike.f90 bflike.f90 bflike_QUonly.f90 long_intrinsic_smw.f90 fitstools_smw.f90 bflike_smw.f90".split()]
       bld.objects(
         features = 'fc',
         source = bflike_source,
