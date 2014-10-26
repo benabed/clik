@@ -16,7 +16,7 @@ module bflike_QU
   integer,save ::ntemp,npol,ntp,ntot,lmax,lsw,npixtot
   
   real(dp),allocatable,dimension(:,:),save ::NCVM,clnorm
-  real(dp),allocatable,dimension(:,:) :: S 
+  real(dp),allocatable,dimension(:,:) :: S ,Spol
   real(dp),allocatable,dimension(:),save:: dt,czs
   real(sp),allocatable,dimension(:),save :: c1s,c2s,s1s,s2s 
   real(sp),allocatable,dimension(:,:),save ::pls
@@ -122,6 +122,7 @@ contains
     deallocate(map,mask)
     
     allocate(S(ntot,ntot))
+    allocate(Spol(npol*2,npol*2))
     allocate(NCVMfull(3*npixtot,3*npixtot))
     allocate(NCVM(ntot,ntot))
     
@@ -520,8 +521,8 @@ contains
 !    endif
     
 !    alike = -.5d0*(argexp+logdet)
- 
-    call dposv('L',npol*2,1,S(ntemp+1: ntot,ntemp+1: ntot),npol*2,auxdt(ntemp+1: ntot),npol*2,info)
+    Spol = S(ntemp+1: ntot,ntemp+1: ntot)
+    call dposv('L',npol*2,1,Spol,npol*2,auxdt(ntemp+1: ntot),npol*2,info)
     !    cholesky: X*(C^-1*X)
     write(0,*) 'Info: ',info
 
