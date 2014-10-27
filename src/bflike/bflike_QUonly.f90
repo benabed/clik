@@ -530,7 +530,7 @@ contains
        argexp = sum(dt(ntemp+1: ntot)*auxdt(ntemp+1: ntot))
 
        logdet = 0.d0
-       do j=ntemp+1,ntot
+       do j=1,2*npol
           logdet =logdet +log(Spol(j,j))
        enddo
 
