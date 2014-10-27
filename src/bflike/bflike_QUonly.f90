@@ -531,7 +531,7 @@ contains
 
        logdet = 0.d0
        do j=ntemp+1,ntot
-          logdet =logdet +log(S(j,j))
+          logdet =logdet +log(Spol(j,j))
        enddo
 
        logdet = 2.d0*logdet
