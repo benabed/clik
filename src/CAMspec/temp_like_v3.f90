@@ -87,8 +87,8 @@
     subroutine CAMspec_ReadNorm(fname, templt,thelmax)
     character(LEN=*), intent(in) :: fname
     real(campc) :: templt(lmax_sz)
-    integer i, dummy, thelmax
-    real(campc) :: renorm
+    integer i,  thelmax
+    real(campc) :: renorm,dummy
 
     !print *,'reading ', fname, ' in readnorm'
 
@@ -108,9 +108,9 @@
     subroutine CAMspec_Read(fname, templt,thelength)
     character(LEN=*), intent(in) :: fname
     real(campc) :: templt(lmax_sz)
-    integer i, dummy, readlmax
+    integer i, readlmax
     integer, optional :: thelength
-
+    real(campc)::dummy
     !print *,'reading ', fname, ' in read'
 
     if(present(thelength)) then
