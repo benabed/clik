@@ -33,32 +33,41 @@ SUBROUTINE plik_cmbonly_extra_LKL(LKL,CL)
 	REAL(8),INTENT(OUT)::LKL
 	REAL(8),INTENT(IN),DIMENSION(0:(CLIK_LMAX+1-CLIK_LMIN)*3)::CL
 	INTEGER::i,cur
-	real(8)::like_tot
+	real(8)::like_tot,calPlanck
+
 	!TT
 	cur = 0
 	cltt = 0
 
-	DO i = clik_lmin,clik_lmax
-		cltt(i)=CL(cur)*(i*(i+1.))/2./PI
-		cur = cur + 1
-	END DO	
-	DO i = clik_lmin,clik_lmax
-		clee(i)=CL(cur)*(i*(i+1.))/2./PI
-		cur = cur + 1
-	END DO	
-	DO i = clik_lmin,clik_lmax
-		clte(i)=CL(cur)*(i*(i+1.))/2./PI
-		cur = cur + 1
-	END DO	
+	if (use_tt) then
+		DO i = clik_lmin,clik_lmax
+			cltt(i)=CL(cur)*(i*(i+1.))/2./PI
+			cur = cur + 1
+		END DO	
+	endif
 
-	call calc_like_cmbonly(like_tot,cltt,clte,clee)	
-	LKL = -like_tot/2.
+	if (use_ee) then
+		DO i = clik_lmin,clik_lmax
+			clee(i)=CL(cur)*(i*(i+1.))/2./PI
+			cur = cur + 1
+		END DO	
+	endif
+	if (use_te) then
+		DO i = clik_lmin,clik_lmax
+			clte(i)=CL(cur)*(i*(i+1.))/2./PI
+			cur = cur + 1
+		END DO	
+	endif
+	calPlanck = Cl(cur)
+
+	call calc_like_cmbonly(like_tot,cltt,clte,clee,calPlanck)	
+	LKL = -like_tot
 
 END SUBROUTINE 	plik_cmbonly_extra_LKL
 
 
 
-SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir)
+SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te)
 	use Plik_CMBonly
 	use plik_cmbonly_extra
 
@@ -75,6 +84,11 @@ SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir)
 	allocate( clte(2:clik_lmax) )
 	
 	!PRINT *,lmin11,lmin12,lmin22,lmax11,lmax12,lmax22,use_act_south,use_act_equa,use_spt_highell,data_dir,ACT_data_dir,SPT_data_dir
+	use_tt = iuse_tt.NE.0
+	use_te = iuse_te.NE.0
+	use_ee = iuse_ee.NE.0
+
 	call like_init_cmbonly
+
 	
 END SUBROUTINE 	plik_cmbonly_extra_INIT

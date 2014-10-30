@@ -109,11 +109,11 @@ subroutine main_CMB
       print*,'Log likelihood for this file ',trim(clfilename),' :',lkl
       close(unit=100)
 
-      call plik_allocate_vec(pself,vec)
-      call plik_get_fg(pself,cl_and_pars,vec)
-      open(unit=120,file="fgtest.dat",form='formatted')
-      write (120,*) vec
-      close(unit=120)
+      !!call plik_allocate_vec(pself,vec)
+      !!call plik_get_fg(pself,cl_and_pars,vec)
+      !!open(unit=120,file="fgtest.dat",form='formatted')
+      !!write (120,*) vec
+      !!close(unit=120)
 
       
       deallocate(cl_and_pars)

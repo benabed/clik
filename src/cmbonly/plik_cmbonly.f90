@@ -5,7 +5,7 @@ module Plik_CMBonly
   integer, parameter :: campc = KIND(1.d0)
 
   character(LEN=500),public :: data_dir 
-  character(LEN=*), parameter, public :: plik_like='Plik_TTTEEE_v13_cmbonly_like'
+  character(LEN=*), parameter, public :: plik_like='Plik_v16_cmbonly_like'
 
   !Possible combinations: TT only, TE only, EE only, TT+TE+EE
   logical :: use_tt  = .true.
@@ -14,12 +14,11 @@ module Plik_CMBonly
 
   integer, public :: tt_lmax  = 3000 
   integer, parameter,public :: plmax  = 2508
-  integer, parameter,public :: plmin  = 50
-  integer, parameter,public :: nbin   = 601 ! total bins   
+  integer, parameter,public :: plmin  = 30
+  integer, parameter,public :: nbin   = 613 ! total bins   
   integer, public, parameter :: nspectt = 4
   integer, public, parameter :: nspecte = 6
   integer, public, parameter :: nspecee = 6
-  integer :: nptt(nspectt), npte(nspecte), npee(nspecee) ! number of bins
   integer, public :: nbintt, nbinte, nbinee
 
   !-------------------------------------------------------
@@ -29,7 +28,7 @@ module Plik_CMBonly
   real(campc), dimension(:), allocatable :: blmin,blmax,bin_w
   real(campc), dimension(:), allocatable :: bl,bm
  
-  public like_init_cmbonly, calc_like_cmbonly
+  public like_init_cmbonly, calc_like_cmbonly,use_tt,use_te,use_ee
   contains
   
   ! ===========================================================================
@@ -41,15 +40,12 @@ module Plik_CMBonly
     
   print *, 'Initializing Planck likelihood, version '//plik_like
  
-  nptt(1:nspectt)=211 !same numbers of bins for 100, 143, 100x143, 217
-  npte(1:nspecte)=195 !same numbers of bins for 100, 100x143, 100x217, 143,100x143, 217
-  npee(1:nspecee)=195 !same numbers of bins for 100, 100x143, 100x217, 143,100x143, 217
-  nbintt = maxval(nptt) !in future they might cut some spectra
-  nbinte = maxval(npte)
-  nbinee = maxval(npee)
+  nbintt = 215 !30-2508 
+  nbinte = 199 !30-1996
+  nbinee = 199 !30-1996
     
-  like_file = trim(data_dir)//'cl_cmb_plik_v9.0.dat'
-  cov_file  = trim(data_dir)//'c_matrix_plik_v9.0.dat'
+  like_file = trim(data_dir)//'cl_cmb_plik_v16.dat'
+  cov_file  = trim(data_dir)//'c_matrix_plik_v16.dat'
   blmin_file = trim(data_dir)//'blmin.dat'
   blmax_file = trim(data_dir)//'blmax.dat'
   binw_file = trim(data_dir)//'bweight.dat'!!Bbl_150_spt_v2.dat'
@@ -119,11 +115,11 @@ module Plik_CMBonly
   end subroutine like_init_cmbonly
   
   ! ===========================================================================
-  subroutine calc_like_cmbonly(plike,cell_tt,cell_te,cell_ee)
+  subroutine calc_like_cmbonly(plike,cell_tt,cell_te,cell_ee,calPlanck)
 
   real(campc), dimension(2:) :: cell_tt,cell_ee,cell_te
   real(campc) :: cl_tt(nbintt),cl_te(nbinte),cl_ee(nbinee)
-  real(campc) plike
+  real(campc) plike, calPlanck
   integer :: bin_no,lun,il,i,j,info
   real(campc), allocatable, save ::  Y(:), X_model(:)
   real(campc), allocatable :: ptemp(:)
@@ -148,10 +144,10 @@ module Plik_CMBonly
   cl_te(1:nbinte)=cl_te(1:nbinte)/bm(1:nbinte)
   cl_ee(1:nbinee)=cl_ee(1:nbinee)/bm(1:nbinee)
 
-  X_model(1:nbintt) = cl_tt(1:nbintt) !TT
-  X_model(nbintt+1:nbintt+nbinte) = cl_te(1:nbinte) !TE
-  X_model(nbintt+nbinte+1:nbintt+nbinte+nbinee) = cl_ee(1:nbinee) !EE
- 
+  X_model(1:nbintt) = cl_tt(1:nbintt)/calPlanck**2.d0 !TT
+  X_model(nbintt+1:nbintt+nbinte) = cl_te(1:nbinte)/calPlanck**2.d0 !TE
+  X_model(nbintt+nbinte+1:nbintt+nbinte+nbinee) = cl_ee(1:nbinee)/calPlanck**2.d0 !EE
+
 !Start basic chisq 
   Y = X_data - X_model
 
@@ -206,7 +202,8 @@ module Plik_CMBonly
  
     ptemp=matmul(fisher,diff_vec)
     plike=sum(ptemp*diff_vec)
- 
+    plike = plike/2.d0
+
     deallocate(X_model,Y)
     deallocate(fisher,diff_vec,ptemp)
     

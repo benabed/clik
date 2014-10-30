@@ -49,9 +49,9 @@ def add_external_data(directory,lkl_grp,tar=False):
       os.chmod(lkl_grp._name+"/_external",0555)
       for r,d,f in os.walk(lkl_grp._name+"/_external"):
         for ff in f:
-          os.chmod(r+"/"+ff,0444)
+          os.chmod(r+"/"+ff,0644)
         for dd in d:
-          os.chmod(r+"/"+dd,0555)
+          os.chmod(r+"/"+dd,0755)
           
 
       
