@@ -381,6 +381,7 @@ def dist(ctx):
   dist_list += "src/mspec/* "
   dist_list += "src/lollipop/* "
   dist_list += "src/bflike/* "
+  dist_list += "src/cmbonly/* "
   #dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   
