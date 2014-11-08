@@ -71,6 +71,7 @@ void _read_meta(cldf *df,error **err) {
     df->nmeta++;
 
   }
+  fclose(ff);
 }
 
 
