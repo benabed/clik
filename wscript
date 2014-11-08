@@ -222,7 +222,7 @@ def configure(ctx):
   ctx.env.has_lollipop = osp.exists("src/lollipop")
 
   # wmap
-  if (ctx.options.wmap_7_install or ctx.options.wmap_9_install or ctx.options.wmap_install) or (ctx.options.install_all_deps or ctx.options.upgrade_all_deps) and not ctx.options.wmap_src :
+  if (ctx.options.wmap_7_install or ctx.options.wmap_9_install or ctx.options.wmap_install) and not ctx.options.wmap_src :
     #if (ctx.options.wmap_7_install or ctx.options.wmap_9_install or ctx.options.wmap_install) and not ctx.options.wmap_src :
     if ctx.options.wmap_7_install:
       atl.installsmthg_pre(ctx,"http://lambda.gsfc.nasa.gov/data/map/dr4/dcp/wmap_likelihood_sw_v4p1.tar.gz","wmap_likelihood_sw_v4p1.tar.gz","src/")
