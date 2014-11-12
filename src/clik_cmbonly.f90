@@ -87,8 +87,8 @@ SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te)
 	use_tt = iuse_tt.NE.0
 	use_te = iuse_te.NE.0
 	use_ee = iuse_ee.NE.0
-
+	
 	call like_init_cmbonly
-
+	
 	
 END SUBROUTINE 	plik_cmbonly_extra_INIT

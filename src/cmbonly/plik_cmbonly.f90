@@ -5,7 +5,7 @@ module Plik_CMBonly
   integer, parameter :: campc = KIND(1.d0)
 
   character(LEN=500),public :: data_dir 
-  character(LEN=*), parameter, public :: plik_like='Plik_v16_cmbonly_like'
+  character(LEN=*), parameter, public :: plik_like='Plik_v17_cmbonly_like'
 
   !Possible combinations: TT only, TE only, EE only, TT+TE+EE
   logical :: use_tt  = .true.
@@ -34,7 +34,7 @@ module Plik_CMBonly
   ! ===========================================================================
   subroutine like_init_cmbonly
  
-  integer  :: i,j,lun,il,info,dum,k
+  integer  :: i,j,lun,il,info,dum,k,bin_no
   character(LEN=1024) :: like_file, cov_file, blmin_file, blmax_file, binw_file
   logical  :: good
     
@@ -44,11 +44,11 @@ module Plik_CMBonly
   nbinte = 199 !30-1996
   nbinee = 199 !30-1996
     
-  like_file = trim(data_dir)//'cl_cmb_plik_v16.dat'
-  cov_file  = trim(data_dir)//'c_matrix_plik_v16.dat'
+  like_file = trim(data_dir)//'cl_cmb_plik_v17.dat'
+  cov_file  = trim(data_dir)//'c_matrix_plik_v17.dat'
   blmin_file = trim(data_dir)//'blmin.dat'
   blmax_file = trim(data_dir)//'blmax.dat'
-  binw_file = trim(data_dir)//'bweight.dat'!!Bbl_150_spt_v2.dat'
+  binw_file = trim(data_dir)//'bweight.dat'
  
   allocate(bval(nbin),X_data(nbin),X_sig(nbin))
   allocate(covmat(nbin,nbin))
@@ -78,6 +78,48 @@ module Plik_CMBonly
   do i=1,nbin
      do j=i+1,nbin
         covmat(j,i)=covmat(i,j) !covmat is now full matrix
+     enddo
+  enddo
+
+  !Select covmat
+  !Only TT
+  if((use_tt .eqv. .true.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .false.)) then
+       bin_no=nbintt
+       allocate(fisher(bin_no,bin_no))
+       fisher(:,:)=covmat(1:bin_no,1:bin_no)
+  !Only TE
+  else if((use_tt .eqv. .false.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .false.)) then
+       bin_no=nbinte
+       allocate(fisher(bin_no,bin_no))
+       fisher(:,:)=covmat(nbintt+1:nbintt+bin_no,nbintt+1:nbintt+bin_no)
+  !Only EE
+  else if((use_tt .eqv. .false.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .true.)) then
+       bin_no=nbinee
+       allocate(fisher(bin_no,bin_no))
+       fisher(:,:)=covmat(nbintt+nbinte+1:nbintt+nbinte+bin_no,nbintt+nbinte+1:nbintt+nbinte+bin_no)
+  !All
+  else if ((use_tt .eqv. .true.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .true.)) then
+       bin_no=nbin
+       allocate(fisher(nbin,nbin))
+       fisher(:,:)=covmat(:,:)
+  else
+     write(*,*) 'Fail: no possible options chosen'
+  endif
+
+  !Invert covmat
+  call dpotrf('U',bin_no,fisher,bin_no,info)
+  if(info.ne.0)then
+     print*, ' info in dpotrf =', info
+     stop
+  endif
+  call dpotri('U',bin_no,fisher,bin_no,info)
+  if(info.ne.0)then
+     print*, ' info in dpotri =', info
+     stop
+  endif
+  do i=1,bin_no
+     do j=i,bin_no
+        fisher(j,i)=fisher(i,j)
      enddo
   enddo
 
@@ -151,61 +193,38 @@ module Plik_CMBonly
 !Start basic chisq 
   Y = X_data - X_model
 
+  !Select data
   !Only TT
   if((use_tt .eqv. .true.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .false.)) then
        bin_no=nbintt
-       allocate(fisher(bin_no,bin_no))
        allocate(diff_vec(bin_no),ptemp(bin_no))
        diff_vec(:)=Y(1:bin_no)
-       fisher(:,:)=covmat(1:bin_no,1:bin_no)
   !Only TE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .false.)) then 
        bin_no=nbinte
-       allocate(fisher(bin_no,bin_no))
        allocate(diff_vec(bin_no),ptemp(bin_no))
        diff_vec(:)=Y(nbintt+1:nbintt+bin_no)
-       fisher(:,:)=covmat(nbintt+1:nbintt+bin_no,nbintt+1:nbintt+bin_no)
   !Only EE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .true.)) then
        bin_no=nbinee
-       allocate(fisher(bin_no,bin_no))
        allocate(diff_vec(bin_no),ptemp(bin_no))
        diff_vec(:)=Y(nbintt+nbinte+1:nbintt+nbinte+bin_no)
-       fisher(:,:)=covmat(nbintt+nbinte+1:nbintt+nbinte+bin_no,nbintt+nbinte+1:nbintt+nbinte+bin_no)
+  !All
   else if ((use_tt .eqv. .true.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .true.)) then
        bin_no=nbin
-       allocate(fisher(nbin,nbin))
        allocate(diff_vec(nbin),ptemp(nbin))
        diff_vec(:)=Y(:)
-       fisher(:,:)=covmat(:,:)
-    else
-       write(*,*) 'Fail: no possible options chosen'
-    endif
+  else
+     write(*,*) 'Fail: no possible options chosen'
+  endif
 
-    !Invert covmat
-    call dpotrf('U',bin_no,fisher,bin_no,info)
-    if(info.ne.0)then
-       print*, ' info in dpotrf =', info
-       stop
-    endif
-    call dpotri('U',bin_no,fisher,bin_no,info)
-    if(info.ne.0)then
-       print*, ' info in dpotri =', info
-       stop
-    endif
-    do i=1,bin_no
-       do j=i,bin_no
-          fisher(j,i)=fisher(i,j)
-       enddo
-    enddo
 
- 
-    ptemp=matmul(fisher,diff_vec)
-    plike=sum(ptemp*diff_vec)
-    plike = plike/2.d0
+  ptemp=matmul(fisher,diff_vec)
+  plike=sum(ptemp*diff_vec)
+  plike = plike/2.d0
 
-    deallocate(X_model,Y)
-    deallocate(fisher,diff_vec,ptemp)
+  deallocate(X_model,Y)
+  deallocate(diff_vec,ptemp)
     
  end subroutine calc_like_cmbonly
   

@@ -29,18 +29,20 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
   int ldd,hk;
   char *xnames_def[] = {"A_Planck"};
   int use_tt, use_te, use_ee;
+  int version;
 
   hk = cldf_haskey(df,"cmbonly_version",err);
   forwardError(*err,__LINE__,NULL);
   testErrorRet(hk==0,-132,"cmbonly v1 not supported anymore",*err, __LINE__,NULL);
-
+  version = cldf_readint(df,"cmbonly_version",err);
+  
+  forwardError(*err,__LINE__,NULL);
+  testErrorRet(version!=17,-132,"cmbonly plik v16 not supported anymore",*err, __LINE__,NULL);
   plik_cmbonly_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"plik_cmbonly already initialized",*err,__LINE__,NULL);
-  
   // get data and change dir
   cldf_external(df,directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
-    
   memset(dir_data,' ',sizeof(char)*2048);
   //sprintf(dir_data,"");
   //dir_data[5] = ' ';
@@ -50,7 +52,7 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
   use_tt = has_cl[0];
   use_ee = has_cl[1];
   use_te = has_cl[3];
-
+  
   plik_cmbonly_extra_init_(dir_data,&ldd,&use_tt, &use_ee, &use_te);
 
   cldf_external_cleanup(directory_name,pwd,err);  
