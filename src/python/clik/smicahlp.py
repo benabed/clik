@@ -688,6 +688,7 @@ def calTP_from_smica(dffile):
       rqd = rqd*calT**2
     return rqd
   cal.varpar = [v for v in list(cal0.varpar) + [TP["P"]] +[TP["T"]] if v]
+  return cal
 
 def calTP0_from_smica(dffile):
   import hpy
@@ -1081,9 +1082,11 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
 
-def best_fit_cmb(dffile,bestfit):
+def best_fit_cmb(dffile,bestfit,cty="B"):
   import parobject as php
   import hpy
+  import lkl
+  import time
 
   oo,Jt0 = ordering_from_smica(dffile)
 
@@ -1092,7 +1095,7 @@ def best_fit_cmb(dffile,bestfit):
   siginv = fi["clik/lkl_0/criterion_gauss_mat"]
   siginv.shape=(len(oo),len(oo))
 
-  lm,oqb,nrms,rqh = get_binned_calibrated_model_and_data(dffile,bestfit)
+  lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
   hascl = fi["clik/lkl_0/has_cl"]
   tm = nm.concatenate([lm for h in hascl if h])
 
@@ -1103,11 +1106,52 @@ def best_fit_cmb(dffile,bestfit):
 
   Yo = nm.sum(oqb,0)-rqh
   Yo = Yo.flat[oo]
-  Jt_siginv = nm.dot(Jt,siginv)
-  Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
-  Jt_siginv_J = nm.dot(Jt_siginv,Jt.T)
 
-  rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+  if cty=="B":
+    a = time.time()
+    Jt_siginv = nm.zeros((Jt.shape))
+    w0,w1 = nm.where(Jt!=0)
+    for ii in range(len(w0)):
+      i = w0[ii]
+      j = w1[ii]
+      Jt_siginv[i] += siginv[j]
+      
+    print "pcompute Jt_siginv in %d sec"%(time.time()-a)
+    
+    b = time.time()
+    Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
+    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-b)
+    
+    
+    c = time.time()
+    nl = Jt.shape[0]
+    Jt_siginv_J = nm.zeros((nl,nl))
+    for ii in range(len(w0)):
+      j = w0[ii]
+      i = w1[ii]
+      Jt_siginv_J[j] += Jt_siginv[:,i]
+    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-c)
+    
+    #Jt_siginv,Jt_siginv_Yo,Jt_siginv_J = lkl.full_solve(Yo,Jt,siginv)
+    rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+    print time.time()-a
+  else:
+    a = time.time()
+    Jt_siginv = nm.dot(Jt,siginv)
+    Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
+    Jt_siginv_J = nm.dot(Jt_siginv,Jt.T)
+  
+  
+    rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+    print time.time()-a
+
+  #rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+  ##try:
+  ##  import scipy.linalg as sla
+  ##  cho_fac = sla.cho_factor(Jt_siginv_J)
+  ##  rVec = -sla.cho_solve(cho_fac,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+  ##except Exception,e:
+  ##  rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
   tVec = nm.zeros(len(tm))
   eVec = tVec*0.

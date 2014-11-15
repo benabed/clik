@@ -222,6 +222,34 @@ def camspec_get_fg(nuis,lmax=3000):
   return nes
 
 
+cdef extern:
+  void dpotrf( char* uplo, int * n, double* a, int * lda, int * info )
+  void dpotrs( char* uplo, int* n, int* nrhs, double* a, int* lda, double* b, int* ldb, int* info)
+  void dsymm(const char *side, const char *uplo, const int *m, const int *n,
+             const double *alpha, const double *a, const int *lda, const double *b, const int *ldb,
+             const double *beta, double *c, const int *ldc)
+  void dgemv(const char *trans, const int *m, const int *n, const double *alpha,
+             const double *a, const int *lda, const double *x, const int *incx,
+             const double *beta, double *y, const int *incy)
+  void dgemm(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+             const double *alpha, const double *a, const int *lda, const double *b, const int *ldb,
+             const double *beta, double *c, const int *ldc)
+
+def chol_solve(a,b):
+  cdef char uplo
+  cdef int sz,one,info
+
+  sz = a.shape[0]
+  an = a*1.
+  one = 1
+  info = 0
+  uplo = 'L'
+  dpotrf(&uplo, &sz,<double*>nm.PyArray_DATA(an),&sz,&info)
+  assert info==0,"argh %d"%info
+  res = b*1.
+  dpotrs(&uplo, &sz, &one, <double*>nm.PyArray_DATA(an), &sz, <double*>nm.PyArray_DATA(res), &sz, &info)  
+  assert info==0,"argh %d"%info
+  return res
 
 
 ##cdef extern from "fowly.h":
