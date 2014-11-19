@@ -19,7 +19,10 @@
  print *,"Planck CMB-only likelihood test"
  print *,"==================================="
 
- data_dir = "/Users/benabed/Boulot/clik-hg/plik_lite2/plik_lite_v16/data/"
+ data_dir = "/Users/benabed/Boulot/clik-hg/plik_lite4/like_cmbonly_plikv17/data/"
+ use_ee = .true.
+ use_te = .true.
+ 
  call like_init_cmbonly
  !---------------------------------------------------
  ! read in test Cls

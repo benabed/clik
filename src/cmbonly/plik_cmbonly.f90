@@ -9,8 +9,8 @@ module Plik_CMBonly
 
   !Possible combinations: TT only, TE only, EE only, TT+TE+EE
   logical :: use_tt  = .true.
-  logical :: use_ee  = .true.
-  logical :: use_te  = .true.
+  logical :: use_ee  = .false.
+  logical :: use_te  = .false.
 
   integer, public :: tt_lmax  = 3000 
   integer, parameter,public :: plmax  = 2508
