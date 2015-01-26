@@ -143,11 +143,11 @@ def build(bld):
         fcflags = bld.env.FCFLAGS_fpic,
         cflags = bld.env.CFLAGS_cpic,
         )
-      bld(
-        features = 'fc fcprogram',
-        source = osp.join("cmbonly",'plik_cmbonly_test.f90'),
-        use = 'cmbonly',
-        target = 'test_plik_cmbonly')
+      ##bld(
+      ##  features = 'fc fcprogram',
+      ##  source = osp.join("cmbonly",'plik_cmbonly_test.f90'),
+      ##  use = 'cmbonly',
+      ##  target = 'test_plik_cmbonly')
       uselib_cmbonly = [ff for ff in ('pmc fc_omp fc_runtime').split() if ff]
 
       
