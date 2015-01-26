@@ -5,7 +5,7 @@ module Plik_CMBonly
   integer, parameter :: campc = KIND(1.d0)
 
   character(LEN=500),public :: data_dir 
-  character(LEN=*), parameter, public :: plik_like='Plik_v17_cmbonly_like'
+  character(LEN=*), parameter, public :: plik_like='Plik_v18_cmbonly_like'
 
   !Possible combinations: TT only, TE only, EE only, TT+TE+EE
   logical :: use_tt  = .true.
@@ -44,8 +44,8 @@ module Plik_CMBonly
   nbinte = 199 !30-1996
   nbinee = 199 !30-1996
     
-  like_file = trim(data_dir)//'cl_cmb_plik_v17.dat'
-  cov_file  = trim(data_dir)//'c_matrix_plik_v17.dat'
+  like_file = trim(data_dir)//'cl_cmb_plik_v18.dat'
+  cov_file  = trim(data_dir)//'c_matrix_plik_v18.dat'
   blmin_file = trim(data_dir)//'blmin.dat'
   blmax_file = trim(data_dir)//'blmax.dat'
   binw_file = trim(data_dir)//'bweight.dat'
@@ -146,13 +146,13 @@ module Plik_CMBonly
   end do
   close(lun)
 
-  do i=0,plmax
-     bl(i) = i*(i+1)/2./PI
-  end do
-
-  do i=1,nbintt !binned ell
-     bm(i) = sum(bl(blmin(i)+plmin:blmax(i)+plmin)*bin_w(blmin(i):blmax(i)))
-  end do
+!!  do i=0,plmax
+!!     bl(i) = i*(i+1)/2./PI
+!!  end do
+!!
+!!  do i=1,nbintt !binned ell
+!!     bm(i) = sum(bl(blmin(i)+plmin:blmax(i)+plmin)*bin_w(blmin(i):blmax(i)))
+!!  end do
 
   end subroutine like_init_cmbonly
   
@@ -161,7 +161,7 @@ module Plik_CMBonly
 
   real(campc), dimension(2:) :: cell_tt,cell_ee,cell_te
   real(campc) :: cl_tt(nbintt),cl_te(nbinte),cl_ee(nbinee)
-  real(campc) plike, calPlanck
+  real(campc) :: plike, calPlanck
   integer :: bin_no,lun,il,i,j,info
   real(campc), allocatable, save ::  Y(:), X_model(:)
   real(campc), allocatable :: ptemp(:)
@@ -171,6 +171,12 @@ module Plik_CMBonly
      X_model = 0
      Y = 0
   end if
+
+  do i=2,tt_lmax
+     cell_tt(i)=cell_tt(i)/real(i)/real(i+1.d0)*2.d0*PI
+     cell_te(i)=cell_te(i)/real(i)/real(i+1.d0)*2.d0*PI
+     cell_ee(i)=cell_ee(i)/real(i)/real(i+1.d0)*2.d0*PI
+  end do
 
   do i=1,nbintt
      cl_tt(i) = sum(cell_tt(blmin(i)+plmin:blmax(i)+plmin)*bin_w(blmin(i):blmax(i)))
@@ -182,9 +188,9 @@ module Plik_CMBonly
      cl_ee(i) = sum(cell_ee(blmin(i)+plmin:blmax(i)+plmin)*bin_w(blmin(i):blmax(i)))
   end do
 
-  cl_tt(1:nbintt)=cl_tt(1:nbintt)/bm(1:nbintt)
-  cl_te(1:nbinte)=cl_te(1:nbinte)/bm(1:nbinte)
-  cl_ee(1:nbinee)=cl_ee(1:nbinee)/bm(1:nbinee)
+  !!cl_tt(1:nbintt)=cl_tt(1:nbintt)/bm(1:nbintt)
+  !!cl_te(1:nbinte)=cl_te(1:nbinte)/bm(1:nbinte)
+  !!cl_ee(1:nbinee)=cl_ee(1:nbinee)/bm(1:nbinee)
 
   X_model(1:nbintt) = cl_tt(1:nbintt)/calPlanck**2.d0 !TT
   X_model(nbintt+1:nbintt+nbinte) = cl_te(1:nbinte)/calPlanck**2.d0 !TE

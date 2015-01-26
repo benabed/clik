@@ -78,7 +78,8 @@ SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te)
 	!write(*,*),data_dir
 	clik_lmin = plmin
 	clik_lmax = plmax
-	
+	tt_lmax = plmax !dans ton cul
+
 	allocate( cltt(2:clik_lmax) )
 	allocate( clee(2:clik_lmax) )
 	allocate( clte(2:clik_lmax) )

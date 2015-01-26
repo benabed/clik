@@ -37,7 +37,7 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
   version = cldf_readint(df,"cmbonly_version",err);
   
   forwardError(*err,__LINE__,NULL);
-  testErrorRet(version!=17,-132,"cmbonly plik v16 not supported anymore",*err, __LINE__,NULL);
+  testErrorRet(version!=18,-132,"cmbonly plik <v17 not supported anymore",*err, __LINE__,NULL);
   plik_cmbonly_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"plik_cmbonly already initialized",*err,__LINE__,NULL);
   // get data and change dir
