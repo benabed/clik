@@ -4,6 +4,7 @@ from clik.parametric import norename,rename_machine,rename_replace
 cdef extern c_parametric *bleak_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *cnoise_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *dip_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *feature_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 
 cdef class bleak(parametric_pol_template):
   def __cinit__(self):
@@ -21,11 +22,16 @@ cdef class dip(parametric):
   def __cinit__(self):
     self.initfunc = <void*> dip_init;
 
+cdef class feature(parametric):
+  def __cinit__(self):
+    self.initfunc = <void*> feature_init;
+
+
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
 cnoise_t3 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t3.dat")
 cnoise_v17 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_v17.dat")
 bleak_v15 = rename_machine(bleak,{},norename,data_file="sky_template_v15_F100_143_217_353.dat")    
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature"]
  
