@@ -13,6 +13,7 @@ cdef class ffp8_gcib(parametric_template):
     self.plugin_name = "ffp8"    
 
 cib_ffp8 = rename_machine(ffp8_gcib,{},rename_replace("gib","cib"))
+cib_ffp8_v2 = rename_machine(ffp8_gcib,{},rename_replace("gib","cib"),data_file="cib_ffp8_v2_100_353.dat")
 
 cdef class ffp8_gal(parametric_pol_template):
   def __cinit__(self):
@@ -32,6 +33,7 @@ def rename_ffp8_dust_TT(v,rups):
 
 
 dust_ffp8_TT = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"200"},rename_ffp8_dust_TT)
+dust_ffp8_v2_TT = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"200"},rename_ffp8_dust_TT,data_file="dust_ffp8_v2_100_353_TEB.dat")
 
 
 def rename_ffp8_dust_TE(v,rups):
@@ -57,6 +59,9 @@ def rename_ffp8_dust_EE(v,rups):
 
 dust_ffp8_TE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_TE)
 dust_ffp8_EE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_EE)
+
+dust_ffp8_v2_TE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_TE,data_file="dust_ffp8_v2_100_353_TEB.dat")
+dust_ffp8_v2_EE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_EE,data_file="dust_ffp8_v2_100_353_TEB.dat")
  
       
-component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE"]
+component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE"]
