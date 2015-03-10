@@ -134,7 +134,7 @@ def build(ctx):
               "clik_lensing_flip_renorm",
               "clik_lensing_flip_ren1",
               "prepare_bicep",
-              "simu_plig","prepare_mspec","prepare_lollipop","prepare_bflike","prepare_plik_cmbonly"]
+              "simu_plig","prepare_mspec","prepare_lollipop","prepare_bflike","prepare_plik_cmbonly","prepare_lensing_quick"]
   old =   [
               "synthetic_smica",
               "create_lowl_problem",

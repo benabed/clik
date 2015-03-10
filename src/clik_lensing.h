@@ -14,6 +14,7 @@ typedef struct {
   int ren1;
   double check;
   int has_check;
+  double *cl_fid;
 } clik_lensing_object;
 
 clik_lensing_object* clik_lensing_init(char *fpath, error **err);

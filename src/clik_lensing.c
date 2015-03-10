@@ -5,8 +5,196 @@
 #define _forwardError(A,B,C) if(_err!=NULL) {forwardError(A,B,C);} else {quitOnError(A,B,stderr);}
 #define _testErrorRetVA(A,B,C,D,E,F,...) if(_err!=NULL) {testErrorRetVA(A,B,C,D,E,F,__VA_ARGS__);} else {testErrorExitVA(A,B,C,D,E,__VA_ARGS__);}
 
-void* dataset_init(int n_data, double *data, int n_input, double* bin, double* siginv, error **err );
-double dataset_lkl(void *vds, double* pars,error **err);
+
+
+typedef struct {
+  int nbins,lmax,nlt;
+  double *bins;
+  double *cors, *cor0;
+  double *siginv;
+  double *buf,*p_hat,*duf;
+  int renorm,ren1,has_calib;
+  double *cl_fid;
+} dts_lensing;
+
+double dts_lensing_lkl(void *vds,double *pars, error **err) {
+  dts_lensing *dt;
+  int il,ib,it;
+  double b_ib;
+  int cut;
+  double lkl,bv;
+  double calib,bb;
+  double *fpars,*fphi;
+  int i0;
+
+  dt = vds;
+
+  calib = 1;
+  if (dt->has_calib==1) {
+    calib = pars[dt->nlt];
+    calib = 1./(calib*calib);  
+  }
+  
+  fpars = pars;
+  if (dt->renorm == 0) {
+    fpars = dt->cl_fid;
+  }
+  fphi = pars;
+  if (dt->ren1 == 0) {
+    fphi = dt->cl_fid;
+  }
+  
+  for(ib=0;ib<dt->nbins;ib++) {
+    b_ib = 0;
+    
+    cut=0;
+    for(il=0;il<dt->lmax+1;il++) {
+      bv = dt->bins[ib*(dt->lmax+1) + il];
+      if (bv==0) {
+        if (cut==0) {
+          continue;
+        } else {
+          break;
+        }
+      }
+      b_ib += (bv * pars[il]*(il*il*(il+1.)*(il+1.))/2./M_PI) ;
+      //_DEBUGHERE_("%d %g %g",il,pars[il]*(il*il*(il+1)*(il+1))/2./M_PI,pars[il])
+      cut=1;
+    }
+    //_DEBUGHERE_("%g",b_ib);
+    if (dt->cor0!=NULL) {
+      b_ib -= dt->cor0[ib];
+    }
+    //_DEBUGHERE_("%g",b_ib);
+    
+    if (dt->cors!=NULL) {
+      bb = 0;
+      for(il=0;il<dt->lmax+1;il++) {
+        bb += (dt->cors[ib*dt->nlt + il] * fphi[il]*(il*il*(il+1.)*(il+1.))/2./M_PI);
+      }
+      //_DEBUGHERE_("%g",bb);
+      
+      for(i0 = dt->lmax+1;i0<dt->nlt;i0+=dt->lmax+1) {
+        for(il=0; il<dt->lmax+1;il++) {
+          //_DEBUGHERE_("%d %g",il,fpars[il + i0]*il*(il+1.)/2./M_PI);
+          bb += (dt->cors[ib*dt->nlt + il + i0] * fpars[il + i0]*il*(il+1.)/2./M_PI)*calib;
+
+        }
+        //_DEBUGHERE_("%g",bb);
+          
+      }
+      b_ib+=bb;
+      //_DEBUGHERE_("%g %g",bb,b_ib);
+      
+    }
+    dt->buf[ib] = dt->p_hat[ib] - b_ib;
+  }
+  
+  lkl = 0;
+
+  for(ib=0;ib<dt->nbins;ib++) {
+    lkl += dt->siginv[ib*dt->nbins+ib] * dt->buf[ib]* dt->buf[ib];
+    for(it=ib+1;it<dt->nbins;it++) {
+      lkl += 2*dt->siginv[ib*dt->nbins+it] * dt->buf[it]* dt->buf[ib];
+    }
+  }
+
+  return -.5*lkl;
+
+}
+
+void* dts_lensing_init(int lmax,int *hascl, int nbins, double* bins, double *p_hat, double *cors, double *cor0, double* siginv,double *cl_fid, int renorm ,int ren1,int has_calib, error **err ) {
+  dts_lensing *ds;
+  int cli;
+  int tlt;
+
+  ds = malloc_err(sizeof(dts_lensing),err);
+  forwardError(*err,__LINE__,NULL);
+
+  ds->nbins = nbins;
+  ds->lmax = lmax;
+  ds->renorm = renorm;
+  ds->ren1 = ren1;
+  ds->has_calib = has_calib;
+  
+  ds->bins = malloc_err(sizeof(double)*nbins*(lmax+1),err);
+  forwardError(*err,__LINE__,NULL);
+
+  memcpy(ds->bins,bins,sizeof(double)*nbins*(lmax+1));
+
+  ds->p_hat = malloc_err(sizeof(double)*nbins,err);
+  forwardError(*err,__LINE__,NULL);
+
+  memcpy(ds->p_hat,p_hat,sizeof(double)*nbins);
+
+  ds->siginv = malloc_err(sizeof(double)*nbins*nbins,err);
+  forwardError(*err,__LINE__,NULL);
+
+  memcpy(ds->siginv,siginv,sizeof(double)*nbins*nbins);
+
+  ds->buf = malloc_err(sizeof(double)*nbins,err);
+  forwardError(*err,__LINE__,NULL);
+
+
+  ds->nlt = 0;
+  ds->cors = NULL;
+  tlt = lmax + 1;
+
+  if (cors!=NULL) {
+    ds->nlt = lmax+1;
+    for(cli=0;cli<6;cli++) {
+      if (hascl[cli]!=0) {
+        ds->nlt += lmax+1;
+      }
+    }
+    ds->cors = malloc_err(sizeof(double)*nbins*ds->nlt,err);
+    forwardError(*err,__LINE__,NULL);
+
+    memcpy(ds->cors,cors,sizeof(double)*nbins*ds->nlt);
+
+    tlt = ds->nlt;
+  } 
+
+  ds->cl_fid = malloc_err(sizeof(double)*tlt,err);
+  forwardError(*err,__LINE__,NULL);
+
+  memcpy(ds->cl_fid,cl_fid,sizeof(double)*tlt);
+
+  ds->cor0 = NULL;
+  if (cor0!=NULL) {
+    ds->cor0 = malloc_err(sizeof(double)*nbins,err);
+    forwardError(*err,__LINE__,NULL);
+
+    memcpy(ds->cor0,cor0,sizeof(double)*nbins);
+  }
+  
+  return ds;
+}
+
+
+void dts_lensing_free(void **vvds) {
+  dts_lensing *ds;
+
+  return;
+  ds = *vvds;
+
+  free(ds->p_hat);
+  free(ds->bins);
+  free(ds->siginv);
+  free(ds->buf);
+  free(ds->duf);
+  free(ds->cl_fid);
+  if (ds->cor0!=NULL) {
+    free(ds->cor0);
+  }
+  if (ds->cors!=NULL) {
+    free(ds->cors);
+  }
+
+  free(ds);
+  *vvds = NULL;
+}
+
 
 int find_in_file(FILE* f, char *what, error **err) {
   char *buf;
@@ -53,6 +241,7 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
   plid->renorm = 1;
   plid->ren1 = 1;
   plid->has_check = 0;
+  plid->cl_fid = NULL;
 
   for(cnt=0;cnt<7;cnt++) {
     plid->lmax[cnt] = -1;
@@ -155,43 +344,100 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
   }
 
   if (plid->type==4) {
-    int n_data;
-    double *data;
-    int n_input;
-    double *bin;
+    double *bins;
+    double *cors;
+    double *cor0;
     double *siginv;
+    double *p_hat;
+    double *cl_fid;
     int sz;
+    int nbins, lmax;
+    int *hascl;
+    int hk;
+    int nlt;
+    int cli;
+    int has_calib;
 
-    n_data = cldf_readint(df,"clik_lensing/n_data",err);
+    nbins = cldf_readint(df,"clik_lensing/nbins",err);
     forwardError(*err,__LINE__,NULL);
-    n_input = cldf_readint(df,"clik_lensing/n_input",err);
-    forwardError(*err,__LINE__,NULL);
-    
-    sz = n_data;
-    data = cldf_readfloatarray(df,"clik_lensing/data",&sz,err);
+    lmax = cldf_readint(df,"clik_lensing/lmax",err);
     forwardError(*err,__LINE__,NULL);
     
-    sz = n_data*n_input;
-    bin = cldf_readfloatarray(df,"clik_lensing/bin",&sz,err);
+    sz = 6;
+    hascl = cldf_readintarray(df,"clik_lensing/hascl",&sz,err);
     forwardError(*err,__LINE__,NULL);
     
-    sz = n_data*n_data;
+    sz = nbins;
+    p_hat = cldf_readfloatarray(df,"clik_lensing/pp_hat",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    sz = nbins*(lmax+1);
+    bins = cldf_readfloatarray(df,"clik_lensing/bins",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+    
+    sz = nbins*nbins;
     siginv = cldf_readfloatarray(df,"clik_lensing/siginv",&sz,err);
     forwardError(*err,__LINE__,NULL);
     
-    plid->plens_payload = dataset_init(n_data, data, n_input, bin, siginv, err );
+    nlt = 0;
+    plid->lmax[0] = lmax;
+
+    for(cli=0;cli<6;cli++) {
+      plid->lmax[cli+1] = -1;
+      if (hascl[cli]!=0) {
+        plid->lmax[cli+1] = lmax;
+        nlt += lmax+1;
+      }
+      
+    }
+    
+    cors = NULL;
+    if (nlt!=0) {
+      nlt += lmax+1;
+      sz = nlt*nbins;
+      cors = cldf_readfloatarray(df,"clik_lensing/cors",&sz,err);
+      forwardError(*err,__LINE__,NULL);
+    } else {
+      nlt = lmax + 1;
+    }
+
+    sz = nlt;
+    cl_fid = cldf_readfloatarray(df,"clik_lensing/cl_fid",&sz,err);
+    forwardError(*err,__LINE__,NULL);
+
+    plid->renorm = cldf_readint(df,"clik_lensing/renorm",err);
+    forwardError(*err,__LINE__,NULL);
+    plid->ren1 = cldf_readint(df,"clik_lensing/ren1",err);
     forwardError(*err,__LINE__,NULL);
     
-    plid->lmax[0] = cldf_readint(df,"clik_lensing/lmaxphi",err);
+    has_calib = cldf_readint(df,"clik_lensing/has_calib",err);
     forwardError(*err,__LINE__,NULL);
-    plid->lmax[1] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
+    
+    cor0 = NULL;
+    hk = cldf_haskey(df,"clik_lensing/cor0",err);
     forwardError(*err,__LINE__,NULL);
-    plid->lmax[2] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
-    forwardError(*err,__LINE__,NULL);
-    plid->lmax[4] = cldf_readint(df,"clik_lensing/lmaxcmb",err);
-    forwardError(*err,__LINE__,NULL);
-  }
 
+    if (hk!=0) {
+      sz = nbins;
+      cor0 = cldf_readfloatarray(df,"clik_lensing/cor0",&sz,err);
+      forwardError(*err,__LINE__,NULL);
+    }
+    
+    plid->plens_payload = dts_lensing_init( lmax, hascl,  nbins,  bins, p_hat, cors, cor0,  siginv, cl_fid, plid->renorm ,plid->ren1,has_calib,err );
+    forwardError(*err,__LINE__,NULL);
+    
+    free(hascl);
+    free(p_hat);
+    free(siginv);
+    free(bins);
+    free(cl_fid);
+    if(cors!=NULL) {
+      free(cors);
+    }
+    if(cor0!=NULL) {
+      free(cor0);
+    }
+  }
   return plid;
 }
 
@@ -267,7 +513,7 @@ double clik_lensing_compute(clik_lensing_object *lclik, double *pars,error **_er
   if (lclik->type==4) {
     void *pqecl;
     pqecl = lclik->plens_payload;
-    lkl = dataset_lkl(pqecl,pars,err);
+    lkl = dts_lensing_lkl(pqecl,pars,err);
     forwardError(*err,__LINE__,0);
   }
   
@@ -290,6 +536,10 @@ void clik_lensing_cleanup(clik_lensing_object **plclik) {
     plenslike_dat_full *pfull;
     pfull = (*plclik)->plens_payload;
     free_plenslike_dat_full(pfull);  
+  }
+  if ((*plclik)->type==4) {
+    dts_lensing_free(&((*plclik)->plens_payload));
+
   }
 
   free(*plclik);
@@ -337,13 +587,22 @@ void clik_lensing_get_lmaxs(clik_lensing_object *lclik, int *lmax, error **_err)
 int clik_lensing_get_extra_parameter_names(clik_lensing_object* lclik, parnam **names, error **_err) {
   parnam *pn;
   _dealwitherr;
+  int nr;
 
+  nr = 0;
+  if (lclik->type==4) {
+    nr = 1;
+  }
   if (names!=NULL) {
     pn = malloc_err(1*sizeof(parnam),err);
     _forwardError(*err,__LINE__,-1);
     *names = pn;  
+    if (lclik->type==4) {
+      sprintf(pn[0],"%s","A_Planck");
+    }
   }
-  return 0;
+
+  return nr;
 }
 
 double* clik_lensing_clcmb_fid(clik_lensing_object* lclik, error **_err) {
@@ -382,6 +641,11 @@ double* clik_lensing_clcmb_fid(clik_lensing_object* lclik, error **_err) {
     memcpy(cltt,pfull->cltt_fid,sizeof(double)*(lmax[1]+1));
     memcpy(cltt+(lmax[1]+1),pfull->clee_fid,sizeof(double)*(lmax[2]+1));
     memcpy(cltt+(lmax[1]+1+lmax[2]+1+lmax[3]+1),pfull->clte_fid,sizeof(double)*(lmax[4]+1));
+  }
+  if ((lclik)->type==4) {
+    dts_lensing *pfull;
+    pfull = (lclik)->plens_payload;
+    memcpy(cltt,(pfull->cl_fid + lmax[0]+1),sizeof(double)*(tot)); 
   }
 
   return cltt;
@@ -425,7 +689,11 @@ double* clik_lensing_clpp_fid(clik_lensing_object* lclik, error **_err) {
     pfull = (lclik)->plens_payload;
     memcpy(cltt,pfull->clpp_fid,sizeof(double)*(lmax[0]+1));
   }
-
+  if ((lclik)->type==4) {
+   dts_lensing *pfull;
+   pfull = (lclik)->plens_payload;
+   memcpy(cltt,pfull->cl_fid,sizeof(double)*(lmax[0]+1)); 
+ }
   return cltt;
 }
 
@@ -448,6 +716,7 @@ void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err)
     cmbdim += lmax[i]+1;
   }
   ndim +=cmbdim;
+  
 
   clt = malloc_err(sizeof(double)*ndim,err);
   forwardError(*err,__LINE__,);
@@ -462,8 +731,11 @@ void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err)
   if (cmbdim>0) {
   clX = clik_lensing_clcmb_fid(lclik,err);
   forwardError(*err,__LINE__,);
-
   memcpy(clt+(lmax[0]+1),clX,sizeof(double)*(ndim-nextra-(lmax[0]+1)));
+
+  if (nextra==1) {
+    clt[ndim-nextra] = 1;
+  }
 
   free(clX);
   }
@@ -477,4 +749,5 @@ void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err)
 
   free(clt);
 }
+
 

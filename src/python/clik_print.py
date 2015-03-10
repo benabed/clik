@@ -95,7 +95,7 @@ def main_lensing(argv):
     else:
       renorm = ff["clik_lensing/renorm"]
       ren1 = 0
-      if ty==3:
+      if ty in [3,4]:
         ren1 = ff["clik_lensing/ren1"]
   else:
     rr = file(argv[1]).read()

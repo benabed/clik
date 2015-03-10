@@ -1010,6 +1010,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   oq = []
   nrms = []
   for p in prms:
+    print p
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
     if oq[-1].shape[1:]!=rqh.shape[1:]:
@@ -1032,8 +1033,10 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
   oqb = nm.zeros((len(oq),)+rqh.shape)
   lm = nm.zeros(nb)
+  print oq.shape,oq.shape[0]
   for b in range(nb):
-    oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
+    if oq.shape[0]:
+      oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
     lm[b] += nm.sum(nm.arange(lmin+blmin[b],lmin+blmax[b]+1)*b_ws[blmin[b]:blmax[b]+1])
   res = lm,oqb,nrms,rqh
   if cls!=None:

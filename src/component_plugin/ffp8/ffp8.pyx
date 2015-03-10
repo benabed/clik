@@ -64,4 +64,4 @@ dust_ffp8_v2_TE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8
 dust_ffp8_v2_EE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_EE,data_file="dust_ffp8_v2_100_353_TEB.dat")
  
       
-component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE"]
+component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib"]
