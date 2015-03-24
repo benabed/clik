@@ -407,6 +407,8 @@ def dist_public(ctx):
   dist_list += "src/gibbs/* "
   dist_list += "src/cmbonly/* "
   dist_list += "src/lowlike/* "
+  dist_list += "src/bflike/* "
+  
   dist_list += "src/component_plugin/** "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   exclude_list = " src/".join('src/smica_test.* clik_bopix.*'.split())
