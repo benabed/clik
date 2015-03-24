@@ -160,7 +160,7 @@ def build(ctx):
       target = "bicep_main",
       install_path = ctx.env.BINDIR
       )    
-  if osp.exists("src/mspec") or True:
+  if osp.exists("src/mspec"):
     ctx(
       execrule = injectpath,
       source = "../mspec/mspec_main.py",
