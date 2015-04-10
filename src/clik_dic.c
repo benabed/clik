@@ -289,11 +289,11 @@ double cdic_set_double(cdic *pf, char *key,double safeguard, error **err) {
 
 
 #ifdef ADD0US
-f90_cdic_get_int(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_int(int* res,long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_get_int__(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_int__(int* res,long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_get_int_(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_int_(int* res,long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -316,11 +316,11 @@ f90_cdic_get_int_(int* res,long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_set_int(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_int(int* res,long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_set_int__(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_int__(int* res,long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_set_int_(int* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_int_(int* res,long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -343,11 +343,11 @@ f90_cdic_set_int_(int* res,long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_get_double(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_double(double* res,long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_get_double__(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_double__(double* res,long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_get_double_(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_double_(double* res,long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -369,11 +369,11 @@ f90_cdic_get_double_(double* res,long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_set_double(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_double(double* res,long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_set_double__(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_double__(double* res,long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_set_double_(double* res,long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_double_(double* res,long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -395,11 +395,11 @@ f90_cdic_set_double_(double* res,long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_get_str(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_str(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_get_str__(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_str__(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_get_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_get_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -429,11 +429,11 @@ f90_cdic_get_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_set_str(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_str(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #elseif ADD2US
-f90_cdic_set_str__(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_str__(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #else
-f90_cdic_set_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
+void f90_cdic_set_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 #endif
   cdic *pf;
   cdic_tempchar key;
@@ -463,11 +463,11 @@ f90_cdic_set_str_(char* res,int *lfres, long *lpf, char *fkey, int *lfkey) {
 }
 
 #ifdef ADD0US
-f90_cdic_test(long *lpf) {
+void f90_cdic_test(long *lpf) {
 #elseif ADD2US
-f90_cdic_test__(long *lpf) {
+void f90_cdic_test__(long *lpf) {
 #else
-f90_cdic_test_(long *lpf) {
+void f90_cdic_test_(long *lpf) {
 #endif
   cdic *pf;
   error *_err,**err;
@@ -506,11 +506,11 @@ f90_cdic_test_(long *lpf) {
 
 
 #ifdef ADD0US
-f90_cdic_free(long *lpf) {
+void f90_cdic_free(long *lpf) {
 #elseif ADD2US
-f90_cdic_free__(long *lpf) {
+void f90_cdic_free__(long *lpf) {
 #else
-f90_cdic_free_(long *lpf) {
+void f90_cdic_free_(long *lpf) {
 #endif
   cdic *pf;
   pf = (cdic*) *lpf;
@@ -518,11 +518,11 @@ f90_cdic_free_(long *lpf) {
 }
 
 #ifdef ADD0US
-f90_cdic_dump(long *lpf) {
+void f90_cdic_dump(long *lpf) {
 #elseif ADD2US
-f90_cdic_dump__(long *lpf) {
+void f90_cdic_dump__(long *lpf) {
 #else
-f90_cdic_dump_(long *lpf) {
+void f90_cdic_dump_(long *lpf) {
 #endif
   cdic *pf;
   error *_err,**err;

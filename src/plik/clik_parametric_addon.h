@@ -1,6 +1,7 @@
 #ifndef _CPADN_
 #define _CPADN_
 #include "clik_helper.h"
+#include "smica.h"
 
 int base_parametric_cldf_init(cldf *df,int ndet, double** detlist,int *ndef, char ***defkeys, char*** defvalues, int *nvar, char ***varkeys, error **err);
 SmicaComp * finalize_parametric_cldf_init(parametric* p_model,cldf *df,int nb, int m, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);

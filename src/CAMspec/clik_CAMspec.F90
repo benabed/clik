@@ -72,6 +72,7 @@ SUBROUTINE CAMSPEC_EXTRA_INIT(iNspec, inX,ilminX,ilmaxX,inp,inpt, ic_inv,iX,ilma
 
 END SUBROUTINE CAMSPEC_EXTRA_INIT
 
+#ifndef CAMSPEC_V1
 SUBROUTINE   camspec_extra_init_v2(ipre_marged,like_file,l_like_file,sz143_file,l_sz143_file,tszxcib_file,l_tszxcib_file,ksz_file,l_ksz_file,beam_file,l_beam_file,data_vector,l_data_vector,icamspec_fiducial_foregrounds,l_camspec_fiducial_foregrounds,icamspec_fiducial_cl,l_camspec_fiducial_cl,lmins,lmaxs,spec_flag,icamspec_beam_mcmc_num,xdim,iclik_lmin,iclik_lmax,has_cl,bs_factor) 
     use CAMSPEC_EXTRA
     use temp_like_camspec
@@ -204,84 +205,6 @@ SUBROUTINE   camspec_extra_init_v3(ipre_marged,like_file,l_like_file,sz143_file,
     
 END SUBROUTINE
 
-SUBROUTINE CAMSPEC_EXTRA_GETCASE(xc)
-    USE CAMSPEC_EXTRA
-    INTEGER::xc
-
-    xc = xcase
-END SUBROUTINE CAMSPEC_EXTRA_GETCASE
-
-SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
-    USE CAMSPEC_EXTRA
-    implicit none
-
-    REAL(8),INTENT(OUT)::LKL
-    REAL(8),DIMENSION(0:npar-1)::CL
-
-    if (cam_version==1) then
-        call CAMSPEC_EXTRA_LKL_V1(LKL,CL)
-    else if (cam_version==2) then
-        call CAMSPEC_EXTRA_LKL_V2(LKL,CL)
-    else
-        call CAMSPEC_EXTRA_LKL_V3(LKL,CL)
-    endif
-
-END SUBROUTINE CAMSPEC_EXTRA_LKL
-
-SUBROUTINE CAMSPEC_EXTRA_LKL_V1(LKL,CL)
-    USE CAMSPEC_EXTRA
-    use temp_like
-    implicit none
-
-    REAL(8),INTENT(OUT)::LKL
-    REAL(8),DIMENSION(0:npar-1)::CL
-    real(8)::zlike, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, &
-         cal0, cal1, cal2, xi, A_ksz
-    real*8, dimension(1:beam_Nspec,1:num_modes_per_beam) :: beam_coeffs
-    INTEGER::l,i,j,cnt,offset
-    real(8)::tlkl
-
-    cltt(:lmin-1) = 0
-    DO l=lmin,lmax
-        ! camspec expects cl/2pi !!! argl !
-        !cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
-        cltt(l)=CL(l-lmin)/2./3.141592653589793
-    ENDDO
-    offset = (lmax+1-lmin)
-
-    do i=1,num_non_beam
-        nuisance(i) = CL(offset + i-1)
-    enddo
-    !A_ps_100  = CL(lmax+1-lmin + 0)
-    !A_ps_143  = CL(lmax+1-lmin + 1)
-    !A_ps_217  = CL(lmax+1-lmin + 2)
-    !A_cib_143 = CL(lmax+1-lmin + 3)
-    !A_cib_217 = CL(lmax+1-lmin + 4)
-    !A_sz      = CL(lmax+1-lmin + 5)
-    !r_ps      = CL(lmax+1-lmin + 6)
-    !r_cib     = CL(lmax+1-lmin + 7) 
-    !cal0      = CL(lmax+1-lmin + 8) 
-    !cal1      = CL(lmax+1-lmin + 9) 
-    !cal2      = CL(lmax+1-lmin + 10)     
-    !xi        = CL(lmax+1-lmin + 11)     
-    !A_ksz     = CL(lmax+1-lmin + 12)
-
-    !print *,CL(lmax+1-lmin+14)
-
-    cnt = 1
-    DO i=1,keep_num
-            nuisance(cnt+num_non_beam) = CL(offset+num_non_beam+cnt-1)
-            cnt = cnt + 1
-    ENDDO
-
-
-    call calc_like(tlkl,  cltt,nuisance)
-    ! lkl is -2loglike clik returns loglik
-    !print *,tlkl
-    lkl = -tlkl/2.
-
-END SUBROUTINE CAMSPEC_EXTRA_LKL_V1
-
 SUBROUTINE CAMSPEC_EXTRA_LKL_V2(LKL,CL)
     USE CAMSPEC_EXTRA
     use temp_like_camspec
@@ -392,6 +315,89 @@ SUBROUTINE CAMSPEC_EXTRA_LKL_V3(LKL,CL)
     lkl = -tlkl/2.
 
 END SUBROUTINE CAMSPEC_EXTRA_LKL_V3
+
+#endif
+
+SUBROUTINE CAMSPEC_EXTRA_GETCASE(xc)
+    USE CAMSPEC_EXTRA
+    INTEGER::xc
+
+    xc = xcase
+END SUBROUTINE CAMSPEC_EXTRA_GETCASE
+
+SUBROUTINE CAMSPEC_EXTRA_LKL(LKL,CL)
+    USE CAMSPEC_EXTRA
+    implicit none
+
+    REAL(8),INTENT(OUT)::LKL
+    REAL(8),DIMENSION(0:npar-1)::CL
+
+    if (cam_version==1) then
+        call CAMSPEC_EXTRA_LKL_V1(LKL,CL)
+#ifndef CAMSPEC_V1
+    else if (cam_version==2) then
+        call CAMSPEC_EXTRA_LKL_V2(LKL,CL)
+    else
+        call CAMSPEC_EXTRA_LKL_V3(LKL,CL)
+#endif
+    endif
+
+END SUBROUTINE CAMSPEC_EXTRA_LKL
+
+SUBROUTINE CAMSPEC_EXTRA_LKL_V1(LKL,CL)
+    USE CAMSPEC_EXTRA
+    use temp_like
+    implicit none
+
+    REAL(8),INTENT(OUT)::LKL
+    REAL(8),DIMENSION(0:npar-1)::CL
+    real(8)::zlike, A_ps_100, A_ps_143, A_ps_217, A_cib_143, A_cib_217, A_sz, r_ps, r_cib, &
+         cal0, cal1, cal2, xi, A_ksz
+    real*8, dimension(1:beam_Nspec,1:num_modes_per_beam) :: beam_coeffs
+    INTEGER::l,i,j,cnt,offset
+    real(8)::tlkl
+
+    cltt(:lmin-1) = 0
+    DO l=lmin,lmax
+        ! camspec expects cl/2pi !!! argl !
+        !cltt(l)=CL(l-lmin)/2./3.14159265358979323846264338328
+        cltt(l)=CL(l-lmin)/2./3.141592653589793
+    ENDDO
+    offset = (lmax+1-lmin)
+
+    do i=1,num_non_beam
+        nuisance(i) = CL(offset + i-1)
+    enddo
+    !A_ps_100  = CL(lmax+1-lmin + 0)
+    !A_ps_143  = CL(lmax+1-lmin + 1)
+    !A_ps_217  = CL(lmax+1-lmin + 2)
+    !A_cib_143 = CL(lmax+1-lmin + 3)
+    !A_cib_217 = CL(lmax+1-lmin + 4)
+    !A_sz      = CL(lmax+1-lmin + 5)
+    !r_ps      = CL(lmax+1-lmin + 6)
+    !r_cib     = CL(lmax+1-lmin + 7) 
+    !cal0      = CL(lmax+1-lmin + 8) 
+    !cal1      = CL(lmax+1-lmin + 9) 
+    !cal2      = CL(lmax+1-lmin + 10)     
+    !xi        = CL(lmax+1-lmin + 11)     
+    !A_ksz     = CL(lmax+1-lmin + 12)
+
+    !print *,CL(lmax+1-lmin+14)
+
+    cnt = 1
+    DO i=1,keep_num
+            nuisance(cnt+num_non_beam) = CL(offset+num_non_beam+cnt-1)
+            cnt = cnt + 1
+    ENDDO
+
+
+    call calc_like(tlkl,  cltt,nuisance)
+    ! lkl is -2loglike clik returns loglik
+    !print *,tlkl
+    lkl = -tlkl/2.
+
+END SUBROUTINE CAMSPEC_EXTRA_LKL_V1
+
 
 SUBROUTINE CAMSPEC_EXTRA_FG(rCL_FG,NUIS,lm)
     USE CAMSPEC_EXTRA

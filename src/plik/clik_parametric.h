@@ -2,6 +2,8 @@
 #include "io.h"
 #include <math.h>
 #include "clik_dic.h"
+#include "smica.h"
+
 
 #ifndef CLIK_PARAMETRIC
 #define CLIK_PARAMETRIC

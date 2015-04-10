@@ -1,4 +1,7 @@
 #include "clik_helper.h"
+#include "smica.h"
+
+typedef SmicaComp * clik_smica_comp_init_func(cldf * df,int nb, int mT,int mP, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins,error **err);
 
 #if 0 
 cmblkl* clik_lowly_init(hid_t group_id, char* cur_lkl, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {

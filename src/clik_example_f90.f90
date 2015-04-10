@@ -31,7 +31,7 @@ program clik_example_f90
 contains
 subroutine main_CMB
   use clik
-  use clik_plik
+  !use clik_plik
   implicit none
   type(clik_object) :: pself
   character(len=128) :: hdffilename, clfilename, clnames(6)

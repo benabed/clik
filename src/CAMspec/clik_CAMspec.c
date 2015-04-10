@@ -29,6 +29,7 @@ int _set_str(char* ptr, char* val, int mlen) {
 }
 #define _flen_ 100
 
+#ifndef CAMSPEC_V1
 cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   cmblkl *cing;
   int hk;
@@ -320,6 +321,8 @@ cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double u
   return cing;
 }
 #undef _flen_
+#endif
+
 
 cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   int bok;
@@ -359,6 +362,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
   camspec_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"CAMspec already initialized",*err,__LINE__,NULL);
 
+#ifndef CAMSPEC_V1
   hk = cldf_haskey(df,"camspec_version",err);
   forwardError(*err,__LINE__,NULL);
   if (hk==1) {
@@ -375,7 +379,8 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
       return cing;
     }
   }
-
+#endif
+  
   Nspec = cldf_readint(df,"Nspec",err);
   forwardError(*err,__LINE__,NULL);
   

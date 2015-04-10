@@ -153,7 +153,8 @@ SHARED = -shared -Bdynamic
 endif
 
 # get version of the code from the svn version
-VERSION = $(strip $(shell cat svnversion)) MAKEFILE
+#VERSION = $(strip $(shell cat svnversion)) MAKEFILE
+VERSION = MAKEFILE
 
 # some more defines
 #macos
@@ -161,7 +162,7 @@ DEFINESMACOS = -D HAS_RTLD_DEFAULT
 #linux
 DEFINESLINUX = 
 
-DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CLIKSVNVERSION="$(VERSION)"'
+DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CLIKSVNVERSION="$(VERSION)"' -D CAMSPEC_V1
 
 
 ifeq ($(OS),macos)
@@ -185,7 +186,7 @@ endif
 INCLUDES = -I$(CFITSIO_INCPATH)
 
 # final CFLAG and FFLAGS
-CFLAGS = $(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I src -I src/cldf -I src/minipmc -I src/lenslike/plenslike $(INCLUDES)
+CFLAGS = $(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I src -I src/cldf -I src/minipmc -I src/lenslike/plenslike -I src/plik $(INCLUDES)
 FFLAGS += $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
 
 
@@ -239,9 +240,10 @@ CFITSIO =  -L$(CFITSIO_LIBPATH) -lcfitsio
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
 # define some path to find the codes
-vpath %.c src src/minipmc src/cldf src/CAMspec src/component_plugin/basic src/lenslike/plenslike
-vpath %.f90  src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
-vpath  %.F90 src src/minipmc src/cldf src/CAMspec src/gibbs src/act_spt src/lowlike
+SRCPATHLIST := src src/minipmc src/cldf src/CAMspec src/bflike src/component_plugin/basic src/lenslike/plenslike src/cmbonly src/gibbs src/act_spt src/lowlike src/plik src/component_plugin/basic src/component_plugin/basic_P src/component_plugin/cibsz src/component_plugin/dust src/component_plugin/systematics
+vpath %.c $(SRCPATHLIST)
+vpath %.f90  $(SRCPATHLIST)
+vpath  %.F90 $(SRCPATHLIST)
 
 # define color output if needed
 ifeq ($(COLORS),1)
@@ -252,17 +254,20 @@ BLUE_COLOR=\x1b[35;11m
 endif
 
 # all the code
-TOOLS := $(addprefix $(ODIR)/,errorlist.o io.o distribution.o cldf.o)
+TOOLS := $(addprefix $(ODIR)/,errorlist.o io.o distribution.o cldf.o clik_dic.o)
 CLIKMAIN := $(addprefix $(ODIR)/,clik.o lklbs.o lowly_common.o clik_helper.o)
-CLIKLKL := $(addprefix $(ODIR)/,clik_lowlike.o clik_actspt.o clik_gibbs.o clik_CAMspec.o)
-LENSLKL := $(addprefix $(ODIR)/,plenslike_dat_mono.o plenslike_dat_quad.o qest.o wignerd.o)
-ACTSPTLKL := $(addprefix $(ODIR)/,Highell_options.f90.o Highell_subroutines.f90.o  Foregrounds_loading.f90.o ACT_equa_likelihood.f90.o SPT_reichardt_likelihood.f90.o ACT_south_likelihood.f90.o  SPT_keisler_likelihood.f90.o  Highell_likelihood.f90.o clik_actspt.f90.o)
-CAMSPECLKL := $(addprefix $(ODIR)/,CAMspec.f90.o clik_CAMspec.f90.o)
-LOWLIKELKL := $(addprefix $(ODIR)/,healpix_types.f90.o read_archive_map.f90.o read_fits.f90.o br_mod_dist.f90.o Planck_options.f90.o  Planck_teeebb_pixlike.f90.o  Planck_likelihood.f90.o clik_lowlike.f90.o)
-GIBBSLKL := $(addprefix $(ODIR)/,comm_br_mod.f90.o clik_gibbs.f90.o)
-CLIKLKL_F90:= $(ACTSPTLKL) $(CAMSPECLKL) $(GIBBSLKL) $(LOWLIKELKL)
 
-CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CLIKLKL) $(CLIKLKL_F90) $(LENSLKL) $(LAPACKDEP)
+LENSLKL := $(addprefix $(ODIR)/,plenslike_dat_mono.o plenslike_dat_quad.o plenslike_dat_qecl.o plenslike_dat_full.o qest.o wignerd.o clik_lensing.o)
+ACTSPTLKL := $(addprefix $(ODIR)/,Highell_options.f90.o Highell_subroutines.f90.o  Foregrounds_loading.f90.o ACT_equa_likelihood.f90.o SPT_reichardt_likelihood.f90.o ACT_south_likelihood.f90.o  SPT_keisler_likelihood.f90.o  Highell_likelihood.f90.o clik_actspt.f90.o clik_actspt.o)
+CAMSPECLKL := $(addprefix $(ODIR)/,CAMspec.f90.o clik_CAMspec.f90.o clik_CAMspec.o)
+LOWLIKELKL := $(addprefix $(ODIR)/,healpix_types.f90.o read_archive_map.f90.o read_fits.f90.o br_mod_dist.f90.o Planck_options.f90.o  Planck_teeebb_pixlike.f90.o  Planck_likelihood.f90.o clik_lowlike.f90.o clik_lowlike.o)
+GIBBSLKL := $(addprefix $(ODIR)/,comm_br_mod.f90.o comm_gauss_br_mod.f90.o comm_lowl_mod_dist.f90.o clik_gibbs.f90.o clik_gibbs.o)
+BFLIKELKL := $(addprefix $(ODIR)/,long_intrinsic_smw.f90.o fitstools_smw.f90.o bflike_QUonly.f90.o bflike.f90.o bflike_smw.f90.o clik_bflike.f90.o clik_bflike.o)
+PLIKLITELKL := $(addprefix $(ODIR)/,plik_cmbonly.f90.o clik_cmbonly.f90.o clik_cmbonly.o)
+PLIKLKL := $(addprefix $(ODIR)/, smica.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o basic.o basic_P.o basic_tools.o cibsz.o cibsz_tools.o dust.o dust_tools.o corrnoise.o dip.o leakage.o)
+
+CMBLKL:= $(ACTSPTLKL) $(CAMSPECLKL) $(GIBBSLKL) $(LOWLIKELKL) $(BFLIKELKL) $(PLIKLITELKL) $(PLIKLKL)
+CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CMBLKL) $(LENSLKL) $(LAPACKDEP)
 
 
 all: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90
