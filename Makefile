@@ -240,7 +240,7 @@ CFITSIO =  -L$(CFITSIO_LIBPATH) -lcfitsio
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
 # define some path to find the codes
-SRCPATHLIST := src src/minipmc src/cldf src/CAMspec src/bflike src/component_plugin/basic src/lenslike/plenslike src/cmbonly src/gibbs src/act_spt src/lowlike src/plik src/component_plugin/basic src/component_plugin/basic_P src/component_plugin/cibsz src/component_plugin/dust src/component_plugin/systematics
+SRCPATHLIST := src src/minipmc src/cldf src/CAMspec src/bflike src/lenslike/plenslike src/cmbonly src/gibbs src/act_spt src/lowlike src/plik src/plik/component_plugin/basic src/plik/component_plugin/basic_P src/plik/component_plugin/cibsz src/plik/component_plugin/dust src/plik/component_plugin/systematics
 vpath %.c $(SRCPATHLIST)
 vpath %.f90  $(SRCPATHLIST)
 vpath  %.F90 $(SRCPATHLIST)

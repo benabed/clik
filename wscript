@@ -270,11 +270,11 @@ def configure(ctx):
   if osp.exists("src/smica.c"):
     ctx.env.has_plik = True
   # go through the component plugins
-  if osp.exists("src/component_plugin"):
-    for plg in os.listdir("src/component_plugin"):
+  if osp.exists("src/plik/component_plugin"):
+    for plg in os.listdir("src/plik/component_plugin"):
       if plg[0]==".":
         continue
-      pth = osp.join("src/component_plugin",plg)
+      pth = osp.join("src/plik/component_plugin",plg)
       if not osp.isdir(pth):
         continue
       ctx.start_msg("Add plugin : '%s'"%plg)
@@ -342,7 +342,7 @@ def build(ctx):
     if not osp.exists(ppp):
       os.mkdir("%s/share/clik/%s"%(ctx.env["PREFIX"],plg))
     if data:
-      ctx.install_files('${PREFIX}/share/clik/%s'%plg,[osp.join('src/component_plugin/%s'%plg,dt) for dt in data])
+      ctx.install_files('${PREFIX}/share/clik/%s'%plg,[osp.join('src/plik/component_plugin/%s'%plg,dt) for dt in data])
 
   ctx.add_post_fun(post)
 
@@ -372,7 +372,7 @@ def dist(ctx):
   dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
   dist_list += "examples/*.par examples/*.dat "
-  dist_list += "src/component_plugin/** "
+  dist_list += "src/plik/component_plugin/** "
   dist_list += "src/* src/CAMspec/* "
   dist_list += "src/act_spt/* "
   dist_list += "src/bopix/* "
@@ -409,7 +409,7 @@ def dist_public(ctx):
   dist_list += "src/lowlike/* "
   dist_list += "src/bflike/* "
   
-  dist_list += "src/component_plugin/** "
+  dist_list += "src/plik/component_plugin/** "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   exclude_list = " src/".join('src/smica_test.* clik_bopix.*'.split())
   dist_list+=" src/python/".join(["src/python/clik_add_free_calib.py",
