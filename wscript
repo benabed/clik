@@ -267,7 +267,7 @@ def configure(ctx):
       allgood = False
   
   ctx.env.has_plik = False
-  if osp.exists("src/smica.c"):
+  if osp.exists("src/plik"):
     ctx.env.has_plik = True
   # go through the component plugins
   if osp.exists("src/plik/component_plugin"):

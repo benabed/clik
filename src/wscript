@@ -3,13 +3,14 @@ import os.path as osp
 
 def build(bld):
   
-  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c clik_plik.c'.split()
-  source_clik += 'smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c'.split()*bool(bld.env.has_plik)
-  source_clik += ['clik_bopix.c']*(bool(bld.env.has_bopix))
-  source_clik += ['clik_wmap.c']*(bool(bld.env.wmap_src))
-  source_clik += ['clik_lowlike.c']*(bool(bld.env.has_lowlike))
-  source_clik += ['clik_actspt.c']*(bool(bld.env.has_actspt))
-  source_clik += ['clik_gibbs.c']*(bool(bld.env.has_gibbs))
+  source_clik = 'clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c '.split()
+  source_clik += ["plik/"+v for v in  'smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c clik_plik.c'.split()*bool(bld.env.has_plik)]
+  print "LALALAL",bld.env.has_plik
+  source_clik += ['bopix/clik_bopix.c']*(bool(bld.env.has_bopix))
+  source_clik += ['wmap/clik_wmap.c']*(bool(bld.env.wmap_src))
+  source_clik += ['lowlike/clik_lowlike.c']*(bool(bld.env.has_lowlike))
+  source_clik += ['act_spt/clik_actspt.c']*(bool(bld.env.has_actspt))
+  source_clik += ['gibbs/clik_gibbs.c']*(bool(bld.env.has_gibbs))
   if bld.env.has_mspec:
     source_clik += ['mspec/clik_mspec.c']
   if bld.env.has_bicep:
@@ -19,7 +20,7 @@ def build(bld):
   if bld.env.has_bflike:
     source_clik += ["bflike/clik_bflike.c"]
   if bld.env.has_cmbonly:
-    source_clik += ["clik_cmbonly.c"]
+    source_clik += ["cmbonly/clik_cmbonly.c"]
 
 
   source_clik += [osp.join("minipmc", src) for src in 'errorlist.c io.c distribution.c'.split()]*( not bld.env.has_pmc)
@@ -27,8 +28,8 @@ def build(bld):
   source_clik += ['cldf/cldf.c','cldf/cfrd.c']
   for plg in bld.env.PLG:
     for prc in getattr(bld.env,"PLG_%s_SRC"%plg):
-      source_clik += [osp.join("component_plugin",plg,prc)]
-      print "add "+osp.join("component_plugin",plg,prc)
+      source_clik += [osp.join("plik/component_plugin",plg,prc)]
+      print "add "+osp.join("plik/component_plugin",plg,prc)
   source_clik = [src for src in source_clik if src]
   
   #uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc gsl dl cfitsio' ).split() if ff]
@@ -53,7 +54,7 @@ def build(bld):
   bld.shlib(
     source   = source_clik,
     target   = 'clik', 
-    includes = '.'+" minipmc/"*(not bld.env.has_pmc),
+    includes = '. plik'+" minipmc/"*(not bld.env.has_pmc),
     uselib   = uselib_clik,
     use = use_clik,
     defines = ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['HDF5_COMPAT_MODE']*bool(bld.env.has_hdf5)+['CLIK_LENSING']*bool(bld.env.has_lenslike),
@@ -116,7 +117,7 @@ def build(bld):
     if bld.env.has_actspt:
       bld.objects(
         features = 'fc',
-        source = ['clik_actspt.f90'] + [osp.join("act_spt",vv) for vv in 'Foregrounds_loading.F90 Highell_subroutines.F90 ACT_equa_likelihood.F90 Highell_likelihood.F90 SPT_reichardt_likelihood.F90 ACT_south_likelihood.F90 Highell_options.F90 SPT_keisler_likelihood.F90'.split()],
+        source = [osp.join("act_spt",vv) for vv in 'Foregrounds_loading.F90 Highell_subroutines.F90 ACT_equa_likelihood.F90 Highell_likelihood.F90 SPT_reichardt_likelihood.F90 ACT_south_likelihood.F90 Highell_options.F90 SPT_keisler_likelihood.F90 clik_actspt.f90'.split()],
         target = 'actspt',
         uselib = 'lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
@@ -137,7 +138,7 @@ def build(bld):
     if bld.env.has_cmbonly:
       bld.objects(
         features = 'fc',
-        source = ['clik_cmbonly.f90'] + [osp.join("cmbonly",vv) for vv in 'plik_cmbonly.f90'.split()],
+        source = [osp.join("cmbonly",vv) for vv in 'plik_cmbonly.f90 clik_cmbonly.f90'.split()],
         target = 'cmbonly',
         uselib = 'lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
@@ -154,7 +155,7 @@ def build(bld):
     if bld.env.has_bopix:
       bld.objects(
         features = 'fc',
-        source = ['clik_bopix.f90'] + [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90'.split()],
+        source = [osp.join("bopix",vv) for vv in 'bopix.F90 library.F90 parameter_module.F90 read_parameter.F90 simple_parser.F90 clik_bopix.f90'.split()],
         target = 'mybopix',
         uselib = 'healpix_f90 cfitsio pmc lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
@@ -165,8 +166,7 @@ def build(bld):
     if bld.env.has_gibbs:
       bld.objects(
         features = 'fc',
-        source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90 comm_gauss_br_mod.f90 comm_lowl_mod_dist.f90'.split()],
-        #source = ['clik_gibbs.f90'] + [osp.join("gibbs",vv) for vv in 'comm_br_mod.f90'.split()],
+        source = [osp.join("gibbs",vv) for vv in 'clik_gibbs.f90 comm_br_mod.f90 comm_gauss_br_mod.f90 comm_lowl_mod_dist.f90'.split()],
         target = 'gibbs',
         uselib = 'healpix_f90 pmc cfitsio lapack fc_omp fc_runtime',
         fcflags = bld.env.FCFLAGS_fpic,
@@ -210,7 +210,7 @@ def build(bld):
         target = 'wmap_c_obj')
 
     if bld.env.has_lowlike:
-      lowlike_source  = ['clik_lowlike.f90'] + [osp.join("lowlike",vv) for vv in 'Planck_options.F90  Planck_teeebb_pixlike.F90  Planck_likelihood.F90'.split()]
+      lowlike_source  = [osp.join("lowlike",vv) for vv in 'Planck_options.F90  Planck_teeebb_pixlike.F90  Planck_likelihood.F90 clik_lowlike.f90'.split()]
       bld.objects(
         features = 'fc',
         source = lowlike_source,
@@ -230,9 +230,9 @@ def build(bld):
     
     if bld.env.wmap_src:
       if bld.env.wmap_version==7:
-        wmap_src = ['clik_wmap_7.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90'.split()]
+        wmap_src = [osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_7yr_options.F90 WMAP_7yr_util.f90 WMAP_7yr_gibbs.F90 WMAP_7yr_tt_pixlike.F90 WMAP_7yr_tt_beam_ptsrc_chisq.f90 WMAP_7yr_teeebb_pixlike.F90 WMAP_7yr_tetbeebbeb_pixlike.F90 WMAP_7yr_likelihood.F90 clik_wmap_7.f90'.split()]
       else:
-        wmap_src = ['clik_wmap_9.f90']+[osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_9yr_options.F90 WMAP_9yr_util.f90 WMAP_9yr_gibbs.F90 WMAP_9yr_tt_pixlike.F90 WMAP_9yr_tt_beam_ptsrc_chisq.f90 WMAP_9yr_teeebb_pixlike.F90 WMAP_9yr_tetbeebbeb_pixlike.F90 WMAP_9yr_likelihood.F90'.split()]
+        wmap_src = [osp.join(bld.env.wmap_src,vv) for vv in 'WMAP_9yr_options.F90 WMAP_9yr_util.f90 WMAP_9yr_gibbs.F90 WMAP_9yr_tt_pixlike.F90 WMAP_9yr_tt_beam_ptsrc_chisq.f90 WMAP_9yr_teeebb_pixlike.F90 WMAP_9yr_tetbeebbeb_pixlike.F90 WMAP_9yr_likelihood.F90 clik_wmap_9.f90'.split()]
       bld.objects(
          features = 'fc',
          source = wmap_src,
@@ -270,7 +270,7 @@ def build(bld):
   
     bld(
       features = "fc cshlib c fcshlib",
-      source = 'clik_fortran.c clik.F90 clik_plik.f90',
+      source = 'clik_fortran.c clik.F90 plik/clik_plik.f90',
       target = 'clik_f90',
       includes = '.'+" minipmc/"*(not bld.env.has_pmc),
       use = 'clik',

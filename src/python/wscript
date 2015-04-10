@@ -63,7 +63,7 @@ def build(ctx):
         features = "c cshlib pyext",
         source = "clik/parametric.pyx",
         target  = "parametric",
-        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+        includes = "../ ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
         use = "clik",
         cflags = "-fopenmp",
         install_path = "${PYTHONDIR}/clik"
@@ -83,9 +83,9 @@ def build(ctx):
       for prc in getattr(ctx.env,"PLG_%s_PYTHON"%plg):
         ctx(
         features = "c cshlib pyext",
-        source = osp.join("../component_plugin",plg,prc),
+        source = osp.join("../plik/component_plugin",plg,prc),
         target  = prc.split(".")[0],
-        includes = "clik/ ./ ../"+" ../minipmc/"*(not ctx.env.has_pmc),
+        includes = "clik/ ./ ../  ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
         use = "clik",
         cflags = "-fopenmp",
         install_path = "${PYTHONDIR}/clik"
