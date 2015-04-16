@@ -194,12 +194,13 @@ def configure(ctx):
   
   #camspec
   ctx.env.has_camspec = osp.exists("src/CAMspec")
+  ctx.env.has_camspec_v3 = osp.exists("src/CAMspec/temp_like_v3.f90")
 
   #cmbonly
   ctx.env.has_cmbonly = osp.exists("src/cmbonly")
 
   #actspt
-  #ctx.env.has_actspt = osp.exists("src/act_spt")
+  #ctx.env.has_actspt = osp.exists("src/actspt")
   ctx.env.has_actspt = False
 
   #gibbs
@@ -242,15 +243,6 @@ def configure(ctx):
         ctx.env.wmap_version = 9
         break
   
-  
-  ##wmap dh
-  #if ctx.options.wmap_dh_install or ctx.options.install_all_deps:
-  #  for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]:
-  #    tf = osp.join("src",ctx.env.wmap_src,"DH_"+f)
-  #    if not osp.exists(tf):
-  #      atl.getfromurl("http://background.uchicago.edu/wmap_fast/"+f,tf)
-  ##print [osp.exists(osp.join("src",ctx.env.wmap_src,"DH_"+f)) for f in ["WMAP_7yr_likelihood.F90","br_mod_dist.f90","WMAP_7yr_tetbeebbeb_pixlike.F90"]]
-
   if not ctx.options.no_pytools:
     try:
       configure_numpy(ctx)
@@ -370,12 +362,12 @@ def dist(ctx):
   ctx.base_name = 'clik-'+clik_version
   get_version(ctx)
   dist_list =  "Makefile svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
-  dist_list += "src/python/**/*.py src/python/**/*.pxd src/python/**/*.pyx "
+  dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
+  dist_list += "src/python/tools/*.py "
   dist_list += "examples/*.par examples/*.dat "
   dist_list += "src/plik/component_plugin/** "
   dist_list += "src/* src/CAMspec/* "
-  dist_list += "src/act_spt/* "
-  dist_list += "src/bopix/* "
+  dist_list += "src/actspt/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
   dist_list += "src/mspec/* "
@@ -401,8 +393,9 @@ def dist_public(ctx):
   get_version(ctx)
   dist_list =  "Makefile setup.py svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
+  #dist_list += "src/python/tools/*.py "
   dist_list += "src/* src/CAMspec/* "
-  dist_list += "src/act_spt/* "
+  dist_list += "src/actspt/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
   dist_list += "src/cmbonly/* "
@@ -412,7 +405,7 @@ def dist_public(ctx):
   dist_list += "src/plik/component_plugin/** "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   exclude_list = " src/".join('src/smica_test.* clik_bopix.*'.split())
-  dist_list+=" src/python/".join(["src/python/clik_add_free_calib.py",
+  dist_list+=" src/python/tools".join(["clik_add_free_calib.py",
               "clik_explore_1d.py",
               "clik_get_selfcheck.py",
               "clik_example_py.py",

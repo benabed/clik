@@ -1,4 +1,4 @@
-#include "clik.h"
+//#include "clik.h"
 #include "clik_helper.h"
 #include <errno.h>
 #include <string.h>
@@ -380,7 +380,7 @@ cmblkl* clik_CAMspec_init(cldf *df, int nell, int* ell, int* has_cl, double unit
     }
   }
 #endif
-  
+
   Nspec = cldf_readint(df,"Nspec",err);
   forwardError(*err,__LINE__,NULL);
   

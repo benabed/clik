@@ -47,17 +47,16 @@ def build(ctx):
       cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
-    if ctx.env.has_lenslike:
-      ctx(
-        features = "c cshlib pyext",
-        source = "clik/lkl_lensing.pyx",
-        target  = "lkl_lensing",
-        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
-        use = "clik",
-        cflags = "-fopenmp",
-        install_path = "${PYTHONDIR}/clik",
-        defines = ["CLIK_LENSING"]
-      ) 
+    ctx(
+      features = "c cshlib pyext",
+      source = "clik/lkl_lensing.pyx",
+      target  = "lkl_lensing",
+      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+      use = "clik",
+      cflags = "-fopenmp",
+      install_path = "${PYTHONDIR}/clik",
+      defines = ["CLIK_LENSING"]
+    ) 
     if (ctx.env.has_plik):
       ctx(
         features = "c cshlib pyext",
@@ -68,35 +67,25 @@ def build(ctx):
         cflags = "-fopenmp",
         install_path = "${PYTHONDIR}/clik"
       )
-    if (ctx.env.has_f90 and ctx.env.has_egfs):
-      ctx(
-        features = "c cshlib pyext",
-        source = "clik/egfs.pyx",
-        target  = "egfs",
-        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
-        use = "clik",
-        cflags = "-fopenmp",
-        install_path = "${PYTHONDIR}/clik"
-      )
-    for plg in ctx.env.PLG:
-      ctx.env.append_unique("CYTHONFLAGS","-I"+osp.join(os.getcwd(),"src/python/clik"))
-      for prc in getattr(ctx.env,"PLG_%s_PYTHON"%plg):
-        ctx(
-        features = "c cshlib pyext",
-        source = osp.join("../plik/component_plugin",plg,prc),
-        target  = prc.split(".")[0],
-        includes = "clik/ ./ ../  ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
-        use = "clik",
-        cflags = "-fopenmp",
-        install_path = "${PYTHONDIR}/clik"
-      ) 
+      for plg in ctx.env.PLG:
+        ctx.env.append_unique("CYTHONFLAGS","-I"+osp.join(os.getcwd(),"src/python/clik"))
+        for prc in getattr(ctx.env,"PLG_%s_PYTHON"%plg):
+          ctx(
+          features = "c cshlib pyext",
+          source = osp.join("../plik/component_plugin",plg,prc),
+          target  = prc.split(".")[0],
+          includes = "clik/ ./ ../  ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
+          use = "clik",
+          cflags = "-fopenmp",
+          install_path = "${PYTHONDIR}/clik"
+        ) 
   
   ctx(
-    source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/cldf.py clik/crayola.py",
+    source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/cldf.py",
     install_path = "${PYTHONDIR}/clik"
   )
 
-  if osp.exists("../bicep"):
+  if ctx.env.has_bicep:
     ctx(
       source = "../bicep/bicep_util.py",
       install_path = "${PYTHONDIR}"
@@ -105,51 +94,13 @@ def build(ctx):
   
   # python execs
 
-  execlist = ["clik_add_free_calib","clik_add_free_calib_PLANCK","clik_add_free_calib_PLANCK_self",
-              "clik_hdf2cldf",
-              "prepare_gibbs",
-              "prepare_comm_lowl",
-              "clik_smica_changelmax",
-              "clik_smica_change_criterion",
-              "clik_explore_1d",
-              "prepare_actspt",
-              "clik_add_selfcheck",
-              "clik_get_selfcheck",
-              "clik_add_default",
-              "clik_example_py",
-              "clik_join",
-              "clik_disjoin",
-              "clik_print",
-              "clik_add_prior",
-              "prepare_wmap",
-              "prepare_lowlike",
-              "clik_include_external",
-              "clik_extract_external",
-              "prepare_CAMspec",
-              "clik_smica_add_gcal",
-              "clik_remove_smica_component",
-              "prepare_plig",
-              "clik_cldf_dump",
-              "clik_cldf_ls",
-              "clik_lensing_flip_renorm",
-              "clik_lensing_flip_ren1",
-              "prepare_bicep",
-              "simu_plig","prepare_mspec","prepare_lollipop","prepare_bflike","prepare_plik_cmbonly","prepare_lensing_quick"]
-  old =   [
-              "synthetic_smica",
-              "create_lowl_problem",
-              "prepare_lowl",
-              "prepare_bopix",
-              "clik_add_egfs",
-              "clik_add_plugin_component",
-  ]
-  tls = os.listdir("src/python")
-  execlist = [ex for ex in execlist if ex+".py" in tls]
+  tls = os.listdir("src/python/tools")
+  execlist = [ex for ex in tls if ".py" in ex]
   for cde in execlist:
     ctx(
       execrule = injectpath,
-      source = cde+".py",
-      target = cde,
+      source = osp.join("tools",cde),
+      target = cde[:-3],
       install_path = ctx.env.BINDIR
       )    
 
@@ -167,3 +118,15 @@ def build(ctx):
       target = "mspec_main",
       install_path = ctx.env.BINDIR
       )    
+
+
+  ###    if (ctx.env.has_f90 and ctx.env.has_egfs):
+  ###      ctx(
+  ###        features = "c cshlib pyext",
+  ###        source = "clik/egfs.pyx",
+  ###        target  = "egfs",
+  ###        includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+  ###        use = "clik",
+  ###        cflags = "-fopenmp",
+  ###        install_path = "${PYTHONDIR}/clik"
+  ###      )
