@@ -193,8 +193,8 @@ def configure(ctx):
   
   
   #camspec
-  ctx.env.has_camspec = osp.exists("src/CAMspec")
-  ctx.env.has_camspec_v3 = osp.exists("src/CAMspec/temp_like_v3.f90")
+  ctx.env.has_camspec = osp.exists("src/camspec")
+  ctx.env.has_camspec_v3 = osp.exists("src/camspec/temp_like_v3.f90")
 
   #cmbonly
   ctx.env.has_cmbonly = osp.exists("src/cmbonly")
@@ -366,7 +366,7 @@ def dist(ctx):
   dist_list += "src/python/tools/*.py "
   dist_list += "examples/*.par examples/*.dat "
   dist_list += "src/plik/component_plugin/** "
-  dist_list += "src/* src/CAMspec/* "
+  dist_list += "src/* src/camspec/* "
   dist_list += "src/actspt/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
@@ -394,7 +394,7 @@ def dist_public(ctx):
   dist_list =  "Makefile setup.py svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
   dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
   #dist_list += "src/python/tools/*.py "
-  dist_list += "src/* src/CAMspec/* "
+  dist_list += "src/* src/camspec/* "
   dist_list += "src/actspt/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
