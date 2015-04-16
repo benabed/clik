@@ -422,7 +422,7 @@ def dist_public(ctx):
   exclude_list += ["src/cmbonly/plik_cmbonly_test.f90"]
   exclude_list += ["src/gibbs/test_comm.c","src/gibbs/validate_comm_lowl.c",]
   exclude_list += ["src/lowlike/test.F90"]
-
+  exclude_list += ["plik/component_plugin/ffp8/**"]
   
   print exclude_list
   
