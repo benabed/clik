@@ -404,7 +404,6 @@ def dist_public(ctx):
   
   dist_list += "src/plik/component_plugin/** "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
-  exclude_list = " src/".join('src/smica_test.* clik_bopix.*'.split())
   dist_list+=" src/python/tools".join(["clik_add_free_calib.py",
               "clik_explore_1d.py",
               "clik_get_selfcheck.py",
@@ -414,6 +413,17 @@ def dist_public(ctx):
               "clik_print.py",
               "prepare_wmap.py",
               "clik_extract_external.py"])
+  
+  exclude_list = []
+  exclude_list += ["src/actspt/test.f90","src/actspt/test_actspt.f90"]
+  exclude_list += ["src/bflike/test_bflike.f90","src/bflike/test_bflike_smw.f90"]
+  exclude_list += ["src/camspec/CAMtst.f90","src/camspec/temp_like.f90","src/camspec/temp_like.f90","src/camspec/temp_like_v3.f90"]
+  exclude_list += ["src/cldf/test_cldf.c"]
+  exclude_list += ["src/cmbonly/plik_cmbonly_test.f90"]
+  exclude_list += ["src/gibbs/test_comm.c","src/gibbs/validate_comm_lowl.c",]
+  exclude_list += ["src/lowlike/test.F90"]
+
+  
   print exclude_list
   
   excl_list = ctx.path.ant_glob(exclude_list)
