@@ -370,7 +370,7 @@ def dist(ctx):
   dist_list += "src/* src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
   dist_list += "src/python/tools/*.py "
   dist_list += "examples/*.par examples/*.dat "
-  dist_list += "src/plik/component_plugin/** src/plik/*"
+  dist_list += "src/plik/component_plugin/** src/plik/* "
   dist_list += "src/* src/camspec/* "
   dist_list += "src/actspt/* "
   dist_list += "src/lowlike/* "
