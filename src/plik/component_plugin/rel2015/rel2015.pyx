@@ -1,5 +1,5 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template
-from clik.parametric import powerlaw_free_emissivity,rename_machine,rename_replace
+from clik.parametric import powerlaw_free_emissivity,rename_machine,rename_replace,norename
 
 cdef extern c_parametric *gal545_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *gal_TE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
