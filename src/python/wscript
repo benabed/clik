@@ -58,6 +58,7 @@ def build(ctx):
       defines = ["CLIK_LENSING"]
     ) 
     if (ctx.env.has_plik):
+      ctx.env.append_unique("CYTHONFLAGS","-I"+osp.join(os.getcwd(),"src/python/clik"))
       ctx(
         features = "c cshlib pyext",
         source = "clik/parametric.pyx",
@@ -68,7 +69,6 @@ def build(ctx):
         install_path = "${PYTHONDIR}/clik"
       )
       for plg in ctx.env.PLG:
-        ctx.env.append_unique("CYTHONFLAGS","-I"+osp.join(os.getcwd(),"src/python/clik"))
         for prc in getattr(ctx.env,"PLG_%s_PYTHON"%plg):
           ctx(
           features = "c cshlib pyext",

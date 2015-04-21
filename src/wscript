@@ -23,6 +23,8 @@ def build(bld):
 
   # plik
   source_plik = lst('smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c clik_plik.c',"plik",test=bld.env.has_plik)
+  source_plik += lst('smica_ext.c clik_hfipack_ext.c',"plik",test=bld.env.has_plik and (not bld.env.plik_release))
+  clik_defines += ["REL_EXT"]*(not bld.env.plik_release)
   for plg in bld.env.PLG:
     for prc in getattr(bld.env,"PLG_%s_SRC"%plg):
       source_plik += lst(prc,["plik/component_plugin",plg])
@@ -134,8 +136,9 @@ def build(bld):
     source_camspec_f90 = lst(['CAMspec.f90','clik_CAMspec.F90'],"camspec")
     if bld.env.has_camspec_v3:
       source_camspec_f90 = lst(['CAMspec.f90','clik_CAMspec.F90','temp_like.f90','temp_like_v3.f90'],"camspec")
+    else:
       clik_defines += ["CAMSPEC_V1"]
-
+    
     bld.objects(
       features = 'fc',
       source = source_camspec_f90, 
@@ -143,6 +146,7 @@ def build(bld):
       uselib = 'fc_runtime',
       fcflags = bld.env.FCFLAGS_fpic,
       cflags = bld.env.CFLAGS_cpic,
+      defines = clik_defines
       )
      
 

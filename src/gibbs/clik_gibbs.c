@@ -3,6 +3,18 @@
 #include <errno.h>
 #include <string.h>
 
+
+void gibbs_extra_free_(int*);
+void gibbs_extra_lkl_(double*,int*,double*);
+void   gibbs_extra_parameter_init_(int*, char*,int*,int*,int*,int*,int*,int*,int*,int*,int*);
+void gibbs_gauss_extra_free_(int*);
+void gibbs_gauss_extra_lkl_(double*,int*,double*);
+void gibbs_gauss_extra_parameter_init_(int*,int*,int*,int*);
+void comm_lowl_extra_free_(int*);
+void comm_lowl_extra_lkl_(double*,int*,double*);
+void comm_lowl_extra_parameter_init_(int*,char*,int*,int*,int*);
+
+
 typedef struct {
   int handle;
   int handle_transition;
@@ -216,7 +228,7 @@ cmblkl* clik_comm_lowl_init(cldf *df, int nell, int* ell, int* has_cl, double un
   int lmin,lmax;
   int firstchain,lastchain,firstsample,lastsample,step;
   int hk;
-  gibbs *gb;
+  int *gb;
 
   lmin = ell[0];
   lmax = ell[nell-1];
@@ -236,7 +248,7 @@ cmblkl* clik_comm_lowl_init(cldf *df, int nell, int* ell, int* has_cl, double un
   *((int*) gb) =0;
   //call
   comm_lowl_extra_parameter_init_(gb,parfile,&ldd,&lmin,&lmax);
-  testErrorRetVA(*((int*) gb) <=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,gb->handle);
+  testErrorRetVA(*((int*) gb) <=0,-43255432,"handle return is negative (got %d)",*err,__LINE__,NULL,*gb);
 
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);

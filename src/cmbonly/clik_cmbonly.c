@@ -3,6 +3,12 @@
 #include <errno.h>
 #include <string.h>
 
+
+void plik_cmbonly_extra_free_();
+void plik_cmbonly_extra_lkl_(double*,double*);
+void plik_cmbonly_extra_only_one_(int*);
+void plik_cmbonly_extra_init_(char*,int*,int*,int*,int*);
+
 typedef struct {
   char tmpdir[800];
   } plik_cmbonly;

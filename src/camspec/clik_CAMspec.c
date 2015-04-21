@@ -3,6 +3,12 @@
 #include <errno.h>
 #include <string.h>
 
+void camspec_extra_free_();
+void camspec_extra_lkl_(double*, double*);
+void camspec_extra_only_one_(int*);
+void camspec_extra_fg_(double*, double*, int*);
+
+
 void free_CAMspec(void **none) {
   camspec_extra_free_();
 }

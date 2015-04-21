@@ -3,6 +3,12 @@
 #include <errno.h>
 #include <string.h>
 
+
+void actspt_extra_free_();
+void actspt_extra_lkl_(double*, double*);
+void actspt_extra_only_one_(int*);
+void actspt_extra_parameter_init_(char*,int*,int*,int*,int*,int*,int*,int*,int*,int*,int*,int*);
+
 typedef struct {
   char tmpdir[800];
   } actspt;

@@ -261,10 +261,15 @@ def configure(ctx):
   ctx.env.has_plik = False
   if osp.exists("src/plik"):
     ctx.env.has_plik = True
+  ctx.env.plik_release = False
+  if not osp.exists("src/plik/smica_ext.c"):
+    ctx.env.plik_release=True
   # go through the component plugins
   if osp.exists("src/plik/component_plugin"):
     for plg in os.listdir("src/plik/component_plugin"):
       if plg[0]==".":
+        continue
+      if plg=="rel2015" and ctx.env.plik_release==False:
         continue
       pth = osp.join("src/plik/component_plugin",plg)
       if not osp.isdir(pth):
@@ -377,9 +382,20 @@ def dist(ctx):
   #dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   
-  #print ctx.path.ant_glob(dist_list)
-  ctx.files = ctx.path.ant_glob(dist_list)
+  exclude_list = ["src/plik/component_plugin/rel2015/* ","src/plik/*_rl.*"]
+  excl_list = ctx.path.ant_glob(exclude_list)
   
+  #print ctx.path.ant_glob(dist_list)
+  excl_list = ctx.path.ant_glob(exclude_list)
+  files = ctx.path.ant_glob(dist_list)
+  giles = []
+  print excl_list
+  for f in files:
+    if f in excl_list:
+      continue
+    giles +=[f]
+  ctx.files = giles
+
 import waflib
 class Dist_public(waflib.Scripting.Dist):
   cmd = 'dist_public'
@@ -402,9 +418,9 @@ def dist_public(ctx):
   dist_list += "src/lowlike/* "
   dist_list += "src/bflike/* "
   
-  dist_list += "src/plik/component_plugin/** "
+  dist_list += "src/plik/component_plugin/rel2015/* src/plik/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
-  dist_list+=" src/python/tools".join(["clik_add_free_calib.py",
+  dist_list+=" src/python/tools/".join(["clik_add_free_calib.py",
               "clik_explore_1d.py",
               "clik_get_selfcheck.py",
               "clik_example_py.py",
@@ -422,14 +438,12 @@ def dist_public(ctx):
   exclude_list += ["src/cmbonly/plik_cmbonly_test.f90"]
   exclude_list += ["src/gibbs/test_comm.c","src/gibbs/validate_comm_lowl.c",]
   exclude_list += ["src/lowlike/test.F90"]
-  exclude_list += ["plik/component_plugin/ffp8/**"]
+  exclude_list += ["src/plik/*_ext.*"]
   
-  print exclude_list
   
   excl_list = ctx.path.ant_glob(exclude_list)
   files = ctx.path.ant_glob(dist_list)
   giles = []
-  print excl_list
   for f in files:
     if f in excl_list:
       continue

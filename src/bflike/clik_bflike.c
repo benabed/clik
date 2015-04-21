@@ -3,6 +3,18 @@
 #include <errno.h>
 #include <string.h>
 
+void bflike_extra_lkl_(double*,double*);
+void bflike_extra_free_();
+void bflike_extra_parameter_init_(char*,int*,int*,int*);
+
+void bflike_qu_extra_lkl_(double*,double*);
+void bflike_qu_extra_free_();
+void bflike_qu_extra_parameter_init_(char*,int*,int*,int*);
+
+void bflike_smw_extra_lkl_(double*,double*);
+void bflike_smw_extra_free_();
+void bflike_smw_extra_parameter_init_(char*,int*,int*,int*);
+
 
 double bflike_lkl(void* none, double* pars, error **err) {
   double lkl;

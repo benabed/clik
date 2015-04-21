@@ -566,10 +566,10 @@ int clik_lensing_get_lmax(clik_lensing_object *lclik, error **_err) {
   int lmax[7];
   _dealwitherr;
 
-  _DEBUGHERE_("WARNING< THIS FONCTION IS DEPRECATED","");
-  testErrorRet(lclik->type!=1,-12134,"this deprecated function only works with 'mono' lensing likelihood types",*err,__LINE__,-1);
-  clik_lensing_get_lmaxs(lclik,lmax,err);
-  forwardError(*err,__LINE__,-1);
+  //_DEBUGHERE_("WARNING THIS FONCTION IS %s","DEPRECATED");
+  testErrorRet(0==0,-12134,"This function is deprecated",*err,__LINE__,-1);
+  //clik_lensing_get_lmaxs(lclik,lmax,err);
+  //forwardError(*err,__LINE__,-1);
   return lmax[0];
 }
 

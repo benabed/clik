@@ -62,7 +62,7 @@ int load_plenslike_dat_full( plenslike_dat_full *dat, char *tfname ) {
   dat->qe12          = malloc( dat->nx  * sizeof(int) );
   dat->qe34          = malloc( dat->nx  * sizeof(int) );
 
-  err = fscanf(tf, "%g %g", &dat->s4fid, &dat->s4std);
+  err = fscanf(tf, "%lg %lg", &dat->s4fid, &dat->s4std);
   
   // read bin info
   for (i=0; i<dat->nbins; i++) {

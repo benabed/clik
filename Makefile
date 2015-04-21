@@ -240,7 +240,7 @@ CFITSIO =  -L$(CFITSIO_LIBPATH) -lcfitsio
 LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
 
 # define some path to find the codes
-SRCPATHLIST := src src/minipmc src/cldf src/CAMspec src/bflike src/lenslike/plenslike src/cmbonly src/gibbs src/act_spt src/lowlike src/plik src/plik/component_plugin/basic src/plik/component_plugin/basic_P src/plik/component_plugin/cibsz src/plik/component_plugin/dust src/plik/component_plugin/systematics
+SRCPATHLIST := src src/minipmc src/cldf src/camspec src/bflike src/lenslike/plenslike src/cmbonly src/gibbs src/actspt src/lowlike src/plik src/plik/component_plugin/rel2015 
 vpath %.c $(SRCPATHLIST)
 vpath %.f90  $(SRCPATHLIST)
 vpath  %.F90 $(SRCPATHLIST)
@@ -264,7 +264,7 @@ LOWLIKELKL := $(addprefix $(ODIR)/,healpix_types.f90.o read_archive_map.f90.o re
 GIBBSLKL := $(addprefix $(ODIR)/,comm_br_mod.f90.o comm_gauss_br_mod.f90.o comm_lowl_mod_dist.f90.o clik_gibbs.f90.o clik_gibbs.o)
 BFLIKELKL := $(addprefix $(ODIR)/,long_intrinsic_smw.f90.o fitstools_smw.f90.o bflike_QUonly.f90.o bflike.f90.o bflike_smw.f90.o clik_bflike.f90.o clik_bflike.o)
 PLIKLITELKL := $(addprefix $(ODIR)/,plik_cmbonly.f90.o clik_cmbonly.f90.o clik_cmbonly.o)
-PLIKLKL := $(addprefix $(ODIR)/, smica.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o basic.o basic_P.o basic_tools.o cibsz.o cibsz_tools.o dust.o dust_tools.o corrnoise.o dip.o leakage.o)
+PLIKLKL := $(addprefix $(ODIR)/, smica.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o fg2015.o corrnoise.o leakage.o)
 
 CMBLKL:= $(ACTSPTLKL) $(CAMSPECLKL) $(GIBBSLKL) $(LOWLIKELKL) $(BFLIKELKL) $(PLIKLITELKL) $(PLIKLKL)
 CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CMBLKL) $(LENSLKL) $(LAPACKDEP)

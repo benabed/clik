@@ -3,6 +3,12 @@
 #include <errno.h>
 #include <string.h>
 
+void lowlike_extra_free_();
+void lowlike_extra_lkl_(double*,double*);
+void lowlike_extra_only_one_(int*);
+void lowlike_extra_parameter_init_(int*,int*,int*,int*,int*,int*,int*);
+
+
 typedef struct {
   char tmpdir[800];
   } lowlike;
