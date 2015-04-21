@@ -367,7 +367,7 @@ def dist(ctx):
   ctx.base_name = 'clik-'+clik_version
   get_version(ctx)
   dist_list =  "svnversion waf wscript **/wscript src/minipmc/* src/cldf/* waf_tools/*.py clik.pdf "
-  dist_list += "src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
+  dist_list += "src/*.c src/*.h src/python/clik/*.py src/python/clik/*.pxd src/python/clik/*.pyx "
   dist_list += "src/python/tools/*.py "
   dist_list += "examples/*.par examples/*.dat "
   dist_list += "src/plik/component_plugin/** src/plik/*.c src/plik/*.h"
