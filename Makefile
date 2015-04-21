@@ -40,6 +40,10 @@ IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcor
 #IFORTLIBPATH = /softs/intel/fce/11.1.075/lib/intel64
 #IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifport -lifcoremt -lpthread
 
+# on a linux machine, ifort 14.0
+#IFORTLIBPATH = /softs/intel/xe/composer_xe_2013_sp1.1.106/compiler/lib/intel64
+#IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifport -lifcoremt -lirc -lpthread
+
 # gfortran
 # if you are using gfortran set here where the lib are installed
 # and check the runtime libs
@@ -202,7 +206,8 @@ LAPACKMACOS = -L$(LAPACKLIBPATHMACOS) -lBLAS -lLAPACK
 LAPACKMKLCORELIB = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core
 LAPACKMKL = -L$(LAPACKLIBPATHMKL) $(LAPACKMKLCORELIB)  -liomp5 -lpthread -lm
 
-LAPACK_FUNC := dtrsv  dpotrf  dpotrs  dpotri  dtrtri  dtrmm  dtrmv  dgeqrf  dormqr  dsyev  dgesvd  dsymv  dgemv  dgemm  dsyrk  dsyr2k  daxpy  dtrsm  dsymm  dsyr  ddot
+#LAPACK_FUNC := dtrsv  dpotrf  dpotrs  dpotri  dtrtri  dtrmm  dtrmv  dgeqrf  dormqr  dsyev  dgesvd  dsymv  dgemv  dgemm  dsyrk  dsyr2k  daxpy  dtrsm  dsymm  dsyr  ddot
+LAPACK_FUNC = $(shell python -c"print(\" \".join(open(\"waf_tools/lapack_funcs.txt\").read().strip().split()))")
 MKL_TO_INCLUDE := $(addprefix -u ,$(addsuffix _,$(LAPACK_FUNC)))
 MKL_LIB_FULLPATH := $(filter $(addsuffix .a,$(addprefix %/lib,$(subst -l,,$(filter -l%,$(LAPACKMKLCORELIB))))),$(wildcard $(subst -L,,$(filter -L%,$(LAPACKMKL)))/lib*.a))
 

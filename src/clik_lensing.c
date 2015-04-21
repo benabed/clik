@@ -598,7 +598,7 @@ int clik_lensing_get_extra_parameter_names(clik_lensing_object* lclik, parnam **
     _forwardError(*err,__LINE__,-1);
     *names = pn;  
     if (lclik->type==4) {
-      sprintf(pn[0],"%s","A_Planck");
+      sprintf(pn[0],"%s","A_planck");
     }
   }
 
