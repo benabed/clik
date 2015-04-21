@@ -153,8 +153,8 @@ SHARED = -shared -Bdynamic
 endif
 
 # get version of the code from the svn version
-#VERSION = $(strip $(shell cat svnversion)) MAKEFILE
-VERSION = MAKEFILE
+VERSION = $(strip $(shell cat svnversion)) MAKEFILE
+#VERSION = MAKEFILE
 
 # some more defines
 #macos

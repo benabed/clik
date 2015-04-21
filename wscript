@@ -418,7 +418,7 @@ def dist_public(ctx):
   dist_list += "src/lowlike/* "
   dist_list += "src/bflike/* "
   
-  dist_list += "src/plik/component_plugin/rel2015/* src/plik/* "
+  dist_list += " src/plik/component_plugin/rel2015/* src/plik/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   dist_list+=" src/python/tools/".join(["clik_add_free_calib.py",
               "clik_explore_1d.py",
