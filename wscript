@@ -445,8 +445,11 @@ def dist_public(ctx):
   files = ctx.path.ant_glob(dist_list)
   giles = []
   for f in files:
+    print f.abspath(),
     if f in excl_list:
+      print "X"
       continue
+    print ""
     giles +=[f]
   ctx.files = giles
   
