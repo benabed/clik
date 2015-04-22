@@ -47,12 +47,9 @@ def options(ctx):
   ctx.load("try_icc","waf_tools")
   ctx.load("try_ifort","waf_tools")
   ctx.load("mbits","waf_tools")
-  #ctx.load("autoinstall_gsl","waf_tools")
-  ctx.load("autoinstall_hdf5","waf_tools")
   ctx.load("any_lapack","waf_tools")
   ctx.load("cfitsio","waf_tools")
 
-  ctx.load("chealpix","waf_tools")
   ctx.load("pmclib","waf_tools")
   ctx.load("python")
 
@@ -73,7 +70,6 @@ def options(ctx):
   grp.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
   ctx.add_option_group(grp)
   options_numpy(ctx)
-  options_h5py(ctx)
   options_pyfits(ctx)
   options_cython(ctx)
   
@@ -87,7 +83,6 @@ def options(ctx):
   grp.add_option("--wmap_install",action="store_true",default=False,help="download latest wmap likelihood for me")
   #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
   grp.add_option("--no_lenslike",action="store_true",default=False,help="do not build the lensing likelihood")
-  grp.add_option("--hdf5",action="store_true",default=False,help="use hdf5")
   
   ctx.add_option_group(grp)
   
@@ -161,23 +156,13 @@ def configure(ctx):
   ctx.env.silent_pmc = True
   ctx.load("pmclib","waf_tools")
 
-  ctx.env.has_hdf5 = False
-  if ctx.options.hdf5:
-    if (not ctx.env.has_pmc) or ("hdf5" not in ctx.env.LIB_pmc):
-      #configure hdf5
-      ctx.env.has_hdf5 = True
-      ctx.load("autoinstall_hdf5","waf_tools")
   
   if (not ctx.env.has_pmc) or ("HAS_LAPACK" not in ctx.env.DEFINES_pmc):
     #configure lapack
     ctx.env.has_lapack = True
     ctx.load("any_lapack","waf_tools")
 
-  #if (not ctx.env.has_pmc) or ("gsl" not in ctx.env.LIB_pmc):
-  #  # configure gsl
-  #  ctx.env.has_gsl = True
-  #  ctx.load("autoinstall_gsl","waf_tools")
-
+  
   #configure cfitsio
   ctx.env.has_cfitsio = True
   ctx.load("cfitsio","waf_tools")
@@ -191,11 +176,6 @@ def configure(ctx):
   #lowlike
   ctx.env.has_lowlike =   not (ctx.options.no_lowlike or not osp.exists("src/lowlike"))
 
-  #configure chealpix
-  if ctx.env.has_bopix:
-    ctx.env.has_chealpix = ctx.env.has_bopix
-    ctx.load("chealpix","waf_tools")
-  
   
   #camspec
   ctx.env.has_camspec = osp.exists("src/camspec")
@@ -253,8 +233,6 @@ def configure(ctx):
       configure_numpy(ctx)
       configure_pyfits(ctx)
       configure_cython(ctx)
-      if bool(ctx.env.has_hdf5):
-        configure_h5py(ctx)
       
     except Exception,e:
       #ctx.options.no_pytools = True
@@ -473,8 +451,8 @@ def post(ctx):
 def build_env_files(ctx):
   import os
   import os.path as ops
-  #full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_gsl + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
-  full_libpath = set(ctx.env.LIBPATH_chealpix + ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_hdf5 + ctx.env.LIBPATH_healpix_f90 + ctx.env.LIBPATH_lapack)
+  #full_libpath = set(ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_lapack)
+  full_libpath = set(ctx.env.LIBPATH_fc_runtime  + ctx.env.LIBPATH_lapack)
   #print full_libpath
   #tcsh and co
   shell = "csh"
@@ -549,9 +527,6 @@ def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   print >>f,single_tmpl%{"PATH":",".join(ctx.env.PLG),"VAR":"CLIK_PLUGIN"}
   f.close()
 
-def options_h5py(ctx):
-  import autoinstall_lib as atl
-  atl.add_python_option(ctx,"h5py")
 def options_pyfits(ctx):
   import autoinstall_lib as atl
   atl.add_python_option(ctx,"pyfits")
@@ -560,18 +535,6 @@ def options_numpy(ctx):
 def options_cython(ctx):
   atl.add_python_option(ctx,"cython")
 
-def configure_h5py(ctx):
-  import autoinstall_lib as atl
-  if ctx.env.INCLUDES_hdf5:
-    HDF5_DIR=osp.split(ctx.env.INCLUDES_hdf5[0])[0]
-  else:
-    fi = ctx.find_file("hdf5.h",ctx.env.INCLUDES_pmc)
-    #print fi
-    HDF5_DIR=osp.split(osp.split(fi)[0])[0]
-  HDF5_API="18"
-  cmdline =  "cd build/%s;HDF5_DIR=%s HDF5_API=%s  PYTHONPATH=%s %s setup.py build_ext -L%s ;HDF5_DIR=%s HDF5_API=%s PYTHONPATH=%s %s setup.py install --install-lib=%s"%("h5py-1.3.1",HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],HDF5_DIR,HDF5_API,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR)
-
-  atl.configure_python_module(ctx,"h5py","http://h5py.googlecode.com/files/h5py-1.3.1.tar.gz","h5py-1.3.1.tar.gz","h5py-1.3.1",cmdline)
 
 def configure_numpy(ctx):
   import autoinstall_lib as atl
@@ -654,110 +617,3 @@ int main(int argc, char **argv)
    return 0;
 }
 '''
-#  @conf
-#  def check_python_headers(conf):
-#    import os,sys
-#    from waflib import Utils,Options,Errors,Logs
-#    from waflib.TaskGen import extension,before_method,after_method,feature
-#    
-#    env=conf.env
-#    if not env['CC_NAME']and not env['CXX_NAME']:
-#      conf.fatal('load a compiler first (gcc, g++, ..)')
-#    if not env['PYTHON_VERSION']:
-#      conf.check_python_version()
-#    pybin=conf.env.PYTHON
-#    if not pybin:
-#      conf.fatal('Could not find the python executable')
-#    v='prefix SO LDFLAGS LIBDIR LIBPL INCLUDEPY Py_ENABLE_SHARED MACOSX_DEPLOYMENT_TARGET LDSHARED CFLAGS'.split()
-#    try:
-#      lst=conf.get_python_variables(["get_config_var('%s') or ''"%x for x in v])
-#    except RuntimeError:
-#      conf.fatal("Python development headers not found (-v for details).")
-#    vals=['%s = %r'%(x,y)for(x,y)in zip(v,lst)]
-#    conf.to_log("Configuration returned from %r:\n%r\n"%(pybin,'\n'.join(vals)))
-#    dct=dict(zip(v,lst))
-#    x='MACOSX_DEPLOYMENT_TARGET'
-#    if dct[x]:
-#      conf.env[x]=conf.environ[x]=dct[x]
-#    env['pyext_PATTERN']='%s'+dct['SO']
-#    all_flags=dct['LDFLAGS']+' '+dct['CFLAGS']
-#    conf.parse_flags(all_flags,'PYEMBED')
-#    all_flags=dct['LDFLAGS']+' '+dct['LDSHARED']+' '+dct['CFLAGS']
-#    conf.parse_flags(all_flags,'PYEXT')
-#    result=None
-#    if sys.platform.lower()=="darwin":
-#      cf_ext = [vl for vl in env["CFLAGS_PYEXT"] if vl!="-march=native"]
-#      cf_ebd = [vl for vl in env["CFLAGS_PYEMBED"] if vl!="-march=native"]
-#      env["CFLAGS_PYEMBED"] = cf_ebd
-#      env["CFLAGS_PYEXT"] = cf_ext
-#    env["CFLAGS_PYEMBED"] =  env["CFLAGS_PYEMBED"]+["-pthread"]
-#    env["CFLAGS_PYEXT"] += ["-pthread"]
-#    env["LIB_PYEMBED"] =  env["LIB_PYEMBED"]+["pthread"]
-#    env["LIB_PYEXT"] += ["pthread"]
-#
-#
-#    for name in('python'+env['PYTHON_VERSION'],'python'+env['PYTHON_VERSION'].replace('.','')):
-#      if not result and env['LIBPATH_PYEMBED']:
-#        path=env['LIBPATH_PYEMBED']
-#        conf.to_log("\n\n# Trying default LIBPATH_PYEMBED: %r\n"%path)
-#        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in LIBPATH_PYEMBED'%name)
-#      if not result and dct['LIBDIR']:
-#        path=[dct['LIBDIR']]
-#        conf.to_log("\n\n# try again with -L$python_LIBDIR: %r\n"%path)
-#        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in LIBDIR'%name)
-#      if not result and dct['LIBPL']:
-#        path=[dct['LIBPL']]
-#        conf.to_log("\n\n# try again with -L$python_LIBPL (some systems don't install the python library in $prefix/lib)\n")
-#        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in python_LIBPL'%name)
-#      if not result:
-#        path=[os.path.join(dct['prefix'],"libs")]
-#        conf.to_log("\n\n# try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)\n")
-#        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in $prefix/libs'%name)
-#      if result:
-#        break
-#    if result:
-#      env['LIBPATH_PYEMBED']=path
-#      env.append_value('LIB_PYEMBED',[name])
-#    else:
-#      conf.to_log("\n\n### LIB NOT FOUND\n")
-#    if(Utils.is_win32 or sys.platform.startswith('os2')or dct['Py_ENABLE_SHARED']):
-#      env['LIBPATH_PYEXT']=env['LIBPATH_PYEMBED']
-#      env['LIB_PYEXT']=env['LIB_PYEMBED']
-#    num='.'.join(env['PYTHON_VERSION'].split('.')[:2])
-#    conf.find_program([''.join(pybin)+'-config','python%s-config'%num,'python-config-%s'%num,'python%sm-config'%num],var='PYTHON_CONFIG',mandatory=False)
-#    includes=[]
-#    if conf.env.PYTHON_CONFIG:
-#      for incstr in conf.cmd_and_log([conf.env.PYTHON_CONFIG,'--includes']).strip().split():
-#        if(incstr.startswith('-I')or incstr.startswith('/I')):
-#          incstr=incstr[2:]
-#        if incstr not in includes:
-#          includes.append(incstr)
-#      conf.to_log("Include path for Python extensions (found via python-config --includes): %r\n"%(includes,))
-#      env['INCLUDES_PYEXT']=includes
-#      env['INCLUDES_PYEMBED']=includes
-#    else:
-#      conf.to_log("Include path for Python extensions ""(found via distutils module): %r\n"%(dct['INCLUDEPY'],))
-#      env['INCLUDES_PYEXT']=[dct['INCLUDEPY']]
-#      env['INCLUDES_PYEMBED']=[dct['INCLUDEPY']]
-#    if env['CC_NAME']=='gcc':
-#      env.append_value('CFLAGS_PYEMBED',['-fno-strict-aliasing'])
-#      env.append_value('CFLAGS_PYEXT',['-fno-strict-aliasing'])
-#    if env['CXX_NAME']=='gcc':
-#      env.append_value('CXXFLAGS_PYEMBED',['-fno-strict-aliasing'])
-#      env.append_value('CXXFLAGS_PYEXT',['-fno-strict-aliasing'])
-#    if env.CC_NAME=="msvc":
-#      from distutils.msvccompiler import MSVCCompiler
-#      dist_compiler=MSVCCompiler()
-#      dist_compiler.initialize()
-#      env.append_value('CFLAGS_PYEXT',dist_compiler.compile_options)
-#      env.append_value('CXXFLAGS_PYEXT',dist_compiler.compile_options)
-#      env.append_value('LINKFLAGS_PYEXT',dist_compiler.ldflags_shared)
-#    try:
-#      #print env
-#      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',uselib='PYEMBED',fragment=FRAG,errmsg=':-(')
-#    except conf.errors.ConfigurationError:
-#      xx=conf.env.CXX_NAME and'cxx'or'c'
-#      conf.check_cfg(msg='Asking python-config for the flags (pyembed)',path=conf.env.PYTHON_CONFIG,package='',uselib_store='PYEMBED',args=['--cflags','--libs','--ldflags'])
-#      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',msg='Getting pyembed flags from python-config',fragment=FRAG,errmsg='Could not build a python embedded interpreter',features='%s %sprogram pyembed'%(xx,xx))
-#      conf.check_cfg(msg='Asking python-config for the flags (pyext)',path=conf.env.PYTHON_CONFIG,package='',uselib_store='PYEXT',args=['--cflags','--libs','--ldflags'])
-#      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',msg='Getting pyext flags from python-config',features='%s %sshlib pyext'%(xx,xx),fragment=FRAG,errmsg='Could not build python extensions')
