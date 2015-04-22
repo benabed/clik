@@ -20,7 +20,7 @@ def check_openmp_cflags(self, **kw):
 	kw.update({'fragment': OPENMP_CODE})
 	try:
 		self.validate_c(kw)
-		self.run_c_code(**kw)
+		self.run_build(**kw)
 		if 'define_name' in kw:
 			self.define(kw['define_name'], 1)
 		self.end_msg('None')
@@ -35,7 +35,7 @@ def check_openmp_cflags(self, **kw):
 				else:
 					self.fatal('Compiler has to be "c" or "cxx"')
 				kw['linkflags'] = flag
-				kw['success'] = self.run_c_code(**kw)
+				kw['success'] = self.run_build(**kw)
 				self.post_check(**kw)
 				self.end_msg(flag)
 				return

@@ -157,7 +157,7 @@ def build(bld):
   source_clik =  lst('clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c')
   source_clik += lst('cldf.c cfrd.c',"cldf")
   source_clik += lst('errorlist.c io.c distribution.c',"minipmc",test=not bld.env.has_pmc)
-  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp' ).split() if ff]
+  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]
   use_clik = []
   use_clik += ["lowlike"]* bool(bld.env.has_lowlike)
   use_clik += ["wmap"]*bool(bld.env.wmap_src)
@@ -177,7 +177,8 @@ def build(bld):
     uselib   = uselib_clik,
     use = use_clik,
     defines = clik_defines,
-    cflags = bld.env.CCFLAGS_cc_omp
+    cflags = bld.env.CCFLAGS_cc_omp,
+    uselib_store="clik"
     )
   bld.install_files('${INCDIR}', 
                     'clik_lensing.h clik.h clik_dic.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h minipmc/maths_base.h'*(not bld.env.has_pmc))
@@ -187,7 +188,8 @@ def build(bld):
     source = 'clik_example_c.c',
     target = 'clik_example_C',
     use = 'clik',
-    includes = '.'+" minipmc/"*(not bld.env.has_pmc)
+    includes = '.'+" minipmc/"*(not bld.env.has_pmc),
+    uselib = uselib_clik
     )
     
   if bld.env.has_f90:
@@ -198,7 +200,7 @@ def build(bld):
       includes = '.'+" minipmc/"*(not bld.env.has_pmc),
       use = 'clik',
       defines = ['NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike),
-      uselib = 'fc_runtime'
+      uselib = ['fc_runtime']+uselib_clik
       )
     
 

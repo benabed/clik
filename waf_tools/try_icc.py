@@ -13,6 +13,7 @@ def options(ctx):
     grp=optparse.OptionGroup(ctx.parser,"compiler options")
   grp.add_option("--gcc",action="store_true",default=False,help="Do not test for icc and only use gcc")
   grp.add_option("--icc",action="store_true",default=False,help="Do not test for gcc and only use icc")
+  grp.add_option("--clang",action="store_true",default=False,help="Do not test for gcc and only use clang")
   ctx.add_option_group(grp)  
 
 def show_linkline(ctx):
@@ -58,6 +59,29 @@ def do_icc(ctx):
 
   ctx.env.has_icc = True
 
+def do_clang(ctx):
+  ctx.env.CC=[]
+  ctx.env.LINK_CC=[]
+  ctx.load('clang')
+  ctx.start_msg("Check clang version") 
+  v90 = ctx.cmd_and_log(ctx.env.CC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  #version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
+  #if len(version90)<1:
+    #Logs.pprint("PINK","Can't get gfortran version... Let's hope for the best")
+  #  ctx.end_msg("not found, let's hope for the best...",color="PINK")
+  #else:
+  #  version90 = version90[0]
+  #  vmid = int(version90.split(".")[1])
+  #  if vmid<2:
+  #    ctx.end_msg(v90,color="YELLOW")
+  #    raise Errors.WafError("gcc version need to be above 4.2 got %s"%version90)
+  ctx.end_msg(v90)
+  ctx.check_cc(
+    errmsg="failed",msg="Compile a test code with clang",
+    mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
+  ctx.env["CCFLAGS_cc_omp"]=[]
+  #ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
+
 def do_gcc(ctx):
   ctx.env.CC=[]
   ctx.env.LINK_CC=[]
@@ -102,7 +126,7 @@ def configure_gccfirst(ctx):
 
   ctx.env.has_icc = False
   import re  
-  if not Options.options.icc:
+  if not Options.options.icc and not Options.options.clang :
     try:
       do_gcc(ctx)  
       return
@@ -110,8 +134,15 @@ def configure_gccfirst(ctx):
       if Options.options.gcc:
         raise
       Logs.pprint("PINK", "gcc not found, defaulting to icc (cause : %s)"%e)
-
-  do_icc(ctx)
+  if not Options.options.clang :
+    try:
+      do_icc(ctx)
+      return 
+    except Exception,e:
+      if Options.options.icc:
+        raise
+      Logs.pprint("PINK", "gcc not found, defaulting to icc (cause : %s)"%e)
+  do_clang(ctx)
 
 def configure(ctx):
   configure_gccfirst(ctx)
