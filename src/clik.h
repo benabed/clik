@@ -27,7 +27,7 @@ typedef void clik_object;
  
 // in each of the following functions, if err is set to NULL the code exit as soon as it encounters an error (with a call to exit, bad for you if you're using mpi...)
 
-// initialize the planck likelihood from an hdf file
+// initialize the planck likelihood from an cldf file
 clik_object* clik_init(char* hdffilepath, error **err);
 
 // retrieve the list of cls as a list of flags 

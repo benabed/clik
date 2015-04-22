@@ -157,7 +157,7 @@ def build(bld):
   source_clik =  lst('clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c')
   source_clik += lst('cldf.c cfrd.c',"cldf")
   source_clik += lst('errorlist.c io.c distribution.c',"minipmc",test=not bld.env.has_pmc)
-  uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]
+  uselib_clik = [ff for ff in ('chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]
   use_clik = []
   use_clik += ["lowlike"]* bool(bld.env.has_lowlike)
   use_clik += ["wmap"]*bool(bld.env.wmap_src)
@@ -166,7 +166,7 @@ def build(bld):
   use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
   use_clik += ["bflike"]*bool(bld.env.has_bflike)
   use_clik += ["cmbonly"]*bool(bld.env.has_cmbonly)
-  clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['HDF5_COMPAT_MODE']*bool(bld.env.has_hdf5)+['CLIK_LENSING']*bool(bld.env.has_lenslike)
+  clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike)
 
   source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec
 
@@ -178,7 +178,6 @@ def build(bld):
     use = use_clik,
     defines = clik_defines,
     cflags = bld.env.CCFLAGS_cc_omp,
-    uselib_store="clik"
     )
   bld.install_files('${INCDIR}', 
                     'clik_lensing.h clik.h clik_dic.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h minipmc/maths_base.h'*(not bld.env.has_pmc))
