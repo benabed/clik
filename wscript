@@ -129,7 +129,8 @@ def configure(ctx):
       ctx.env.FRAMEWORK_ST=""
       ctx.check_python_version()
       ctx.env["PYTHONDIR"]=ctx.get_python_variables(["get_python_lib(standard_lib=0, prefix=%r) or ''"%ctx.env['PREFIX']])[0]
-      ctx.check_python_headers("pyext")
+      ctx.check_python_headers("pyembed")
+      ctx.env.INCLUDES_PYEXT = ctx.env.INCLUDES_PYEMBED
       # remove unwanted flags for darwin
       _remove_arch(ctx,"CFLAGS_PYEXT")
       _remove_arch(ctx,"LINKFLAGS_PYEXT")
