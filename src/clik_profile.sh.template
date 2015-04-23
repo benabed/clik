@@ -46,6 +46,6 @@ fi
 CLIK_DATA=PREFIX/share/clik
 export CLIK_DATA
 
-CLIK_PLUGIN=basic,ffp6_foreground,pep_cib
+CLIK_PLUGIN=rel2015
 export CLIK_PLUGIN
 

@@ -283,7 +283,14 @@ install_dir:
 	@mkdir -p $(PREFIX)/include
 	@mkdir -p $(PREFIX)/share/clik
 
-install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 | install_dir
+DATAPLIK := $(addprefix src/plik/component_plugin/rel2015/,tsz_143_eps0.50.dat sz_x_cib_template.dat ksz_fromcamspec.dat cib_1h_2h_100_353_Jsr-1_PS_2014_09.dat sky_template_v15_F100_143_217_353.dat cnoise_F100_143_217_353_v17.dat)
+
+install_data: | install_dir
+	@mkdir -p $(PREFIX)/share/clik/rel2015
+	@$(ECHO) "install template data $(BLUE_COLOR) $(DATAPLIK) $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/share/clik/rel2015 $(NO_COLOR)"
+	$(INSTALL) $(DATAPLIK) $(PREFIX)/share/clik/rel2015
+
+install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 install_data | install_dir
 	@$(ECHO) "install libs $(BLUE_COLOR)libclik.$(SO) libclik_f90.$(SO)$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/lib $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(LAPACKDEP) $(PREFIX)/lib
 	@$(ECHO) "install includes $(BLUE_COLOR)clik.h clik.mod$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/include $(NO_COLOR)"
@@ -352,9 +359,10 @@ $(ODIR)/%.f90.o : %.F90
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 
-$(ODIR)/%.py: src/python/%.py
+$(ODIR)/%.py: src/python/tools/%.py 
 	@sed "s@PYTHONEXE@$(PYTHONEXE)@g;s@REPLACEPATH@$(PYTHONPATH)@g" <$< >$@
 	@$(INSTALL) $@ $(PREFIX)/bin/$(subst .py,,$(@F))
+	@$(ECHO) "install python tools $(BLUE_COLOR)  $(subst .py,,$(@F)) $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
 
 $(ODIR)/.print_info: |$(ODIR)
 	@$(ECHO) "\n$(BLUE_COLOR)Compile$(NO_COLOR) clik $(VERSION) "
@@ -369,9 +377,9 @@ $(ODIR)/.print_info: |$(ODIR)
 	@$(ECHO)
 	@touch $(@)
 
-install_python: install $(addprefix $(ODIR)/, clik_add_free_calib.py clik_explore_1d.py prepare_actspt.py clik_get_selfcheck.py clik_example_py.py clik_join.py clik_disjoin.py clik_print.py prepare_wmap.py clik_extract_external.py) |$(ODIR)
+install_python: install $(addprefix $(ODIR)/, $(shell cd src/python/tools/;ls *.py;cd ../../../)) |$(ODIR)
 	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
-
+	
 HAS_CFITSIO_INC := $(shell [ -f $(CFITSIO_INCPATH)/fitsio.h ] && echo OK)
 HAS_CFITSIO_LIB := $(shell [ -f $(CFITSIO_LIBPATH)/libcfitsio.$(SO) ] && echo OK)
 

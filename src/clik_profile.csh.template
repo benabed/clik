@@ -65,5 +65,5 @@ setenv DYLD_LIBRARY_PATH LAPACKLIBPATH:${newvar}
 endif
 setenv CLIK_DATA PREFIX/share/clik
 
-setenv CLIK_PLUGIN basic,ffp6_foreground,pep_cib
+setenv CLIK_PLUGIN rel2015
 

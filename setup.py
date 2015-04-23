@@ -8,7 +8,7 @@ import re
 
 version = open("svnversion").read()+" MAKEFILE"
 prefix = "./"
-includes = [nm.get_include(),prefix+"/include"]
+includes = [nm.get_include(),prefix+"/include","src/","src/python/clik","src/plik/"]
 defines = [("HAS_LAPACK",None),("LAPACK_CLIK",None),("NOHEALPIX",None),("CLIK_LENSING",None)]
 options = {}
 options["include_dirs"] = includes
@@ -24,7 +24,9 @@ setup(name='clik',
       version=version,
       cmdclass = {'build_ext': build_ext},
       ext_modules = [Extension("clik.lkl", ["src/python/clik/lkl.pyx"],**options),
-                     Extension("clik.lkl_lensing", ["src/python/clik/lkl_lensing.pyx"],**options)
+                     Extension("clik.lkl_lensing", ["src/python/clik/lkl_lensing.pyx"],**options),
+                     Extension("clik.parametric", ["src/python/clik/parametric.pyx"],**options),
+                     Extension("clik.rel2015", ["src/plik/component_plugin/rel2015/rel2015.pyx"],**options)
                      ],
       package_dir = {'clik': 'src/python/clik'},
       packages = ['clik'],
