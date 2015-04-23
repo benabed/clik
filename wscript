@@ -120,24 +120,18 @@ def configure(ctx):
     ctx.load("python")
     print ctx.env.PYTHONDIR
     
-    ppp()
     if ctx.env.PYTHON[0]!=sys.executable:
       from waflib.Logs import warn
       warn("reverting to current executable")
       ctx.env.PYTHON[0]=sys.executable
       os.environ["PATH"]=":".join(set(os.environ["PATH"].split(":")+[osp.dirname(sys.executable)]))
     try:
-<<<<<<< mine
-      ctx.check_python_headers()
-      print ctx.env.PYTHONDIR
-=======
       # remove unwanted flags for darwin
       ctx.env.FRAMEWORK_ST=""
       ctx.check_python_version()
       ctx.env["PYTHONDIR"]=ctx.get_python_variables(["get_python_lib(standard_lib=0, prefix=%r) or ''"%ctx.env['PREFIX']])[0]
       ctx.check_python_headers("pyembed")
       ctx.env.INCLUDES_PYEXT = ctx.env.INCLUDES_PYEMBED
->>>>>>> theirs
       # remove unwanted flags for darwin
       _remove_arch(ctx,"CFLAGS_PYEXT")
       _remove_arch(ctx,"LINKFLAGS_PYEXT")
@@ -608,134 +602,3 @@ def configure_cython(ctx):
     f.close()
     os.chmod(osp.join(ctx.env.BINDIR,"cython"),Utils.O755)
   
-def ppp():
-  FRAG='''
-#include <Python.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
-  void Py_Initialize(void);
-  void Py_Finalize(void);
-#ifdef __cplusplus
-}
-#endif
-int main(int argc, char **argv)
-{
-   Py_Initialize();
-   Py_Finalize();
-   return 0;
-}
-'''
-<<<<<<< mine
-  @conf
-  def check_python_headers(conf):
-    import os,sys
-    from waflib import Utils,Options,Errors,Logs
-    from waflib.TaskGen import extension,before_method,after_method,feature
-    
-    env=conf.env
-    print "OHOH",env.PYTHONDIR
-    if not env['CC_NAME']and not env['CXX_NAME']:
-      conf.fatal('load a compiler first (gcc, g++, ..)')
-    if not env['PYTHON_VERSION']:
-      conf.check_python_version()
-    print "OHOH",env.PYTHONDIR
-
-    pybin=conf.env.PYTHON
-    if not pybin:
-      conf.fatal('Could not find the python executable')
-    v='prefix SO LDFLAGS LIBDIR LIBPL INCLUDEPY Py_ENABLE_SHARED MACOSX_DEPLOYMENT_TARGET LDSHARED CFLAGS'.split()
-    try:
-      lst=conf.get_python_variables(["get_config_var('%s') or ''"%x for x in v])
-    except RuntimeError:
-      conf.fatal("Python development headers not found (-v for details).")
-    vals=['%s = %r'%(x,y)for(x,y)in zip(v,lst)]
-    conf.to_log("Configuration returned from %r:\n%r\n"%(pybin,'\n'.join(vals)))
-    dct=dict(zip(v,lst))
-    x='MACOSX_DEPLOYMENT_TARGET'
-    if dct[x]:
-      conf.env[x]=conf.environ[x]=dct[x]
-    env['pyext_PATTERN']='%s'+dct['SO']
-    all_flags=dct['LDFLAGS']+' '+dct['CFLAGS']
-    conf.parse_flags(all_flags,'PYEMBED')
-    all_flags=dct['LDFLAGS']+' '+dct['LDSHARED']+' '+dct['CFLAGS']
-    conf.parse_flags(all_flags,'PYEXT')
-    result=None
-    if sys.platform.lower()=="darwin":
-      cf_ext = [vl for vl in env["CFLAGS_PYEXT"] if vl!="-march=native"]
-      cf_ebd = [vl for vl in env["CFLAGS_PYEMBED"] if vl!="-march=native"]
-      env["CFLAGS_PYEMBED"] = cf_ebd
-      env["CFLAGS_PYEXT"] = cf_ext
-    env["CFLAGS_PYEMBED"] =  env["CFLAGS_PYEMBED"]+["-pthread"]
-    env["CFLAGS_PYEXT"] += ["-pthread"]
-    env["LIB_PYEMBED"] =  env["LIB_PYEMBED"]+["pthread"]
-    env["LIB_PYEXT"] += ["pthread"]
-    print "LALALA",env.PYTHONDIR
-
-    for name in('python'+env['PYTHON_VERSION'],'python'+env['PYTHON_VERSION'].replace('.','')):
-      if not result and env['LIBPATH_PYEMBED']:
-        path=env['LIBPATH_PYEMBED']
-        conf.to_log("\n\n# Trying default LIBPATH_PYEMBED: %r\n"%path)
-        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in LIBPATH_PYEMBED'%name)
-      if not result and dct['LIBDIR']:
-        path=[dct['LIBDIR']]
-        conf.to_log("\n\n# try again with -L$python_LIBDIR: %r\n"%path)
-        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in LIBDIR'%name)
-      if not result and dct['LIBPL']:
-        path=[dct['LIBPL']]
-        conf.to_log("\n\n# try again with -L$python_LIBPL (some systems don't install the python library in $prefix/lib)\n")
-        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in python_LIBPL'%name)
-      if not result:
-        path=[os.path.join(dct['prefix'],"libs")]
-        conf.to_log("\n\n# try again with -L$prefix/libs, and pythonXY name rather than pythonX.Y (win32)\n")
-        result=conf.check(lib=name,uselib='PYEMBED',libpath=path,mandatory=False,msg='Checking for library %s in $prefix/libs'%name)
-      if result:
-        break
-    if result:
-      env['LIBPATH_PYEMBED']=path
-      env.append_value('LIB_PYEMBED',[name])
-    else:
-      conf.to_log("\n\n### LIB NOT FOUND\n")
-    if(Utils.is_win32 or sys.platform.startswith('os2')or dct['Py_ENABLE_SHARED']):
-      env['LIBPATH_PYEXT']=env['LIBPATH_PYEMBED']
-      env['LIB_PYEXT']=env['LIB_PYEMBED']
-    num='.'.join(env['PYTHON_VERSION'].split('.')[:2])
-    conf.find_program([''.join(pybin)+'-config','python%s-config'%num,'python-config-%s'%num,'python%sm-config'%num],var='PYTHON_CONFIG',mandatory=False)
-    includes=[]
-    if conf.env.PYTHON_CONFIG:
-      for incstr in conf.cmd_and_log([conf.env.PYTHON_CONFIG,'--includes']).strip().split():
-        if(incstr.startswith('-I')or incstr.startswith('/I')):
-          incstr=incstr[2:]
-        if incstr not in includes:
-          includes.append(incstr)
-      conf.to_log("Include path for Python extensions (found via python-config --includes): %r\n"%(includes,))
-      env['INCLUDES_PYEXT']=includes
-      env['INCLUDES_PYEMBED']=includes
-    else:
-      conf.to_log("Include path for Python extensions ""(found via distutils module): %r\n"%(dct['INCLUDEPY'],))
-      env['INCLUDES_PYEXT']=[dct['INCLUDEPY']]
-      env['INCLUDES_PYEMBED']=[dct['INCLUDEPY']]
-    if env['CC_NAME']=='gcc':
-      env.append_value('CFLAGS_PYEMBED',['-fno-strict-aliasing'])
-      env.append_value('CFLAGS_PYEXT',['-fno-strict-aliasing'])
-    if env['CXX_NAME']=='gcc':
-      env.append_value('CXXFLAGS_PYEMBED',['-fno-strict-aliasing'])
-      env.append_value('CXXFLAGS_PYEXT',['-fno-strict-aliasing'])
-    if env.CC_NAME=="msvc":
-      from distutils.msvccompiler import MSVCCompiler
-      dist_compiler=MSVCCompiler()
-      dist_compiler.initialize()
-      env.append_value('CFLAGS_PYEXT',dist_compiler.compile_options)
-      env.append_value('CXXFLAGS_PYEXT',dist_compiler.compile_options)
-      env.append_value('LINKFLAGS_PYEXT',dist_compiler.ldflags_shared)
-    try:
-      #print env
-      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',uselib='PYEMBED',fragment=FRAG,errmsg=':-(')
-    except conf.errors.ConfigurationError:
-      xx=conf.env.CXX_NAME and'cxx'or'c'
-      conf.check_cfg(msg='Asking python-config for the flags (pyembed)',path=conf.env.PYTHON_CONFIG,package='',uselib_store='PYEMBED',args=['--cflags','--libs','--ldflags'])
-      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',msg='Getting pyembed flags from python-config',fragment=FRAG,errmsg='Could not build a python embedded interpreter',features='%s %sprogram pyembed'%(xx,xx))
-      conf.check_cfg(msg='Asking python-config for the flags (pyext)',path=conf.env.PYTHON_CONFIG,package='',uselib_store='PYEXT',args=['--cflags','--libs','--ldflags'])
-      conf.check(header_name='Python.h',define_name='HAVE_PYTHON_H',msg='Getting pyext flags from python-config',features='%s %sshlib pyext'%(xx,xx),fragment=FRAG,errmsg='Could not build python extensions')
-=======
->>>>>>> theirs
