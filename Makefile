@@ -31,6 +31,8 @@ FC = ifort
 # ifort
 # if you are using ifort set here where its lib are installed
 # and check the runtime libs
+# PLEASE note that gcc 4.9 and ifort <14.0.4 have an imcompativbility
+# (see https://software.intel.com/en-us/articles/gcc-49-openmp-code-cannot-be-linked-with-intel-openmp-runtime)
 
 # on my mac I got
 IFORTLIBPATH = /usr/bin/ifort-2011-base/compiler/lib
@@ -377,7 +379,8 @@ $(ODIR)/.print_info: |$(ODIR)
 	@$(ECHO)
 	@touch $(@)
 
-install_python: install $(addprefix $(ODIR)/, $(shell cd src/python/tools/;ls *.py;cd ../../../)) |$(ODIR)
+PYTOOLS := $(shell cd src/python/tools/;ls *.py;cd ../../../)
+install_python: install $(addprefix $(ODIR)/, $(PYTOOLS)) |$(ODIR)
 	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
 	
 HAS_CFITSIO_INC := $(shell [ -f $(CFITSIO_INCPATH)/fitsio.h ] && echo OK)

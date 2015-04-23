@@ -112,13 +112,21 @@ def configure(ctx):
     ctx.env.has_f90 = False
     allgood = False
   ctx.load("local_install","waf_tools")
-  
+  if ctx.env.GCC_VERSION and ctx.env.IFORT_VERSION:
+    ctx.start_msg("check compatibility of ifort and gcc versions")
+    gcc_v = [int(v) for v in ctx.env.GCC_VERSION.split("\n")[0].strip().split(" ")[2].split(".")]
+    ifort_v = [int(v) for v in ctx.env.IFORT_VERSION.split(".")]
+    if gcc_v[0]==4 and gcc_v[1]==9:
+      if ifort_v[0]<14 or (ifort_v[0]==14 and ifort_v[1]==0 and ifort_v[2]<4):
+        ctx.end_msg("%s can only be linked with ifort >14.0.4 (you have %s)"%( ctx.env.GCC_VERSION, ctx.env.IFORT_VERSION),color="RED")
+        ctx.fatal('The configuration failed') 
+    ctx.end_msg("ok")
+
+
   if not ctx.options.no_pytools:
     ctx.env.append_value("LIB_PYEMBED",['m','dl','util'])
     ctx.env.append_value("LIB_PYEXT",['m','dl','util'])
-    print ctx.env.PYTHONDIR
     ctx.load("python")
-    print ctx.env.PYTHONDIR
     
     if ctx.env.PYTHON[0]!=sys.executable:
       from waflib.Logs import warn

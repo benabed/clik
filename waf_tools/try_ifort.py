@@ -60,6 +60,7 @@ def ifort_conf(ctx):
   v90 = ctx.cmd_and_log(ctx.env.FC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   v90 = v90.split("\n")[0].strip().split(" ")[2]
   ctx.end_msg(v90)
+  ctx.env.IFORT_VERSION = v90
   majver = int(v90.split(".")[0])
   rl0 = []
   if majver>13:

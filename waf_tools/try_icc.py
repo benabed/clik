@@ -98,7 +98,8 @@ def do_gcc(ctx):
     if vmid<2:
       ctx.end_msg(v90,color="YELLOW")
       raise Errors.WafError("gcc version need to be above 4.2 got %s"%version90)
-    ctx.end_msg(v90)
+  ctx.env.GCC_VERSION=v90
+  ctx.end_msg(v90)
   ctx.check_cc(
     errmsg="failed",msg="Compile a test code with gcc",
     mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
