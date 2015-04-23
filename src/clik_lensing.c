@@ -423,6 +423,14 @@ clik_lensing_object* _clik_lensing_init(char *fpath, error **err) {
       forwardError(*err,__LINE__,NULL);
     }
     
+    hk = cldf_haskey(df,"clik_lensing/check",err);
+    forwardError(*err,__LINE__,NULL);
+    if (hk==1) {
+      plid->check = cldf_readfloat(df,"clik_lensing/check",err);
+      forwardError(*err,__LINE__,NULL);
+      plid->has_check = 1;
+    }
+
     plid->plens_payload = dts_lensing_init( lmax, hascl,  nbins,  bins, p_hat, cors, cor0,  siginv, cl_fid, plid->renorm ,plid->ren1,has_calib,err );
     forwardError(*err,__LINE__,NULL);
     
@@ -743,9 +751,10 @@ void clik_lensing_selftest(clik_lensing_object *lclik, char *fpath, error **err)
   res = clik_lensing_compute(lclik,clt,err);
   forwardError(*err,__LINE__,);
   if (lclik->has_check==1) {
-    printf("Checking lensing likelihood '%s' on test data. got %g (expected %g)\n",fpath,res,lclik->check);  
+    printf("Checking lensing likelihood '%s' on test data. got %g expected %g (diff %g)\n",fpath,res,lclik->check,res-lclik->check);  
+  } else {
+    printf("Checking lensing likelihood '%s' on test data. got %g\n",fpath,res);
   }
-  printf("Checking lensing likelihood '%s' on test data. got %g\n",fpath,res);
 
   free(clt);
 }
