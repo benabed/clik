@@ -156,7 +156,7 @@ def configure(ctx):
       Logs.pprint("BLUE","Cause : '%s'"%e)
       Logs.pprint("BLUE","Compilation will continue without it (but I strongly advise that you install it)")
       allgood = False
-    print ctx.env.PYTHONDIR
+    
     
   # dl
   ctx.check_cc(lib="dl",mandatory=1,uselib_store="dl")
