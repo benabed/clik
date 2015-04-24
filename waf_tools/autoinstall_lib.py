@@ -291,7 +291,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
       if not osp.exists(ctx.env.PYTHONDIR):
         os.makedirs(ctx.env.PYTHONDIR)
       if cmdline==None:
-        cmdline =  "cd build/%s; PYTHONPATH=%s %s setup.py build_ext -L=%s ;PYTHONPATH=%s %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
+        cmdline =  "cd build/%s; PYTHONPATH=%s:$PYTHONPATH %s setup.py build_ext -L=%s ;PYTHONPATH=%s:$PYTHONPATH %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
       waflib.Logs.pprint("PINK",cmdline)
       ret = ctx.exec_command(cmdline)
       if ret!=0:

@@ -124,8 +124,11 @@ def configure(ctx):
 
 
   if not ctx.options.no_pytools:
-    ctx.env.append_value("LIB_PYEMBED",['m','dl','util'])
-    ctx.env.append_value("LIB_PYEXT",['m','dl','util'])
+    import sysconfig
+    ctx.env.append_value("LIB_PYEMBED",['m','dl','util','pthread'])
+    ctx.env.append_value("LIB_PYEXT",['m','dl','util','pthread'])
+    ctx.env.append_value("LIBPATH_PYEMBED",[sysconfig.get_config_var("LIBDIR")])
+    ctx.env.append_value("LIBPATH_PYEXT",[sysconfig.get_config_var("LIBDIR")])
     ctx.load("python")
     
     if ctx.env.PYTHON[0]!=sys.executable:
