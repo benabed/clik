@@ -87,19 +87,12 @@ def do_gcc(ctx):
   ctx.env.LINK_CC=[]
   ctx.load('gcc')
   ctx.start_msg("Check gcc version") 
-  v90 = ctx.cmd_and_log(ctx.env.CC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
-  version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
-  if len(version90)<1:
-    #Logs.pprint("PINK","Can't get gfortran version... Let's hope for the best")
-    ctx.end_msg("not found, let's hope for the best...",color="PINK")
-  else:
-    version90 = version90[0]
-    vmid = int(version90.split(".")[1])
-    if vmid<2:
-      ctx.end_msg(v90,color="YELLOW")
-      raise Errors.WafError("gcc version need to be above 4.2 got %s"%version90)
-  ctx.env.GCC_VERSION=v90
-  ctx.end_msg(v90)
+  version = [int(v) for v in ctx.env.CC_VERSION]
+  if version[0]<4 or (version[0]==4 and version[1]<2):
+    ctx.end_msg(".".join(ctx.env.CC_VERSION),color="YELLOW")
+    raise Errors.WafError("gcc version need to be above 4.2 got %s"%".".join(ctx.env.CC_VERSION))
+  ctx.end_msg(".".join(ctx.env.CC_VERSION))
+  ctx.env.GCC_VERSION = ".".join(ctx.env.CC_VERSION)
   ctx.check_cc(
     errmsg="failed",msg="Compile a test code with gcc",
     mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
@@ -134,7 +127,7 @@ def configure_gccfirst(ctx):
     except Exception,e:
       if Options.options.gcc:
         raise
-      Logs.pprint("PINK", "gcc not found, defaulting to icc (cause : %s)"%e)
+      Logs.pprint("PINK", "gcc not found(cause : %s)"%e)
   if not Options.options.clang :
     try:
       do_icc(ctx)
@@ -142,7 +135,7 @@ def configure_gccfirst(ctx):
     except Exception,e:
       if Options.options.icc:
         raise
-      Logs.pprint("PINK", "gcc not found, defaulting to icc (cause : %s)"%e)
+      Logs.pprint("PINK", "icc not found (cause : %s)"%e)
   do_clang(ctx)
 
 def configure(ctx):

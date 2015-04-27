@@ -114,7 +114,7 @@ def configure(ctx):
   ctx.load("local_install","waf_tools")
   if ctx.env.GCC_VERSION and ctx.env.IFORT_VERSION:
     ctx.start_msg("check compatibility of ifort and gcc versions")
-    gcc_v = [int(v) for v in ctx.env.GCC_VERSION.split("\n")[0].strip().split(" ")[2].split(".")]
+    gcc_v = [int(v) for v in ctx.env.GCC_VERSION.split(".")]
     ifort_v = [int(v) for v in ctx.env.IFORT_VERSION.split(".")]
     if gcc_v[0]==4 and gcc_v[1]==9:
       if ifort_v[0]<14 or (ifort_v[0]==14 and ifort_v[1]==0 and ifort_v[2]<4):
