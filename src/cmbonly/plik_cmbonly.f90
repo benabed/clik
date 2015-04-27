@@ -25,7 +25,10 @@ module Plik_CMBonly
   real(campc), parameter :: PI    = 3.14159265358979323846264d0
   real(campc), dimension(:), allocatable ::  bval,X_data,X_sig,diff_vec
   real(campc), dimension(:,:), allocatable :: covmat, fisher
-  real(campc), dimension(:), allocatable :: blmin,blmax,bin_w
+  !  real(campc), dimension(:), allocatable :: blmin,blmax,bin_w changed to accomodate gfortran
+    integer, dimension(:), allocatable :: blmin, blmax
+    real(campc) :: campcbuf
+    real(campc), dimension(:), allocatable :: bin_w
   real(campc), dimension(:), allocatable :: bl,bm
  
   public like_init_cmbonly, calc_like_cmbonly,use_tt,use_te,use_ee
@@ -128,14 +131,18 @@ module Plik_CMBonly
   call get_free_lun(lun)
   open(unit=lun,file=blmin_file,form='formatted',status='old')
   do i=1,nbintt
-       read(lun,*) blmin(i) 
+  !       read(lun,*) blmin(i) 
+    read(lun,*) campcbuf
+    blmin(i) = int(campcbuf)
   end do
   close(lun)
 
   call get_free_lun(lun)
   open(unit=lun,file=blmax_file,form='formatted',status='old')
   do i=1,nbintt
-       read(lun,*) blmax(i)
+!       read(lun,*) blmax(i)
+    read(lun,*) campcbuf
+    blmax(i) = int(campcbuf)
   end do
   close(lun)
 

@@ -49,7 +49,7 @@ def configure(ctx):
     # parse version
     ctx.start_msg("Check mkl version")
     if ctx.options.lapack_mkl_version.strip()[:4] not in ("10.0","10.1","10.2","10.3"):
-      ctx.end_msg(ctx.options.lapack_mkl_version.strip(),color="YELLOW")
+      ctx.end_msg(ctx.options.lapack_mkl_version.strip()+" not understood, 10.3 library recipe should be ok",color="YELLOW")
       raise Errors.WafError("Cannot understand mkl version '%s'"%ctx.options.lapack_mkl_version.strip())
     version = int(ctx.options.lapack_mkl_version.strip()[:4].split(".")[1])
     ctx.end_msg("10.%d"%version)

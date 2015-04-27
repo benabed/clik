@@ -18,6 +18,7 @@
 PREFIX := $(shell pwd)
 
 # set the path of the cfitsio lib. 
+# bewared that cfitsio must have been compiled with the option "make shared"
 CFITSIOPATH := /usr/local
 #CFITSIOPATH := /softs/cfitsio/3.24
 # you have a CFITSIO lib in a weird location, also set those
@@ -101,7 +102,7 @@ ODIR := $(shell pwd)/buildir/tmp
 # tools
 LD = gcc
 INSTALL = install
-ECHO = echo
+ECHO = echo -e
 
 # get the os
 UNAME := $(shell uname -s)
