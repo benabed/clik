@@ -394,11 +394,11 @@ double smica_crit_gauss(void *vsmic, error **err) {
   }
   //_DEBUGHERE_("%d",iv);
   //gettimeofday(&starttime2,NULL);
- /*
-  one = 1;
-  done = 1;
-  dzero = 0;
-  uplo = 'L';
+ 
+  //one = 1;
+  //done = 1;
+  //dzero = 0;
+  //uplo = 'L';
   //printMat(smic->crit_cor,smic->quad_sn,smic->quad_sn);
   //_DEBUGHER_("%d",smic->quad_sn);
   //write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
@@ -410,8 +410,7 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //    smic->gvec[smic->quad_sn+i] += smic->crit_cor[i*smic->quad_sn+j]*smic->gvec[j];
   //  }
   //}
-  dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
-  */
+  //dsymv(&uplo, &smic->quad_sn, &done, smic->crit_cor, &smic->quad_sn, smic->gvec, &one, &dzero, smic->gvec+smic->quad_sn, &one);
   //write_bin_vector(smic->gvec, "gvecCC.dat", sizeof(double)*(smic->quad_sn), err);   
    //gettimeofday(&starttime3,NULL);
  /*
