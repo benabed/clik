@@ -1,4 +1,5 @@
 from waflib import Logs
+from waflib.Logs import colors
 import sys
 import os.path as osp
 import re
@@ -308,10 +309,24 @@ def configure(ctx):
     ctx.env.LIB_extra = lib
     
   if allgood==False:
-    print "\nConfigure partial.\nYou can build now but you will be lacking some features.\nI advise you to correct the error above before building"
+    print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
+    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   Configure partial.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   You can build now but you will be lacking some   %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   features.                                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+    
   else:
-    print "\nConfigure ok\n\nrun './waf install' now !"
-  
+    print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
+    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   Configure step ok.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+    print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+    
   
 def build(ctx):
   import os
@@ -424,7 +439,7 @@ def dist_public(ctx):
               "clik_disjoin.py",
               "clik_print.py",
               "prepare_wmap.py",
-              "clik_extract_external.py"])
+              "clik_extract_external.py","clik_change_lrange.py"])
   
   exclude_list = []
   exclude_list += ["src/actspt/test.f90","src/actspt/test_actspt.f90"]
@@ -520,8 +535,13 @@ fi"""
     
   __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath)
   
-  print "Source clik_profile.sh (or clik_profile.csh) to set the environment variables needed by clik"
- 
+  print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
+  print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+  print "%s|%s   Source clik_profile.sh (or clik_profile.csh)     %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+  print "%s|%s   to set the environment variables needed by clik  %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+  print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
+  print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+  
 def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   import sys
   if sys.platform.lower()=="darwin":
@@ -536,6 +556,7 @@ def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   print >>f,multi_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
   for pt in full_libpath:
     print >>f,multi_tmpl%{"PATH":pt,"VAR":LD_LIB}
+  print >>f,single_tmpl%{"PATH":ctx.env.PREFIX,"VAR":"CLIK_PATH"}
   print >>f,single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
   print >>f,single_tmpl%{"PATH":",".join(ctx.env.PLG),"VAR":"CLIK_PLUGIN"}
   f.close()

@@ -63,6 +63,8 @@ set newvar=`echo ${newvar} | sed s@^CFITSIOLIBPATH:@@`
 set newvar=LAPACKLIBPATH:${newvar}                     
 setenv DYLD_LIBRARY_PATH LAPACKLIBPATH:${newvar} 
 endif
+
+setenv CLIK_PATH PREFIX
 setenv CLIK_DATA PREFIX/share/clik
 
 setenv CLIK_PLUGIN rel2015

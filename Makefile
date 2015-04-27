@@ -68,8 +68,12 @@ LAPACKLIBPATHMKL =
 #LAPACKLIBPATH = /some/path
 
 
-# pretty colors (comment to remove pretty colors)
+# pretty colors (comment to remove pretty colors or try to change echo to echo -e)
 COLORS = 1
+
+#set echo to echo -e to have colourized output on some shell
+ECHO = echo 
+
 
 # what is the openmp option for your C compiler (leave empty to cmpile without openmp)
 COPENMP = -fopenmp
@@ -102,7 +106,6 @@ ODIR := $(shell pwd)/buildir/tmp
 # tools
 LD = gcc
 INSTALL = install
-ECHO = echo -e
 
 # get the os
 UNAME := $(shell uname -s)
@@ -258,7 +261,8 @@ ifeq ($(COLORS),1)
 NO_COLOR=\x1b[0m
 GREEN_COLOR=\x1b[32;11m
 RED_COLOR=\x1b[31;01m
-BLUE_COLOR=\x1b[35;11m
+BLUE_COLOR=\x1b[36;11m
+PINK_COLOR=\x1b[35m
 endif
 
 # all the code
@@ -302,7 +306,12 @@ install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C 
 	@$(INSTALL)  $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 $(PREFIX)/bin
 	@$(ECHO) "install exec tools $(BLUE_COLOR)clik_example_C clik_example_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(PREFIX)/bin
-
+	@$(ECHO) "\n$(PINK_COLOR)*----------------------------------------------------*"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh (or clik_profile.csh)     $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   to set the environment variables needed by clik  $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
 
 ifdef PYTHON
 PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print 'python%s/site-packages'%sys.version[0:3]"`
@@ -383,7 +392,13 @@ $(ODIR)/.print_info: |$(ODIR)
 PYTOOLS := $(shell cd src/python/tools/;ls *.py;cd ../../../)
 install_python: install $(addprefix $(ODIR)/, $(PYTOOLS)) |$(ODIR)
 	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
-	
+	@$(ECHO) "\n$(PINK_COLOR)*----------------------------------------------------*"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh (or clik_profile.csh)     $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   to set the environment variables needed by clik  $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
+
 HAS_CFITSIO_INC := $(shell [ -f $(CFITSIO_INCPATH)/fitsio.h ] && echo OK)
 HAS_CFITSIO_LIB := $(shell [ -f $(CFITSIO_LIBPATH)/libcfitsio.$(SO) ] && echo OK)
 

@@ -62,7 +62,9 @@ cdef extern from "clik_parametric.h":
 
 cdef set_color(c_parametric *egl, object color,int ndet):
   cdef double *_color
-  cdef error *_err, **err
+  cdef error *_err
+  cdef error **err
+
   _err = NULL
   err = &_err
   if color is not None:
@@ -116,8 +118,11 @@ cdef class parametric:
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
     """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={})"""
     cdef double p_detlist[2000]
-    cdef char *defkey[2000],*defvalue[2000],*key[2000]
-    cdef error *_err,**err
+    cdef char *defkey[2000]
+    cdef char *defvalue[2000]
+    cdef char *key[2000]
+    cdef error *_err
+    cdef error **err
 
     
     _err = NULL
@@ -158,7 +163,8 @@ cdef class parametric:
 
   def _post_init_1(self,color,ndet,voidmask,defs):
     cdef int voidlist[2000]
-    cdef error *_err,**err
+    cdef error *_err
+    cdef error **err
     _err = NULL
     err = &_err
     
@@ -198,7 +204,8 @@ cdef class parametric:
   def _post_init(self,detlist,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
     cdef double _color[2000]
     cdef int i
-    cdef error *_err,**err
+    cdef error *_err
+    cdef error **err
     cdef int voidlist[2000]
 
     _err = NULL
@@ -217,7 +224,8 @@ cdef class parametric:
     self._post_init_2(prs,lmin,lmax)
 
   def get_default_value(self,key):
-    cdef error *_err,**err
+    cdef error *_err
+    cdef error **err
     _err = NULL
     err = &_err
     
@@ -237,8 +245,10 @@ cdef class parametric:
       return False
 
   def __call__(self,pars,derivatives=False):
-    cdef error *_err,**err
-    cdef double *_drq,*_rq
+    cdef error *_err
+    cdef error **err
+    cdef double *_drq
+    cdef double *_rq
       
     
     if len(pars)!=self.celf.nvar:
@@ -295,10 +305,13 @@ cdef class parametric_template(parametric):
   def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
     """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None)"""
     cdef double p_detlist[2000]
-    cdef char *defkey[2000],*defvalue[2000],*key[2000]
+    cdef char *defkey[2000]
+    cdef char *defvalue[2000]
+    cdef char *key[2000]
     cdef double *template
-    cdef error *_err,**err
-    
+    cdef error *_err
+    cdef error **err
+
     _err = NULL
     err = &_err
     
@@ -370,8 +383,11 @@ cdef class parametric_pol(parametric):
   def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
     """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={})"""
     cdef double p_detlist[2000]
-    cdef char *defkey[2000],*defvalue[2000],*key[2000]
-    cdef error *_err,**err
+    cdef char *defkey[2000],
+    cdef char *defvalue[2000]
+    cdef char *key[2000]
+    cdef error *_err
+    cdef error **err
     cdef int p_has_TEB[3]
     
     _err = NULL
@@ -422,7 +438,8 @@ cdef class parametric_pol(parametric):
   def _post_init(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs,dnofail,color,voidmask,*other):
     cdef double _color[2000]
     cdef int i
-    cdef error *_err,**err
+    cdef error *_err
+    cdef error **err
     cdef int voidlist[2000]
 
     _err = NULL
@@ -449,9 +466,12 @@ cdef class parametric_pol_template(parametric_pol):
   def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None):
     """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={},data_dir="",data_path="",data_file="",data=None)"""
     cdef double p_detlist[2000]
-    cdef char *defkey[2000],*defvalue[2000],*key[2000]
+    cdef char *defkey[2000]
+    cdef char *defvalue[2000]
+    cdef char *key[2000]
     cdef double *template
-    cdef error *_err,**err
+    cdef error *_err
+    cdef error **err
     cdef int p_has_TEB[3]
     
     _err = NULL

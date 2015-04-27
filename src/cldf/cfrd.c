@@ -64,6 +64,7 @@ int cfrd_read_err(int fd, char* buf,  error **err) {
       return i;
     }     
   }
+  return 0;
 }
 
 int cfrd_startup(int pipin[2],int pipout[2],char *arg0, char *arg1, error **err) {
@@ -92,7 +93,7 @@ int cfrd_startup(int pipin[2],int pipout[2],char *arg0, char *arg1, error **err)
     write(1,"test\n",5);
     execlp(arg0,arg0,arg1,(char*) NULL);
     // never returns from here, but we never know
-    _DEBUGHERE_("bad oh bad","");
+    _DEBUGHERE_("bad oh bad%s","");
     exit(-1);
   } /* end of child process case */
 
