@@ -18,8 +18,8 @@ def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
   grp = ctx.parser.get_option_group("--lapack_install")
   grp.add_option("--lapack_mkl",action="store",default="",help="if lapack is mkl, location of the mkl install")
-  grp.add_option("--lapack_mkl_version",action="store",default="",help="version of the mkl lib (should be 10.3, 10.2, 10.1 or 10.0)")
-  grp.add_option("--lapack_apple",action="store_true",default=False,help="use apple version of blas/lapack")
+  grp.add_option("--lapack_mkl_version",action="store",default="10.3",help="only needed if version of the mkl library is lower than 10.3 (could be 10.2, 10.1 or 10.0)")
+  grp.add_option("--lapack_apple",action="store_true",default=sys.platform.lower()=="darwin",help="use apple version of blas/lapack")
 
 def do_include(ctx,ptrn="%s_"):
   f=open(osp.join(ctx.env.PREFIX,"include/lapack_clik.h"),"w")
