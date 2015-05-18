@@ -18,7 +18,7 @@ extern "C" {
 #define CLIKSVNVERSION "NOPE"
 #endif
 
-#include "pmc.h"
+#include "errorlist.h"
 
 #define _pn_size 256
 typedef char parname[_pn_size];

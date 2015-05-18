@@ -9,6 +9,8 @@
 
 
 #include "clik.h"
+#include "pmc.h"
+
 #include "clik_helper.h"
 
 // ARE YOU STILL READING ?

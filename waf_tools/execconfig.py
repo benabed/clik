@@ -6,9 +6,11 @@ import os.path as osp
 import os
 
 def uniqify(lst):
-  rlst = lst
+  rlst = []
   for v in lst:
+    #print v, rlst
     if v in rlst:
+      #print "caught"
       continue
     rlst.append(v)
   return rlst

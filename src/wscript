@@ -180,7 +180,7 @@ def build(bld):
     cflags = bld.env.CCFLAGS_cc_omp,
     )
   bld.install_files('${INCDIR}', 
-                    'clik_lensing.h clik.h clik_dic.h'+' minipmc/pmc.h minipmc/io.h minipmc/errorlist.h minipmc/maths_base.h'*(not bld.env.has_pmc))
+                    'clik_lensing.h clik.h'+' minipmc/errorlist.h '*(not bld.env.has_pmc))
   
   bld(
     features = 'c cprogram',
@@ -214,10 +214,10 @@ def build(bld):
 
   # clik_config tools    
   bld.load("execconfig","waf_tools")  
-  bld(features="build_pkgconfig", use='clik', flavor='c',target='clik-config')
+  bld(features="build_pkgconfig", use='clik chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime', flavor='c',target='clik-config')
   
   if bld.env.has_f90:  
-    bld(features="build_pkgconfig", use='clik_f90', flavor='f90',target='clik-config_f90')
+    bld(features="build_pkgconfig", use='clik_f90 clik chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime', flavor='f90',target='clik-config_f90')
   
     
     

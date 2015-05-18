@@ -435,11 +435,9 @@ def dist_public(ctx):
   dist_list+=" src/python/tools/".join(["clik_cldf_dump","clik_cldf_ls","clik_explore_1d.py",
               "clik_get_selfcheck.py",
               "clik_example_py.py",
-              "clik_join.py",
-              "clik_disjoin.py",
               "clik_print.py",
               "prepare_wmap.py",
-              "clik_extract_external.py","clik_change_lrange.py"])
+              "clik_change_lrange.py"])
   
   exclude_list = []
   exclude_list += ["src/actspt/test.f90","src/actspt/test_actspt.f90"]
@@ -480,7 +478,7 @@ def build_env_files(ctx):
   import os
   import os.path as ops
   #full_libpath = set(ctx.env.LIBPATH_fc_runtime + ctx.env.LIBPATH_lapack)
-  full_libpath = set(ctx.env.LIBPATH_fc_runtime  + ctx.env.LIBPATH_lapack)
+  full_libpath = set(ctx.env.LIBPATH_fc_runtime  + ctx.env.LIBPATH_lapack + ctx.env.LIBPATH_cfitsio + [ctx.env.PREFIX+"/lib"])
   #print full_libpath
   #tcsh and co
   shell = "csh"

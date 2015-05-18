@@ -1,4 +1,6 @@
 #include "clik_lensing.h"
+#include "pmc.h"
+#include "cldf/cldf.h"
 #include "lenslike/plenslike/plenslike.h"
 
 #define _dealwitherr error *lerr,**err; if(_err==NULL) {lerr=NULL;err=&lerr;} else {err=_err;}
