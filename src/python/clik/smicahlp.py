@@ -30,6 +30,8 @@ def remove_component(lkl_grp,position):
   for ic in range(position,nc-1):
     del lkl_grp["component_%d"%(ic)]
     lkl_grp.copy("component_%d"%(ic+1),"component_%d"%ic)
+  del lkl_grp["component_%d"%(nc-1)]
+  lkl_grp.attrs["n_component"] = nc-1
   
 def add_component(lkl_grp,typ,position=-1):
   nc = lkl_grp.attrs["n_component"]

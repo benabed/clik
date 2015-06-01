@@ -202,7 +202,7 @@ class File(object):
 
   def copy(self,a,b,c=""):
     if not c:
-      self[a] = self[b]
+      self[b] = self[a]
     else:
       b[c]=a
     
