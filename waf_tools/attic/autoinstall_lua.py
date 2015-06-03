@@ -27,8 +27,8 @@ def installlua(ctx):
   mk=f.read()
   f=open("%s/Makefile"%basepath,"w")
   mk = re.sub("PLAT= none","PLAT= "+plat,mk)
-  mk = re.sub("CFLAGS= -O2 -Wall ","CFLAGS= -O2 -Wall %s -fPIC "%ctx.env.mopt,mk)
-  mk = re.sub("CC= gcc","CC= gcc %s "%ctx.env.mopt,mk)
+  mk = re.sub("CFLAGS= -O2 -Wall ","CFLAGS= -O2 -Wall %s -fPIC "%(" ".join(ctx.env.mopt)),mk)
+  mk = re.sub("CC= gcc","CC= gcc %s "%(" ".join(ctx.env.mopt)),mk)
   print >>f,mk
   f.close()
   
