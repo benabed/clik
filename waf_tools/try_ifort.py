@@ -51,7 +51,7 @@ def ifort_conf(ctx):
   ctx.load('ifort')
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
-  ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
+  ctx.env.append_value('FCFLAGS',ctx.env.mopt)
   ctx.env["FCFLAGS_fc_omp"]=[]
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   ctx.env.FCSHLIB_MARKER = [""]
@@ -103,7 +103,7 @@ def ifort_conf_(ctx):
   ctx.load('ifort')
   if sys.platform.lower()=="darwin":
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
-  ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
+  ctx.env.append_value('FCFLAGS',ctx.env.mopt)
   ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
@@ -160,12 +160,12 @@ def gfortran_conf(ctx):
   if sys.platform.lower()=="darwin":
     if "i386" in ctx.env.mopt:
       ctx.env.append_value('FCFLAGS','-m32')
-      mopt = "-m32"
+      mopt = ["-m32"]
     else:
       ctx.env.append_value('FCFLAGS','-m64')
-      mopt = "-m64"
+      mopt = ["-m64"]
   else:
-    ctx.env.append_value('FCFLAGS',ctx.env.mopt.split())
+    ctx.env.append_value('FCFLAGS',ctx.env.mopt)
   ctx.start_msg("Check gfortran version") 
   v90 = ctx.cmd_and_log(ctx.env.FC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
@@ -182,15 +182,15 @@ def gfortran_conf(ctx):
   
   # kludge !
   ctx.env.FCSHLIB_MARKER = [""]
-  ctx.env.FCSTLIB_MARKER = [mopt]
+  ctx.env.FCSTLIB_MARKER = mopt
   ctx.check_cc(
       errmsg="failed",msg='Compile a test code with gfortran',
       mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
 
   ctx.start_msg("retrieve gfortran link line")
-  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgfortran.dylib"%mopt,quiet=Context.STDOUT)    
+  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgfortran.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
   lpath = [osp.dirname(osp.realpath(lgfpath))]
-  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgomp.dylib"%mopt,quiet=Context.STDOUT)    
+  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgomp.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
   lpath += [osp.dirname(osp.realpath(lgfpath))]
   lpath = set(lpath)
 
