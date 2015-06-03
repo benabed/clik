@@ -66,10 +66,10 @@ def configure(ctx):
       raise Errors.WafError("unknown platform '%s'"%tag)
     tag+="_10.%d"%version
     mopt = ctx.env.mopt
-    if "64" in mopt:
-      tag+="_64"
+    if ("32" in " ".join(mopt)) or ("i386" in " ".join(mopt)):
+      tag+="_32"
     else:
-      tag +="_32"
+      tag +="_64"
 
     if sys.platform.lower()!='darwin':
       #I need to create my own lapack ! 
