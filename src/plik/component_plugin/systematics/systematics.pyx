@@ -31,7 +31,15 @@ cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_21
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
 cnoise_t3 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t3.dat")
 cnoise_v17 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_v17.dat")
-bleak_v15 = rename_machine(bleak,{},norename,data_file="sky_template_v15_F100_143_217_353.dat")    
+bleak_v15 = rename_machine(bleak,{},norename,data_file="sky_template_v15_F100_143_217_353.dat")
+cleak_defs = {}
+for f1 in (100,143,217):
+  for f2 in (100,143,217):
+    for s1 in "TE":
+      for s2 in "TE":
+        cleak_defs["A_cleak_%d_%d_%s%s"%(f1,f2,s1,s2)] = "1"
+cleak_v1 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_naive_v1.dat")
+cleak_v2 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_wght_v2.dat")
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2"]
  

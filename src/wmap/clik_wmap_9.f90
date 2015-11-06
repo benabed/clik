@@ -34,7 +34,7 @@ SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 	REAL(8) :: like(num_WMAP)
 	REAL(8),INTENT(IN),DIMENSION(0:4*CLIK_LMAX+3)::CL
 	INTEGER::i,cur
-
+	 print *,"ici"
 	!TT
 	cur = 0
 	cltt = 0
@@ -65,10 +65,10 @@ SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 		clte(i)=CL(cur+i)*(i*(i+1.))/TWOPI
 	END DO	
 	cur = cur+clik_lmax+1
-	!print *,cltt
+	print *,cltt
 	!print *,clte
 	CALL wmap_likelihood_compute(cltt,clte,clee,clbb,like)
-	!print *,like
+	print *,like
 	LKL = -sum(like(1:num_WMAP))
 END SUBROUTINE 	WMAP_EXTRA_LKL
 

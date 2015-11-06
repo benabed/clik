@@ -15,6 +15,7 @@ void free_wmap(void **none) {
 double wmap_lkl(void* none, double* pars, error **err) {
   double lkl;
   
+  _DEBUGHERE_("","");
   wmap_extra_lkl_(&lkl,pars);
   return lkl;
 }
@@ -59,12 +60,15 @@ cmblkl* clik_wmap_init(cldf *df, int nell, int* ell, int* has_cl, double unit,do
   forwardError(*err,__LINE__,NULL);
   
   
-  
+    _DEBUGHERE_("","");
+
   cing = init_cmblkl(NULL, &wmap_lkl, 
                      &free_wmap,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,0,err);
   forwardError(*err,__LINE__,NULL);
+    _DEBUGHERE_("","");
+
   return cing;
 }
 

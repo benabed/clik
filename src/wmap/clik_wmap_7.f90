@@ -33,7 +33,7 @@ SUBROUTINE WMAP_EXTRA_LKL(LKL,CL)
 	REAL(8) :: like(num_WMAP)
 	REAL(8),INTENT(IN),DIMENSION(0:4*CLIK_LMAX+3)::CL
 	INTEGER::i,cur
-
+	print *,"la"
 	!TT
 	cur = 0
 	cltt = 0

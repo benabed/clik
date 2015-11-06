@@ -46,7 +46,7 @@ def add_external_data(directory,lkl_grp,tar=False):
       #os.mkdir(lkl_grp._name+"/_external")
       shutil.copytree(directory,lkl_grp._name+"/_external")    
       lkl_grp.attrs["external_dir"] = "."
-      os.chmod(lkl_grp._name+"/_external",0555)
+      os.chmod(lkl_grp._name+"/_external",0755)
       for r,d,f in os.walk(lkl_grp._name+"/_external"):
         for ff in f:
           os.chmod(r+"/"+ff,0644)

@@ -153,6 +153,9 @@ def build(bld):
   #lenslike 
   source_lenslike = lst("plenslike_dat_mono.c plenslike_dat_quad.c plenslike_dat_qecl.c plenslike_dat_full.c qest.c wignerd.c","lenslike/plenslike",bld.env.has_lenslike)
 
+  #ftau
+  source_ftau = ["ftau/ftau.c"]
+
   # clik
   source_clik =  lst('clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c')
   source_clik += lst('cldf.c cfrd.c',"cldf")
@@ -168,7 +171,7 @@ def build(bld):
   use_clik += ["cmbonly"]*bool(bld.env.has_cmbonly)
   clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike)
 
-  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec
+  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec + source_ftau
 
   bld.shlib(
     source   = source_clik,
