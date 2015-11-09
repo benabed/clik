@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include "errorlist.h"
+#include "io.h"
 
 #define _pn_size 256
 typedef char parname[_pn_size];
