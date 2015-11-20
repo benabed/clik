@@ -579,8 +579,13 @@ def register_all(gl=sys.modules[__name__],verb=False):
       pass
 
 
-def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_file="",data=None):
+def rename_machine(component, bdefs, rename_func=None,data_dir="",data_path="",data_file="",data=None):
   import types
+  renf = rename_func
+  if rename_func==None:
+    renf = norename
+  if isinstance(rename_func,dict):
+    renf = rename_dict(rename_func)
   def rename_update(defs,vars,rename):
     rename = rename.copy()
     rups = {}
@@ -588,7 +593,7 @@ def rename_machine(component, bdefs, rename_func,data_dir="",data_path="",data_f
     bdef.update(defs)
     vv = tuple(vars)+tuple(bdef.keys())+tuple(rename.values())
     for v in vv:
-      rename_func(v,rups)
+      renf(v,rups)
     for k in rename:
       if rename[k] in rups:
         oo = rename[k]
@@ -635,6 +640,13 @@ def rename_replace(before,after):
     if after in v:
       rv = v.replace(after,before)
       rups[v]=rv
+  return rename
+
+def rename_dict(renint):
+  def rename(v,rups):
+    if v in renint: 
+      rups[v] = renint[v]
+    
   return rename
 
 register_all()

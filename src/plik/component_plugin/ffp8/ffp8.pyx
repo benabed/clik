@@ -62,6 +62,35 @@ dust_ffp8_EE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_du
 
 dust_ffp8_v2_TE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_TE,data_file="dust_ffp8_v2_100_353_TEB.dat")
 dust_ffp8_v2_EE = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_ffp8_dust_EE,data_file="dust_ffp8_v2_100_353_TEB.dat")
- 
-      
-component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib"]
+
+cdef extern c_parametric *grcT_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+
+cdef class grcT(parametric_template):
+  def __cinit__(self):
+    self.initfunc = <void*> grcT_init;
+    self.template_name = "cib_ffp8_100_353.dat"
+    self.plugin_name = "ffp8"    
+
+
+def rename_dust_e2e_TT(v,rups):
+  renint={ "gal545_A_100":"A_grcT_100",
+           "gal545_A_143":"A_grcT_143",
+           "gal545_A_217":"A_grcT_217",
+           "gal545_A_143_217":"A_grcT_143_217"}
+  if v in renint:
+    rups[v] = renint[v]
+xtra_grct = {"grcT_nfreq_template":"3","grcT_lmax_template":"4000","grcT_freq_0":"100","grcT_freq_1":"143","grcT_freq_2":"217"}
+def appdct(d1,d2):
+  dd = {}
+  for k in d1:
+    dd[k]=d1[k]
+  for k in d2:
+    dd[k] = d2[k]
+  return dd
+
+dust_e2e_2015_11 = rename_machine(grcT,appdct(xtra_grct,{"grcT_l_pivot":"200","grcT_rigid":"0"}),rename_dust_e2e_TT,data_file="gal_e2e_2015_11.dat") 
+cib_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"217"}),rename_replace("grcT","cib"),data_file="cib_e2e_2015_11.dat")
+tsz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"A_sz":"A_grcT_143"},data_file="tsz_e2e_2015_11.dat")
+ksz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"ksz_norm":"A_grcT_143"},data_file="ksz_e2e_2015_11.dat")
+
+component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11"]
