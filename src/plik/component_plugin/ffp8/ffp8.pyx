@@ -93,4 +93,4 @@ cib_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","
 tsz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"A_sz":"A_grcT_143"},data_file="tsz_e2e_2015_11.dat")
 ksz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"ksz_norm":"A_grcT_143"},data_file="ksz_e2e_2015_11.dat")
 
-component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11"]
+component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11","grcT"]

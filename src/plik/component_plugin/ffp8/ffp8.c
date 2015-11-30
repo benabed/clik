@@ -345,7 +345,7 @@ parametric *grcT_init(int ndet, double *detlist, int ndef, char** defkey, char *
 
 
   memcpy(egl->payload,template,sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template)));
-
+  
   mv = egl->payload + sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template)) + sizeof(double)*(nfreq_template+egl->nfreq*egl->nfreq);
   conv = egl->payload + sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template));
   
@@ -414,21 +414,21 @@ void grcT_compute(parametric *egl, double *Rq, error **err) {
   
   mv = egl->payload + sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template)) + sizeof(double)*(nfreq_template+egl->nfreq*egl->nfreq);
   conv = egl->payload + sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template));
-  A = egl->payload + ((lmax_template+1)*(nfreq_template)*(nfreq_template)) + sizeof(double)*(nfreq_template);
+  A = egl->payload + ((lmax_template+1)*(nfreq_template)*(nfreq_template))*sizeof(double) + sizeof(double)*(nfreq_template);
 
   template = egl->payload;
   l_pivot = parametric_get_value(egl,"grcT_l_pivot",err);
   forwardError(*err,__LINE__,);;
-
+  
   rigid = parametric_get_value(egl,"grcT_rigid",err);
   forwardError(*err,__LINE__,);
   //_DEBUGHERE_("rigid %d",rigid);
-
+  
   index = parametric_get_value(egl,"grcT_index",err);
   forwardError(*err,__LINE__,);
   index0 = parametric_get_value(egl,"grcT_index_0",err);
   forwardError(*err,__LINE__,);
-
+  
   if (rigid==0) {
     sprintf(name,"A_grcT_%d",217);    
     irigid = 2;
@@ -454,32 +454,33 @@ void grcT_compute(parametric *egl, double *Rq, error **err) {
     
   }
 
-
+  
   nrm = parametric_get_value(egl,name,err);
   forwardError(*err,__LINE__,);
   //_DEBUGHERE_("%s %g",name,nrm);
-    
+     
   
   for(m1=0;m1<egl->nfreq;m1++) {
+    
     for(m2=m1;m2<egl->nfreq;m2++) {
       if (m1==m2) {
         sprintf(name,"A_grcT_%d",(int)egl->freqlist[m1]);  
       } else {
         sprintf(name,"A_grcT_%d_%d",(int)egl->freqlist[m1],(int)egl->freqlist[m2]);
       }
+      
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
       A[m1*egl->nfreq+m2] = (v/template[((int) l_pivot)*(nfreq_template)*(nfreq_template)+mv[m1]*(nfreq_template)+mv[m2]]*(1-rigid) +  nrm/template[((int)l_pivot)*(nfreq_template)*(nfreq_template)+irigid*(nfreq_template)+irigid]*rigid*conv[mv[m1]]*conv[mv[m2]]/conv[irigid]/conv[irigid]) /l_pivot/(l_pivot+1)*2*M_PI ;
       A[m2*egl->nfreq+m1] = A[m1*egl->nfreq+m2];
     }
   }
-
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     v = pow((double) ell/l_pivot,(double) index-(-index0));
     //_DEBUGHERE_("%d %g",ell,v);
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
-        //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*16+mv[m1]*4+mv[m2]]);
+        //_DEBUGHERE_("%d %d %d %d %g %g %g %d",ell,mv[m1],mv[m2],nfreq_template,template[ell*(nfreq_template)*(nfreq_template)+mv[m1]*(nfreq_template)+mv[m2]],v,A[m2*egl->nfreq+m1],ell*(nfreq_template)*(nfreq_template)+mv[m1]*(nfreq_template)+mv[m2]);
         Rq[IDX_R(egl,ell,m1,m2)] = v*template[ell*(nfreq_template)*(nfreq_template)+mv[m1]*(nfreq_template)+mv[m2]] * A[m2*egl->nfreq+m1];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }  
