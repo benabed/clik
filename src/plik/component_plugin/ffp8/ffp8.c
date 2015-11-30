@@ -476,7 +476,7 @@ void grcT_compute(parametric *egl, double *Rq, error **err) {
     }
   }
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
-    v = pow((double) ell/l_pivot,(double) index-(-index0));
+    v = pow((double) ell/l_pivot,(double) index-index0);
     //_DEBUGHERE_("%d %g",ell,v);
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
