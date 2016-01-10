@@ -1,10 +1,12 @@
-from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template
+from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template,parametric_mul,parametric_template_mul
 from clik.parametric import norename,rename_machine,rename_replace
 
 cdef extern c_parametric *bleak_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *cnoise_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *dip_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *feature_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *mul0_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *beamnl_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
 
 cdef class bleak(parametric_pol_template):
   def __cinit__(self):
@@ -22,9 +24,19 @@ cdef class dip(parametric):
   def __cinit__(self):
     self.initfunc = <void*> dip_init;
 
+cdef class mul0(parametric_mul):
+  def __cinit__(self):
+    self.initfunc = <void*> mul0_init;
+    
 cdef class feature(parametric):
   def __cinit__(self):
     self.initfunc = <void*> feature_init;
+
+cdef class beamnl(parametric_template_mul):
+  def __cinit__(self):
+    self.initfunc = <void*> beamnl_init;
+    self.template_name = "beamnl_DX11_HM.dat"
+    self.plugin_name = "systematics"
 
 
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
@@ -41,5 +53,13 @@ for f1 in (100,143,217):
 cleak_v1 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_naive_v1.dat")
 cleak_v2 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_wght_v2.dat")
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2"]
+beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
+                    "beamnl_lmax_template":"3000",
+                    "beamnl_freq_0":"100",
+                    "beamnl_freq_1":"143",
+                    "beamnl_freq_2":"217"}
+
+beamnl_DX11 = rename_machine(beamnl,beamnl_DX11_defs,norename)
+
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11"]
  

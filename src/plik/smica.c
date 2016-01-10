@@ -1428,7 +1428,6 @@ SmicaComp* comp_totcalP_init(int q, int mT, int mP, int *TEB,error **err ) {
 
 }
 
-
 /* OLD */
 double smica_crit_classic(void *vsmic,error **err) {
   double res;

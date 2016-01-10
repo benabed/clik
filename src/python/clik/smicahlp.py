@@ -510,6 +510,9 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     agrp.attrs["rename_from"] = php.pack256(*rename_from)
     agrp.attrs["rename_to"] = php.pack256(*rename_to)
     agrp.attrs["nrename"] = len(rename_from)
+
+  if pm.ismul==1:
+    agrp.attrs["is_multiplicative"] = 1    
   return agrp
 
 import numpy as nm

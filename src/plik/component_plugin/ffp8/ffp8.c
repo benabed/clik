@@ -340,7 +340,7 @@ parametric *grcT_init(int ndet, double *detlist, int ndef, char** defkey, char *
   forwardError(*err,__LINE__,NULL);
 
 
-  egl->payload = malloc_err(sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template)) + sizeof(double)*((nfreq_template)+egl->nfreq*egl->nfreq)+sizeof(int)*egl->nfreq,err);
+  egl->payload = malloc_err(sizeof(double)* ((lmax_template+1)*(nfreq_template)*(nfreq_template)) + sizeof(double)*((nfreq_template)+egl->nfreq*egl->nfreq)+sizeof(double)*egl->nfreq,err);
   forwardError(*err,__LINE__,NULL);
 
 

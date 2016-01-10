@@ -88,6 +88,7 @@ cdef class parametric:
   
   def __cinit__(self):
     self.initfunc=NULL
+    self.ismul=0
 
   def test_derivative(self,key,value=None,h = 1e-3):
     """test_derivative(key,value=None,h = 1e-3) -> exact, approx, diff, reldiff"""
@@ -222,7 +223,7 @@ cdef class parametric:
         self.__init__(detlist,prs,lmin,lmax,defs,False,color,voidmask,*other)
 
     self._post_init_2(prs,lmin,lmax)
-
+    
   def get_default_value(self,key):
     cdef error *_err
     cdef error **err
@@ -295,6 +296,11 @@ def get_data_path(plg=None):
     if plg:
       return osp.join(res,plg)
   return ""
+
+cdef class parametric_mul(parametric):
+  def _post_init_2(self,prs,lmin,lmax):
+    parametric._post_init_2(self,prs,lmin,lmax)
+    self.ismul=1
 
 cdef class parametric_template(parametric):
   def __cinit__(self):
@@ -379,6 +385,11 @@ cdef class parametric_template(parametric):
       tmp = nm.array(data)
     return tmp
 
+cdef class parametric_template_mul(parametric_template):
+  def _post_init_2(self,prs,lmin,lmax):
+    parametric_template._post_init_2(self,prs,lmin,lmax)
+    self.ismul=1
+    
 cdef class parametric_pol(parametric):
   def __init__(self,detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
     """__init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={})"""

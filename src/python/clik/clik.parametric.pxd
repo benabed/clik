@@ -20,7 +20,8 @@ cdef class parametric:
   cdef void* initfunc
   cdef readonly object rename,emaner,voidmask,name
   cdef readonly object _template
-  
+  cdef readonly object ismul
+
 cdef class parametric_template(parametric):
   cdef object template_name
   cdef object plugin_name
@@ -31,3 +32,8 @@ cdef class parametric_pol_template(parametric_pol):
   cdef object template_name
   cdef object plugin_name
 
+cdef class parametric_mul(parametric):
+  pass
+
+cdef class parametric_template_mul(parametric_template):
+  pass
