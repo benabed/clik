@@ -67,11 +67,11 @@ END SUBROUTINE 	plik_cmbonly_extra_LKL
 
 
 
-SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te)
-	use Plik_CMBonly
+SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te,rbin_min_tt,rbin_max_tt,rbin_min_te,rbin_max_te,rbin_min_ee,rbin_max_ee)
+  use Plik_CMBonly
 	use plik_cmbonly_extra
-
-	INTEGER,INTENT(IN)::l_datadir
+	integer,INTENT(IN) ::rbin_min_tt,rbin_max_tt,rbin_min_te,rbin_max_te,rbin_min_ee,rbin_max_ee
+	INTEGER,INTENT(IN)::l_datadir,iuse_tt, iuse_ee, iuse_te
 	character(len=l_datadir)::datadir
 	
 	data_dir = TRIM(datadir)
@@ -89,7 +89,7 @@ SUBROUTINE plik_cmbonly_extra_INIT(datadir,l_datadir,iuse_tt, iuse_ee, iuse_te)
 	use_te = iuse_te.NE.0
 	use_ee = iuse_ee.NE.0
 	
-	call like_init_cmbonly
+	call like_init_cmbonly(rbin_min_tt,rbin_max_tt,rbin_min_te,rbin_max_te,rbin_min_ee,rbin_max_ee)
 	
 	
 END SUBROUTINE 	plik_cmbonly_extra_INIT

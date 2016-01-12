@@ -38,6 +38,36 @@ def cutarr(inhf,outhf,olmin,olmax,lmin,lmax,nn):
   narr = arr[lmin-olmin:lmax+1-olmin]
   outhf[nn] = narr.flat[:]
 
+def change_plik_cmbonly(inhf,lklfile,outfile,lmin,lmax):
+  olmin = 30
+  olmax = 2508
+  if lmin == -1 or lmin>lmax or lmin<olmin:
+    lmin = olmin
+  if lmax == -1 or lmax>olmax:
+    lmax = olmax
+  nb = 215
+  blmin = nm.loadtxt(inhf._name+"/clik/lkl_0/_external/blmin.dat")
+  blmax = nm.loadtxt(inhf._name+"/clik/lkl_0/_external/blmax.dat")
+  bmin = nm.argmin((blmin+olmin-lmin)**2)
+  bmax = nm.argmin((blmax+olmin-lmax)**2)
+
+  lmin = blmin[bmin]+olmin
+  lmax = blmax[bmax]+olmin
+
+  print "restrict to %d %d [%d %d]"%(lmin,lmax,bmin,bmax)
+
+  hpy.copyfile(lklfile,outfile)
+  outhf = hpy.File(outfile,"r+")
+  outhf["clik/lkl_0/bin_min_tt"] = bmin+1
+  outhf["clik/lkl_0/bin_max_tt"] = bmax+1
+  outhf["clik/lkl_0/bin_min_te"] = 1
+  outhf["clik/lkl_0/bin_max_te"] = 199
+  outhf["clik/lkl_0/bin_min_ee"] = 1
+  outhf["clik/lkl_0/bin_max_ee"] = 199
+
+  php.remove_selfcheck(root_grp=outhf["clik"])
+  outhf.close()
+
 def change_smica(inhf,lklfile,outfile,lmin,lmax):
   olmin = inhf["clik/lkl_0/lmin"]
   olmax = inhf["clik/lkl_0/lmax"]
@@ -128,10 +158,10 @@ def main(argv):
 
   inhf = hpy.File(lklfile)
   ty = inhf["clik/lkl_0/lkl_type"]
-  if ty not in ("smica","gibbs_gauss"):
-    print "can only change lmin and lmax for plik and commander TT likelihoods"
+  if ty not in ("smica","gibbs_gauss","plik_cmbonly"):
+    print "can only change lmin and lmax for plik, plik_lite, and commander TT likelihoods"
     sys.exit(-1)
-  assert ty in ["smica","gibbs_gauss"],"Cannot change lrange for likelihood type %s"%ty
+  assert ty in ["smica","gibbs_gauss","plik_cmbonly"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]
   fnc(inhf,lklfile,outfile,lmin,lmax)
   

@@ -20,7 +20,7 @@ module Plik_CMBonly
   integer, public, parameter :: nspecte = 6
   integer, public, parameter :: nspecee = 6
   integer, public :: nbintt, nbinte, nbinee
-
+  integer, public ::bin_min_tt,bin_max_tt,bin_min_te,bin_max_te,bin_min_ee,bin_max_ee
   !-------------------------------------------------------
   real(campc), parameter :: PI    = 3.14159265358979323846264d0
   real(campc), dimension(:), allocatable ::  bval,X_data,X_sig,diff_vec
@@ -35,14 +35,22 @@ module Plik_CMBonly
   contains
   
   ! ===========================================================================
-  subroutine like_init_cmbonly
+  subroutine like_init_cmbonly(rbin_min_tt,rbin_max_tt,rbin_min_te,rbin_max_te,rbin_min_ee,rbin_max_ee)
+  integer ::rbin_min_tt,rbin_max_tt,rbin_min_te,rbin_max_te,rbin_min_ee,rbin_max_ee
  
-  integer  :: i,j,lun,il,info,dum,k,bin_no
+  integer  :: i,j,lun,il,info,dum,k,bin_no,ip,jp
   character(LEN=1024) :: like_file, cov_file, blmin_file, blmax_file, binw_file
   logical  :: good
     
   print *, 'Initializing Planck likelihood, version '//plik_like
  
+  bin_min_tt = rbin_min_tt
+  bin_max_tt = rbin_max_tt
+  bin_min_te = rbin_min_te
+  bin_max_te = rbin_max_te
+  bin_min_ee = rbin_min_ee
+  bin_max_ee = rbin_max_ee 
+
   nbintt = 215 !30-2508 
   nbinte = 199 !30-1996
   nbinee = 199 !30-1996
@@ -87,24 +95,50 @@ module Plik_CMBonly
   !Select covmat
   !Only TT
   if((use_tt .eqv. .true.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .false.)) then
-       bin_no=nbintt
+       bin_no=bin_max_tt-bin_min_tt+1
        allocate(fisher(bin_no,bin_no))
-       fisher(:,:)=covmat(1:bin_no,1:bin_no)
+       fisher(:,:)=covmat(bin_min_tt:bin_max_tt,bin_min_tt:bin_max_tt)
   !Only TE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .false.)) then
-       bin_no=nbinte
+       bin_no=bin_max_te-bin_min_te+1
        allocate(fisher(bin_no,bin_no))
-       fisher(:,:)=covmat(nbintt+1:nbintt+bin_no,nbintt+1:nbintt+bin_no)
+       fisher(:,:)=covmat(nbintt+bin_min_te:nbintt+bin_max_te,nbintt+bin_min_te:nbintt+bin_max_te)
   !Only EE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .true.)) then
-       bin_no=nbinee
+       bin_no=bin_max_ee-bin_min_ee+1
        allocate(fisher(bin_no,bin_no))
-       fisher(:,:)=covmat(nbintt+nbinte+1:nbintt+nbinte+bin_no,nbintt+nbinte+1:nbintt+nbinte+bin_no)
+       fisher(:,:)=covmat(nbintt+nbinte+bin_min_ee:nbintt+nbinte+bin_max_ee,nbintt+nbinte+bin_min_ee:nbintt+nbinte+bin_max_ee)
   !All
   else if ((use_tt .eqv. .true.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .true.)) then
-       bin_no=nbin
-       allocate(fisher(nbin,nbin))
-       fisher(:,:)=covmat(:,:)
+       bin_no=bin_max_tt-bin_min_tt+1+bin_max_te-bin_min_te+1+bin_max_ee-bin_min_ee+1
+       ip=1
+       jp=1
+       allocate(fisher(bin_no,bin_no))
+       do i=1,nbintt+nbinte+nbinee
+        if (i<bin_min_tt) then
+          continue
+        else if (i>bin_max_tt .and. i<bin_min_te+nbintt) then
+          continue
+        else if (i>bin_max_te+nbintt .and. i<bin_min_ee+nbintt+nbinte) then
+          continue
+        else if (i>bin_max_ee+nbintt+nbinte) then 
+          continue
+        endif
+        do j=1,nbintt+nbinte+nbinee
+          if (j<bin_min_tt) then
+            continue
+          else if (j>bin_max_tt .and. j<bin_min_te+nbintt) then
+            continue
+          else if (j>bin_max_te+nbintt .and. j<bin_min_ee+nbintt+nbinte) then
+            continue
+          else if (j>bin_max_ee+nbintt+nbinte) then 
+            continue
+          endif
+          fisher(ip,jp) = covmat(i,j)
+          jp = jp+1
+        enddo
+        ip = ip+1
+       enddo
   else
      write(*,*) 'Fail: no possible options chosen'
   endif
@@ -169,7 +203,7 @@ module Plik_CMBonly
   real(campc), dimension(2:) :: cell_tt,cell_ee,cell_te
   real(campc) :: cl_tt(nbintt),cl_te(nbinte),cl_ee(nbinee)
   real(campc) :: plike, calPlanck
-  integer :: bin_no,lun,il,i,j,info
+  integer :: bin_no,lun,il,i,j,info,ip
   real(campc), allocatable, save ::  Y(:), X_model(:)
   real(campc), allocatable :: ptemp(:)
 
@@ -209,24 +243,37 @@ module Plik_CMBonly
   !Select data
   !Only TT
   if((use_tt .eqv. .true.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .false.)) then
-       bin_no=nbintt
+       bin_no=bin_max_tt-bin_min_tt+1
        allocate(diff_vec(bin_no),ptemp(bin_no))
-       diff_vec(:)=Y(1:bin_no)
+       diff_vec(:)=Y(bin_min_tt:bin_max_tt)
   !Only TE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .false.)) then 
-       bin_no=nbinte
+       bin_no=bin_max_te-bin_min_te+1
        allocate(diff_vec(bin_no),ptemp(bin_no))
-       diff_vec(:)=Y(nbintt+1:nbintt+bin_no)
+       diff_vec(:)=Y(bin_min_te+nbintt:bin_max_te+nbintt)
   !Only EE
   else if((use_tt .eqv. .false.) .and. (use_te .eqv. .false.) .and. (use_ee .eqv. .true.)) then
-       bin_no=nbinee
+       bin_no=bin_max_ee-bin_min_ee+1
        allocate(diff_vec(bin_no),ptemp(bin_no))
-       diff_vec(:)=Y(nbintt+nbinte+1:nbintt+nbinte+bin_no)
+       diff_vec(:)=Y(bin_min_ee+nbintt+nbinte:bin_max_ee+nbintt+nbinte)
   !All
   else if ((use_tt .eqv. .true.) .and. (use_te .eqv. .true.) .and. (use_ee .eqv. .true.)) then
-       bin_no=nbin
-       allocate(diff_vec(nbin),ptemp(nbin))
-       diff_vec(:)=Y(:)
+       bin_no=bin_max_tt-bin_min_tt+1+bin_max_te-bin_min_te+1+bin_max_ee-bin_min_ee+1
+       allocate(diff_vec(bin_no),ptemp(bin_no))
+       ip=1
+       do i=1,nbintt+nbinte+nbinee
+         if (i<bin_min_tt) then
+           continue
+         else if (i>bin_max_tt .and. i<bin_min_te+nbintt) then
+           continue
+         else if (i>bin_max_te+nbintt .and. i<bin_min_ee+nbintt+nbinte) then
+           continue
+         else if (i>bin_max_ee+nbintt+nbinte) then 
+           continue
+         endif
+         diff_vec(ip)=Y(i) 
+         ip = ip+1
+       enddo      
   else
      write(*,*) 'Fail: no possible options chosen'
   endif
