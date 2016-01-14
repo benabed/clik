@@ -124,7 +124,7 @@ def compress_bins(bins,has_cl):
   return b_ws,blmin,blmax
   
 def uncompress_bins(shape,b_ws,blmin,blmax):
-  print shape,b_ws,blmin,blmax
+  #print shape,b_ws,blmin,blmax
   bins = nm.zeros(shape)
   lc = 0
   for i in range(shape[0]):
