@@ -13,6 +13,15 @@ import os
 import shutil
 import clik.hpy as hpy
 
+def change_simlow(inhf,lklfile,outfile,lmin,lmax):
+  hpy.copyfile(lklfile,outfile)
+  outhf = hpy.File(outfile,"r+")
+  outhf["clik/lmax"] = [-1,lmax,-1,-1,-1,-1]
+  outhf["clik/lkl_0/lmin"] = lmin
+  outhf["clik/lkl_0/lmax"] = lmax
+  php.remove_selfcheck(root_grp=outhf["clik"])
+  outhf.close()
+
 
 def change_gibbs_gauss(inhf,lklfile,outfile,lmin,lmax):
   olmin = inhf["clik/lkl_0/lmin"]
@@ -158,10 +167,10 @@ def main(argv):
 
   inhf = hpy.File(lklfile)
   ty = inhf["clik/lkl_0/lkl_type"]
-  if ty not in ("smica","gibbs_gauss","plik_cmbonly"):
+  if ty not in ("smica","gibbs_gauss","plik_cmbonly","simlow"):
     print "can only change lmin and lmax for plik, plik_lite, and commander TT likelihoods"
     sys.exit(-1)
-  assert ty in ["smica","gibbs_gauss","plik_cmbonly"],"Cannot change lrange for likelihood type %s"%ty
+  assert ty in ["smica","gibbs_gauss","plik_cmbonly","simlow"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]
   fnc(inhf,lklfile,outfile,lmin,lmax)
   
