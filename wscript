@@ -200,8 +200,8 @@ def configure(ctx):
   ctx.env.has_cmbonly = osp.exists("src/cmbonly")
 
   #actspt
-  #ctx.env.has_actspt = osp.exists("src/actspt")
-  ctx.env.has_actspt = False
+  ctx.env.has_actspt = osp.exists("src/actspt")
+  #ctx.env.has_actspt = False
 
   #gibbs
   ctx.env.has_gibbs = osp.exists("src/gibbs")
