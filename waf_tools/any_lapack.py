@@ -163,11 +163,16 @@ def configure(ctx):
   
   atl.conf_lib(ctx,"lapack",lapack_libs,lapack_funcs.split(),lapack_includes,defines=lapack_extradefs,install=installlapack)
 
+def unlist(wh):
+  if isinstance(wh,str):
+    return wh
+  return " ".join(wh)
+
 def installlapack(ctx):
   filen = version+".tgz"
   atl.installsmthg_pre(ctx,"http://www.netlib.org/lapack/"+filen,filen)
   from waflib import Utils,Errors
-  dii = {"FCC":ctx.env.FC,"FCFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fcshlib),"FLINKFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.LINKFLAGS_fcshlib),"SO":ctx.env.shsuffix,"MFLAG":" ".join(ctx.env.FCFLAGS) }
+  dii = {"FCC":unlist(ctx.env.FC),"FCFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fcshlib),"FLINKFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.LINKFLAGS_fcshlib),"SO":ctx.env.shsuffix,"MFLAG":" ".join(ctx.env.FCFLAGS) }
   Logs.pprint("PINK","build blas")
   f=open("build/%s/make.inc"%version,"w")
   print >>f,make_inc_blas%dii
