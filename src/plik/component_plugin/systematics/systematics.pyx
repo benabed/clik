@@ -52,6 +52,7 @@ for f1 in (100,143,217):
         cleak_defs["A_cleak_%d_%d_%s%s"%(f1,f2,s1,s2)] = "1"
 cleak_v1 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_naive_v1.dat")
 cleak_v2 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_dx11_full_wght_v2.dat")
+cleak_rd12rc3_v1 = rename_machine(cnoise,cleak_defs,rename_replace("cnoise","cleak"),data_file="cleak_eh_rd12rc3_v1.dat")
 
 beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
                     "beamnl_lmax_template":"3000",
@@ -61,5 +62,5 @@ beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
 
 beamnl_DX11 = rename_machine(beamnl,beamnl_DX11_defs,norename)
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1"]
  
