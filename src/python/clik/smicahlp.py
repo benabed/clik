@@ -788,21 +788,31 @@ def beamTP_from_smica(dffile):
   return cal
 
 
-def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
+def create_gauss_mask(nq,qmins,qmaxs,nT,nP,has_cl):
   """lmins is a ndetxndet qmins matrix, qmaxs is a ndetxndet matrix of qmax. if qmax[i,j]<=0, the spectrum is ignored
   mask is 1 for q in qmins<=q<qmaxs
   only the upper part (j>=i) of qmins and qmaxs is used"""
   qmins = nm.array(qmins)
   qmaxs = nm.array(qmaxs)
   ndet = qmins.shape[0]
-  assert ndet == nT+nP
+  assert ndet == nT+nP*has_cl[1]+nP*has_cl[2]
   mask = nm.zeros((nq,ndet,ndet),dtype=nm.int )
+  nE = nP*has_cl[1]
+  nB = nP*has_cl[2]
   for i in range(ndet):
     for j in range(i,ndet):
       mask[qmins[i,j]:qmaxs[i,j],i,j]=1
       mask[qmins[i,j]:qmaxs[i,j],j,i]=1
-      if i<nT and j>=nT and i>j-nT and i<nP:
+      if has_cl[0]*has_cl[1] and i<nT and j>=nT and j<nT+nP and i>j-nT:
         # cas TE dessous
+        mask[qmins[i,j]:qmaxs[i,j],i,j]=0
+        mask[qmins[i,j]:qmaxs[i,j],j,i]=0
+      if has_cl[0]*has_cl[2] and i<nT and j>=nT+nP*has_cl[1] and i>j-nT-nP*has_cl[1]:
+        # cas TB dessous
+        mask[qmins[i,j]:qmaxs[i,j],i,j]=0
+        mask[qmins[i,j]:qmaxs[i,j],j,i]=0
+      if has_cl[1]*hascl[2] and i>nT*has_cl[0] and i<nT*has_cl[0] +nP and j>=nT*has_cl[0]+nP  and i>j-nT*has_cl[0]-nP:
+        # cas EB dessous
         mask[qmins[i,j]:qmaxs[i,j],i,j]=0
         mask[qmins[i,j]:qmaxs[i,j],j,i]=0
 

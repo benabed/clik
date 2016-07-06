@@ -87,17 +87,30 @@ def read_full_cov_mat(fname):
   bin_TT  = hdulist['BIN_TT'].data
   bin_EE  = hdulist['BIN_EE'].data
   bin_TE  = hdulist['BIN_TE'].data
+  try:
+    bin_TB  = hdulist['BIN_TB'].data
+  except:
+    bin_TB = None
+  try:
+    bin_EB  = hdulist['BIN_EB'].data
+  except:
+    bin_EB = None
+  try:
+    bin_BB  = hdulist['BIN_BB'].data
+  except:
+    bin_BB = None
   
+
   header  = hdulist[0].header
   hdulist.close()
   for key in header.keys():
     if ('LMIN_' in key or 'LMAX_' in key):
       l_info[key] = int(header[key])
   cov_mat /= (1.0E6)**4
-  return l_info, bin_TT, bin_EE, bin_TE, cov_mat
+  return l_info, bin_TT, bin_EE, bin_BB, bin_TE, bin_TB, bin_EB, cov_mat
 
 def select_channels(l_info, nr_freq, frequencies):
-  mask_TP = nm.zeros([2*nr_freq, 2*nr_freq], dtype='int')
+  mask_TP = nm.zeros([3*nr_freq, 3*nr_freq], dtype='int')
   for i, freq1 in enumerate(frequencies):
     for j, freq2 in enumerate(frequencies):
       if i > j:
@@ -105,21 +118,49 @@ def select_channels(l_info, nr_freq, frequencies):
       mask_TP[i,j] \
               = (l_info['LMAX_TT_' + freq1 + 'X' + freq2] > 0)
       mask_TP[j,i] = mask_TP[i,j]
+      
       mask_TP[i+nr_freq,j+nr_freq] \
               = (l_info['LMAX_EE_' + freq1 + 'X' + freq2] > 0)
       mask_TP[j+nr_freq,i+nr_freq] = mask_TP[i+nr_freq,j+nr_freq]
+      
+      mask_TP[i+nr_freq*2,j+nr_freq*2] \
+              = (l_info['LMAX_BB_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j+nr_freq*2,i+nr_freq*2] = mask_TP[i+nr_freq*2,j+nr_freq*2]
+      
       mask_TP[i+nr_freq,j] \
               = (l_info['LMAX_TE_' + freq1 + 'X' + freq2] > 0)
       mask_TP[j+nr_freq,i] = mask_TP[i+nr_freq,j]
       mask_TP[i,j+nr_freq] = mask_TP[i+nr_freq,j]
       mask_TP[j,i+nr_freq] = mask_TP[i+nr_freq,j]
+
+      mask_TP[i+nr_freq*2,j] \
+              = (l_info['LMAX_TB_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j+nr_freq*2,i] = mask_TP[i+nr_freq*2,j]
+      mask_TP[i,j+nr_freq*2] = mask_TP[i+nr_freq*2,j]
+      mask_TP[j,i+nr_freq*2] = mask_TP[i+nr_freq*2,j]
+
+      mask_TP[i+nr_freq*2,j+nr_freq] \
+              = (l_info['LMAX_EB_' + freq1 + 'X' + freq2] > 0)
+      mask_TP[j+nr_freq*2,i+nr_freq] = mask_TP[i+nr_freq*2,j+nr_freq]
+      mask_TP[i+nr_freq,j+nr_freq*2] = mask_TP[i+nr_freq*2,j+nr_freq]
+      mask_TP[j+nr_freq,i+nr_freq*2] = mask_TP[i+nr_freq*2,j+nr_freq]
+
+
   diag_TT = (sum(mask_TP[:nr_freq,:nr_freq], 0) > 0).astype('int')
-  diag_EE = (sum(mask_TP[nr_freq:,nr_freq:], 0) > 0).astype('int')
-  diag_TE = (sum(mask_TP[:nr_freq,nr_freq:], 0) > 0).astype('int')
-  nT      = sum(diag_TT | diag_TE)
-  nP      = sum(diag_EE | diag_TE)
+  diag_EE = (sum(mask_TP[nr_freq:nr_freq*2,nr_freq:nr_freq*2], 0) > 0).astype('int')
+  diag_BB = (sum(mask_TP[nr_freq*2:,nr_freq*2:], 0) > 0).astype('int')
+  diag_TE = (sum(mask_TP[:nr_freq,nr_freq:nr_freq*2], 0) > 0).astype('int')
+  diag_TB = (sum(mask_TP[:nr_freq,nr_freq*2:], 0) > 0).astype('int')
+  diag_EB = (sum(mask_TP[nr_freq:nr_freq*2,nr_freq*2:], 0) > 0).astype('int')
+  nT      = sum(diag_TT | diag_TE | diag_TB)
+  nE      = sum(diag_EE | diag_TE | diag_EB)
+  nB      = sum(diag_BB | diag_TB | diag_EB)
+  nP      = sum(diag_EE | diag_TE | diag_BB | diag_TB | diag_EB)
   nTE     = sum(diag_TE)
-  has_cl  = [1*(nT > 0), 1*(nP > 0), 0, 1*(nTE > 0), 0, 0]
+  nTB     = sum(diag_TB)
+  nEB     = sum(diag_EB)
+
+  has_cl  = [1*(nT > 0), 1*(nE > 0), 1*(nB > 0), 1*(nTE > 0), 1*(nTB > 0), 1*(nEB > 0)]
 
   frq     = []
   channel = []
@@ -128,7 +169,7 @@ def select_channels(l_info, nr_freq, frequencies):
       frq.append(float(freq))
       channel.append(freq + 'T')
   for i, freq in enumerate(frequencies):
-    if sum(mask_TP[i+nr_freq,:]) > 0:
+    if sum(mask_TP[i+nr_freq,:]) > 0 or sum(mask_TP[i+nr_freq*2,:]) > 0:
       frq.append(float(freq))
       channel.append(freq + 'P')
   return nT, nP, has_cl, frq, channel, mask_TP
@@ -136,6 +177,7 @@ def select_channels(l_info, nr_freq, frequencies):
 def get_l_range(l_info, mask_TP, nr_freq, frequencies):
   lmin_TP = -1*nm.ones(mask_TP.shape, dtype='int')
   lmax_TP = -1*nm.ones(mask_TP.shape, dtype='int')
+  
   for i, freq1 in enumerate(frequencies):
     for j, freq2 in enumerate(frequencies):
       if i > j:
@@ -145,11 +187,19 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
         lmin_TP[j,i] = lmin_TP[i,j]
         lmax_TP[i,j] = l_info['LMAX_TT_' + freq1 + 'X' + freq2]
         lmax_TP[j,i] = lmax_TP[i,j]
+      
       if mask_TP[i+nr_freq,j+nr_freq] != 0:
         lmin_TP[i+nr_freq,j+nr_freq] = l_info['LMIN_EE_' + freq1 + 'X' + freq2]
         lmin_TP[j+nr_freq,i+nr_freq] = lmin_TP[i+nr_freq,j+nr_freq]
         lmax_TP[i+nr_freq,j+nr_freq] = l_info['LMAX_EE_' + freq1 + 'X' + freq2]
         lmax_TP[j+nr_freq,i+nr_freq] = lmax_TP[i+nr_freq,j+nr_freq]
+      
+      if mask_TP[i+nr_freq*2,j+nr_freq*2] != 0:
+        lmin_TP[i+nr_freq*2,j+nr_freq*2] = l_info['LMIN_BB_' + freq1 + 'X' + freq2]
+        lmin_TP[j+nr_freq*2,i+nr_freq*2] = lmin_TP[i+nr_freq*2,j+nr_freq*2]
+        lmax_TP[i+nr_freq*2,j+nr_freq*2] = l_info['LMAX_BB_' + freq1 + 'X' + freq2]
+        lmax_TP[j+nr_freq*2,i+nr_freq*2] = lmax_TP[i+nr_freq*2,j+nr_freq*2]
+      
       if mask_TP[i+nr_freq,j] != 0:
         lmin_TP[i+nr_freq,j] = l_info['LMIN_TE_' + freq1 + 'X' + freq2]
         lmin_TP[j+nr_freq,i] = lmin_TP[i+nr_freq,j]
@@ -159,6 +209,27 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
         lmax_TP[j+nr_freq,i] = lmax_TP[i+nr_freq,j]
         lmax_TP[i,j+nr_freq] = lmax_TP[i+nr_freq,j]
         lmax_TP[j,i+nr_freq] = lmax_TP[i+nr_freq,j]
+      
+      if mask_TP[i+nr_freq*2,j] != 0:
+        lmin_TP[i+nr_freq*2,j] = l_info['LMIN_TB_' + freq1 + 'X' + freq2]
+        lmin_TP[j+nr_freq*2,i] = lmin_TP[i+nr_freq*2,j]
+        lmin_TP[i,j+nr_freq*2] = lmin_TP[i+nr_freq*2,j]
+        lmin_TP[j,i+nr_freq*2] = lmin_TP[i+nr_freq*2,j]
+        lmax_TP[i+nr_freq*2,j] = l_info['LMAX_TB_' + freq1 + 'X' + freq2]
+        lmax_TP[j+nr_freq*2,i] = lmax_TP[i+nr_freq*2,j]
+        lmax_TP[i,j+nr_freq*2] = lmax_TP[i+nr_freq*2,j]
+        lmax_TP[j,i+nr_freq*2] = lmax_TP[i+nr_freq*2,j]
+      
+      if mask_TP[i+nr_freq*2,j+nr_freq] != 0:
+        lmin_TP[i+nr_freq*2,j+nr_freq] = l_info['LMIN_EB_' + freq1 + 'X' + freq2]
+        lmin_TP[j+nr_freq*2,i+nr_freq] = lmin_TP[i+nr_freq*2,j+nr_freq]
+        lmin_TP[i+nr_freq,j+nr_freq*2] = lmin_TP[i+nr_freq*2,j+nr_freq]
+        lmin_TP[j+nr_freq,i+nr_freq*2] = lmin_TP[i+nr_freq*2,j+nr_freq]
+        lmax_TP[i+nr_freq*2,j+nr_freq] = l_info['LMAX_EB_' + freq1 + 'X' + freq2]
+        lmax_TP[j+nr_freq*2,i+nr_freq] = lmax_TP[i+nr_freq*2,j+nr_freq]
+        lmax_TP[i+nr_freq,j+nr_freq*2] = lmax_TP[i+nr_freq*2,j+nr_freq]
+        lmax_TP[j+nr_freq,i+nr_freq*2] = lmax_TP[i+nr_freq*2,j+nr_freq]
+
   try:
     submatrix   = lmin_TP[:nr_freq,:nr_freq]
     min_lmin_TT = min(submatrix[submatrix >= 0])
@@ -166,20 +237,47 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
     min_lmin_TT = -1
   submatrix     = lmax_TP[:nr_freq,:nr_freq]
   max_lmax_TT   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+
   try:
-    submatrix   = lmin_TP[nr_freq:,nr_freq:]
+    submatrix   = lmin_TP[nr_freq:nr_freq*2,nr_freq:nr_freq*2]
     min_lmin_EE = min(submatrix[submatrix >= 0])
   except ValueError:
     min_lmin_EE = -1
-  submatrix     = lmax_TP[nr_freq:,nr_freq:]
+  submatrix     = lmax_TP[nr_freq:nr_freq*2,nr_freq:nr_freq*2]
   max_lmax_EE   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+
   try:
-    submatrix   = lmin_TP[:nr_freq,nr_freq:]
+    submatrix   = lmin_TP[nr_freq*2:,nr_freq*2:]
+    min_lmin_BB = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_BB = -1
+  submatrix     = lmax_TP[nr_freq*2:,nr_freq*2:]
+  max_lmax_BB   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+    
+  try:
+    submatrix   = lmin_TP[:nr_freq,nr_freq:nr_freq*2]
     min_lmin_TE = min(submatrix[submatrix >= 0])
   except ValueError:
     min_lmin_TE = -1
-  submatrix     = lmax_TP[:nr_freq,nr_freq:]
+  submatrix     = lmax_TP[:nr_freq,nr_freq:nr_freq*2]
   max_lmax_TE   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+  
+  try:
+    submatrix   = lmin_TP[:nr_freq,nr_freq*2:]
+    min_lmin_TB = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_TB = -1
+  submatrix     = lmax_TP[:nr_freq,nr_freq*2:]
+  max_lmax_TB   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+  
+  try:
+    submatrix   = lmin_TP[nr_freq:nr_freq*2,nr_freq*2:]
+    min_lmin_EB = min(submatrix[submatrix >= 0])
+  except ValueError:
+    min_lmin_EB = -1
+  submatrix     = lmax_TP[nr_freq:nr_freq*2,nr_freq*2:]
+  max_lmax_EB   = max(nm.hstack([-1, submatrix[submatrix >= 0].flatten()]))
+
   lmin          = min(lmin_TP[lmax_TP >= 0])
   lmax          = max(lmax_TP[lmax_TP >= 0])
 
@@ -187,14 +285,20 @@ def get_l_range(l_info, mask_TP, nr_freq, frequencies):
   l_info['max_lmax_TT'] = max_lmax_TT
   l_info['min_lmin_EE'] = min_lmin_EE
   l_info['max_lmax_EE'] = max_lmax_EE
+  l_info['min_lmin_BB'] = min_lmin_BB
+  l_info['max_lmax_BB'] = max_lmax_BB
   l_info['min_lmin_TE'] = min_lmin_TE
   l_info['max_lmax_TE'] = max_lmax_TE
+  l_info['min_lmin_TB'] = min_lmin_TB
+  l_info['max_lmax_TB'] = max_lmax_TB
+  l_info['min_lmin_EB'] = min_lmin_EB
+  l_info['max_lmax_EB'] = max_lmax_EB
   l_info['lmin']        = lmin
   l_info['lmax']        = lmax
   return lmin, lmax, lmin_TP, lmax_TP, l_info
 
 def get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, \
-                  bin_TT, bin_TE, bin_EE):
+                  bin_TT, bin_EE, bin_BB, bin_TE, bin_TB, bin_EB):
   qmins = nm.zeros(mask_TP.shape, dtype='int')
   qmaxs = nm.zeros(mask_TP.shape, dtype='int')
   if (l_info['min_lmin_TT'] == l_info['lmin']) \
@@ -203,9 +307,18 @@ def get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, \
   elif (l_info['min_lmin_EE'] == l_info['lmin']) \
      and (l_info['max_lmax_EE'] == l_info['lmax']):
     bins = bin_EE
+  elif (l_info['min_lmin_BB'] == l_info['lmin']) \
+     and (l_info['max_lmax_BB'] == l_info['lmax']):
+    bins = bin_BB
   elif (l_info['min_lmin_TE'] == l_info['lmin']) \
      and (l_info['max_lmax_TE'] == l_info['lmax']):
     bins = bin_TE
+  elif (l_info['min_lmin_TB'] == l_info['lmin']) \
+     and (l_info['max_lmax_TB'] == l_info['lmax']):
+    bins = bin_TB
+  elif (l_info['min_lmin_EB'] == l_info['lmin']) \
+     and (l_info['max_lmax_EB'] == l_info['lmax']):
+    bins = bin_EB
   else:
     print "Error: Using combined binning matrices not implemented"
     quit()
@@ -224,14 +337,30 @@ def get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, \
   qmaxs = remove_zero_rowcol(qmaxs, mask_TP)
   return qmins, qmaxs, nr_bins, bins
 
-def get_power_spectra(fname, nT, nP, nr_freq, mask_TP, l_info, nr_bins, bins):
+def get_power_spectra(fname, nT, nP, has_cl, nr_freq, mask_TP, l_info, nr_bins, bins):
   cl_raw = read_array(fname)
-  try:
-    cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
-  except ValueError:
-    print "Error: Power spectrum input file format mismatch"
-    quit()
-  rqhat     = nm.zeros([nr_bins, nT + nP, nT + nP])
+  return get_power_spectra_(cl_raw, nT, nP , has_cl, nr_freq, mask_TP, l_info, nr_bins, bins)
+def get_power_spectra_(cl_raw, nT, nP, has_cl, nr_freq, mask_TP, l_info, nr_bins, bins):
+  if has_cl[2] or has_cl[4] or has_cl[5]:
+    try:
+      cl_raw.shape = [3001, 3*nr_freq, 3*nr_freq]
+    except ValueError:
+      print "Error: Power spectrum input file format mismatch"
+      quit()
+  else:
+    try:
+      cl_raw.shape = [3001, 3*nr_freq, 3*nr_freq]
+    except ValueError:
+      pass
+    try:
+      cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
+      cl_raw_good = nm.zeros((3001,3*nr_freq,3*nr_freq))
+      cl_raw_good[:,:nr_freq*2,:nr_freq*2] = cl_raw
+      cl_raw = cl_raw_good
+    except ValueError:
+      print "Error: Power spectrum input file format mismatch"
+      quit()
+  rqhat     = nm.zeros([nr_bins, nT + nP*(has_cl[1]+has_cl[2]), nT + nP*(has_cl[1]+has_cl[2])])
   rqhat_tmp = nm.zeros([nr_bins, mask_TP.shape[0], mask_TP.shape[0]])
   for i in range(mask_TP.shape[0]):
     for j in range(mask_TP.shape[0]):
@@ -291,7 +420,7 @@ def input_from_cov_mat(pars):
   color_corr  = [1.06881, 1.05195, 1.13962, 1.0, 1.0, 1.0]
   nr_freq     = len(frequencies)
 
-  l_info, bin_TT, bin_EE, bin_TE, cov_mat \
+  l_info,  bin_TT, bin_EE, bin_BB, bin_TE, bin_TB, bin_EB, cov_mat \
      = read_full_cov_mat(pars.str.mat)
 
   nT, nP, has_cl, frq, channel, mask_TP \
@@ -301,17 +430,17 @@ def input_from_cov_mat(pars):
      = get_l_range(l_info, mask_TP, nr_freq, frequencies)
 
   qmins, qmaxs, nr_bins, bins \
-     = get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, bin_TT, bin_TE, bin_EE)
-
-  rqhat = get_power_spectra(pars.str.rqhat, nT, nP, nr_freq, mask_TP, \
+     = get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, bin_TT, bin_EE, bin_BB, bin_TE, bin_TB, bin_EB)
+     
+  rqhat = get_power_spectra(pars.str.rqhat, nT, nP, has_cl,nr_freq, mask_TP, \
                             l_info, nr_bins, bins)
 
-  pars = dump_colorcorrections(color_corr, mask_TP, pars)
+  #pars = dump_colorcorrections(color_corr, mask_TP, pars)
 
-  pars = add_calibration(channel, pars)
+  #pars = add_calibration(channel, pars)
 
   bins = expand_bins(bins, sum(has_cl))
-  Acmb = nm.ones(nT + nP)
+  Acmb = nm.ones(nT + nP*(has_cl[1]+has_cl[2]))
   return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
          qmins, qmaxs, Acmb, rqhat, cov_mat, pars
 
