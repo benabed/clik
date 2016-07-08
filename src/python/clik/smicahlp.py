@@ -811,7 +811,7 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP,has_cl):
         # cas TB dessous
         mask[qmins[i,j]:qmaxs[i,j],i,j]=0
         mask[qmins[i,j]:qmaxs[i,j],j,i]=0
-      if has_cl[1]*hascl[2] and i>nT*has_cl[0] and i<nT*has_cl[0] +nP and j>=nT*has_cl[0]+nP  and i>j-nT*has_cl[0]-nP:
+      if has_cl[1]*has_cl[2] and i>nT*has_cl[0] and i<nT*has_cl[0] +nP and j>=nT*has_cl[0]+nP  and i>j-nT*has_cl[0]-nP:
         # cas EB dessous
         mask[qmins[i,j]:qmaxs[i,j],i,j]=0
         mask[qmins[i,j]:qmaxs[i,j],j,i]=0

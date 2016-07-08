@@ -516,7 +516,7 @@ def main(argv):
 
   ordering = ordering_TEB(nT,nP,has_cl)
 
-  mask = smh.create_gauss_mask(nq,qmins,qmaxs,nT,nP)
+  mask = smh.create_gauss_mask(nq,qmins,qmaxs,nT,nP,has_cl)
 
   wq = nm.ones(nq) *1.
 
