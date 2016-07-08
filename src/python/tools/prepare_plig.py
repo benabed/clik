@@ -440,7 +440,7 @@ def input_from_cov_mat(pars):
   #pars = add_calibration(channel, pars)
 
   bins = expand_bins(bins, sum(has_cl))
-  Acmb = nm.ones(nT + nP*(has_cl[1]+has_cl[2]))
+  Acmb = nm.ones(nT + nP*max(has_cl[1],has_cl[2]))
   return nT, nP, has_cl, frq, channel, lmin, lmax, nr_bins, bins, \
          qmins, qmaxs, Acmb, rqhat, cov_mat, pars
 

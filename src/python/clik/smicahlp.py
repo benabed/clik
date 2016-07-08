@@ -481,7 +481,10 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["lmax"] = lmax
 
   agrp.attrs["dfreq"] = [float(d) for d in dets]
-  agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
+  A_cmb = lkl_grp.attrs["A_cmb"]
+  if has_cl[1]*has_cl[2]:
+    A_cmb = nm.concatenate((A_cmb[:nT],A_cmb[nT:],A_cmb[nT:]))
+  agrp.attrs["A_cmb"] = A_cmb
 
   voidmask = pm.voidmask
   if voidmask:
