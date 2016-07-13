@@ -456,9 +456,13 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   prclass = getattr(parametric,name)
   nT = lkl_grp.attrs["m_channel_T"]
   nP = lkl_grp.attrs["m_channel_P"]
+  A_cmb = lkl_grp.attrs["A_cmb"]
   if issubclass(prclass,parametric.parametric_pol):
     has_cl = lkl_grp.attrs["has_cl"]
     pm = prclass(dets[:nT],dets[nT:],has_cl,vpars,lmin,lmax,defaults,color=color,rename=rename,voidmask=voidmask)
+    if has_cl[1]*has_cl[2]:
+      A_cmb = nm.concatenate((A_cmb[:nT],A_cmb[nT:],A_cmb[nT:]))
+
   else:
     dets = dets[:nT]
     if color!=None:
@@ -481,9 +485,6 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["lmax"] = lmax
 
   agrp.attrs["dfreq"] = [float(d) for d in dets]
-  A_cmb = lkl_grp.attrs["A_cmb"]
-  if has_cl[1]*has_cl[2]:
-    A_cmb = nm.concatenate((A_cmb[:nT],A_cmb[nT:],A_cmb[nT:]))
   agrp.attrs["A_cmb"] = A_cmb
 
   voidmask = pm.voidmask
