@@ -75,8 +75,10 @@ def ordering_TEB(nt,np,has_cl):
   
 def remove_zero_rowcol(matrix_in, mask):
   idx        = list(set(list(nm.nonzero(mask)[0])))
+  idx.sort()
   matrix_out = nm.zeros([len(idx), len(idx)])
   for i in range(len(idx)):
+    #print i,idx[i],idx
     matrix_out[i,:] = matrix_in[idx[i],idx]
   return matrix_out
 
@@ -351,23 +353,24 @@ def get_power_spectra_(cl_raw, nT, nP, has_cl, nr_freq, mask_TP, l_info, nr_bins
     try:
       cl_raw.shape = [3001, 3*nr_freq, 3*nr_freq]
     except ValueError:
-      pass
-    try:
-      cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
-      cl_raw_good = nm.zeros((3001,3*nr_freq,3*nr_freq))
-      cl_raw_good[:,:nr_freq*2,:nr_freq*2] = cl_raw
-      cl_raw = cl_raw_good
-    except ValueError:
-      print "Error: Power spectrum input file format mismatch"
-      quit()
+      try:
+        cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
+        cl_raw_good = nm.zeros((3001,3*nr_freq,3*nr_freq))
+        cl_raw_good[:,:nr_freq*2,:nr_freq*2] = cl_raw
+        cl_raw = cl_raw_good
+      except ValueError:
+        print "Error: Power spectrum input file format mismatch"
+        quit()
   rqhat     = nm.zeros([nr_bins, nT + nP*(has_cl[1]+has_cl[2]), nT + nP*(has_cl[1]+has_cl[2])])
   rqhat_tmp = nm.zeros([nr_bins, mask_TP.shape[0], mask_TP.shape[0]])
   for i in range(mask_TP.shape[0]):
     for j in range(mask_TP.shape[0]):
+      #print i,j
       rqhat_tmp[:,i,j] = nm.dot(bins, cl_raw[l_info['lmin']:l_info['lmax']+1,i,j])
   for i in range(nr_bins):
     rqhat[i,:,:] = remove_zero_rowcol(rqhat_tmp[i,:,:], mask_TP)
   rqhat *= (1.0E6)**2
+  
   return rqhat
 
 def dump_colorcorrections(color_corr, mask_TP, pars):
@@ -533,6 +536,7 @@ def main(argv):
   #    rqhat[qmins[o[0],o[1]]:qmaxs[o[0],o[1]],o[1],o[0]] = cls
 
   root_grp,hf = php.baseCreateParobject(pars.res_object)
+  
   lkl_grp = smh.base_smica(root_grp,has_cl,lmin,lmax,nT,nP,wq,rqhat,Acmb,None,bins)
   smh.set_criterion(lkl_grp,"gauss",mat=cov_mat,mask=mask,ordering=ordering)
   lkl_grp.attrs["dnames"] = php.pack256(*channel)
