@@ -18,7 +18,7 @@ def main(argv):
   import tempfile
   dr = tempfile.mkdtemp()
   import os
-  print dr
+  print(dr)
   import shutil
   shutil.copy(pars.data.strip(),dr+"/lollipop_data")    
   shutil.copy(pars.fiducial.strip(),dr+"/lollipop_fid")    

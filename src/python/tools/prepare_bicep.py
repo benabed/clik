@@ -23,7 +23,7 @@ def main(argv):
   import tempfile
   dr = tempfile.mkdtemp()
   import os
-  print dr
+  print(dr)
   import shutil
   shutil.copytree(pars.cliksrc.strip()+"/src/bicep/windows",dr+"/windows")    
   shutil.copy(pars.cliksrc.strip()+"/src/bicep/B2_3yr_bpcm_no-sysuncer_20140314.txt",dr+"/")

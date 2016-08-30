@@ -90,7 +90,7 @@ def read_full_cov_mat(fname):
   
   header  = hdulist[0].header
   hdulist.close()
-  for key in header.keys():
+  for key in list(header.keys()):
     if ('LMIN_' in key or 'LMAX_' in key):
       l_info[key] = int(header[key])
   cov_mat /= (1.0E6)**4
@@ -207,7 +207,7 @@ def get_l_binning(mask_TP, lmin_TP, lmax_TP, l_info, \
      and (l_info['max_lmax_TE'] == l_info['lmax']):
     bins = bin_TE
   else:
-    print "Error: Using combined binning matrices not implemented"
+    print("Error: Using combined binning matrices not implemented")
     quit()
   nr_bins = bins.shape[0]
   lcuts   = nm.zeros(nr_bins+1, dtype='int')
@@ -229,7 +229,7 @@ def get_power_spectra(fname, nT, nP, nr_freq, mask_TP, l_info, nr_bins, bins):
   try:
     cl_raw.shape = [3001, 2*nr_freq, 2*nr_freq]
   except ValueError:
-    print "Error: Power spectrum input file format mismatch"
+    print("Error: Power spectrum input file format mismatch")
     quit()
   rqhat     = nm.zeros([nr_bins, nT + nP, nT + nP])
   rqhat_tmp = nm.zeros([nr_bins, mask_TP.shape[0], mask_TP.shape[0]])
@@ -271,7 +271,7 @@ def add_calibration(channel, pars):
   ref = '143'
   if ((any('T' in entry for entry in channel) and (not ref + 'T' in channel)) or
       (any('P' in entry for entry in channel) and (not ref + 'P' in channel))):
-    print "Error: Need {0:3s} GHz channel for calibration".format(ref)
+    print("Error: Need {0:3s} GHz channel for calibration".format(ref))
     quit()
   calib_channels = ''
   for freq in channel:
@@ -286,7 +286,7 @@ def add_calibration(channel, pars):
   return pars
 
 def input_from_cov_mat(pars):
-  print "Parsing binning information from covariance matrix"
+  print("Parsing binning information from covariance matrix")
   frequencies = ['100', '143', '217']
   color_corr  = [1.06881, 1.05195, 1.13962, 1.0, 1.0, 1.0]
   nr_freq     = len(frequencies)
@@ -316,7 +316,7 @@ def input_from_cov_mat(pars):
          qmins, qmaxs, Acmb, rqhat, cov_mat, pars
 
 def input_from_config_file(pars):
-  print "Parsing binning information from config file"
+  print("Parsing binning information from config file")
   nT = pars.int.nT
   nP = pars.int.nP
 
@@ -412,10 +412,10 @@ def main(argv):
   if "parametric" in pars:
     defaults = {}
     if "parametric.default.parameter" in pars:
-      defaults = dict(zip(pars.str_array.parametric_dot_default_dot_parameter,pars.str_array.parametric_dot_default_dot_value))
+      defaults = dict(list(zip(pars.str_array.parametric_dot_default_dot_parameter,pars.str_array.parametric_dot_default_dot_value)))
     rename = {}
     if "parametric.rename.from" in pars:
-      rename = dict(zip(pars.str_array.parametric_dot_rename_dot_from,pars.str_array.parametric_dot_rename_dot_to))
+      rename = dict(list(zip(pars.str_array.parametric_dot_rename_dot_from,pars.str_array.parametric_dot_rename_dot_to)))
 
     keys = pars.str_array.parametric_dot_parameter
     colors = [None]*1000
@@ -428,7 +428,7 @@ def main(argv):
           colors += [read_array(cl)]
 
     for ip,pname in enumerate(pars.str_array.parametric):
-      print pname
+      print(pname)
       smh.add_parametric_component(lkl_grp,str(pname),frq,keys,lmin,lmax,defaults=defaults,color=colors[ip],rename=rename)
 
   # Some fix contribution (affected by beam and calib) ?
@@ -457,10 +457,10 @@ def main(argv):
   #  smh.add_gcal2_component(lkl_grp,names,tpl)
 
   if "beam" in pars and pars.beam.strip():
-    print "add beam eigenmodes",
+    print("add beam eigenmodes", end=' ')
     if pars.bool(default=True).beam_dot_ortho:
-      print "and ensure orthogonality",
-    print ""
+      print("and ensure orthogonality", end=' ')
+    print("")
     names = ["beam_"+v for v in pars.str_array.beam]
     m = nT*has_cl[0]+nP*has_cl[1]+nP*has_cl[2]
     bdir = pars.str.beam_dot_path.strip()

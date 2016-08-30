@@ -40,13 +40,13 @@ def main(argv):
     
   lkl_grp = php.add_lkl_generic(root_grp,"actspt",1,hascl,lmax,lmin)
   
-  print "lmin11 = ",lmin11
-  print "lmin12 = ",lmin12
-  print "lmin22 = ",lmin22
-  print "lmax11 = ",lmax11
-  print "lmax12 = ",lmax12
-  print "lmax22 = ",lmax22
-  print "tt_lmax_mc = ",tt_lmax_mc
+  print("lmin11 = ",lmin11)
+  print("lmin12 = ",lmin12)
+  print("lmin22 = ",lmin22)
+  print("lmax11 = ",lmax11)
+  print("lmax12 = ",lmax12)
+  print("lmax22 = ",lmax22)
+  print("tt_lmax_mc = ",tt_lmax_mc)
   
   lkl_grp.attrs["lmin11"] = lmin11
   lkl_grp.attrs["lmin12"] = lmin12

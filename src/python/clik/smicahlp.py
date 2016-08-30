@@ -1,4 +1,4 @@
-import parobject as php
+from . import parobject as php
 import numpy as nm
 import re
 
@@ -441,7 +441,7 @@ def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tp
   return agrp
 
 def add_from_pars(lkl_grp,parfile):
-  import miniparse
+  from . import miniparse
   pars = miniparse.miniparse(parfile)
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
@@ -472,7 +472,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["keys"] = php.pack256(*npars)
   nefaults = pm.defaults
   agrp.attrs["ndef"] = len(nefaults)
-  defkey = nefaults.keys()
+  defkey = list(nefaults.keys())
   defval = [nefaults[k] for k in defkey]
   agrp.attrs["defaults"] = php.pack256(*defkey)
   agrp.attrs["values"] = php.pack256(*defval)
@@ -505,7 +505,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
 
   rename = pm.rename
   if rename:
-    rename_from = rename.keys()
+    rename_from = list(rename.keys())
     rename_to = [rename[k] for k in rename_from]
     agrp.attrs["rename_from"] = php.pack256(*rename_from)
     agrp.attrs["rename_to"] = php.pack256(*rename_to)
@@ -597,7 +597,7 @@ def build_vecproj(mask):
 
 
 def parametric_from_smica(h5file,lmin=-1,lmax=-1,ilkl=0):
-  import hpy
+  from . import hpy
   ff = hpy.File(h5file,"r")
   return parametric_from_smica_group(ff["clik/lkl_%d"%ilkl],lmin,lmax)
   ff.close()
@@ -613,13 +613,13 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     key = [v.strip() for v in hgrp["component_%d"%i].attrs["keys"].split("\0") if v.strip() ]
     default = [v.strip() for v in hgrp["component_%d"%i].attrs["defaults"].split("\0") if v.strip() ]
     value = [v.strip() for v in hgrp["component_%d"%i].attrs["values"].split("\0") if v.strip() ]
-    defdir = dict(zip(default,value))
+    defdir = dict(list(zip(default,value)))
     frq = hgrp["component_%d"%i].attrs["dfreq"]
     try:
       rename_from = [v.strip() for v in hgrp["component_%d"%i].attrs["rename_from"].split("\0") if v.strip() ]
       rename_to = [v.strip() for v in hgrp["component_%d"%i].attrs["rename_to"].split("\0") if v.strip() ]
-      rename = dict(zip(rename_from,rename_to))
-    except Exception,e:
+      rename = dict(list(zip(rename_from,rename_to)))
+    except Exception as e:
       rename = {}
     #print rename
     #print key
@@ -627,12 +627,12 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     #print value
     try:
       color = hgrp["component_%d/color"%i][:]
-    except Exception,e:
+    except Exception as e:
       color = None
     try:
       data = hgrp["component_%d/template"%i][:]
       
-    except Exception,e:
+    except Exception as e:
       data = None
     if lmin==-1:
       lmin = hgrp["component_%d"%i].attrs["lmin"]
@@ -654,7 +654,7 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
 
 def calTP_from_smica(dffile):
   cal0 = calTP0_from_smica(dffile)
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -696,7 +696,7 @@ def calTP_from_smica(dffile):
   return cal
 
 def calTP0_from_smica(dffile):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -750,7 +750,7 @@ def calTP0_from_smica(dffile):
   return cal
 
 def beamTP_from_smica(dffile):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -809,7 +809,7 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP):
   return mask
 
 def ordering_from_smica(dffile,jac=True):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   msk = fi["clik/lkl_0/criterion_gauss_mask"]
@@ -868,7 +868,7 @@ def ordering_from_smica(dffile,jac=True):
   fi.close()
 
 def get_bestfit_and_cl(dffile,bffile):
-  import hpy
+  from . import hpy
   import lkl
 
   fi = hpy.File(dffile)
@@ -883,7 +883,7 @@ def get_bestfit_and_cl(dffile,bffile):
       cnt += lmax+1
   lkl = lkl.clik(dffile)
   names = lkl.extra_parameter_names
-  bestfit = dict(zip(names,bff[cnt:]))
+  bestfit = dict(list(zip(names,bff[cnt:])))
   return bestfit,cls
 
 
@@ -894,7 +894,7 @@ def _simu_from_rq(mt,me,mb,rq,nside=2048):
   for i in range(m):
     for j in range(m-i):
       cls += [rq[:,j,j+i]]
-  print "random alms"
+  print("random alms")
   alms = hp.synalm(cls,new = True)
   rmaps = nm.zeros((m,m,12*nside**2))
   mp = nm.max(me,mb)
@@ -915,15 +915,15 @@ def _simu_from_rq(mt,me,mb,rq,nside=2048):
       almsr += [nm.zeros_like(alms[0])]
     else:
       almsr += [cls[i+mt+me]]
-    print "fg channel %d"%i
+    print("fg channel %d"%i)
     mps += [hp.alm2map(almsr,nside,pol=True)]
   for i in range(mp,m):
-    print "fg channel %d"%i
+    print("fg channel %d"%i)
     mps += [[hp.alm2map(alms[i],nside,pol=True),None,None]]
   return mps
 
 def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
-  import hpy
+  from . import hpy
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
@@ -964,7 +964,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   if me==0 and mb == 0:
     icls = [0]
 
-  print "generate cmb"
+  print("generate cmb")
   cmb = hp.synfast(ncls,nside,pol=True and len(ncls)>1 ,new=True)
 
   # got maps  for the cmb !
@@ -978,7 +978,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
     nrms += [p.__class__.__name__]
   oq = nm.array(oq)
   oq = nm.sum(oq,0)
-  print "generate fg"
+  print("generate fg")
   fg = _simu_from_rq(mt,me,mb,oq,nside)
 
   maps = [[None,None,None]]*max(mt,me,mb)
@@ -994,7 +994,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
 
 
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
-  import hpy
+  from . import hpy
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
@@ -1015,7 +1015,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   oq = []
   nrms = []
   for p in prms:
-    print p
+    print(p)
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
     if oq[-1].shape[1:]!=rqh.shape[1:]:
@@ -1038,7 +1038,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
   oqb = nm.zeros((len(oq),)+rqh.shape)
   lm = nm.zeros(nb)
-  print oq.shape,oq.shape[0]
+  print(oq.shape,oq.shape[0])
   for b in range(nb):
     if oq.shape[0]:
       oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
@@ -1091,8 +1091,8 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xaxis = (0,lm[-1]+100)
 
 def best_fit_cmb(dffile,bestfit,cty="B"):
-  import parobject as php
-  import hpy
+  from . import parobject as php
+  from . import hpy
   import lkl
   import time
 
@@ -1124,11 +1124,11 @@ def best_fit_cmb(dffile,bestfit,cty="B"):
       j = w1[ii]
       Jt_siginv[i] += siginv[j]
       
-    print "pcompute Jt_siginv in %d sec"%(time.time()-a)
+    print("pcompute Jt_siginv in %d sec"%(time.time()-a))
     
     b = time.time()
     Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
-    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-b)
+    print("pcompute Jt_siginv_Yo in %d sec"%(time.time()-b))
     
     
     c = time.time()
@@ -1138,12 +1138,12 @@ def best_fit_cmb(dffile,bestfit,cty="B"):
       j = w0[ii]
       i = w1[ii]
       Jt_siginv_J[j] += Jt_siginv[:,i]
-    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-c)
+    print("pcompute Jt_siginv_Yo in %d sec"%(time.time()-c))
     
     #Jt_siginv,Jt_siginv_Yo,Jt_siginv_J = lkl.full_solve(Yo,Jt,siginv)
     #rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
     rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
-    print time.time()-a
+    print(time.time()-a)
   else:
     a = time.time()
     Jt_siginv = nm.dot(Jt,siginv)
@@ -1153,7 +1153,7 @@ def best_fit_cmb(dffile,bestfit,cty="B"):
   
     #rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
     rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
-    print time.time()-a
+    print(time.time()-a)
 
   #rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
   ##try:

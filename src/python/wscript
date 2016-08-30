@@ -32,7 +32,7 @@ def build(ctx):
     txt = re.sub("REPLACEPATH",ctx.env.PYTHONDIR,txt)
     txt = re.sub("PYTHONEXE",ctx.env.PYTHON[0],txt)
     f=open(tgt,"w")
-    print >>f,txt,
+    print(txt, end=' ', file=f)
     f.close()
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]

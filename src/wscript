@@ -28,7 +28,7 @@ def build(bld):
   for plg in bld.env.PLG:
     for prc in getattr(bld.env,"PLG_%s_SRC"%plg):
       source_plik += lst(prc,["plik/component_plugin",plg])
-      print "add "+source_plik[-1]
+      print("add "+source_plik[-1])
   
   
   #wmap

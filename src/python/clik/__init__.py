@@ -4,22 +4,22 @@ if osp.exists(osp.join(osp.dirname(__file__),"lkl.pyx")):
   raise ImportError("Cannot import clik python wrapper from the source directory.\nMake sure that you have compiled and installed clik and then\nrun python from another directory.")
 
 try:
-  from lkl import clik
+  from .lkl import clik
   _lkl_ok = True
-except ImportError,e:
-  print "Cannot use clik wrapper (cause = '%s')"%e
+except ImportError as e:
+  print("Cannot use clik wrapper (cause = '%s')"%e)
 try:
-  from lkl_lensing import clik_lensing,try_lensing
+  from .lkl_lensing import clik_lensing,try_lensing
   _lkl_lensing_ok = True
-except ImportError,e:
-  print "Cannot use clik_lensing wrapper (cause = '%s')"%e
+except ImportError as e:
+  print("Cannot use clik_lensing wrapper (cause = '%s')"%e)
   def try_lensing(fl):
     return False
   
 import re
 import numpy as nm
 
-from miniparse import miniparse
+from .miniparse import miniparse
 
 class forfile:
   def __init__(self,fi):

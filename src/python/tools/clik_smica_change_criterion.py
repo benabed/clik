@@ -28,7 +28,7 @@ def main(argv):
     if "mask" in pars:
 
       extra["mask"] = nm.asarray(nm.reshape(nm.loadtxt(pars.mask),(lkl_grp.attrs["m_channel_T"],lkl_grp.attrs["m_channel_T"])),nm.int)
-      print extra["mask"]
+      print(extra["mask"])
   smh.set_criterion(lkl_grp,crit,**extra)
   outhf.close()  
     

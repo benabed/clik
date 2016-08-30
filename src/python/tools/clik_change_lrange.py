@@ -30,7 +30,7 @@ def change_gibbs_gauss(inhf,lklfile,outfile,lmin,lmax):
   if lmax == -1:
     lmax = inhf["clik/lkl_0/lmax"]
   if lmax>249:
-    print "not possible"
+    print("not possible")
     sys.exit(-1)
   hpy.copyfile(lklfile,outfile)
   outhf = hpy.File(outfile,"r+")
@@ -63,7 +63,7 @@ def change_plik_cmbonly(inhf,lklfile,outfile,lmin,lmax):
   lmin = blmin[bmin]+olmin
   lmax = blmax[bmax]+olmin
 
-  print "restrict to %d %d [%d %d]"%(lmin,lmax,bmin,bmax)
+  print("restrict to %d %d [%d %d]"%(lmin,lmax,bmin,bmax))
 
   hpy.copyfile(lklfile,outfile)
   outhf = hpy.File(outfile,"r+")
@@ -96,7 +96,7 @@ def change_smica(inhf,lklfile,outfile,lmin,lmax):
   lmin = blmin[bmin]+olmin
   lmax = blmax[bmax]+olmin
 
-  print "restrict to %d %d"%(lmin,lmax)
+  print("restrict to %d %d"%(lmin,lmax))
 
   hascl = inhf["clik/lkl_0/has_cl"]
   assert hascl[1:].sum()==0,"do not work yet on polar data"
@@ -158,7 +158,7 @@ def change_smica(inhf,lklfile,outfile,lmin,lmax):
 def main(argv):
 
   if len(sys.argv)!=5:
-    print "usage : %s input_clik lmin lmax output_clik\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins."%osp.basename(sys.argv[0])
+    print("usage : %s input_clik lmin lmax output_clik\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins."%osp.basename(sys.argv[0]))
     sys.exit(0)
   lklfile = sys.argv[1]
   lmin = int(sys.argv[2])
@@ -168,7 +168,7 @@ def main(argv):
   inhf = hpy.File(lklfile)
   ty = inhf["clik/lkl_0/lkl_type"]
   if ty not in ("smica","gibbs_gauss","plik_cmbonly","simlow"):
-    print "can only change lmin and lmax for plik, plik_lite, and commander TT likelihoods"
+    print("can only change lmin and lmax for plik, plik_lite, and commander TT likelihoods")
     sys.exit(-1)
   assert ty in ["smica","gibbs_gauss","plik_cmbonly","simlow"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]

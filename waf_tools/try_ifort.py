@@ -28,7 +28,7 @@ def configure_(ctx):
     try:
       ifort_conf(ctx)
       return
-    except Exception,e:
+    except Exception as e:
       if Options.options.ifort:
         raise
       Logs.pprint("PINK", "ifort not found, defaulting to gfortran (cause: '%s')"%e)

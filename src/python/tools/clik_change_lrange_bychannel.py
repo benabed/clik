@@ -41,14 +41,14 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
   lmins = nm.array([blmin[bm]+olmin for bm in bmins])
   lmaxs = nm.array([blmax[bm]+olmin for bm in bmaxs])
 
-  print "restrict to %s"%(zip(lmins,lmaxs))
+  print("restrict to %s"%(list(zip(lmins,lmaxs))))
 
   lmin = min(lmins[kpp])
   lmax = max(lmaxs[kpp])
-  print lmin,lmax
+  print(lmin,lmax)
   bmin = min(bmins[kpp])
   bmax = max(bmaxs[kpp])
-  print bmin,bmax
+  print(bmin,bmax)
 
   hascl = inhf["clik/lkl_0/has_cl"]
   assert hascl[1:].sum()==0,"do not work yet on polar data"
@@ -75,12 +75,12 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
     else:
       nnmsk[:,i,j] = 0
     mx += len(cur)
-    print i,j
-    print cur[:1],cur[-2:]
-    print bmins[i,j],bmaxs[i,j]+1
-    print kpp[i,j]
-    print nmsk[:,i,j]
-    print nnmsk[:,i,j]
+    print(i,j)
+    print(cur[:1],cur[-2:])
+    print(bmins[i,j],bmaxs[i,j]+1)
+    print(kpp[i,j])
+    print(nmsk[:,i,j])
+    print(nnmsk[:,i,j])
   kp = nm.concatenate(kp)
   
   siginv = inhf["clik/lkl_0/criterion_gauss_mat"]
@@ -126,20 +126,20 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
 def main(argv):
 
   if len(sys.argv)!=2:
-    print "usage : %s parfile\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins.\n  Here is an example parfile\n    #input and output clik files\n    input_clik = plik_dx11dr2_HM_v18_TT.clik\n\n    output_clik = plik_dx11dr2_HM_v18_TT_no143x143.clik\n\n    #set to -1 to use default value\n    #set to anything else to change lmin\n    lmin = -1    -1    -1    &\n           -1    -1    -1    &\n           -1    -1    -1   \n\n \n    #set to -1 to use default value\n    #set to anything else to change lmax\n    #set any non negative value inferior than lmin (0 is a good example) ro remove a cross spectra\n    lmax = -1    -1    -1    &\n           -1     0    -1    &\n           -1    -1    -1   \n\n "%osp.basename(sys.argv[0])
+    print("usage : %s parfile\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins.\n  Here is an example parfile\n    #input and output clik files\n    input_clik = plik_dx11dr2_HM_v18_TT.clik\n\n    output_clik = plik_dx11dr2_HM_v18_TT_no143x143.clik\n\n    #set to -1 to use default value\n    #set to anything else to change lmin\n    lmin = -1    -1    -1    &\n           -1    -1    -1    &\n           -1    -1    -1   \n\n \n    #set to -1 to use default value\n    #set to anything else to change lmax\n    #set any non negative value inferior than lmin (0 is a good example) ro remove a cross spectra\n    lmax = -1    -1    -1    &\n           -1     0    -1    &\n           -1    -1    -1   \n\n "%osp.basename(sys.argv[0]))
     sys.exit(0)
   pars = clik.miniparse(argv[1])
   lklfile = pars.str.input_clik
   lmin = pars.int_array.lmin
   lmax = pars.int_array.lmax
   outfile = pars.str.output_clik
-  print lmin
-  print lmax
+  print(lmin)
+  print(lmax)
 
   inhf = hpy.File(lklfile)
   ty = inhf["clik/lkl_0/lkl_type"]
   if ty not in ("smica"):
-    print "can only change lmin and lmax for plik TT likelihoods"
+    print("can only change lmin and lmax for plik TT likelihoods")
     sys.exit(-1)
   assert ty in ["smica"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]

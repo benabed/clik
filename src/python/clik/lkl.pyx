@@ -66,7 +66,7 @@ cdef class clik:
     self._err = NULL
     self.err = &self._err
     
-    self.celf = clik_init(filename,self.err)
+    self.celf = clik_init(filename.encode(),self.err)
     er=doError(self.err)
     if er:
       raise er
@@ -131,7 +131,7 @@ cdef class clik:
     er=doError(self.err)
     if er:
       raise er  
-    res = ["%s"%names[i] for i in range(n_names)]
+    res = [names[i].decode() for i in range(n_names)]
     res = tuple(res)
     stdlib.free(names)
     return tuple(res)

@@ -2,15 +2,15 @@ _has_h5py = False
 try:
 	import h5py
 	_has_h5py = True
-except Exception, e:
+except Exception as e:
 	#print e
 	pass
 
 _has_cldf = False
 try:
-	import cldf
+	from . import cldf
 	_has_cldf = True
-except Exception,e:
+except Exception as e:
 	pass
 
 import os.path as osp
@@ -36,7 +36,7 @@ def File(path,mode="r",ty=None):
 				pass
 			else:
 				return h5py.File(path,mode)
-		except Exception,e:
+		except Exception as e:
 			pass
 			#print e
 	return cldf.File(path,mode)

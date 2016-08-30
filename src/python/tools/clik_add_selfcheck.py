@@ -16,7 +16,7 @@ def main(argv):
 	  pars = clik.miniparse(argv[1])
 	  cls = nm.loadtxt(pars.input_cl)
 	  res = php.add_selfcheck(pars.input_object,cls)
-	print "lkl for init cl %g"%res 
+	print("lkl for init cl %g"%res) 
     
 import sys
 if __name__=="__main__":

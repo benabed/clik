@@ -9,11 +9,11 @@ import clik.hpy as hpy
 
 def main(argv):
   if len(sys.argv)!=2:
-    print "usage : %s lkl_file"
+    print("usage : %s lkl_file")
     sys.exit(1)
     
   lkls = hpy.File(sys.argv[1])["clik"]
-  print "found %d likelihoods"%lkls.attrs["n_lkl_object"]
+  print("found %d likelihoods"%lkls.attrs["n_lkl_object"])
   f0 = sys.argv[1]
   f_tmpl = f0.split(".")
   f_tmpl = ".".join(f_tmpl[:-1]+["%s"]+[f_tmpl[-1]])
@@ -21,7 +21,7 @@ def main(argv):
   for lkln in ("lkl_%d"%v for v in range(lkls.attrs["n_lkl_object"])):
     fname = f_tmpl%lkln
     lkl = lkls[lkln]
-    print "  "+fname
+    print("  "+fname)
     hf = hpy.File(fname,"w",lkls)
     if "lmax" in lkl.attrs:
       lmax = lkl.attrs["lmax"]

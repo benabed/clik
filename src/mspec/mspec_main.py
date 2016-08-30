@@ -25,13 +25,13 @@ class mspec_clik(object):
     """
     Returns the names of needed nuisance parameter as a list of strings.
     """
-    return self.script.get_sampled().keys()
+    return list(self.script.get_sampled().keys())
 
   def get_lmaxs(self):
     """
     Returns a list of lmaxs in the order given by the order parameter.
     """
-    return [max([-1]+[lmax for ((x1,_),(x2,_)),(_,lmax) in self.script.params.mspec.use.items() if x1+x2==x]) for x in order]
+    return [max([-1]+[lmax for ((x1,_),(x2,_)),(_,lmax) in list(self.script.params.mspec.use.items()) if x1+x2==x]) for x in order]
 
   def get_lnl(self,dls,nuisance_params):
     """
@@ -40,7 +40,7 @@ class mspec_clik(object):
     0th index of the array is l=0. lmaxs need to be at least those given get get_lmaxs()
     nuisance_params is a list of the values of the nuisance parameters, in the order given by get_nuisance_params.
     """
-    params = dict(zip(self.script.get_sampled(),nuisance_params))
+    params = dict(list(zip(self.script.get_sampled(),nuisance_params)))
     params['cmb_result'] = {'cl_%s'%x:dl for x,dl in zip(order,dls)}
     return self.script.evaluate(**params)[0]
 
@@ -86,13 +86,13 @@ def main(argv):
   ltot = nm.sum(lmax)+6
   ntot = len(nuis)
   #print >>sys.stderr,ntot,ltot,ntot+ltot
-  print "READY"
+  print("READY")
   sys.stdout.flush()
   
   while(True):
     vo = sys.stdin.readline()
     if vo.strip()=="stop":
-      print>>sys.stderr, "bye"
+      print("bye", file=sys.stderr)
       break
     cls = nm.array([float(vo)]+[float(sys.stdin.readline()) for i in range(ltot+ntot-1)])
     dls = []
@@ -105,8 +105,8 @@ def main(argv):
     nu = cls[cnt:]
 
     lkl = msp.get_lnl(dls,nu)
-    print "READY"
-    print -lkl
+    print("READY")
+    print(-lkl)
     sys.stdout.flush()
     #if resp.strip()!='ok':
     #  print >>sys.stderr,"bad !"

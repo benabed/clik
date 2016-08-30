@@ -17,7 +17,7 @@ def main_CMB(argv):
   for clfile in argv[2:]:
     cls = nm.loadtxt(clfile)
     nres = lkl(cls.flat[:])
-    print nres
+    print(nres)
 
 def main_lensing(argv):
   lklfile = argv[1]
@@ -25,7 +25,7 @@ def main_lensing(argv):
   for clfile in argv[2:]:
     cls = nm.loadtxt(clfile)
     nres = lkl(cls.flat[:])
-    print nres
+    print(nres)
 
 if __name__=="__main__":
   main(sys.argv)

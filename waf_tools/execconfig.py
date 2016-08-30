@@ -71,7 +71,7 @@ def build_pkgconfig(self):
     alibs += (self.env.STLIB_MARKER or "") +" ".join([srlibpath,stlibs])
 
   f=open(osp.join(self.env.BINDIR,self.target),"w")
-  print >>f,config_tpl%(" ".join((includepath,defines,cflags)),alibs)
+  print(config_tpl%(" ".join((includepath,defines,cflags)),alibs), file=f)
   f.close()  
   os.chmod(osp.join(self.env.BINDIR,self.target),Utils.O755)
 
