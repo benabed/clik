@@ -99,13 +99,15 @@ def change_smica(inhf,lklfile,outfile,lmin,lmax):
   print "restrict to %d %d"%(lmin,lmax)
 
   hascl = inhf["clik/lkl_0/has_cl"]
-  assert hascl[1:].sum()==0,"do not work yet on polar data"
+  assert hascl.sum()==1, "do not work for joint T+P (incuding TE) yet"
+
   mT = inhf["clik/lkl_0/m_channel_T"]
+  mP = inhf["clik/lkl_0/m_channel_P"]
     
   ord = inhf["clik/lkl_0/criterion_gauss_ordering"]
   ord.shape=(-1,2)
   nmsk = inhf["clik/lkl_0/criterion_gauss_mask"]
-  nmsk.shape=(nb,mT,mT)
+  nmsk.shape=(nb,mT+mP,mT+mP)
 
   kp = []
   mx = 0
@@ -127,7 +129,8 @@ def change_smica(inhf,lklfile,outfile,lmin,lmax):
   hpy.copyfile(lklfile,outfile)
   outhf = hpy.File(outfile,"r+")
   
-  outhf["clik/lmax"] = [lmax,-1,-1,-1,-1,-1]
+  lmaxo = hascl*(lmax+1)-1
+  outhf["clik/lmax"] = lmaxo
   
   outhf["clik/lkl_0/lmin"] = lmin
   outhf["clik/lkl_0/lmax"] = lmax
