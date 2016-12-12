@@ -1105,7 +1105,7 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
 
-def best_fit_cmb(dffile,bestfit,cty="B"):
+def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
   import parobject as php
   import hpy
   import lkl
@@ -1117,6 +1117,12 @@ def best_fit_cmb(dffile,bestfit,cty="B"):
 
   siginv = fi["clik/lkl_0/criterion_gauss_mat"]
   siginv.shape=(len(oo),len(oo))
+  if Jmask is not None:
+    oo = oo[Jmask]
+    Jt0 = Jt0[:,Jmask]
+    sig = nm.linalg.inv(siginv)
+    rsig = (sig[Jmask])[:,Jmask]
+    siginv = nm.linalg.inv(rsig)
 
   lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -1126,9 +1132,10 @@ def best_fit_cmb(dffile,bestfit,cty="B"):
 
   Jt = Jt0[good]
 
-
   Yo = nm.sum(oqb,0)-rqh
   Yo = Yo.flat[oo]
+
+  print 1
 
   if cty=="B":
     a = time.time()

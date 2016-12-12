@@ -94,7 +94,8 @@ def build(ctx):
   if ctx.env.has_bicep:
     ctx(
       source = "../bicep/bicep_util.py",
-      install_path = "${PYTHONDIR}"
+      install_path = "${PYTHONDIR}",
+      install_from=None
     )
   
   
@@ -124,6 +125,30 @@ def build(ctx):
       target = "mspec_main",
       install_path = ctx.env.BINDIR
       )    
+  if ctx.env.has_slik:
+    print "yes"
+    ctx(
+      execrule = injectpath,
+      source = "../slik/slik_main.py",
+      target = "slik_main",
+      install_path = ctx.env.BINDIR
+      )    
+    ctx(
+      source = "../slik/slik.py",
+      install_path = "${PYTHONDIR}",
+      target = "slik",
+      install_from=ctx.path.find_dir('../slik'),
+    )
+    ctx(
+      features = "c cshlib pyext",
+      source = "../slik/slik_fast.pyx ../slik/slik_support.c",
+      target  = "slik_fast",
+      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+      use = "clik",
+      #uselib = uselib_clik,
+      cflags = "-fopenmp",
+      install_path = "${PYTHONDIR}"
+    )
 
 
   ###    if (ctx.env.has_f90 and ctx.env.has_egfs):
