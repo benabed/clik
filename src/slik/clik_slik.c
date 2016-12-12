@@ -100,7 +100,7 @@ cmblkl* clik_slik_init(cldf *df, int nell, int* ell, int* has_cl, double unit,do
   
   
   bic->ntot = (ell[nell-1]+1-ell[0])*has_cl[0] + (ell[nell-1]+1-ell[0])*has_cl[1] + (ell[nell-1]+1-ell[0])*has_cl[2] + (ell[nell-1]+1-ell[0])*has_cl[3] + (ell[nell-1]+1-ell[0])*has_cl[4] + (ell[nell-1]+1-ell[0])*has_cl[5];
-  _DEBUGHERE_("%d %d %d %d %d %d %d",bic->ntot,has_cl[0],has_cl[1],has_cl[2],has_cl[3],has_cl[4],has_cl[5]);
+  //_DEBUGHERE_("%d %d %d %d %d %d %d",bic->ntot,has_cl[0],has_cl[1],has_cl[2],has_cl[3],has_cl[4],has_cl[5]);
   return cing;
 }
 

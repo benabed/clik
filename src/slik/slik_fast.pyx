@@ -77,7 +77,7 @@ cdef extern void dec_kap3_inner(double* dk3, double *ci,double *k3, int n) nogil
 cdef extern void dec_derivkap2_inner(double* dk2, double*  ci,double * k2, int n) nogil
 cdef extern double pairdot(double* A, int As, int AT, double * B, int Bs, int BT, double* C, int Cs, int CT, int Ap, int Aop, int Aoq, int Bp, int Bop, int Boq, int Cp, int Cop, int Coq, int lmin) nogil
 cdef extern void d_symcov12_inner(double *dcov, double* mat11,double* mat12,double* mat22,double* qty11,double* qty22,double *bl, int shape1, int lmin,int lmax) nogil
-cdef extern void symkappa4_12_finalize(double* k4, int lmin,int lmax);
+cdef extern void symkappa4_12_finalize(double* k4, int lmin,int lmax) nogil
 
 #cdef int mind0(int L,int i0,int i1,int i2,int i3,int i4,int i5,int outlen) nogil:
 #  cdef int o2 = outlen*outlen
