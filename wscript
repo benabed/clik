@@ -220,7 +220,7 @@ def configure(ctx):
   ctx.env.has_mspec = osp.exists("src/mspec")
 
   #mspec
-  ctx.env.has_slik = osp.exists("src/slik")
+  ctx.env.has_momento = osp.exists("src/momento")
 
   #lollipop
   ctx.env.has_lollipop = osp.exists("src/lollipop")

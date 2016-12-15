@@ -125,24 +125,24 @@ def build(ctx):
       target = "mspec_main",
       install_path = ctx.env.BINDIR
       )    
-  if ctx.env.has_slik:
+  if ctx.env.has_momento:
     print "yes"
     ctx(
       execrule = injectpath,
-      source = "../slik/slik_main.py",
-      target = "slik_main",
+      source = "../momento/momento_main.py",
+      target = "momento_main",
       install_path = ctx.env.BINDIR
       )    
     ctx(
-      source = "../slik/slik.py",
+      source = "../momento/momento.py",
       install_path = "${PYTHONDIR}",
-      target = "slik",
-      install_from=ctx.path.find_dir('../slik'),
+      target = "momento",
+      install_from=ctx.path.find_dir('../momento'),
     )
     ctx(
       features = "c cshlib pyext",
-      source = "../slik/slik_fast.pyx ../slik/slik_support.c",
-      target  = "slik_fast",
+      source = "../momento/momento_fast.pyx ../momento/momento_support.c",
+      target  = "momento_fast",
       includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
       #uselib = uselib_clik,

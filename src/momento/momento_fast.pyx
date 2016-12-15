@@ -154,7 +154,7 @@ def symkappa4_12(nm.ndarray mat11,nm.ndarray mat12,nm.ndarray mat22,sih):
 
   #k4b = k4.copy()
 
-  #k4.tofile("slik_fast_k4.dat") 
+  #k4.tofile("momento_fast_k4.dat") 
   ##t1 = time.time()
   ##for ells in (itertools.product(range(lmin,lmax+1),repeat=4)):
   ##  p,q,r,s=list(ells)
@@ -173,12 +173,12 @@ def symkappa4_12(nm.ndarray mat11,nm.ndarray mat12,nm.ndarray mat22,sih):
   ##  k4[3*(p-lmin):3*(p+1-lmin),3*(q-lmin):3*(q+1-lmin),3*(r-lmin):3*(r+1-lmin),3*(s-lmin):3*(s+1-lmin)] = zz2
   ##
   ##print time.time()-t1  
-  ##k4.tofile("slik_fast_k4.dat") 
+  ##k4.tofile("momento_fast_k4.dat") 
   
   t1 = time.time()
   symkappa4_12_finalize(<double*>k4.data,lmin,lmax)
   #print time.time()-t1  
-  #k4b.tofile("slik_fast_k4b.dat") 
+  #k4b.tofile("momento_fast_k4b.dat") 
   
   return k4
   

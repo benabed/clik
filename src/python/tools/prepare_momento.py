@@ -14,18 +14,16 @@ def main(argv):
   
   hascl = [1,1,0,1,0,0]
   hascl = nm.array(hascl,dtype=nm.int)
-  lmax = pars.int(default=10).lmax
-  lmin = pars.int(default=2).lmin
-
   
-  lkl_grp = php.add_lkl_generic(root_grp,"slik",1,hascl,lmax,lmin)
   
-  lkl_grp.attrs["data_lmin"] = 2
-  lkl_grp.attrs["data_lmax"] = 12
+  lkl_grp = php.add_lkl_generic(root_grp,"momento",1,hascl,12,2)
+  
+  lkl_grp.attrs["use_lmin"] = pars.int(default=2).lmin
+  lkl_grp.attrs["use_lmax"] = pars.int(default=10).lmax
 
   lkl_grp.attrs["do_linear"] = pars.int(default=1).do_linear
-  lkl_grp.attrs["use_offset_k2"] = pars.int(default=0).do_linear
-  lkl_grp.attrs["regcl"] = pars.int(default=1).do_linear
+  lkl_grp.attrs["use_offset_k2"] = pars.int(default=0).use_offset_k2
+  lkl_grp.attrs["regcl"] = pars.int(default=1).regcl
 
   php.add_pid(lkl_grp,"")
 
@@ -34,7 +32,7 @@ def main(argv):
   import os
   print dr
   import shutil
-  shutil.copytree(pars.slik_data,dr+"/slik_data")    
+  shutil.copytree(pars.momento_data,dr+"/momento_data")    
   
   php.add_external_data(dr,lkl_grp,tar=True)
 

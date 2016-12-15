@@ -7,14 +7,14 @@ import scipy.integrate
 from numpy import *
 from numpy.linalg import *
 from pylab import *
-import slik_fast as sf
+import momento_fast as sf
 
 
 ################################################################################
 # class to hold stuff                                                          #
 ################################################################################
 
-class stevenlike:
+class momento:
   def __init__(self,lmin=2,lmax=12,loadroot="teststore/",
                do_linear=True,use_offset_k2=False,
                lminlike=2,lmaxlike=10,regcl=True):
@@ -72,10 +72,7 @@ class stevenlike:
     self.fidgrads_part= self.grad_s_part(self.ci,self.fidcls)
 
   def lkl(self,cls):
-    #print >>sys.stderr,cls
-    lkl=self.s_romb_part(cls)
-    #print >>sys.stderr,"WOWOWO",lkl
-    return lkl
+    return self.s_romb_part(cls)
 
   def __call__(self,cls):
     return self.lkl(cls)
@@ -90,7 +87,8 @@ class stevenlike:
     grads[2]=dot(partdcls,self.grad_s_part(self.ci,self.fidcls+.50*dcls))
     grads[3]=dot(partdcls,self.grad_s_part(self.ci,self.fidcls+.75*dcls))
     grads[4]=dot(partdcls,self.grad_s_part(self.ci,cls))
-    return scipy.integrate.romb(grads,.25,show=False)
+    #print grads
+    return romb(grads,.25,show=False)
 
   def grad_s_part(self,ci,cls):
     lmin,lmax,b_l = self.lmin,self.lmax,self.b_l
@@ -117,9 +115,8 @@ class stevenlike:
     #sys.stdout.flush()
 
     k1=pars
-    
     if self.use_offset_k2:
-      k2=dec_kap2(ci,symcov12_inc_offset(cov_11,cov_12,cov_22,ym_1,ym_2))[nmin:nmax,nmin:nmax]
+      k2=dec_kap2(ci,symcov12_inc_offset(cov_11,cov_12,cov_22,self.ym_1,self.ym_2,self))[nmin:nmax,nmin:nmax]
     else:
       k2=dec_kap2(ci,symcov12_short(cov_11,cov_12,cov_22,self))[nmin:nmax,nmin:nmax]
     
@@ -564,172 +561,6 @@ def squash_vec(v,lmin,lmax):
     return y
 
 
-def grad_s_part(ci,cls,sih):
-    lmin,lmax,b_l = sih.lmin,sih.lmax,sih.b_l
-    
-    #print 'generating pixel covmats...',
-    cllong=makecllong_from_cls(cls,sih)
-
-    cov_11=make_m_slow(sih.f_11, cllong, sih.f_11, sih.yn_11)
-    cov_22=make_m_slow(sih.f_22, cllong, sih.f_22, sih.yn_22)
-    cov_12=make_m_slow(sih.f_11, cllong, sih.f_22, sih.yn_12)
-
-    nells=sih.lmaxlike-sih.lminlike+1
-
-    nmin=3*(sih.lminlike-sih.lmin)
-    nmax=3*(sih.lmaxlike-sih.lmin+1)
-    
-    pars=cls[nmin:nmax].copy()
-
-    n1=shape(pars)[0]
-    n2=n1*(n1+1)/2
-    n=n1+n2
-
-    #print 'generating cumulants...',
-    #sys.stdout.flush()
-
-    k1=pars.copy()
-    
-    t1 = time.time()
-    k2=dec_kap2(ci,symcov12_short(cov_11,cov_12,cov_22,sih))[nmin:nmax,nmin:nmax].copy()
-    print "linear case",time.time()-t1 
-    if sih.do_linear:
-        if sih.use_offset_k2:
-            k2=dec_kap2(ci,symcov12_inc_offset(cov_11,cov_12,cov_22,ym_1,ym_2))[nmin:nmax,nmin:nmax].copy()
-    # testing returning the "linear" result...
-        tmpdat=dec_kap1(ci,squash_vec(sih.yp_12-sih.n_12_p,lmin,lmax))[nmin:nmax].copy()
-    #tmpdat=fidcls
-        return -dot(dot(transpose(tmpdat-k1),inv(k2)),identity(n1))    
-    #tmpdiff=zeros_like(cls)
-    #tmpdiff[2::3]=(ells+.5)*(-fidcls[2::3]/k1[2::3]**2+1./k1[2::3])
-    #return tmpdiff
-
-    #testing zeroing the higher cumulants...
-    print "before k3"
-    t1 = time.time()
-    k3=dec_kap3(ci,symkappa3_12(cov_11,cov_12,cov_22,sih))[nmin:nmax,nmin:nmax,nmin:nmax].copy()
-    print "after k3",time.time()-t1
-    #udk4=symkappa4_12(cov_11,cov_12,cov_22)
-    #k4=dec_kap4(ci,udk4)
-    #sys.exit()
-    print "before k4"
-    t2 = time.time()
-    udk4=symkappa4_12(cov_11,cov_12,cov_22,sih)
-    print 'deconvolving k4...',  time.time()-t2
-    sys.stdout.flush()
-    t3 = time.time()
-    k4=dec_kap4(ci,udk4)[nmin:nmax,nmin:nmax,nmin:nmax,nmin:nmax].copy()
-    print 'done deconvolving k4...',time.time()-t3
-    sys.stdout.flush()
-    #k3=zeros((n1,n1,n1))
-    #k4=zeros((n1,n1,n1,n1))
-
-    #    print k1
-    #print k2
-    #print k3
-    #print k4
-
-
-    dk1=identity(n1)
-    print 'generating d_k2...',
-    sys.stdout.flush()
-    t4 = time.time()
-    uddk2=d_symcov12(cov_11,cov_12,cov_22,sih.f_11,sih.f_22,sih)
-    print 'deconvolving d_k2...',  time.time()-t4
-    sys.stdout.flush()
-    t5 = time.time()
-    dk2=dec_derivkap2(ci,uddk2)[nmin:nmax,nmin:nmax,nmin:nmax].copy()
-    print 'done deconvolving d_k2...', time.time()-t5
-    sys.stdout.flush()
-
-    #print dk1
-    #print dk2
-
-
-    deriv=zeros((n,n1))
-    diff=zeros(n)
-    mat=zeros((n,n))
-
-    print 'filling matrix...',
-    sys.stdout.flush()
-    t6 = time.time()
-
-    mat[:n1,:n1]=k2
-
-    p=n1
-    for p1 in xrange(0,n1):
-        for p2 in xrange(p1,n1):
-            for q in xrange(n1):
-                mat[p,q] = k3[p1,p2,q]
-            p+=1
-
-    for p in xrange(0,n1):
-        q=n1
-        for q1 in xrange(0,n1):
-            for q2 in xrange(q1,n1):
-                mat[p,q] = (
-                    + k3[p,q1,q2]
-                    + k2[p,q1]*k1[q2] + k2[p,q2]*k1[q1]
-                    )
-                q+=1
-
-    #zeroing k3 for xx-xx block...
-    #k3=zeros((n1,n1,n1))            
-    p=n1
-    for p1 in xrange(0,n1):
-        for p2 in xrange(p1,n1):
-            q=n1
-            for q1 in xrange(0,n1):
-                for q2 in xrange(q1,n1):
-                    mat[p,q] = (
-                        + k4[p1,p2,q1,q2]
-                        + k3[p1,p2,q1]*k1[q2] + k3[p1,p2,q2]*k1[q1]
-                        + k2[p1,q1]*k2[q2,p2] + k2[p1,q2]*k2[q1,p2]
-                        )
-                    q+=1
-            p+=1
-
-            #print mat
-
-    print time.time()-t6
-    print 'inverting matrix...',
-    sys.stdout.flush()
-    t7 = time.time()
-    matinv=inv(mat)
-    print time.time()-t7
-
-    #print matinv
-
-    #print dot(mat,matinv)
-
-    print 'filling diff and deriv...',
-    sys.stdout.flush()
-    t8=time.time()
-    tk1=dec_kap1(ci,squash_vec(sih.yp_12-sih.n_12_p,lmin,lmax))[nmin:nmax].copy()
-
-    for p in xrange(0,n1):
-        diff[p]=tk1[p]-pars[p]
-    p=n1
-    for p1 in xrange(0,n1):
-        for p2 in xrange(p1,n1):
-            diff[p]=tk1[p1]*tk1[p2]-k2[p1,p2]-k1[p1]*k1[p2]
-            p+=1
-
-    deriv[:n1,:n1]=dk1
-    p=n1
-    for p1 in xrange(0,n1):
-        for p2 in xrange(p1,n1):
-            deriv[p,:]=dk2[p1,p2,:]
-            p+=1
-
-            #assert(False)
-
-    print 'computing likelihood...', time.time()-t8
-    print "total",time.time()-t1
-    sys.stdout.flush()
-    res = -dot(dot(transpose(diff),matinv),deriv)
-    print "RES",res
-    return res
 
 # for now assuming M_AB^T=M_BA...
 def cov_12_34(mat23,mat41,mat24,mat31,sih):
@@ -980,7 +811,7 @@ def _symkappa4_12(mat11,mat12,mat22,sih):
                     #print "(",p,q,r,s,")",t1
 
                     
-    #k4.tofile("slik_slow_k4.dat")
+    #k4.tofile("momento_slow_k4.dat")
     for ells in (itertools.product(range(lmin,lmax+1),repeat=4)):
         p,q,r,s=list(ells)
         sargs=argsort(ells)
@@ -1032,15 +863,101 @@ def _d_symcov12(mat11,mat12,mat22,qty11,qty22,sih):
     return dcov
 
 
-def s_romb_part(cls,sih):
-    lmin,lmax = sih.lmin,sih.lmax
-    grads=zeros(5)
-    dcls=(cls-sih.fidcls)
-    partdcls=dcls[3*(sih.lminlike-lmin):3*(sih.lmaxlike-lmin+1)].copy()
-    grads[0]=dot(transpose(partdcls),sih.fidgrads_part)
-    grads[1]=dot(transpose(partdcls),grad_s_part(sih.ci,sih.fidcls+.25*dcls,sih))
-    grads[2]=dot(transpose(partdcls),grad_s_part(sih.ci,sih.fidcls+.50*dcls,sih))
-    grads[3]=dot(transpose(partdcls),grad_s_part(sih.ci,sih.fidcls+.75*dcls,sih))
-    grads[4]=dot(transpose(partdcls),grad_s_part(sih.ci,cls,sih))
-    return scipy.integrate.romb(grads,.25,show=False)
+
+
+# straight from scipy 0.18.1
+def tupleset(t, i, value):
+    l = list(t)
+    l[i] = value
+    return tuple(l)
+
+def romb(y, dx=1.0, axis=-1, show=False):
+    """
+    Romberg integration using samples of a function.
+    Parameters
+    ----------
+    y : array_like
+        A vector of ``2**k + 1`` equally-spaced samples of a function.
+    dx : float, optional
+        The sample spacing. Default is 1.
+    axis : int, optional
+        The axis along which to integrate. Default is -1 (last axis).
+    show : bool, optional
+        When `y` is a single 1-D array, then if this argument is True
+        print the table showing Richardson extrapolation from the
+        samples. Default is False.
+    Returns
+    -------
+    romb : ndarray
+        The integrated result for `axis`.
+    See also
+    --------
+    quad : adaptive quadrature using QUADPACK
+    romberg : adaptive Romberg quadrature
+    quadrature : adaptive Gaussian quadrature
+    fixed_quad : fixed-order Gaussian quadrature
+    dblquad : double integrals
+    tplquad : triple integrals
+    simps : integrators for sampled data
+    cumtrapz : cumulative integration for sampled data
+    ode : ODE integrators
+    odeint : ODE integrators
+    """
+    import numpy as np
+    y = np.asarray(y)
+    nd = len(y.shape)
+    Nsamps = y.shape[axis]
+    Ninterv = Nsamps-1
+    n = 1
+    k = 0
+    while n < Ninterv:
+        n <<= 1
+        k += 1
+    if n != Ninterv:
+        raise ValueError("Number of samples must be one plus a "
+                         "non-negative power of 2.")
+
+    R = {}
+    slice_all = (slice(None),) * nd
+    slice0 = tupleset(slice_all, axis, 0)
+    slicem1 = tupleset(slice_all, axis, -1)
+    h = Ninterv * np.asarray(dx, dtype=float)
+    R[(0, 0)] = (y[slice0] + y[slicem1])/2.0*h
+    slice_R = slice_all
+    start = stop = step = Ninterv
+    for i in xrange(1, k+1):
+        start >>= 1
+        slice_R = tupleset(slice_R, axis, slice(start, stop, step))
+        step >>= 1
+        R[(i, 0)] = 0.5*(R[(i-1, 0)] + h*y[slice_R].sum(axis=axis))
+        for j in xrange(1, i+1):
+            prev = R[(i, j-1)]
+            R[(i, j)] = prev + (prev-R[(i-1, j-1)]) / ((1 << (2*j))-1)
+        h /= 2.0
+
+    if show:
+        if not np.isscalar(R[(0, 0)]):
+            print("*** Printing table only supported for integrals" +
+                  " of a single data set.")
+        else:
+            try:
+                precis = show[0]
+            except (TypeError, IndexError):
+                precis = 5
+            try:
+                width = show[1]
+            except (TypeError, IndexError):
+                width = 8
+            formstr = "%%%d.%df" % (width, precis)
+
+            title = "Richardson Extrapolation Table for Romberg Integration"
+            print "", title.center(68), "=" * 68
+            for i in xrange(k+1):
+                for j in xrange(i+1):
+                    print(formstr % R[(i, j)])
+                print()
+            print("=" * 68)
+            print()
+
+    return R[(k, k)]
 

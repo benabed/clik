@@ -5,7 +5,7 @@ import numpy as nm
 import sys
 import os
 
-import slik
+import momento
 import clik.hpy as hpy
 
 def main(argv):
@@ -16,11 +16,11 @@ def main(argv):
   #print >>sys.stderr,"lklfile"
   lkl = hpy.File(lklfile)["lkl_0"]
 
-  slk = slik.stevenlike(lmin=lkl["data_lmin"],lmax=lkl["data_lmax"],loadroot = lkl._name+"/_external/slik_data/", 
+  slk = momento.momento(lmin=lkl["lmin"],lmax=lkl["lmax"],loadroot = lkl._name+"/_external/momento_data/", 
                      do_linear=lkl["do_linear"]==1,
                      use_offset_k2=lkl["use_offset_k2"]==1,
-                     lminlike=lkl["lmin"],
-                     lmaxlike=lkl["lmax"],
+                     lminlike=lkl["use_lmin"],
+                     lmaxlike=lkl["use_lmax"],
                      regcl=lkl["regcl"]==1)
 
   bl = slk.b_l
@@ -29,9 +29,11 @@ def main(argv):
   lminlike = slk.lminlike
   lmaxlike = slk.lmaxlike
 
-  ltot = 3*(lmaxlike-lminlike+1)  
+  ltot = 3*(lmax-lmin+1)  
+  #print >>sys.stderr,lmax,lmin,ltot
 
   pls = slk.fidcls.copy()
+  print >>sys.stderr,slk.fidcls.shape
   #print >>sys.stderr,"READY"
   
   print "rep: READY"
@@ -60,8 +62,8 @@ def main(argv):
     cnt = 0
     pos = 0
     for i in [0,2,1]:
-      for j in range(lmaxlike+1-lminlike):
-        pls[(j+lmin-lminlike)*3+i] = cls[pos]*bl[j+lminlike]**2
+      for j in range(lmax-lmin+1):
+        pls[(j)*3+i] = cls[pos]*bl[j+lmin]**2
         pos+=1
     
     #print "reorg now compute"
