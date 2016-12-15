@@ -610,12 +610,12 @@ def configure_cython(ctx):
     atl.check_python_module(ctx,"cython")
     vv=True
     version_str = "unknown"
-    ctx.start_msg("Checking cython version (>0.12)")
+    ctx.start_msg("Checking cython version (>0.20)")
     import Cython.Compiler.Version
     version_str = Cython.Compiler.Version.version
     version = [int(v) for v in version_str.split(".")]
     #print version
-    assert version[1]>=12
+    assert version[1]>=20
     ctx.end_msg(version_str)
   except Exception,e:
     if vv:
