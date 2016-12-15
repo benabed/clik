@@ -33,7 +33,7 @@ def main(argv):
   #print >>sys.stderr,lmax,lmin,ltot
 
   pls = slk.fidcls.copy()
-  print >>sys.stderr,slk.fidcls.shape
+  #print >>sys.stderr,slk.fidcls.shape
   #print >>sys.stderr,"READY"
   
   print "rep: READY"
