@@ -129,12 +129,12 @@ void cnoise_compute(parametric *egl, double *Rq, error **err) {
           forwardError(*err,__LINE__,);
           rm1 = m1 + f1*4;
           rm2 = m2 + f2*4;
-          A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI);  
+          A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]*l_pivot*(l_pivot+1)/2./M_PI);  
           A[rm2*12+rm1] = A[rm1*12+rm2];
           //_DEBUGHERE_("%s %g %g %d %d %g",name,v,(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI),rm1,rm2,A[rm1*12+rm2]);
           rm1 = m1 + f2*4;
           rm2 = m2 + f1*4;
-          A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI);  
+          A[rm1*12+rm2] = v/(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]*l_pivot*(l_pivot+1)/2./M_PI);  
           A[rm2*12+rm1] = A[rm1*12+rm2];
           //_DEBUGHERE_("%s %g %g %d %d %g",name,v,(1-abso+abso*template[((int) l_pivot)*12*12+rm1*12+rm2]/l_pivot/(l_pivot+1)*2*M_PI),rm1,rm2,A[rm1*12+rm2]);
                 
