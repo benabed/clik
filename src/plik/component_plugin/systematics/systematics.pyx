@@ -39,6 +39,8 @@ cdef class beamnl(parametric_template_mul):
     self.plugin_name = "systematics"
 
 
+cnoise_gpe = rename_machine(cnoise,{},norename,data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
+
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
 cnoise_t3 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t3.dat")
