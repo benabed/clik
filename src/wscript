@@ -94,8 +94,8 @@ def build(bld):
   #mspec
   source_mspec = ['mspec/clik_mspec.c'] if bld.env.has_mspec else []
 
-  #slik
-  source_slik = ['slik/clik_slik.c'] if bld.env.has_slik else []
+  #momento
+  source_momento = ['momento/clik_momento.c'] if bld.env.has_momento else []
 
   #bicep
   source_bicep = ["bicep/bicep_call.c"] if bld.env.has_bicep else []
@@ -175,9 +175,9 @@ def build(bld):
   use_clik += ["gibbs"]*bool(bld.env.has_gibbs)
   use_clik += ["bflike"]*bool(bld.env.has_bflike)
   use_clik += ["cmbonly"]*bool(bld.env.has_cmbonly)
-  clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lenslike)
+  clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lensing)
 
-  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec + source_ftau + source_simbal + source_slik
+  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec + source_ftau + source_simbal + source_momento
 
   bld.shlib(
     source   = source_clik,

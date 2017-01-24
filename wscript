@@ -220,7 +220,7 @@ def configure(ctx):
   ctx.env.has_mspec = osp.exists("src/mspec")
 
   #mspec
-  ctx.env.has_slik = osp.exists("src/slik")
+  ctx.env.has_momento = osp.exists("src/momento")
 
   #lollipop
   ctx.env.has_lollipop = osp.exists("src/lollipop")
@@ -396,6 +396,7 @@ def dist(ctx):
   dist_list += "src/cmbonly/* "
   dist_list += "src/ftau/* "
   dist_list += "src/simbal/* "
+  dist_list += "src/momento/* "
   #dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
   
@@ -602,7 +603,7 @@ def configure_cython(ctx):
     f.close()
     os.chmod(osp.join(ctx.env.BINDIR,"cython"),Utils.O755)
 
-  atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",postinstall=postinstallcython)
+  atl.configure_python_module(ctx,"cython","https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz","Cython-0.25.2",postinstall=postinstallcython)
 
   try:
     # check for cython
@@ -620,7 +621,7 @@ def configure_cython(ctx):
     if vv:
       ctx.end_msg("no (%s)"%version_str,'YELLOW')
     # no cython, install it !
-    atl.configure_python_module(ctx,"cython","http://cython.org/release/Cython-0.14.1.tar.gz","Cython-0.14.1.tar.gz","Cython-0.14.1",postinstall=postinstallcython)
+    atl.configure_python_module(ctx,"cython","https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz","Cython-0.25.2",postinstall=postinstallcython)
 
   try:
     ctx.load("cython")

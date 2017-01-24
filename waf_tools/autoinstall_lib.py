@@ -247,6 +247,8 @@ def installsmthg_post(ctx,where,what,extra_config=""):
 def check_python_module(ctx,name,extracmd=""):
   import sys
   import imp
+  import site
+  site.addsitedir(ctx.env.PYTHONDIR)
   if ctx.env.PYTHONDIR not in sys.path:
     sys.path=[ctx.env.PYTHONDIR]+sys.path
   try:
@@ -298,7 +300,11 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
         raise Errors.ConfigurationError("Cannot build %s"%name)
       # deal with eggs...
       if (not osp.exists(osp.join(ctx.env.PYTHONDIR,name))) and (not osp.exists(osp.join(ctx.env.PYTHONDIR,name+".py"))):
-        eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if name in v and osp.isdir(osp.join(ctx.env.PYTHONDIR,v))][0]
+        eggdir = [v for v in os.listdir(ctx.env.PYTHONDIR) if name in v and osp.isdir(osp.join(ctx.env.PYTHONDIR,v))]
+        if eggdir:
+          eggdir = eggdir[0]
+        else:
+          eggdir = name
         if eggdir!=name and eggdir!=name+".py":
           mdir = [v for v in os.listdir(osp.join(ctx.env.PYTHONDIR,eggdir)) if name in v][0]
           import os
