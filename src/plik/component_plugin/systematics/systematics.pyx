@@ -7,6 +7,7 @@ cdef extern c_parametric *dip_init(int ndet, double *detlist, int ndef, char** d
 cdef extern c_parametric *feature_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *mul0_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *beamnl_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
+cdef extern c_parametric *nslb_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err)
 
 cdef class bleak(parametric_pol_template):
   def __cinit__(self):
@@ -38,6 +39,11 @@ cdef class beamnl(parametric_template_mul):
     self.template_name = "beamnl_DX11_HM.dat"
     self.plugin_name = "systematics"
 
+cdef class nslb(parametric_template_mul):
+  def __cinit__(self):
+    self.initfunc = <void*> nslb_init;
+    self.template_name = "sky_and_beam_template_v15_F100_143_217_353.dat"
+    self.plugin_name = "systematics"
 
 cnoise_EEBB = rename_machine(cnoise,{},norename,data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
 
@@ -64,5 +70,5 @@ beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
 
 beamnl_DX11 = rename_machine(beamnl,beamnl_DX11_defs,norename)
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1","cnoise_EEBB"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1","cnoise_EEBB","nslb"]
  
