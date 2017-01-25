@@ -16,7 +16,7 @@ parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
 
-  egl->payload = malloc_err(sizeof(double)* (3001*12*12 + 3001*8 + 2*8) + sizeof(int)*egl->nfreq*2,err);
+  egl->payload = malloc_err(sizeof(double)* (3001*12*12 + 3001*8 + 2*8 + 12) + sizeof(int)*egl->nfreq*2,err);
   forwardError(*err,__LINE__,NULL);
 
   memcpy(egl->payload,template,sizeof(double)* (3001*12*12 + 3001*8));
@@ -30,6 +30,11 @@ parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int
 
   fill_offset_freq_TP(4,dreq, egl->nfreq_T*has_TEB[0],egl->freqlist_T,mv,0,err);
   forwardError(*err,__LINE__,NULL);
+  fill_offset_freq_TP(4,dreq, egl->nfreq_P*has_TEB[1],egl->freqlist_P,mv + egl->nfreq_T*has_TEB[0],4,err);
+  forwardError(*err,__LINE__,NULL);
+  fill_offset_freq_TP(4,dreq, egl->nfreq_P*has_TEB[2],egl->freqlist_P,mv + egl->nfreq_P*has_TEB[1]+egl->nfreq_T*has_TEB[0],4,err);
+  forwardError(*err,__LINE__,NULL);
+
   if (has_TEB[1]!=0 || has_TEB[2]!=0) {
     fill_offset_freq_TP(4,dreq, egl->nfreq_P,egl->freqlist_P,mv + egl->nfreq_T*has_TEB[0],4,err);
     forwardError(*err,__LINE__,NULL);
@@ -83,15 +88,21 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   template = egl->payload;
   bl = egl->payload + sizeof(double)* (3001*12*12);
 
+  for(m1=0;m1<egl->nfreq;m1++) {
+    _DEBUGHERE_("%d %d",m1,mv[m1]);
+  }
+  
   for(m1=0;m1<4;m1++) {
     for(f1=0;f1<2;f1++) {
       sprintf(name,"nslb_epsilon_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
+      _DEBUGHERE_("epsilon %d %s %g",dreq[m1],tp[f1],v)
       epsilon[m1*2+f1] = v;
       sprintf(name,"nslb_fwhm_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
+      _DEBUGHERE_("fwhm %d %s %g",dreq[m1],tp[f1],v)
       sigma[m1*2+f1] = v/sqrt(8*log(2))/60/180*M_PI;
     }
   }  
