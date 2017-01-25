@@ -89,9 +89,9 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   bl = egl->payload + sizeof(double)* (3001*12*12);
 
   for(m1=0;m1<egl->nfreq;m1++) {
-    _DEBUGHERE_("%d %d",m1,mv[m1]);
+    _DEBUGHERE_("%d %d %d",m1,mv[m1],egl->nfreq);
   }
-  
+
   for(m1=0;m1<4;m1++) {
     for(f1=0;f1<2;f1++) {
       sprintf(name,"nslb_epsilon_%d_%c",(int)dreq[m1],tp[f1]);
