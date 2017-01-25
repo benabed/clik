@@ -39,7 +39,7 @@ cdef class beamnl(parametric_template_mul):
     self.template_name = "beamnl_DX11_HM.dat"
     self.plugin_name = "systematics"
 
-cdef class nslb(parametric_template_mul):
+cdef class nslb(parametric_pol_template):
   def __cinit__(self):
     self.initfunc = <void*> nslb_init;
     self.template_name = "sky_and_beam_template_v15_F100_143_217_353.dat"
