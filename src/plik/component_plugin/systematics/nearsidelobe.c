@@ -88,20 +88,20 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   template = egl->payload;
   bl = egl->payload + sizeof(double)* (3001*12*12);
 
-  for(m1=0;m1<egl->nfreq;m1++) {
+  /*for(m1=0;m1<egl->nfreq;m1++) {
     _DEBUGHERE_("%d %d %d",m1,mv[m1],egl->nfreq);
-  }
+  }*/
   for(m1=0;m1<4;m1++) {
     for(f1=0;f1<2;f1++) {
       sprintf(name,"nslb_epsilon_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
-      _DEBUGHERE_("epsilon %d %c %g",dreq[m1],tp[f1],v)
+      //_DEBUGHERE_("epsilon %d %c %g",dreq[m1],tp[f1],v)
       epsilon[m1+f1*4] = v;
       sprintf(name,"nslb_fwhm_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
-      _DEBUGHERE_("fwhm %d %c %g",dreq[m1],tp[f1],v)
+      //_DEBUGHERE_("fwhm %d %c %g",dreq[m1],tp[f1],v)
       sigma[m1+f1*4] = v/sqrt(8*log(2))/60/180*M_PI;
     }
   }  
@@ -109,27 +109,27 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
-        if(ell==100) {
+        /*if(ell==100) {
             _DEBUGHERE_("%d %d %d %d ----------",m1,m2,mv[m1],mv[m2]);
             _DEBUGHERE_("%g %g %g %g",epsilon[mv[m1]],sigma[mv[m1]],epsilon[mv[m2]],sigma[mv[m2]]);
-        }
+        }*/
         b = epsilon[mv[m1]]*exp(-.5*ell*(ell+1)*sigma[mv[m1]]*sigma[mv[m1]])/bl[ell*8+mv[m1]] + epsilon[mv[m2]]*exp(-.5*ell*(ell+1)*sigma[mv[m2]]*sigma[mv[m2]])/bl[ell*8+mv[m2]];
         if (m1<egl->nfreq_T*egl->has_TEB[0] && m2>=egl->nfreq_T*egl->has_TEB[0]) {
           // TP case, need to symetrise;
           m1p = m1+egl->nfreq_T*egl->has_TEB[0];
           m2p = m2-egl->nfreq_T*egl->has_TEB[0];
           bp = epsilon[mv[m1p]]*exp(-.5*ell*(ell+1)*sigma[mv[m1p]]*sigma[mv[m1p]])/bl[ell*8+mv[m1p]] + epsilon[mv[m2p]]*exp(-.5*ell*(ell+1)*sigma[mv[m2p]]*sigma[mv[m2p]])/bl[ell*8+mv[m2p]];
-          if(ell==100) {
+          /*if(ell==100) {
             _DEBUGHERE_("ext %d %d %d %d",m1p,m2p,mv[m1p],mv[m2p]);
             _DEBUGHERE_("%g %g %g %g -> %g %g",epsilon[mv[m1p]],sigma[mv[m1p]],epsilon[mv[m2p]],sigma[mv[m2p]],b,bp);
-          }   
+          } */  
           b = .5*(b+bp);
           
         }
-        if(ell==100) {
+        /*if(ell==100) {
           _DEBUGHERE_("%g ------------",b);
           //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*12*12+mv[m1]*12+mv[m2]]);  
-        }
+        }*/
         
         Rq[IDX_R(egl,ell,m1,m2)] = b*template[ell*12*12+mv[m1]*12+mv[m2]];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
