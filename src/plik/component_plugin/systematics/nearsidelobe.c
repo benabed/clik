@@ -114,7 +114,7 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
             _DEBUGHERE_("%g %g %g %g",epsilon[mv[m1]],sigma[mv[m1]],epsilon[mv[m2]],sigma[mv[m2]]);
         }
         b = epsilon[mv[m1]]*exp(-.5*ell*(ell+1)*sigma[mv[m1]]*sigma[mv[m1]])/bl[ell*8+mv[m1]] + epsilon[mv[m2]]*exp(-.5*ell*(ell+1)*sigma[mv[m2]]*sigma[mv[m2]])/bl[ell*8+mv[m2]];
-        if (m1<egl->nfreq_T*egl->has_TEB[0] && m2=>egl->nfreq_T*egl->has_TEB[0]) {
+        if (m1<egl->nfreq_T*egl->has_TEB[0] && m2>=egl->nfreq_T*egl->has_TEB[0]) {
           // TP case, need to symetrise;
           m1p = m1+egl->nfreq_T*egl->has_TEB[0];
           m2p = m2-egl->nfreq_T*egl->has_TEB[0];
