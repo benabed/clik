@@ -91,17 +91,12 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   for(m1=0;m1<egl->nfreq;m1++) {
     _DEBUGHERE_("%d %d %d",m1,mv[m1],egl->nfreq);
   }
-  _DEBUGHERE_("","");
   for(m1=0;m1<4;m1++) {
     for(f1=0;f1<2;f1++) {
-      _DEBUGHERE_("","");
       sprintf(name,"nslb_epsilon_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
-      _DEBUGHERE_("","");
-
       _DEBUGHERE_("epsilon %d %c %g",dreq[m1],tp[f1],v)
-      _DEBUGHERE_("","");
       epsilon[m1*2+f1] = v;
       sprintf(name,"nslb_fwhm_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
@@ -114,9 +109,6 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     for(m1=0;m1<egl->nfreq;m1++) {
       for(m2=m1;m2<egl->nfreq;m2++) {
-        //if(ell==egl->lmin) {
-          //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*12*12+mv[m1]*12+mv[m2]]);  
-        //}
         b = epsilon[mv[m1]]*exp(-.5*ell*(ell+1)*sigma[mv[m1]]*sigma[mv[m1]])/bl[ell*8+mv[m1]] + epsilon[mv[m2]]*exp(-.5*ell*(ell+1)*sigma[mv[m2]]*sigma[mv[m2]])/bl[ell*8+mv[m2]];
         if (m1<egl->nfreq_T*egl->has_TEB[0] && m2>egl->nfreq_T*egl->has_TEB[0]) {
           // TP case, need to symetrise;
@@ -125,6 +117,11 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
           bp = epsilon[mv[m1p]]*exp(-.5*ell*(ell+1)*sigma[mv[m1p]]*sigma[mv[m1p]])/bl[ell*8+mv[m1p]] + epsilon[mv[m2p]]*exp(-.5*ell*(ell+1)*sigma[mv[m2p]]*sigma[mv[m2p]])/bl[ell*8+mv[m2p]];
           b = .5*(b+bp);
         }
+        if(ell==100) {
+          _DEBUGHERE_("%d %d %d %d %g",m1,m2,mv[m1],mv[m2],b);
+          //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*12*12+mv[m1]*12+mv[m2]]);  
+        }
+        
         Rq[IDX_R(egl,ell,m1,m2)] = b*template[ell*12*12+mv[m1]*12+mv[m2]];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
       }  
