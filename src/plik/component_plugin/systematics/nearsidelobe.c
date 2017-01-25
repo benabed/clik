@@ -91,13 +91,17 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   for(m1=0;m1<egl->nfreq;m1++) {
     _DEBUGHERE_("%d %d %d",m1,mv[m1],egl->nfreq);
   }
-
+  _DEBUGHERE_("","");
   for(m1=0;m1<4;m1++) {
     for(f1=0;f1<2;f1++) {
+      _DEBUGHERE_("","");
       sprintf(name,"nslb_epsilon_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
+      _DEBUGHERE_("","");
+
       _DEBUGHERE_("epsilon %d %s %g",dreq[m1],tp[f1],v)
+      _DEBUGHERE_("","");
       epsilon[m1*2+f1] = v;
       sprintf(name,"nslb_fwhm_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
