@@ -97,12 +97,12 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
       _DEBUGHERE_("epsilon %d %c %g",dreq[m1],tp[f1],v)
-      epsilon[m1*2+f1] = v;
+      epsilon[m1+f1*4] = v;
       sprintf(name,"nslb_fwhm_%d_%c",(int)dreq[m1],tp[f1]);
       v = parametric_get_value(egl,name,err);
       forwardError(*err,__LINE__,);
       _DEBUGHERE_("fwhm %d %c %g",dreq[m1],tp[f1],v)
-      sigma[m1*2+f1] = v/sqrt(8*log(2))/60/180*M_PI;
+      sigma[m1+f1*4] = v/sqrt(8*log(2))/60/180*M_PI;
     }
   }  
   
