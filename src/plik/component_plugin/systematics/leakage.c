@@ -1,4 +1,3 @@
-// SZ alone
 #include "clik_parametric.h"
 #include "clik_parametric_addon.h"
 

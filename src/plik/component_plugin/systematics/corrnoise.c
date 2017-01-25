@@ -38,7 +38,7 @@ parametric *cnoise_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, i
   egl->eg_compute = &cnoise_compute;
   egl->eg_free = &parametric_simple_payload_free;
 
-  egl->payload = malloc_err(sizeof(double)* (3001*12*12 + 12*12) + sizeof(int)*egl->nfreq*egl->nfreq,err);
+  egl->payload = malloc_err(sizeof(double)* (3001*12*12 + 12*12) + sizeof(int)*egl->nfreq*4,err);
   forwardError(*err,__LINE__,NULL);
 
 
