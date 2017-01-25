@@ -7,7 +7,7 @@ void nslb_compute(parametric* egl, double *Rq, error **err);
 
 parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
-  int *mv,m1,m2;
+  int *mv,m1,m2,f1;
   double dreq[4];
   pfchar name;
   char tp[2];
@@ -30,7 +30,7 @@ parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int
 
   fill_offset_freq_TP(4,dreq, egl->nfreq_T*has_TEB[0],egl->freqlist_T,mv,0,err);
   forwardError(*err,__LINE__,NULL);
-  if (has_TEB[1]!=0 or has_TEB[2]!=0) {
+  if (has_TEB[1]!=0 || has_TEB[2]!=0) {
     fill_offset_freq_TP(4,dreq, egl->nfreq_P,egl->freqlist_P,mv + egl->nfreq_T*has_TEB[0],4,err);
     forwardError(*err,__LINE__,NULL);
   }
@@ -58,9 +58,10 @@ parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int
 
 
 void nslb_compute(parametric* egl, double *Rq, error **err) {
-  double *mv,*template,*bl,*epsilon,*sigma;
+  double *template,*bl,*epsilon,*sigma;
+  int *mv;
   double b,v;
-  int m1,m2,f1,f2;
+  int m1,m2,f1,f2,ell;
   int dreq[4];
   char tp[2];
   pfchar name;
@@ -102,12 +103,12 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
           //_DEBUGHERE_("%d %d %d %g",ell,mv[m1],mv[m2],template[ell*12*12+mv[m1]*12+mv[m2]]);  
         //}
         b = epsilon[mv[m1]]*exp(-ell*(ell+1)*sigma)/bl[mv[m1]] + epsilon[mv[m2]]*exp(-ell*(ell+1)*sigma)/bl[mv[m2]];
-        if (m1<egl->nfreq_T*egl->has_TEB[0] and m2>egl->nfreq_T*egl->has_TEB[0]) {
+        if (m1<egl->nfreq_T*egl->has_TEB[0] && m2>egl->nfreq_T*egl->has_TEB[0]) {
           // TP case, need to symetrise;
           m1p = m1+egl->nfreq_T*egl->has_TEB[0];
           m2p = m2-egl->nfreq_T*egl->has_TEB[0];
           bp = epsilon[mv[m1p]]*exp(-ell*(ell+1)*sigma)/bl[mv[m1p]] + epsilon[mv[m2p]]*exp(-ell*(ell+1)*sigma)/bl[mv[m2p]];
-          b = .5*(b+bp)
+          b = .5*(b+bp);
         }
         Rq[IDX_R(egl,ell,m1,m2)] = b*template[ell*12*12+mv[m1]*12+mv[m2]];
         Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
@@ -116,7 +117,6 @@ void nslb_compute(parametric* egl, double *Rq, error **err) {
   }
 
   return;
-}
   
 }
 
