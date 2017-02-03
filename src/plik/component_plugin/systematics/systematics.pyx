@@ -45,7 +45,7 @@ cdef class nslb(parametric_pol_template):
     self.template_name = "sky_and_beam_template_v15_F100_143_217_353.dat"
     self.plugin_name = "systematics"
 
-cnoise_EEBB = rename_machine(cnoise,{},norename,data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
+cnoise_EEBB = rename_machine(cnoise,{},rename_replace("cnoise","cnEEBB"),data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
 
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
