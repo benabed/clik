@@ -143,14 +143,19 @@ cmblkl* clik_bflike_smw_init(cldf *df, int nell, int* ell, int* has_cl, double u
   int lmin,lmax;
   int firstchain,lastchain,firstsample,lastsample,step;
   int hk;
-
+  
   lmin = ell[0];
   lmax = ell[nell-1];
   
   // get data and change dir
+
+  getcwd(pwd2,4096);
+  _DEBUGHERE_("--->>> %s",pwd2);
+
   cldf_external(df,directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
-
+ getcwd(pwd2,4096);
+  _DEBUGHERE_("--->>> %s",pwd2);
   memset(dir_data,' ',sizeof(char)*2048);
   sprintf(dir_data,".");
   dir_data[1] = ' ';
@@ -159,16 +164,19 @@ cmblkl* clik_bflike_smw_init(cldf *df, int nell, int* ell, int* has_cl, double u
   //call
 
   bflike_smw_extra_parameter_init_(dir_data,&ldd,&lmin,&lmax);
-  
+   getcwd(pwd2,4096);
+  _DEBUGHERE_("--->>> %s",pwd2);
   cldf_external_cleanup(directory_name,pwd,err);
   forwardError(*err,__LINE__,NULL);
-  
+   getcwd(pwd2,4096);
+  _DEBUGHERE_("--->>> %s",pwd2);
   cing = init_cmblkl(NULL, &bflike_smw_lkl, 
                      &free_bflike_smw,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,0,err);
   forwardError(*err,__LINE__,NULL);
-
+ getcwd(pwd2,4096);
+  _DEBUGHERE_("--->>> %s",pwd2);
   return cing;
 }
 
