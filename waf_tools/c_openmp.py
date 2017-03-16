@@ -44,6 +44,7 @@ def check_openmp_cflags(self, **kw):
 				continue
 
 		self.end_msg('Not supported')
+		print "lalala"
 		if 'define_name' in kw:
 			self.undefine(kw['define_name'])
 		if kw.get('mandatory', True):

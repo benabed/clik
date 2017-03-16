@@ -46,7 +46,7 @@ def build(ctx):
       includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
       uselib = uselib_clik,
-      cflags = "-fopenmp",
+      #cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik"
     )
     ctx(
@@ -56,7 +56,7 @@ def build(ctx):
       includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
       uselib = uselib_clik,
-      cflags = "-fopenmp",
+      #cflags = "-fopenmp",
       install_path = "${PYTHONDIR}/clik",
       defines = ["CLIK_LENSING"]
     ) 
@@ -69,7 +69,7 @@ def build(ctx):
         includes = "../ ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
         use = "clik",
         uselib = uselib_clik,
-        cflags = "-fopenmp",
+        #cflags = "-fopenmp",
         install_path = "${PYTHONDIR}/clik"
       )
       for plg in ctx.env.PLG:
@@ -81,7 +81,7 @@ def build(ctx):
           includes = "clik/ ./ ../  ../plik/"+" ../minipmc/"*(not ctx.env.has_pmc),
           use = "clik",
           uselib = uselib_clik,
-          cflags = "-fopenmp",
+          #cflags = "-fopenmp",
           install_path = "${PYTHONDIR}/clik"
         ) 
   
@@ -146,7 +146,7 @@ def build(ctx):
       includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
       use = "clik",
       #uselib = uselib_clik,
-      cflags = "-fopenmp",
+      #cflags = "-fopenmp",
       install_path = "${PYTHONDIR}"
     )
 
