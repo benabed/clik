@@ -1086,6 +1086,23 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   return res
 
   
+def full_calib(dffile,bestfit):
+  import hpy
+  if isinstance(bestfit,str):
+    bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+  
+  fi = hpy.File(dffile)
+  cal = calTP_from_smica(dffile)
+  cvec = [bestfit[nn] for nn in cal.varpar]
+  g = cal(cvec)
+  bal = beamTP_from_smica(dffile)
+  cvec = [bestfit[nn] for nn in bal.varpar]
+  bg = bal(cvec)
+  g *=bg
+  acmb = fi["clik/lkl_0/A_cmb"]
+  g *= nm.outer(acmb,acmb)[nm.newaxis,:,:]
+  return g  
+
 def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   import pylab as plt  
   plt.figure()
@@ -1105,16 +1122,18 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
 
-def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
+def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=False):
   import parobject as php
   import hpy
   import lkl
   import time
 
-  oo,Jt0 = ordering_from_smica(dffile)
-
+  if rcal==True:
+    cal=False
   fi = hpy.File(dffile)
-
+  
+  oo,Jt0 = ordering_from_smica(dffile)
+  
   siginv = fi["clik/lkl_0/criterion_gauss_mat"]
   siginv.shape=(len(oo),len(oo))
   if Jmask is not None:
@@ -1124,13 +1143,19 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
     rsig = (sig[Jmask])[:,Jmask]
     siginv = nm.linalg.inv(rsig)
 
+  good = Jt0.sum(1)!=0
+  Jt = Jt0[good]
+  g =  full_calib(dffile,bestfit)
+  if cal:
+    Jt=Jt*g.flat[oo]
+
   lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
+  if rcal:
+    rqh/=g
+    oqb/=g
+
   hascl = fi["clik/lkl_0/has_cl"]
   tm = nm.concatenate([lm for h in hascl if h])
-
-  good = Jt0.sum(1)!=0
-
-  Jt = Jt0[good]
 
   Yo = nm.sum(oqb,0)-rqh
   Yo = Yo.flat[oo]
@@ -1144,7 +1169,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
     for ii in range(len(w0)):
       i = w0[ii]
       j = w1[ii]
-      Jt_siginv[i] += siginv[j]
+      Jt_siginv[i] += Jt[i,j]*siginv[j]
       
     print "pcompute Jt_siginv in %d sec"%(time.time()-a)
     
@@ -1159,7 +1184,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
     for ii in range(len(w0)):
       j = w0[ii]
       i = w1[ii]
-      Jt_siginv_J[j] += Jt_siginv[:,i]
+      Jt_siginv_J[j] += Jt[j,i]*Jt_siginv[:,i]
     print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-c)
     
     #Jt_siginv,Jt_siginv_Yo,Jt_siginv_J = lkl.full_solve(Yo,Jt,siginv)
@@ -1192,5 +1217,43 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None):
   tm.shape = (-1,len(lm))
   tVec.shape = tm.shape
   eVec.shape = tm.shape
+  if covmat:
+    return tm, tVec,eVec,Jt_siginv_J
   return tm,tVec,eVec
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
+
+def get_chi2_coadd(dffile,bestfit,cal=True,rcal=False):
+  import parobject as php
+  import hpy
+  
+  tm, tVec,eVec,Jt_siginv_J = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal)
+  if isinstance(bestfit,str):
+    bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+  fi = hpy.File(dffile)
+  lmin = fi["clik/lkl_0/lmin"]
+  lmax = fi["clik/lkl_0/lmax"]
+  bins = php.read_bins(fi["clik/lkl_0"])
+  hascl = fi["clik/lkl_0/has_cl"]
+  
+  rls = nm.concatenate([cls[i,lmin:lmax+1] for i in range(6) if hascl[i]])
+  bls = nm.dot(bins,rls)
+  bls_tilde = nm.concatenate(tVec)
+
+  deltals = bls-bls_tilde
+  return tm,bls,bls_tilde,Jt_siginv_J,-.5*nm.dot(deltals,nm.dot(Jt_siginv_J,deltals))
+
+def do_all_chi2(dffile,bestfit,npar=0):
+  import clik
+  from scipy.stats.distributions import chi2
+  lkl = clik.clik(dffile)
+  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_add = get_chi2_coadd(dffile,bestfit)
+  n_add = len(lkl_add[1])
+  lkl_add=lkl_add[-1]
+  nextra = len(lkl.extra_parameter_names)
+  oo,Jt0 = ordering_from_smica(dffile)
+  n_full = len(oo)
+  print "full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar))
+  print "coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar))
+
+
