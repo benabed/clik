@@ -113,7 +113,7 @@ def add_xxx(outhf,n_name,name,vpars,defaults,values,lmin,lmax,template_names,tpl
   for nnm,vvv in zip(template_names,tpls):
     agrp.create_dataset(nnm, data=vvv.flat[:])
 
-  if cib_decor_clustering!=None:
+  if cib_decor_clustering is not None:
     agrp.attrs["cib_decor_clustering"] = cib_decor_clustering.flat[:]
 
   return agrp

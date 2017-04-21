@@ -184,7 +184,7 @@ class File(object):
     assert self._mode=='+'
     return File(osp.join(self._name,name),"w")
   def create_dataset(self,name,data=None):
-    assert data!=None
+    assert data is not None
     self[name] = data
   
   def __delitem__(self,key):

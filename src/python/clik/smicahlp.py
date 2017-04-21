@@ -652,9 +652,10 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     else:
       args = [frq,key,lmin,lmax]
     kargs = {"rename":rename,"defs":defdir,"color":color}
-    if data != None:
+    if data is not None:
       kargs["data"]=data
-    prms += [cmpr(*args,**kargs)]
+    a = cmpr(*args,**kargs)
+    prms += [a]
   return prms  
 
 def calTP_from_smica(dffile):
@@ -1030,7 +1031,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   oq = []
   nrms = []
   for p in prms:
-    print p
+    #print p
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
     if oq[-1].shape[1:]!=rqh.shape[1:]:
@@ -1053,13 +1054,13 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
   oqb = nm.zeros((len(oq),)+rqh.shape)
   lm = nm.zeros(nb)
-  print oq.shape,oq.shape[0]
+  #print oq.shape,oq.shape[0]
   for b in range(nb):
     if oq.shape[0]:
       oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
     lm[b] += nm.sum(nm.arange(lmin+blmin[b],lmin+blmax[b]+1)*b_ws[blmin[b]:blmax[b]+1])
   res = lm,oqb,nrms,rqh
-  if cls!=None:
+  if cls is not None:
     rq = nm.zeros((nb,m,m))
     for b in range(nb):
       if mt:
@@ -1160,7 +1161,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   Yo = nm.sum(oqb,0)-rqh
   Yo = Yo.flat[oo]
 
-  print 1
+  #print 1
 
   if cty=="B":
     a = time.time()
@@ -1222,7 +1223,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   return tm,tVec,eVec
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
-def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False):
+def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
   import parobject as php
   import hpy
   
@@ -1240,14 +1241,16 @@ def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False):
   bls_tilde = nm.concatenate(tVec)
 
   deltals = bls-bls_tilde
-  return tm,bls,bls_tilde,Jt_siginv_J,-.5*nm.dot(deltals,nm.dot(Jt_siginv_J,deltals))
+  if all:
+    return tm,bls,bls_tilde,Jt_siginv_J,-.5*nm.dot(deltals,nm.dot(Jt_siginv_J,deltals))
+  return -.5*nm.dot(deltals,nm.dot(Jt_siginv_J,deltals))
 
 def do_all_chi2(dffile,bestfit,npar=0):
   import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
   lkl_full = lkl(nm.loadtxt(bestfit))
-  lkl_add = get_lkl_coadd(dffile,bestfit)
+  lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
   nextra = len(lkl.extra_parameter_names)

@@ -20,7 +20,7 @@ def do_nlbl(fwhm,ns,Acmb,lmin,lmax,bins=None):
   ell = nm.arange(lmin,lmax+1)
   bl = nm.exp(-ell*(ell+1)*sigma2/2.)
   nl = ns * Acmb**2/(bl**2)*4*nm.pi
-  if bins!=None:
+  if bins is not None:
     return nm.dot(bins,nl)
   return nl
 
