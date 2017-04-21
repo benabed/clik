@@ -1222,7 +1222,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   return tm,tVec,eVec
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
-def get_chi2_coadd(dffile,bestfit,cal=True,rcal=False):
+def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False):
   import parobject as php
   import hpy
   
