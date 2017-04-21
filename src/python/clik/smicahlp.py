@@ -1247,7 +1247,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
   lkl_full = lkl(nm.loadtxt(bestfit))
-  lkl_add = get_chi2_coadd(dffile,bestfit)
+  lkl_add = get_lkl_coadd(dffile,bestfit)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
   nextra = len(lkl.extra_parameter_names)
