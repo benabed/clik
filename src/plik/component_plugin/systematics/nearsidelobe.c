@@ -12,6 +12,8 @@ parametric *nslb_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int
   pfchar name;
   char tp[2];
   
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+
   // init
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);

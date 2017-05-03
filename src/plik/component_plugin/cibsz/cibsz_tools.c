@@ -4,7 +4,9 @@ void parametric_sz_cib_payload_free(void **pp) {
   sz_cib_payload *p;
   p = *pp;
   if (p!=NULL) {
-    free(p->template);
+    if(p->template!=NULL) {
+      free(p->template);
+    }
     free(p->ind_freq);
     free(p);
   }

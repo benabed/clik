@@ -345,7 +345,10 @@ cdef class parametric_template(parametric):
     self._template=None
     tmp = self.get_template(data_dir,data_path,data_file,data)
     self._template = tmp*1.
-    template = <double*> nm.PyArray_DATA(self._template)
+    if len(self._template.flat[:])==0:
+      template=NULL
+    else:
+      template = <double*> nm.PyArray_DATA(self._template)
     
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
@@ -520,7 +523,10 @@ cdef class parametric_pol_template(parametric_pol):
     self._template=None
     tmp = self.get_template(data_dir,data_path,data_file,data)
     self._template = tmp*1.
-    template = <double*> nm.PyArray_DATA(self._template)
+    if len(self._template.flat[:])==0:
+      template=NULL
+    else:
+      template = <double*> nm.PyArray_DATA(self._template)
     
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
@@ -535,30 +541,30 @@ cdef class parametric_pol_template(parametric_pol):
     self._post_init(detlist_T,detlist_P,has_TEB,vars,lmin,lmax,defs,dnofail,color,voidmask,rename,data_dir,data_path,data_file,data)
 
   
-  def get_template(self,data_dir="",data_path="",data_file="",data=None):
-    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
-      return self._template
-    if data is None:
-      if data_path:
-        pth = data_path
-      else:
-        bpth = get_data_path(self.plugin_name)
-        if data_dir:
-          bpth = data_dir
-        fpth = self.template_name
-        if data_file:
-          fpth = data_file  
-        if isinstance(fpth,str):
-          fpth = [fpth]
-        pth = [osp.join(bpth,fpthI) for fpthI in fpth]
-      if isinstance(pth,str):
-        pth = [pth]
-      
-      tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
-    else:
-      
-      tmp = nm.array(data)
-    return tmp
+#  def get_template(self,data_dir="",data_path="",data_file="",data=None):
+#    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
+#      return self._template
+#    if data is None:
+#      if data_path:
+#        pth = data_path
+#      else:
+#        bpth = get_data_path(self.plugin_name)
+#        if data_dir:
+#          bpth = data_dir
+#        fpth = self.template_name
+#        if data_file:
+#          fpth = data_file  
+#        if isinstance(fpth,str):
+#          fpth = [fpth]
+#        pth = [osp.join(bpth,fpthI) for fpthI in fpth]
+#      if isinstance(pth,str):
+#        pth = [pth]
+#      
+#      tmp = nm.concatenate([loadcolumn(pp) for pp in pth])
+#    else:
+#      
+#      tmp = nm.array(data)
+#    return tmp
 
 component_list = ["powerlaw","powerlaw_free_emissivity"]
 simple_parametric_list = component_list

@@ -84,6 +84,8 @@ parametric *bleak_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
   double dfreq[4];
   int ell,cli;
 
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+
   // init
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -145,7 +147,7 @@ parametric *bleak_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
       u1=2;
     }
     for (mf1=0;mf1<4;mf1++) {
-      if (abs(dfreq[mf1]-egl->freqlist[i])<1e-6) {
+      if (fabs(dfreq[mf1]-egl->freqlist[i])<1e-6) {
         break;
       }
     }
@@ -161,7 +163,7 @@ parametric *bleak_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
         u2=2;
       }
       for (mf2=0;mf2<4;mf2++) {
-        if (abs(dfreq[mf2]-egl->freqlist[j])<1e-6) {
+        if (fabs(dfreq[mf2]-egl->freqlist[j])<1e-6) {
           break;
         }
       }

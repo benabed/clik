@@ -32,6 +32,8 @@ parametric *ffp8_gal_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist,
   char teb[3];
   int f1,f2;
 
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+
   // init
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -180,6 +182,7 @@ parametric *ffp8_gcib_init(int ndet, double *detlist, int ndef, char** defkey, c
   pfchar name;
   double *conv,*A;
 
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -326,6 +329,8 @@ parametric *grcT_init(int ndet, double *detlist, int ndef, char** defkey, char *
   double *conv,*A;
   int nfreq_template,lmax_template;
   double *dreq;
+
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
   
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);

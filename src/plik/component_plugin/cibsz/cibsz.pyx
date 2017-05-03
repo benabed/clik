@@ -104,6 +104,18 @@ cibsz_1h_2h_sept14 = rename_machine(gcib,{"cibsz_rigid":"143"},rename_replace("g
 cibsz_consistency_sept14 = rename_machine(gibXsz,{},norename,data_file="cibsz_PS_dl_sept_14.dat[1]")
 sz_color = rename_machine(sz,{"sz_color_143_to_143":"0.975","sz_color_100_to_143":"0.981"},norename)
 
+def_cib_pw ={
+  "gib_muK_MJ-2sr_100" : "1.167938534341598", #= 1.36408042 **.5,
+  #A_100x143 = 2.8436055
+  #A_100x217 = 9.23805778
+  "gib_muK_MJ-2sr_143" : "2.4352558920984055" , #= 5.93047126 **.5,
+  #A_143x217 = 19.28347472
+  "gib_muK_MJ-2sr_217" : "7.92464510246358", # = 62.8 **.5,
+  "cib_index_ref" : "0"
+}
+
+cib_pw = rename_machine(gcib,def_cib_pw,rename_replace("gib","cib"),data_file="",data=[])
+
 
       
-component_list = ["sz_color","cibsz_consistency_sept14","gibXsz","cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14"]
+component_list = ["sz_color","cibsz_consistency_sept14","gibXsz","cibsz_1h_2h","cib_1h_2h","cib_1h_2h_SN","gcib","ncib","cib","cibr","sz","sz_cib","sz_x","cib_x","sz_cib_x","ksz","ncibXsz","tcib","cib_1h_2h_sept14","cibsz_1h_2h_sept14","cib_pw"]

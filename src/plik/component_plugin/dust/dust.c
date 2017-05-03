@@ -1046,7 +1046,8 @@ parametric *t1gal_init(int ndet, double *detlist, int ndef, char** defkey, char 
   int m1,m2;
   int l;
   pfchar name;
-  
+  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
 

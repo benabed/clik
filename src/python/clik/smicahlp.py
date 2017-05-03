@@ -504,8 +504,9 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
     pass
   else:
     if data is None:
-      agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])  
-    else:
+      if len(template.flat[:])!=0:
+        agrp.create_dataset("template",data=nm.array(template,dtype=nm.double).flat[:])  
+    else :
       agrp.create_dataset("template",data=nm.array(data,dtype=nm.double).flat[:])
 
   rename = pm.rename
