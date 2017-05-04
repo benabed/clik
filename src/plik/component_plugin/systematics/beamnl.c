@@ -56,7 +56,7 @@ parametric *beamnl_init(int ndet, double *detlist, int ndef, char** defkey, char
   double *dreq;
   int i,m1,p;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);

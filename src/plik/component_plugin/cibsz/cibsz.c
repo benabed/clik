@@ -12,7 +12,7 @@ parametric *sz_init(int ndet, double *detlist, int ndef, char** defkey, char **d
   double szcolor[4],dreq[4];
   int mv[100];
   
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // make sure l(l+1)/(2pi)*C_l template is normalized to 1 at l=3000 
   fac = template[3000-lmin_sz_template];
@@ -109,7 +109,7 @@ parametric *ksz_init(int ndet, double *detlist, int ndef, char** defkey, char **
   double fac;
   int l;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // make sure l(l+1)/(2pi)*C_l template is normalized to 1 at l=3000 
   fac = template[3000-lmin_ksz_template];
@@ -181,7 +181,7 @@ parametric *ncib_init(int ndet, double *detlist, int ndef, char** defkey, char *
   pfchar name;
   int bad;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -331,7 +331,7 @@ parametric *tcib_init(int ndet, double *detlist, int ndef, char** defkey, char *
   double *conv,*A;
 
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -467,7 +467,7 @@ parametric *gcib_init(int ndet, double *detlist, int ndef, char** defkey, char *
   double *conv,*A;
 
 
-  //testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  //testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);
@@ -812,7 +812,7 @@ void sz_cib_compute(parametric *egl, double *Rq, error **err) ;
 parametric* sz_cib_common_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl =  parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
@@ -906,7 +906,7 @@ void sz_cib_szxcib_init(parametric *egl,int der,error **err) {
 parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // Initialize structure and payload, with template
   egl = sz_cib_common_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,template,err);
@@ -932,7 +932,7 @@ parametric *sz_cib_init(int ndet, double *detlist, int ndef, char** defkey, char
 parametric *sz_cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // Initialize structure and payload, with template
   egl = sz_cib_common_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,template,err);
@@ -975,7 +975,7 @@ parametric *cib_x_init(int ndet, double *detlist, int ndef, char** defkey, char 
 parametric *sz_x_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* template, error **err) {
   parametric *egl;
   
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // Initialize structure and payload, with template
   egl = sz_cib_common_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,template,err);
@@ -1101,7 +1101,7 @@ parametric *ncibXsz_init(int ndet, double *detlist, int ndef, char** defkey, cha
   double dreq[4];
   double *ratio;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);
@@ -1215,7 +1215,9 @@ parametric *gibXsz_init(int ndet, double *detlist, int ndef, char** defkey, char
   int remove_100;
   double szcolor[4];
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  //_DEBUGHERE_("%d",template==NULL);
+
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   egl = parametric_init(ndet,detlist,ndef,defkey,defvalue,nvar,varkey,lmin,lmax,err);
   forwardError(*err,__LINE__,NULL);

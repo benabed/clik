@@ -84,7 +84,7 @@ parametric *bleak_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, in
   double dfreq[4];
   int ell,cli;
 
-  testErrorRet(template!=NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
 
   // init
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
