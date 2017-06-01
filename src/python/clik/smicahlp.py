@@ -825,11 +825,15 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP,has_cl):
 
   return mask
 
-def ordering_from_smica(dffile,jac=True):
+def ordering_from_smica(dffile,jac=True,omsk=None):
   import hpy
   
   fi = hpy.File(dffile)
-  msk = fi["clik/lkl_0/criterion_gauss_mask"]
+  if omsk is None:
+    msk = fi["clik/lkl_0/criterion_gauss_mask"]
+  else:
+    msk = omsk
+    jac = False
   ord = fi["clik/lkl_0/criterion_gauss_ordering"]
   hascl = fi["clik/lkl_0/has_cl"]
   mT = fi["clik/lkl_0/m_channel_T"]
@@ -1124,7 +1128,7 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
 
-def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=False):
+def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=False,goodmask=False):
   import parobject as php
   import hpy
   import lkl
@@ -1219,8 +1223,12 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   tm.shape = (-1,len(lm))
   tVec.shape = tm.shape
   eVec.shape = tm.shape
+  if covmat and goodmask:
+    return tm, tVec,eVec,Jt_siginv_J,good
   if covmat:
     return tm, tVec,eVec,Jt_siginv_J
+  if goodmask:
+    return tm,tVec,eVec,good
   return tm,tVec,eVec
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
@@ -1228,7 +1236,7 @@ def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
   import parobject as php
   import hpy
   
-  tm, tVec,eVec,Jt_siginv_J = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal)
+  tm, tVec,eVec,Jt_siginv_J,good = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal,goodmask=True)
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
@@ -1239,8 +1247,9 @@ def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
   
   rls = nm.concatenate([cls[i,lmin:lmax+1] for i in range(6) if hascl[i]])
   bls = nm.dot(bins,rls)
+  bls = bls[good]
   bls_tilde = nm.concatenate(tVec)
-
+  bls_tilde = bls_tilde[good]
   deltals = bls-bls_tilde
   if all:
     return tm,bls,bls_tilde,Jt_siginv_J,-.5*nm.dot(deltals,nm.dot(Jt_siginv_J,deltals))
@@ -1259,5 +1268,131 @@ def do_all_chi2(dffile,bestfit,npar=0):
   n_full = len(oo)
   print "full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar))
   print "coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar))
+
+def do_all_chi2(dffile,bestfit,npar=0):
+  import clik
+  from scipy.stats.distributions import chi2
+  lkl = clik.clik(dffile)
+  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
+  n_add = len(lkl_add[1])
+  lkl_add=lkl_add[-1]
+  nextra = len(lkl.extra_parameter_names)
+  oo,Jt0 = ordering_from_smica(dffile)
+  n_full = len(oo)
+
+  print "full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar))
+  print "coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar))
+
+def get_unbinned(dffile):
+  import parobject as php
+  import hpy
+  fi = hpy.File(dffile)
+  bns = php.read_bins(fi["clik/lkl_0"])
+  return nm.dot(bns.T,nm.linalg.inv(nm.dot(bns,bns.T)))
+
+def change_cls(dffile,bestfit,cls):
+  import clik
+  clo = nm.loadtxt(bestfit)
+  clo[:len(clik.clik(dffile).cc.get_extra_parameter_names())] = cls
+  return cls
+
+
+def mask_frq(dffile,lmins,lmaxs):
+  inhf = hpy.File(dffile)
+  olmin = inhf["clik/lkl_0/lmin"]
+  olmax = inhf["clik/lkl_0/lmax"]
+  lmaxs = nm.array([olmax if (lm == -1 or lm>olmax) else lm for lm in lmaxs])
+  lmins = nm.array([olmin if (lm == -1 or lm<olmin) else lm for lm in lmins])
+  kpp =  lmaxs>lmins
+  
+  nb = inhf["clik/lkl_0/nbins"]
+
+  hascl = inhf["clik/lkl_0/has_cl"]
+  mT = inhf["clik/lkl_0/m_channel_T"]
+  mP = inhf["clik/lkl_0/m_channel_P"]  
+  mE = mT*hascl[0]
+  mB = mE + mP*hascl[1]
+  m =  mB + mP*hascl[2]
+  
+  blmin = inhf["clik/lkl_0/bin_lmin"][:nb/nm.sum(hascl)]
+  blmax = inhf["clik/lkl_0/bin_lmax"][:nb/nm.sum(hascl)]
+  
+  bmins = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in lmins])
+  bmaxs = nm.array([nm.argmin((blmax+olmin-lm)**2) for lm in lmaxs])
+
+  lmins = nm.array([blmin[bm]+olmin for bm in bmins])
+  lmaxs = nm.array([blmax[bm]+olmin for bm in bmaxs])
+
+  dnames = inhf["clik/lkl_0/dnames"]
+  dnames = [dnames[i*256:(i+1)*256].strip("\0") for i in range(len(dnames)/256)]
+  print "restrict to"
+  cc = 0
+  for a in range(3):
+    aT = "TEB"[a]
+    for ii in range(mT if a==0 else mP*hascl[a]):
+      for b in range(3):
+        bT = "TEB"[b]
+        for jj in range(mT if b==0 else mP*hascl[b]):
+          print "  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc])
+          cc+=1
+
+
+  lmin = min(lmins[kpp])
+  lmax = max(lmaxs[kpp])
+  bmin = min(bmins[kpp])
+  bmax = max(bmaxs[kpp])
+  ord = inhf["clik/lkl_0/criterion_gauss_ordering"]
+  ord.shape=(-1,2)
+  nmsk = inhf["clik/lkl_0/criterion_gauss_mask"]
+  nmsk.shape=(nb/nm.sum(hascl),m,m)
+
+  kp = []
+  mx = 0
+  bmins.shape=(m,m)
+  bmaxs.shape=(m,m)
+  kpp.shape=(m,m)
+  nnmsk = nmsk*1
+
+  for i,j in ord:
+    cur = nm.arange(nb/nm.sum(hascl))[nmsk[:,i,j]==1]
+    nnmsk[:bmins[i,j],i,j] = 0
+    nnmsk[bmaxs[i,j]+1:,i,j] = 0
+    if kpp[i,j]:
+      kp += [nm.where((cur<bmaxs[i,j]+1) * (cur>bmins[i,j]-1))[0]+mx]
+    else:
+      nnmsk[:,i,j] = 0
+    mx += len(cur)
+    
+  kp = nm.concatenate(kp)
+  return nnmsk,kp
+
+
+def conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
+  lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
+  Yo = -rq-nm.sum(oqb,0)+rqh
+  nmsk,kp = mask_frq(dffile,lmins,lmaxs)
+  nmsk_cond,kp_cond = mask_frq(dffile,lmins_cond,lmaxs_cond)
+  ord = ordering_from_smica(dffile,omsk = nmsk)
+  ord_cond = ordering_from_smica(dffile,omsk = nmsk_cond)
+
+  inhf = hpy.File(dffile)
+  siginv = inhf["clik/lkl_0/criterion_gauss_mat"]
+  siginv.shape=(siginv.shape[0]**.5,-1)
+  sig = nm.linalg.inv(siginv)
+  del(siginv)
+  
+  M = ((sig[kp])[:,kp])*1.
+  M_cond = ((sig[kp_cond])[:,kp_cond])*1.
+  M_cross = ((sig[kp])[:,kp_cond])*1.
+  mu = Yo.flat[ord]
+  mu_b = Yo[flat[ord_cond]]
+  M_cond_inv = nm.linalg.inv(M_cond)
+  M_cross_dot_M_cond_inv = nm.dot(M_cross,M_cond_inv)
+  M_hat = nm.dot(M_cross_dot_M_cond_inv,M_cross.T)
+  mu_hat = mu + nm.dot(M_cross_dot_M_cond_inv,mu_b)
+
+  
+
 
 
