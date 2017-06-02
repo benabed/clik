@@ -161,6 +161,10 @@ def build(bld):
 
   #simbal
   source_simbal = ["simbal/clik_simbal.c"]
+  
+  #simall
+  source_simall = ["simall/clik_simall.c"]
+
 
   # clik
   source_clik =  lst('clik.c lklbs.c lowly_common.c  clik_helper.c clik_dic.c clik_lensing.c')
@@ -177,7 +181,7 @@ def build(bld):
   use_clik += ["cmbonly"]*bool(bld.env.has_cmbonly)
   clik_defines += ['CLIKSVNVERSION="%s"'%bld.env.svnversion.strip(),'NOHEALPIX']+['CLIK_LENSING']*bool(bld.env.has_lensing)
 
-  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec + source_ftau + source_simbal + source_momento
+  source_clik += source_plik + source_wmap + source_lowlike + source_actspt + source_gibbs + source_mspec + source_bicep + source_lollipop + source_bflike + source_cmbonly + source_lenslike + source_camspec + source_ftau + source_simbal + source_momento+ source_simall
 
   bld.shlib(
     source   = source_clik,
