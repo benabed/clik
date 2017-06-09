@@ -893,7 +893,10 @@ def get_bestfit_and_cl(dffile,bffile):
   import lkl
 
   fi = hpy.File(dffile)
-  bff = nm.loadtxt(bffile)
+  if not bool(bffile):
+    bff = php.get_selfcheck(dffile)[0]
+  else:
+    bff = nm.loadtxt(bffile)
   lmax = fi["clik/lkl_0/lmax"]
   hascl = fi["clik/lkl_0/has_cl"]
   cls = nm.zeros((6,lmax+1))
@@ -1127,7 +1130,7 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   plt.xlabel(extra.get("xlabel","$\\ell$"))
   #plt.xscale=("linear")
   #plt.xaxis = (0,lm[-1]+100)
-
+  
 def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=False,goodmask=False):
   import parobject as php
   import hpy

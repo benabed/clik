@@ -177,7 +177,13 @@ def remove_selfcheck(fname=None,root_grp=None):
     del root_grp["check_value"]
   if fname:
     hf.close()
-    
+
+def get_selfcheck(fname=None,root_grp=None):
+  if fname!=None:
+    hf = hpy.File(fname, 'r')
+    root_grp = hf["clik"]
+  return root_grp["check_param"], root_grp["check_value"]
+
 def read_somearray(somepath):
   # for now only ascii arrays
   try:
