@@ -17,7 +17,7 @@ def get_version(ctx):
   res = ctx.cmd_and_log("hg identify --id", output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
   svnversion = res
   f=open("svnversion","w")
-  print >>f,svnversion
+  print(svnversion, file=f)
   f.close()
   
 def get_tag(ctx):
@@ -59,7 +59,7 @@ def options(ctx):
     if not osp.exists(osp.join(osp.split(waflib.__file__)[0],"extras/cython.py")):
       waflib.Configure.download_tool("cython",ctx=ctx)  
     ctx.load("cython",dowload=True)
-  except Exception,e:
+  except Exception as e:
     pass
   
   import optparse
@@ -96,7 +96,7 @@ def configure(ctx):
 
   try:
     ctx.load("try_icc","waf_tools")
-  except Exception,e:
+  except Exception as e:
     Logs.pprint("RED","No suitable c compiler found (cause: '%s')"%e)
     ctx.fatal('The configuration failed') 
   ctx.load("mbits","waf_tools")
@@ -107,7 +107,7 @@ def configure(ctx):
   try:
     ctx.load("try_ifort","waf_tools")
     ctx.env.has_f90 = True
-  except Exception,e:
+  except Exception as e:
     Logs.pprint("RED","No suitable fortran compiler found (cause: '%s')"%e)
     ctx.fatal('The configuration failed') 
     ctx.env.has_f90 = False
@@ -151,7 +151,7 @@ def configure(ctx):
       for v in ctx.env["DEFINES"]:
         if "PYTHON" in v:
           ctx.undefine(v)
-    except Exception,e:
+    except Exception as e:
       #ctx.options.no_pytools = True
       Logs.pprint("BLUE","No suitable python distribution found")
       Logs.pprint("BLUE","Cause : '%s'"%e)
@@ -252,7 +252,7 @@ def configure(ctx):
       configure_pyfits(ctx)
       configure_cython(ctx)
       
-    except Exception,e:
+    except Exception as e:
       #ctx.options.no_pytools = True
       Logs.pprint("BLUE","No suitable python distribution found")
       Logs.pprint("BLUE","Cause : '%s'"%e)
@@ -286,7 +286,7 @@ def configure(ctx):
           for f in decr[k]:
             if not osp.exists(osp.join(pth,f)):
               raise Exception((osp.join(pth,f))+" does not exists")
-      except Exception,e:
+      except Exception as e:
         ctx.end_msg("Ignored (%s)"%e,"YELLOW")
         continue
       ctx.end_msg("ok")
@@ -312,23 +312,23 @@ def configure(ctx):
     ctx.env.LIB_extra = lib
     
   if allgood==False:
-    print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
-    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   Configure partial.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   You can build now but you will be lacking some   %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   features.                                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+    print("\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD))
+    print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   Configure partial.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   You can build now but you will be lacking some   %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   features.                                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL))
     
   else:
-    print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
-    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   Configure step ok.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-    print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+    print("\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD))
+    print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   Configure step ok.                               %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s   run './waf install' now !                        %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+    print("%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL))
     
   
 def build(ctx):
@@ -376,7 +376,7 @@ def _remove_arch(ctx,evn):
 
 
 def dist(ctx):
-  print "private"
+  print("private")
   import re
   get_tag(ctx)
   ctx.base_name = 'clik-'+clik_version
@@ -408,7 +408,7 @@ def dist(ctx):
   excl_list = ctx.path.ant_glob(exclude_list)
   files = ctx.path.ant_glob(dist_list)
   giles = []
-  print excl_list
+  print(excl_list)
   for f in files:
     if f in excl_list:
       continue
@@ -421,7 +421,7 @@ class Dist_public(waflib.Scripting.Dist):
   fun = 'dist_public'
   
 def dist_public(ctx):
-  print "public"
+  print("public")
   import re
   get_tag(ctx)
   ctx.base_name = 'plc-'+plc_version
@@ -540,12 +540,12 @@ fi"""
     
   __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath)
   
-  print "\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD)
-  print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-  print "%s|%s   Source clik_profile.sh (or clik_profile.csh)     %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-  print "%s|%s   to set the environment variables needed by clik  %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-  print "%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD)
-  print "%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL)
+  print("\n%s*----------------------------------------------------*"%(colors.PINK+colors.BOLD))
+  print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+  print("%s|%s   Source clik_profile.sh (or clik_profile.csh)     %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+  print("%s|%s   to set the environment variables needed by clik  %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+  print("%s|%s                                                    %s|"%(colors.PINK+colors.BOLD,colors.NORMAL,colors.PINK+colors.BOLD))
+  print("%s*----------------------------------------------------*%s\n"%(colors.PINK+colors.BOLD,colors.NORMAL))
   
 def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   import sys
@@ -554,16 +554,16 @@ def __dofile(ctx,name,shell,extra,multi_tmpl,single_tmpl,full_libpath):
   else:
     LD_LIB = "LD_LIBRARY_PATH"
   f = open(osp.join(ctx.env.BINDIR,name),"w")
-  print >>f,"# this code cannot be run directly"
-  print >>f,"# do 'source %s' from your %s shell or put it in your profile\n"%(osp.join(ctx.env.BINDIR,name),shell)
-  print >>f,extra,"\n"
-  print >>f,multi_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}
-  print >>f,multi_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}
+  print("# this code cannot be run directly", file=f)
+  print("# do 'source %s' from your %s shell or put it in your profile\n"%(osp.join(ctx.env.BINDIR,name),shell), file=f)
+  print(extra,"\n", file=f)
+  print(multi_tmpl%{"PATH":ctx.env.BINDIR,"VAR":"PATH"}, file=f)
+  print(multi_tmpl%{"PATH":ctx.env.PYTHONDIR,"VAR":"PYTHONPATH"}, file=f)
   for pt in full_libpath:
-    print >>f,multi_tmpl%{"PATH":pt,"VAR":LD_LIB}
-  print >>f,single_tmpl%{"PATH":ctx.env.PREFIX,"VAR":"CLIK_PATH"}
-  print >>f,single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}
-  print >>f,single_tmpl%{"PATH":",".join(ctx.env.PLG),"VAR":"CLIK_PLUGIN"}
+    print(multi_tmpl%{"PATH":pt,"VAR":LD_LIB}, file=f)
+  print(single_tmpl%{"PATH":ctx.env.PREFIX,"VAR":"CLIK_PATH"}, file=f)
+  print(single_tmpl%{"PATH":osp.join(ctx.env.PREFIX,"share/clik"),"VAR":"CLIK_DATA"}, file=f)
+  print(single_tmpl%{"PATH":",".join(ctx.env.PLG),"VAR":"CLIK_PLUGIN"}, file=f)
   f.close()
 
 def options_pyfits(ctx):
@@ -618,7 +618,7 @@ def configure_cython(ctx):
     #print version
     assert version[1]>=20
     ctx.end_msg(version_str)
-  except Exception,e:
+  except Exception as e:
     if vv:
       ctx.end_msg("no (%s)"%version_str,'YELLOW')
     # no cython, install it !

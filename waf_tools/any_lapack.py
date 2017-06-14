@@ -11,7 +11,7 @@ import waflib
 version = "lapack-3.3.1"
 tool = "lapack-3.3.1"
 
-lapack_funcs= " ".join(file("waf_tools/lapack_funcs.txt").read().strip().split())
+lapack_funcs= " ".join(open("waf_tools/lapack_funcs.txt").read().strip().split())
 #lapack_funcs = "dposv dtrsv dpotrf dpotrs dpotri dtrtri dtrmm dtrmv dgeqrf dormqr dsyev dgesvd dsymv dgemv dgemm dsyrk dsyr2k daxpy dtrsm dsymm dsyr ddot dsyevd dlamch dsyevr"     
 
 def options(ctx):
@@ -24,8 +24,8 @@ def options(ctx):
 def do_include(ctx,ptrn="%s_"):
   f=open(osp.join(ctx.env.PREFIX,"include/lapack_clik.h"),"w")
   for fnc in lapack_funcs.split():
-    print >>f,("#define %s "+ptrn)%(fnc,fnc)
-  print >>f,extra_inc
+    print(("#define %s "+ptrn)%(fnc,fnc), file=f)
+  print(extra_inc, file=f)
   f.close()
 
 def configure(ctx):
@@ -175,14 +175,14 @@ def installlapack(ctx):
   dii = {"FCC":unlist(ctx.env.FC),"FCFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fcshlib),"FLINKFLAGS":" ".join(ctx.env.FCFLAGS+ctx.env.LINKFLAGS_fcshlib),"SO":ctx.env.shsuffix,"MFLAG":" ".join(ctx.env.FCFLAGS) }
   Logs.pprint("PINK","build blas")
   f=open("build/%s/make.inc"%version,"w")
-  print >>f,make_inc_blas%dii
+  print(make_inc_blas%dii, file=f)
   f.close()
   cmdline = "cd build/%s; make blaslib"%version
   if ctx.exec_command(cmdline)!=0:
     raise Errors.WafError("Cannot build %s"%version)
   Logs.pprint("PINK","build lapack")
   f=open("build/%s/make.inc"%version,"w")
-  print >>f,make_inc_lapack%dii
+  print(make_inc_lapack%dii, file=f)
   f.close()
   cmdline = "cd build/%s; make lapacklib"%version
   if ctx.exec_command(cmdline)!=0:

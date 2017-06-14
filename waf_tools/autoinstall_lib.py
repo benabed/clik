@@ -142,7 +142,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       assert forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False
       conf_lib(ctx,name,_libs,testfunc,testinclude,add_inc_path,defines,frameworkpath,framework,False,msg,uselib,flagline,opt_name,add_lib_code)
       return
-    except Exception,e:
+    except Exception as e:
       if forceinstall==False and getattr(ctx.options,opt_name+"_forceinstall",False)==False and iall==False:
         Logs.pprint("RED","%s not found, try to install it"%name)
       install(ctx)
@@ -170,7 +170,7 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
     setattr(ctx.env,"use_%s"%name,name)
     setattr(ctx.env,"has_%s"%name,name)
 
-  except Exception,e:
+  except Exception as e:
     ctx.env["INCLUDES_%s"%name]=[]
     ctx.env["DEFINES_%s"%name]=[]
     if not getattr(ctx.env,"has_"+name,False):
@@ -188,19 +188,19 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       raise e
 
 def getfromurl(fromurl,tofile):
-  import urllib2
-  luaf = urllib2.urlopen(fromurl)
+  import urllib.request, urllib.error, urllib.parse
+  luaf = urllib.request.urlopen(fromurl)
   #if luaf.code!=200 and luaf.code!=None:
   #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
   f=open(tofile,"w")
-  print >>f,luaf.read(),
+  print(luaf.read(), end=' ', file=f)
   luaf.close()
   f.close()
 
 def installsmthg_pre(ctx,where,what,whereto="build/"):
 
   from waflib import Utils,Errors
-  import urllib2
+  import urllib.request, urllib.error, urllib.parse
   import re
   import os.path as osp
   import tarfile
@@ -258,7 +258,7 @@ def check_python_module(ctx,name,extracmd=""):
       #print extracmd
       exec(extracmd)
     ctx.end_msg(True)
-  except Exception,e: 
+  except Exception as e: 
     ctx.end_msg(False)
     raise e
 
@@ -286,7 +286,7 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
   try:
     assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and iall==False
     check_python_module(ctx,name,extracmd)
-  except Exception,e: 
+  except Exception as e: 
     if upgrade(ctx,name) or getattr(ctx.options,name+"_forceinstall",False) or iall:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
       atl.installsmthg_pre(ctx,url,packtgz)

@@ -1,4 +1,4 @@
-import parobject as php
+from . import parobject as php
 import numpy as nm
 import re
 
@@ -434,21 +434,21 @@ def setnames(agrp,names):
   agrp.attrs["names"] = php.pack256(*names) 
   
 def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering,position=-1):
-  import egfs
+  from . import egfs
   agrp = add_component(lkl_grp,"egfs",position)
   egfs.add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
   agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
   return agrp
 
 def add_from_pars(lkl_grp,parfile):
-  import miniparse
+  from . import miniparse
   pars = miniparse.miniparse(parfile)
   typ = pars.str.ctype
   return globals()["add_%s_component_pars"](lkl_grp,pars)
 
 def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color=None,rename={},voidmask="",data=None,position=-1):
   import os
-  import parametric
+  from . import parametric
   import os.path as osp
   #parametric.register_all(parametric.__dict__,False)
   
@@ -477,7 +477,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
   agrp.attrs["keys"] = php.pack256(*npars)
   nefaults = pm.defaults
   agrp.attrs["ndef"] = len(nefaults)
-  defkey = nefaults.keys()
+  defkey = list(nefaults.keys())
   defval = [nefaults[k] for k in defkey]
   agrp.attrs["defaults"] = php.pack256(*defkey)
   agrp.attrs["values"] = php.pack256(*defval)
@@ -511,7 +511,7 @@ def add_parametric_component(lkl_grp,name,dets,vpars,lmin,lmax,defaults={},color
 
   rename = pm.rename
   if rename:
-    rename_from = rename.keys()
+    rename_from = list(rename.keys())
     rename_to = [rename[k] for k in rename_from]
     agrp.attrs["rename_from"] = php.pack256(*rename_from)
     agrp.attrs["rename_to"] = php.pack256(*rename_to)
@@ -603,13 +603,13 @@ def build_vecproj(mask):
 
 
 def parametric_from_smica(h5file,lmin=-1,lmax=-1,ilkl=0):
-  import hpy
+  from . import hpy
   ff = hpy.File(h5file,"r")
   return parametric_from_smica_group(ff["clik/lkl_%d"%ilkl],lmin,lmax)
   ff.close()
 
 def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
-  import parametric as prm
+  from . import parametric as prm
   nc = hgrp.attrs["n_component"]
   prms = []
   for i in range(1,nc):
@@ -619,13 +619,13 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     key = [v.strip() for v in hgrp["component_%d"%i].attrs["keys"].split("\0") if v.strip() ]
     default = [v.strip() for v in hgrp["component_%d"%i].attrs["defaults"].split("\0") if v.strip() ]
     value = [v.strip() for v in hgrp["component_%d"%i].attrs["values"].split("\0") if v.strip() ]
-    defdir = dict(zip(default,value))
+    defdir = dict(list(zip(default,value)))
     frq = hgrp["component_%d"%i].attrs["dfreq"]
     try:
       rename_from = [v.strip() for v in hgrp["component_%d"%i].attrs["rename_from"].split("\0") if v.strip() ]
       rename_to = [v.strip() for v in hgrp["component_%d"%i].attrs["rename_to"].split("\0") if v.strip() ]
-      rename = dict(zip(rename_from,rename_to))
-    except Exception,e:
+      rename = dict(list(zip(rename_from,rename_to)))
+    except Exception as e:
       rename = {}
     #print rename
     #print key
@@ -633,12 +633,12 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     #print value
     try:
       color = hgrp["component_%d/color"%i][:]
-    except Exception,e:
+    except Exception as e:
       color = None
     try:
       data = hgrp["component_%d/template"%i][:]
       
-    except Exception,e:
+    except Exception as e:
       data = None
     if lmin==-1:
       lmin = hgrp["component_%d"%i].attrs["lmin"]
@@ -661,7 +661,7 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
 
 def calTP_from_smica(dffile):
   cal0 = calTP0_from_smica(dffile)
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -703,7 +703,7 @@ def calTP_from_smica(dffile):
   return cal
 
 def calTP0_from_smica(dffile):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -757,7 +757,7 @@ def calTP0_from_smica(dffile):
   return cal
 
 def beamTP_from_smica(dffile):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
@@ -826,7 +826,7 @@ def create_gauss_mask(nq,qmins,qmaxs,nT,nP,has_cl):
   return mask
 
 def ordering_from_smica(dffile,jac=True,omsk=None):
-  import hpy
+  from . import hpy
   
   fi = hpy.File(dffile)
   if omsk is None:
@@ -889,8 +889,8 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
   fi.close()
 
 def get_bestfit_and_cl(dffile,bffile):
-  import hpy
-  import lkl
+  from . import hpy
+  from . import lkl
 
   fi = hpy.File(dffile)
   if not bool(bffile):
@@ -907,7 +907,7 @@ def get_bestfit_and_cl(dffile,bffile):
       cnt += lmax+1
   lkl = lkl.clik(dffile)
   names = lkl.extra_parameter_names
-  bestfit = dict(zip(names,bff[cnt:]))
+  bestfit = dict(list(zip(names,bff[cnt:])))
   return bestfit,cls
 
 
@@ -918,7 +918,7 @@ def _simu_from_rq(mt,me,mb,rq,nside=2048):
   for i in range(m):
     for j in range(m-i):
       cls += [rq[:,j,j+i]]
-  print "random alms"
+  print("random alms")
   alms = hp.synalm(cls,new = True)
   rmaps = nm.zeros((m,m,12*nside**2))
   mp = nm.max(me,mb)
@@ -939,15 +939,15 @@ def _simu_from_rq(mt,me,mb,rq,nside=2048):
       almsr += [nm.zeros_like(alms[0])]
     else:
       almsr += [cls[i+mt+me]]
-    print "fg channel %d"%i
+    print("fg channel %d"%i)
     mps += [hp.alm2map(almsr,nside,pol=True)]
   for i in range(mp,m):
-    print "fg channel %d"%i
+    print("fg channel %d"%i)
     mps += [[hp.alm2map(alms[i],nside,pol=True),None,None]]
   return mps
 
 def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
-  import hpy
+  from . import hpy
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
@@ -988,7 +988,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   if me==0 and mb == 0:
     icls = [0]
 
-  print "generate cmb"
+  print("generate cmb")
   cmb = hp.synfast(ncls,nside,pol=True and len(ncls)>1 ,new=True)
 
   # got maps  for the cmb !
@@ -1002,7 +1002,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
     nrms += [p.__class__.__name__]
   oq = nm.array(oq)
   oq = nm.sum(oq,0)
-  print "generate fg"
+  print("generate fg")
   fg = _simu_from_rq(mt,me,mb,oq,nside)
 
   maps = [[None,None,None]]*max(mt,me,mb)
@@ -1018,7 +1018,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
 
 
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
-  import hpy
+  from . import hpy
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
@@ -1039,7 +1039,6 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   oq = []
   nrms = []
   for p in prms:
-    #print p
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
     if oq[-1].shape[1:]!=rqh.shape[1:]:
@@ -1062,7 +1061,6 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
   oqb = nm.zeros((len(oq),)+rqh.shape)
   lm = nm.zeros(nb)
-  #print oq.shape,oq.shape[0]
   for b in range(nb):
     if oq.shape[0]:
       oqb[:,b] = nm.sum(oq[:,blmin[b]:blmax[b]+1]*b_ws[nm.newaxis,blmin[b]:blmax[b]+1,nm.newaxis,nm.newaxis],1)
@@ -1096,7 +1094,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
 
   
 def full_calib(dffile,bestfit):
-  import hpy
+  from . import hpy
   if isinstance(bestfit,str):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   
@@ -1132,9 +1130,9 @@ def plot_1d_residual(lm,oqb,nrms,rqh,rq,m1,m2,**extra):
   #plt.xaxis = (0,lm[-1]+100)
   
 def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=False,goodmask=False):
-  import parobject as php
-  import hpy
-  import lkl
+  from . import parobject as php
+  from . import hpy
+  from . import lkl
   import time
 
   if rcal==True:
@@ -1180,11 +1178,11 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
       j = w1[ii]
       Jt_siginv[i] += Jt[i,j]*siginv[j]
       
-    print "pcompute Jt_siginv in %d sec"%(time.time()-a)
+    print("pcompute Jt_siginv in %d sec"%(time.time()-a))
     
     b = time.time()
     Jt_siginv_Yo = nm.dot(Jt_siginv,Yo)
-    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-b)
+    print("pcompute Jt_siginv_Yo in %d sec"%(time.time()-b))
     
     
     c = time.time()
@@ -1194,12 +1192,12 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
       j = w0[ii]
       i = w1[ii]
       Jt_siginv_J[j] += Jt[j,i]*Jt_siginv[:,i]
-    print "pcompute Jt_siginv_Yo in %d sec"%(time.time()-c)
+    print("pcompute Jt_siginv_Yo in %d sec"%(time.time()-c))
     
     #Jt_siginv,Jt_siginv_Yo,Jt_siginv_J = lkl.full_solve(Yo,Jt,siginv)
     #rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
     rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
-    print time.time()-a
+    print(time.time()-a)
   else:
     a = time.time()
     Jt_siginv = nm.dot(Jt,siginv)
@@ -1209,7 +1207,7 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   
     #rVec = -lkl.chol_solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
     rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
-    print time.time()-a
+    print(time.time()-a)
 
   #rVec = -nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
   ##try:
@@ -1236,8 +1234,8 @@ def best_fit_cmb(dffile,bestfit,cty="B",Jmask=None,covmat=True,cal=True,rcal=Fal
   #return lm,-nm.linalg.solve(Jt_siginv_J,Jt_siginv_Yo),1./nm.sqrt(Jt_siginv_J.diagonal())
 
 def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
-  import parobject as php
-  import hpy
+  from . import parobject as php
+  from . import hpy
   
   tm, tVec,eVec,Jt_siginv_J,good = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal,goodmask=True)
   if isinstance(bestfit,str):
@@ -1269,8 +1267,8 @@ def do_all_chi2(dffile,bestfit,npar=0):
   nextra = len(lkl.extra_parameter_names)
   oo,Jt0 = ordering_from_smica(dffile)
   n_full = len(oo)
-  print "full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar))
-  print "coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar))
+  print ("full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar)))
+  print ("coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar)))
 
 def do_all_chi2(dffile,bestfit,npar=0):
   import clik
@@ -1284,12 +1282,12 @@ def do_all_chi2(dffile,bestfit,npar=0):
   oo,Jt0 = ordering_from_smica(dffile)
   n_full = len(oo)
 
-  print "full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar))
-  print "coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar))
+  print ("full lkl  : %g (%g deg) -> %g PTE %g"%(lkl_full,n_full-nextra-npar, -lkl_full*2./(n_full-nextra-npar), chi2.sf(lkl_full*-2,n_full-nextra-npar)))
+  print ("coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar)))
 
 def get_unbinned(dffile):
-  import parobject as php
-  import hpy
+  from . import parobject as php
+  from . import hpy
   fi = hpy.File(dffile)
   bns = php.read_bins(fi["clik/lkl_0"])
   return nm.dot(bns.T,nm.linalg.inv(nm.dot(bns,bns.T)))
@@ -1329,7 +1327,7 @@ def mask_frq(dffile,lmins,lmaxs):
 
   dnames = inhf["clik/lkl_0/dnames"]
   dnames = [dnames[i*256:(i+1)*256].strip("\0") for i in range(len(dnames)/256)]
-  print "restrict to"
+  print ("restrict to")
   cc = 0
   for a in range(3):
     aT = "TEB"[a]
@@ -1337,7 +1335,7 @@ def mask_frq(dffile,lmins,lmaxs):
       for b in range(3):
         bT = "TEB"[b]
         for jj in range(mT if b==0 else mP*hascl[b]):
-          print "  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc])
+          print ("  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc]))
           cc+=1
 
 

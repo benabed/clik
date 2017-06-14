@@ -15,10 +15,10 @@ def main(argv):
   mspec_folder = pars.mspec_folder
   import cosmoslik as K
   import mspec
-  print mspec.__file__
+  print(mspec.__file__)
   script = K.load_script(osp.join(mspec_folder,'script.py'),cls_set_externally=True)
-  lmax = [max([-1]+[lmax for ((x1,_),(x2,_)),(_,lmax) in script.params.mspec.use.items() if x1+x2==x]) for x in ['TT','EE','BB','TE','TB','EB']]
-  nuis = script.get_sampled().keys()
+  lmax = [max([-1]+[lmax for ((x1,_),(x2,_)),(_,lmax) in list(script.params.mspec.use.items()) if x1+x2==x]) for x in ['TT','EE','BB','TE','TB','EB']]
+  nuis = list(script.get_sampled().keys())
 
   hascl = [int(lm!=-1) for lm in lmax]
   hascl = nm.array(hascl,dtype=nm.int)
@@ -34,7 +34,7 @@ def main(argv):
   import tempfile
   dr = tempfile.mkdtemp()
   import os
-  print dr
+  print(dr)
   import shutil
   shutil.copytree(mspec_folder.strip(),dr+"/mspec_data")    
   

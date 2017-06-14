@@ -47,14 +47,14 @@ def main_v1(argv):
     lkl_grp.attrs["approx_chi2"] = pars.int.approx_chi2
   if "ltrans" in pars:
     lkl_grp.attrs["ltrans"] = pars.int.ltrans
-    print pars.ltrans
+    print(pars.ltrans)
   php.add_pid(lkl_grp,pars.str(default="").pid)
 
   import tempfile
   dr = tempfile.mkdtemp()
   import os
   os.mkdir(dr+"/data")
-  print dr
+  print(dr)
   import shutil
   shutil.copy(pars.sigma_file.strip(),dr+"/data/sigma.fits")
   shutil.copy(pars.cl_file.strip(),dr+"/data/cl.dat")
@@ -100,7 +100,7 @@ def main_v2(argv):
   import tempfile
   dr = tempfile.mkdtemp()
   import os
-  print dr
+  print(dr)
   import shutil
   shutil.copy(pars.sigma_file.strip(),dr+"/sigma.fits")
   

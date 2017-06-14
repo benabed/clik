@@ -19,7 +19,7 @@ def read_binning(pars,name,fl):
   rnb = bmax - bmin
   n_in = len(getattr(pars.str_array,"%s_in_order"%name))
 
-  rord = range(n_in)
+  rord = list(range(n_in))
   if n_in!=1:
     iord = getattr(pars.str_array,"%s_in_order"%name)
     rord = [iord.index(v) for v in ["PP","TT","EE","BB","TE","TB","EB"] if v in iord]
@@ -27,7 +27,7 @@ def read_binning(pars,name,fl):
   mat = nm.zeros((rnb,(lmax+1)*n_in))
 
   for i in range(bmin,bmax):
-    print osp.join(osp.dirname(fl),getattr(pars.str,"%s_files"%name)%(i+1))
+    print(osp.join(osp.dirname(fl),getattr(pars.str,"%s_files"%name)%(i+1)))
     bi = nm.loadtxt(osp.join(osp.dirname(fl),getattr(pars.str,"%s_files"%name)%(i+1)))
     for ioor,oor in enumerate(rord):
       mat[i,(bi[:,0]+(lmax+1)*ioor).astype(nm.int)] = bi[:,oor+1]
@@ -75,28 +75,28 @@ def main(argv):
   ell = clf[:,0][:lmax+1-2]
 
   clrf[0,2:] = (clf[:,-1][:lmax+1-2] /  ((ell*(ell+1))*(ell*(ell+1)))) *2*nm.pi
-  print clrf[0,40],clf[40-2,-1],clf[40-2,-1]*2*nm.pi/40/41./40/41.
+  print(clrf[0,40],clf[40-2,-1],clf[40-2,-1]*2*nm.pi/40/41./40/41.)
   ii = 1
-  print hascl
+  print(hascl)
   if hascl[0]:
     clrf[ii,2:] = clf[:,1][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
-    print clrf[:,-3:]
+    print(clrf[:,-3:])
   if hascl[1]:
     clrf[ii,2:] = clf[:,3][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
-    print clrf[:,-3:]
+    print(clrf[:,-3:])
   if hascl[2]:
     clrf[ii,2:] = clf[:,4][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
-    print clrf[:,-3:]
+    print(clrf[:,-3:])
   if hascl[3]:
     clrf[ii,2:] = clf[:,2][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
-    print clrf[:,-3:]
+    print(clrf[:,-3:])
 
-  print clrf.shape
-  print clrf[:,-3:]
+  print(clrf.shape)
+  print(clrf[:,-3:])
   root["clik_lensing/cl_fid"] = clrf.flat[:]
 
   root.close()

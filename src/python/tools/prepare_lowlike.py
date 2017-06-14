@@ -50,12 +50,12 @@ def main(argv):
   
   if hasattr(clik,"clik"):
     res = php.add_selfcheck(pars.res_object,mcl)
-    print "lkl for init cl %g"%res
+    print("lkl for init cl %g"%res)
   
   if "cl_save" in pars:
     f=open(pars.cl_save,"w")
     for ci in mcl:
-      print >>f,ci
+      print(ci, file=f)
     f.close()
 
 import sys

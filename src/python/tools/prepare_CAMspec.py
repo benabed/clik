@@ -150,7 +150,7 @@ def main_v1(argv):
     beam_mode = nm.loadtxt(pars.str.beam_mode)
     beam_flag = [int(v in ("1","t")) for v in pars.str.free_beam_flag.ljust(cov_dim,"0")]
     marge_flag = [1-v for v in beam_flag]
-    print marge_flag
+    print(marge_flag)
     lkl_grp.attrs["marge_mode"] = beam_mode.flat[:]
     lkl_grp.attrs["marge_flag"] = nm.array(marge_flag).flat[:]
 
@@ -168,13 +168,13 @@ def main_v2(argv):
   hascl = nm.array(pars.bool_array.hascl,dtype=nm.int)
   lmin = pars.int.lmin
   lmax = pars.int.lmax
-  print hascl,hascl.dtype
+  print(hascl,hascl.dtype)
   lkl_grp = php.add_lkl_generic(root_grp,"CAMspec",1,hascl,lmax,lmin)
 
   lkl_grp.attrs["camspec_version"] = version
 
   if "pre_marged" in pars:
-    print pars.int.pre_marged
+    print(pars.int.pre_marged)
     lkl_grp.attrs["pre_marged"] = pars.int.pre_marged
 
   if "spec_flag" in pars:
@@ -229,7 +229,7 @@ def main_v2(argv):
   #dr = tempfile.mkdtemp()
   dr = "tmp_camspec"
   os.mkdir(dr)
-  print dr
+  print(dr)
   import shutil
   #like_file[20], sz143_file[20], tszxcib_file[20], ksz_file[20], beam_file[20],data_vector[20]
 

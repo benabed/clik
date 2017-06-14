@@ -1,5 +1,5 @@
 import numpy as nm
-import hpy
+from . import hpy
 import shutil
 
 def pack256(*li):
@@ -46,12 +46,12 @@ def add_external_data(directory,lkl_grp,tar=False):
       #os.mkdir(lkl_grp._name+"/_external")
       shutil.copytree(directory,lkl_grp._name+"/_external")    
       lkl_grp.attrs["external_dir"] = "."
-      os.chmod(lkl_grp._name+"/_external",0755)
+      os.chmod(lkl_grp._name+"/_external",0o755)
       for r,d,f in os.walk(lkl_grp._name+"/_external"):
         for ff in f:
-          os.chmod(r+"/"+ff,0644)
+          os.chmod(r+"/"+ff,0o644)
         for dd in d:
-          os.chmod(r+"/"+dd,0755)
+          os.chmod(r+"/"+dd,0o755)
           
 
       
@@ -92,7 +92,7 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
         b_ws,blmin,blmax = compress_bins(bins,has_cl)
         bins.shape=ish
         if b_ws.size+2*blmin.size<bins.size:
-          print "compressing bins"
+          print("compressing bins")
           lkl_grp.create_dataset("bin_ws",data=b_ws.flat[:])
           lkl_grp.create_dataset("bin_lmin",data=blmin.flat[:])
           lkl_grp.create_dataset("bin_lmax",data=blmax.flat[:])
@@ -210,7 +210,7 @@ def add_prior(root_grp,name,loc,var):
   pred = {}
   if "default" in root_grp:
     prid = root_grp["default"]
-    pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
+    pred = dict(list(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:])))
     del(prid.attrs["name"])
     del[prid["loc"]]
     del(root_grp["default"])
@@ -243,7 +243,7 @@ def add_prior(root_grp,name,loc,var):
   prid.create_dataset("loc", data=loc.flat[:])
   prid.create_dataset("var", data=var.flat[:])
   if pred:
-    nam = pred.keys()
+    nam = list(pred.keys())
     lo = [pred[k] for k in nam]
     add_default(root_grp,nam,lo)
 
@@ -258,23 +258,23 @@ def add_default(root_grp,name,loc,extn=None):
     prid = root_grp["default"]
     #print prid.keys()
     #print prid.attrs.keys()
-    pred = dict(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:]))
+    pred = dict(list(zip([v.strip() for v in prid.attrs["name"].split("\0") if v.strip()],prid["loc"][:])))
     
   else:
     prid = root_grp.create_group("default")
     pred = {}
   
-  pred.update(dict(zip(name,loc)))
+  pred.update(dict(list(zip(name,loc))))
 
   if extn !=None:
     for n in name:
       if n not in extn and n not in pred:
         raise Exception("extra parameter %s does not exist"%(n))
 
-  fname = pred.keys()
+  fname = list(pred.keys())
   floc = nm.array([pred[n] for n in fname])
   prid.attrs["name"] = pack256(*fname)
-  if "loc" in prid.keys():
+  if "loc" in list(prid.keys()):
     del(prid["loc"])
   prid["loc"]=floc.flat[:]
 

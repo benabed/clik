@@ -3,7 +3,7 @@ import autoinstall_lib as atl
 version = "fftw-3.2.2"
 tool = "fftw3"
 
-print "-> loading %s autoinstall (using version %s)"%(tool,version)
+print("-> loading %s autoinstall (using version %s)"%(tool,version))
 
 def options(opt):
   atl.add_lib_option(tool,opt,install=True)

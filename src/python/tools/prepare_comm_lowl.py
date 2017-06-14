@@ -31,7 +31,7 @@ def main(argv):
 
   import tempfile
   dr = tempfile.mkdtemp()
-  print dr
+  print(dr)
   import shutil
   shutil.copy(parfile,dr+"/comm_lowl.par")
   shutil.copy(datafile,dr+"/"+datafile)

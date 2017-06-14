@@ -12,7 +12,7 @@ def configure(ctx):
   try:
     pmc_config_path = ctx.find_program("pmc-config",path_list=[ctx.options.pmc_prefix+"/bin"])
     pmcflagline = ctx.cmd_and_log(pmc_config_path)
-  except Exception,e:
+  except Exception as e:
     pmcflagline='' 
   atl.conf_lib(ctx,"pmc","pmc","init_distribution","pmc.h",["pmclib","pmctools"],defines=["HAS_PMC"],flagline=pmcflagline)
     

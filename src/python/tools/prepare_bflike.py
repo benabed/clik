@@ -18,7 +18,7 @@ def main(argv):
   root_grp,hf = php.baseCreateParobject(pars.res_object)
   hascl = [1]*6
   btype = "bflike"
-  print pars.str(default="").type.lower()
+  print(pars.str(default="").type.lower())
   if pars.str(default="").type.lower() == "smw":
     hascl = [1,1,1,1,0,0]
     btype = "bflike_smw"

@@ -1,0 +1,3 @@
+[ ] for some reason *.py files are not installed
+[ ] there a Python 3 string error in the clik error handling code
+[ ] Python 2 backwards compat currently broken, fix this

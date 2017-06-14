@@ -10,7 +10,7 @@ def main(argv):
 
   base = osp.dirname(argv[1])
   f = cldf.File(base)
-  print f[osp.basename(argv[1])]
+  print(f[osp.basename(argv[1])])
 
 import sys
 if __name__=="__main__":

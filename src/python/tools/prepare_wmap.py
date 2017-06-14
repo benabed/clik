@@ -12,7 +12,7 @@ def main(argv):
   pars = clik.miniparse(argv[1])
   try:
     test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/test_cls_v4.dat"))
-  except IOError,e:
+  except IOError as e:
     test_cl = nm.loadtxt(osp.join(pars.wmap_data,"data/test_cls_v5.dat"))
 
   mcl = nm.zeros((4,1201),dtype=nm.double)
@@ -67,12 +67,12 @@ def main(argv):
   
   if hasattr(clik,"clik"):
     res = php.add_selfcheck(pars.res_object,mcl)
-    print "lkl for init cl %g"%res
+    print("lkl for init cl %g"%res)
   
   if "cl_save" in pars:
     f=open(pars.cl_save,"w")
     for ci in mcl:
-      print >>f,ci
+      print(ci, file=f)
     f.close()
 
 import sys

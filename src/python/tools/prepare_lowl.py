@@ -31,10 +31,10 @@ def mode(l,m,nside,field,ordering="ring",all=False):
   if ordering.lower() !="ring" :
     #fuck reorder !
     if field.lower()=="t":
-      mres = res[hp.nest2ring(nside,range(12*nside**2))]
+      mres = res[hp.nest2ring(nside,list(range(12*nside**2)))]
       res = mres
     else:
-      mres = res[nm.concatenate((hp.nest2ring(nside,range(12*nside**2)),hp.nest2ring(nside,range(12*nside**2))+12*nside**2))]
+      mres = res[nm.concatenate((hp.nest2ring(nside,list(range(12*nside**2))),hp.nest2ring(nside,list(range(12*nside**2)))+12*nside**2))]
       res = mres
       
   if all:
@@ -334,10 +334,10 @@ def main(argv):
   
   if nm.sum(hascl[1:])==0:
     rmaps = hp.read_map(pars.str.mapfile)
-    print rmaps[0]
+    print(rmaps[0])
   else:
     rmaps = [hp.read_map(pars.str.mapfile,i) for i in range(3)]
-    print rmaps[0][0],rmaps[1][0],rmaps[2][0]
+    print(rmaps[0][0],rmaps[1][0],rmaps[2][0])
     
   cl = nm.loadtxt(pars.str.clfile)
   wl = nm.loadtxt(pars.str.beamfile)
@@ -350,7 +350,7 @@ def main(argv):
       allcl[i] = cl[j]*wl
       j+=1
   clw = allcl.flat[:]
-  print clw
+  print(clw)
   res = prepdats(None,rmaps,pars.float.noise,nm.arange(pars.int.lmin,pars.int.lmax+1),clw,hascl)
   
   return 0

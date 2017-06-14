@@ -124,7 +124,7 @@ def configure_gccfirst(ctx):
     try:
       do_gcc(ctx)  
       return
-    except Exception,e:
+    except Exception as e:
       if Options.options.gcc:
         raise
       Logs.pprint("PINK", "gcc not found(cause : %s)"%e)
@@ -132,7 +132,7 @@ def configure_gccfirst(ctx):
     try:
       do_icc(ctx)
       return 
-    except Exception,e:
+    except Exception as e:
       if Options.options.icc:
         raise
       Logs.pprint("PINK", "icc not found (cause : %s)"%e)

@@ -12,9 +12,9 @@ def main(argv):
   base = (argv[1])
   try:
     f = cldf.File(base)
-    kk = f.keys()
-  except IOError,e:
-    print "Can't cldf_ls %s"%argv[1]
+    kk = list(f.keys())
+  except IOError as e:
+    print("Can't cldf_ls %s"%argv[1])
     return
   kk.sort()
   res = []
@@ -37,7 +37,7 @@ def main(argv):
     if cnt == cc:
       cnt = 0
       txt +="\n"
-  print txt
+  print(txt)
 
 import sys
 if __name__=="__main__":

@@ -41,7 +41,7 @@ class transformme:
       try:
         vl = self.pf.pf[val]
         self.pf._access_list += [val]
-      except Exception,e:
+      except Exception as e:
         if self.df==None:
           raise e
         else:
@@ -64,7 +64,7 @@ class transformme:
     return self
 
 def getnextline(txtit):
-  l = txtit.next()
+  l = next(txtit)
   l = re.split("#|!",l)[0]
   if len(l.strip())==0:
     return getnextline(txtit)
@@ -149,7 +149,7 @@ class miniparse(object):
     self.localdir = [osp.dirname(osp.abspath(pfn or "."))]
 
     if pfn!=None:
-      print "read parameter file %s"%pfn
+      print("read parameter file %s"%pfn)
       self._parse(open(pfn))  
       #pff =open(pfn)
       #txt = "\n".join([to.split("#")[0] for to in pff])+"\n"
@@ -161,13 +161,13 @@ class miniparse(object):
     self._access_list = []
 
   def keys(self,prefix=""):
-    return [k for k in self.pf.keys() if k[:len(prefix)]==prefix]
+    return [k for k in list(self.pf.keys()) if k[:len(prefix)]==prefix]
     
   def __repr__(self):
     rr = []
-    print self._access_list
+    print(self._access_list)
     for v in self._access_list:
-      print v #ICICICICI
+      print(v) #ICICICICI
       rr += ["%s = %s"%(v,getattr(self,v))]
     return "\n".join(rr)
     
@@ -218,7 +218,7 @@ def fromargv():
   argv = sys.argv
 
   if len(argv)!=2:
-    print "usage: %s parfile\n"%(argv[0])
+    print("usage: %s parfile\n"%(argv[0]))
     sys.exit(-1)
 
   pfn = argv[1]

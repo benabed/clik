@@ -32,7 +32,7 @@ def build(ctx):
     txt = re.sub("REPLACEPATH",ctx.env.PYTHONDIR,txt)
     txt = re.sub("PYTHONEXE",ctx.env.PYTHON[0],txt)
     f=open(tgt,"w")
-    print >>f,txt,
+    print(txt, end=' ', file=f)
     f.close()
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]
@@ -84,11 +84,12 @@ def build(ctx):
           #cflags = "-fopenmp",
           install_path = "${PYTHONDIR}/clik"
         ) 
+  # import ipdb; ipdb.set_trace()
   
   ctx(
     source = "clik/parobject.py clik/__init__.py clik/miniparse.py clik/smicahlp.py clik/hpy.py clik/cldf.py",
-    install_path = "${PYTHONDIR}",
-    install_from=None
+    install_path = "${PYTHONDIR}/clik",
+    install_from = ctx.path.find_node("clik")
   )
 
   if ctx.env.has_bicep:

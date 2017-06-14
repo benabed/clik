@@ -10,12 +10,12 @@ import clik.parobject as php
 
 def main(argv):
   if len(sys.argv)<4:
-    print "usage : %s lkl_file_1 lkl_file_2 [lkl_file_3 ...] result_lkl_file"
+    print("usage : %s lkl_file_1 lkl_file_2 [lkl_file_3 ...] result_lkl_file")
     sys.exit(1)
 
   for fl in sys.argv[1:-1]:
     if clik.try_lensing(fl):
-      print "clik_join doesn't work yet with lensing likelihood, sorry"
+      print("clik_join doesn't work yet with lensing likelihood, sorry")
       sys.exit(1)
   
   
