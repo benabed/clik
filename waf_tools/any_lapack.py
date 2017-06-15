@@ -1,4 +1,8 @@
 #try to support many flavours of lapack
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import autoinstall_lib as atl
 from waflib import Logs
 import os.path as osp

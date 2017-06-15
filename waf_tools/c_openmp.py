@@ -2,6 +2,9 @@
 # encoding: utf-8
 
 # from https://github.com/waf-extras/waf-extras/blob/master/portability/openmp.py
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from waflib.Configure import conf
 from waflib.Errors import ConfigurationError
@@ -44,7 +47,6 @@ def check_openmp_cflags(self, **kw):
 				continue
 
 		self.end_msg('Not supported')
-		print "lalala"
 		if 'define_name' in kw:
 			self.undefine(kw['define_name'])
 		if kw.get('mandatory', True):

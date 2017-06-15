@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from waflib import Logs
 import sys
 import os.path as osp
@@ -188,8 +191,15 @@ def conf_lib(ctx,name,_libs,testfunc=[],testinclude=[],add_inc_path=[],defines=[
       raise e
 
 def getfromurl(fromurl,tofile):
-  import urllib.request, urllib.error, urllib.parse
-  luaf = urllib.request.urlopen(fromurl)
+  try:
+    import urllib.request, urllib.error, urllib.parse
+    urlopen = urllib.request.urlopen
+  except ImportError:
+    # are we on py2 ?
+    import urllib2
+    urlopen = urllib2.urlopen
+  
+  luaf = urlopen(fromurl)
   #if luaf.code!=200 and luaf.code!=None:
   #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
   f=open(tofile,"w")
@@ -200,7 +210,6 @@ def getfromurl(fromurl,tofile):
 def installsmthg_pre(ctx,where,what,whereto="build/"):
 
   from waflib import Utils,Errors
-  import urllib.request, urllib.error, urllib.parse
   import re
   import os.path as osp
   import tarfile
