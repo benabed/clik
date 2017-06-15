@@ -19,11 +19,11 @@ class momento:
                do_linear=True,use_offset_k2=False,
                lminlike=2,lmaxlike=10,regcl=True):
     if(lminlike<lmin):
-      print 'error: lminlike less than lmin'
+      print('error: lminlike less than lmin')
       assert(False)
 
     if(lmaxlike>lmax):
-      print 'error: lmaxlike greater than lmax'
+      print('error: lmaxlike greater than lmax')
       assert(False)
 
     self.lmin = lmin
@@ -32,7 +32,7 @@ class momento:
     self.do_linear=do_linear
     self.use_offset_k2=use_offset_k2
     if((not self.do_linear) & self.use_offset_k2):
-      print 'Offset covariance only implemented for linear approximation'
+      print('Offset covariance only implemented for linear approximation')
       assert(False)
     self.lminlike=lminlike
     self.lmaxlike=lmaxlike
@@ -726,7 +726,7 @@ def _symkappa3_12(mat11,mat12,mat22,sih):
                 k3[3*(p-lmin):3*(p+1-lmin),3*(q-lmin):3*(q+1-lmin),3*(r-lmin):3*(r+1-lmin)]=z     
             #print p,q,r
     t2 = time.time()
-    print "s",t2-t1
+    print("s",t2-t1)
     for ells in (itertools.product(range(lmin,lmax+1),repeat=3)):
         p,q,r=list(ells)
         sargs=argsort(ells)
@@ -738,7 +738,7 @@ def _symkappa3_12(mat11,mat12,mat22,sih):
             sinds=array(tinds)[sargs]
             zz2[tuple(tinds)] = zz1[tuple(sinds)]
         k3[3*(p-lmin):3*(p+1-lmin),3*(q-lmin):3*(q+1-lmin),3*(r-lmin):3*(r+1-lmin)] = zz2
-    print "s",time.time()-t2
+    print("s",time.time()-t2)
     #k3.tofile("sk3_slow.dat")
     return k3
 
@@ -951,7 +951,7 @@ def romb(y, dx=1.0, axis=-1, show=False):
             formstr = "%%%d.%df" % (width, precis)
 
             title = "Richardson Extrapolation Table for Romberg Integration"
-            print "", title.center(68), "=" * 68
+            print("", title.center(68), "=" * 68)
             for i in xrange(k+1):
                 for j in xrange(i+1):
                     print(formstr % R[(i, j)])
@@ -960,4 +960,3 @@ def romb(y, dx=1.0, axis=-1, show=False):
             print()
 
     return R[(k, k)]
-
