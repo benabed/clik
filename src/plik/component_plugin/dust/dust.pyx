@@ -1,5 +1,6 @@
 from clik.parametric cimport c_parametric, error, doError, parametric, parametric_template, parametric_pol, parametric_pol_template
 from clik.parametric import powerlaw_free_emissivity,rename_machine,rename_replace
+from clik.systematics import cnoise
 
 cdef extern c_parametric *galactic_component_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *hgal_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -87,7 +88,26 @@ def ngpegal_rename_func(v,rups):
     rups[v]="_".join(rvl)
 
 ngpegal = rename_machine(t1gal,{"gal545_l_pivot":"200"},rename_replace("t1gal","gal545"),data_file="gpe_dust.dat")
+
+gal545_2017_defs = {"gal545_abs" : "1",
+                    "gal545_l_pivot" : "200",
+                    "gal545_A_100" : "7",
+                    "gal545_A_143" : "9",
+                    "gal545_A_143217" : "20",
+                    "gal545_A_217" : "83",
+                  }
+
+gal545_2017_rename = {"gal545_A_217" : "A_cnoise_217_217_TT",
+                      "gal545_A_100" : "A_cnoise_100_100_TT",
+                      "gal545_A_143" : "A_cnoise_143_143_TT",
+                      "gal545_A_143_217" : "A_cnoise_143_217_217_TT",
+                      "gal545_abs" : "cnoise_abs",
+                      "gal545_l_pivot" : "cnoise_l_pivot"}
+              
+import os
+import os.path as osp
+gal545_2017 = rename_machine(cnoise,gal545_2017_defs,gal545_2017_rename,data_path=osp.join(os.environ.get("CLIK_DATA"),"dust","dust_2017_SG_v1.dat"))
   
 
-component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545","gal545_80pc","ngpegal"]
+component_list = ["galametric","gpe_dust","gal_EE","gal_TE","galf","hgal","kgal","t1gal","gpegal","gal545","gal545_80pc","ngpegal","gal545_2017"]
 
