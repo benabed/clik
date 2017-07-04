@@ -23,11 +23,14 @@ def cutarr(inhf,outhf,olmin,olmax,lmin,lmax,nn,inarr=None):
   narr = arr[lmin-olmin:lmax+1-olmin]
   outhf[nn] = narr.flat[:]
 
-def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
+def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   olmin = inhf["clik/lkl_0/lmin"]
   olmax = inhf["clik/lkl_0/lmax"]
   lmaxs = nm.array([olmax if (lm == -1 or lm>olmax) else lm for lm in lmaxs])
   lmins = nm.array([olmin if (lm == -1 or lm<olmin) else lm for lm in lmins])
+  beg_notch = nm.array([lmx if (lm == -1 or lm>lmx) else lm for lm,lmx in zip(beg,lmaxs)])
+  end_notch = nm.array([lmx if (lm == -1 or lm<lmx) else lm for lm,lmx in zip(nd,lmins)])
+  
   kpp =  lmaxs>lmins
   
   nb = inhf["clik/lkl_0/nbins"]
@@ -45,9 +48,16 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
   bmins = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in lmins])
   bmaxs = nm.array([nm.argmin((blmax+olmin-lm)**2) for lm in lmaxs])
 
+  bbeg_notch = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in beg_notch])
+  bend_notch = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in end_notch])
+
   lmins = nm.array([blmin[bm]+olmin for bm in bmins])
   lmaxs = nm.array([blmax[bm]+olmin for bm in bmaxs])
 
+  beg_notch = nm.array([blmin[bm]+olmin for bm in bbeg_notch])
+  end_notch = nm.array([blmax[bm]+olmin for bm in bend_notch])
+
+  
   dnames = inhf["clik/lkl_0/dnames"]
   dnames = [dnames[i*256:(i+1)*256].strip("\0") for i in range(len(dnames)/256)]
   print "restrict to"
@@ -58,7 +68,10 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
       for b in range(3):
         bT = "TEB"[b]
         for jj in range(mT if b==0 else mP*hascl[b]):
-          print "  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc])
+          print "  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc]),
+          if beg_notch[cc]*kpp[cc]<end_notch[cc]*kpp[cc]:
+            print "[notch %d -> %d]"%(beg_notch[cc]*kpp[cc],end_notch[cc]*kpp[cc],),
+          print ""
           cc+=1
 
 
@@ -78,6 +91,8 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
   mx = 0
   bmins.shape=(m,m)
   bmaxs.shape=(m,m)
+  bbeg_notch.shape=(m,m)
+  bend_notch.shape=(m,m)
   kpp.shape=(m,m)
   nnmsk = nmsk*1
 
@@ -85,8 +100,16 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs):
     cur = nm.arange(nb/nm.sum(hascl))[nmsk[:,i,j]==1]
     nnmsk[:bmins[i,j],i,j] = 0
     nnmsk[bmaxs[i,j]+1:,i,j] = 0
+    nnmsk[bbeg_notch[i,j]:bend_notch[i,j]+1,i,j]=0
     if kpp[i,j]:
-      kp += [nm.where((cur<bmaxs[i,j]+1) * (cur>bmins[i,j]-1))[0]+mx]
+      kp += [nm.where((cur<bmaxs[i,j]+1) * (cur>bmins[i,j]-1) * (((cur>bbeg_notch[i,j]-1) * (cur<bend_notch[i,j]+1))==False))[0]+mx]
+      #print "cur",cur+mx
+      #print "kp",kp[-1]
+      #print i,j,len(cur),len(kp[-1])
+      #print (cur<bmaxs[i,j]+1)
+      #print (cur>bmins[i,j]-1)
+      #print (cur<bbeg_notch[i,j]+1),bbeg_notch[i,j]
+      #print (cur>bend_notch[i,j]-1),bend_notch[i,j]
     else:
       nnmsk[:,i,j] = 0
     mx += len(cur)
@@ -144,6 +167,13 @@ def main(argv):
   lklfile = pars.str.input_clik
   lmin = pars.int_array.lmin
   lmax = pars.int_array.lmax
+  if "beg_notch" in pars:
+    beg = pars.int_array.beg_notch
+    nd = pars.int_array.end_notch
+  else:
+    beg = [-1]*len(lmin)
+    nd = [-1]*len(lmin)
+
   outfile = pars.str.output_clik
   
   inhf = hpy.File(lklfile)
@@ -153,7 +183,7 @@ def main(argv):
     sys.exit(-1)
   assert ty in ["smica"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]
-  fnc(inhf,lklfile,outfile,lmin,lmax)
+  fnc(inhf,lklfile,outfile,lmin,lmax,beg,nd)
   
     
 import sys
