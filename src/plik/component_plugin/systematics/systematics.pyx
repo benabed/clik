@@ -60,6 +60,9 @@ cdef class trans2(parametric_pol_template):
     self.plugin_name = "systematics"
 
 cnoise_EEBB = rename_machine(cnoise,{},rename_replace("cnoise","cnEEBB"),data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
+cr_143E_HM = rename_machine(cnoise,{"A_cr_143E_143_143_EE":"1","A_cr_143E_100_143_EE":"1","A_cr_143E_143_217_EE":"1"},rename_replace("cnoise","cr_143E"),data_file="cr_hdr_HM_2017.dat")
+cr_143E_OE = rename_machine(cnoise,{"A_cr_143E_143_143_EE":"1","A_cr_143E_100_143_EE":"1","A_cr_143E_143_217_EE":"1"},rename_replace("cnoise","cr_143E"),data_file="cr_hdr_OE_2017.dat")
+
 
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
 cnoise_t2 = rename_machine(cnoise,{},norename,data_file="cnoise_F100_143_217_353_t2.dat")
@@ -85,5 +88,5 @@ beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
 
 beamnl_DX11 = rename_machine(beamnl,beamnl_DX11_defs,norename)
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1","cnoise_EEBB","nslb","cleak_rd12rc3_v1_oe","trans","trans2"]
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1","cnoise_EEBB","nslb","cleak_rd12rc3_v1_oe","trans","trans2","cr_143E_OE","cr_143E_HM"]
  
