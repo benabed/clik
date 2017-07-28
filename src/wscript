@@ -190,7 +190,7 @@ def build(bld):
     uselib   = uselib_clik,
     use = use_clik,
     defines = clik_defines,
-    cflags = bld.env.CCFLAGS_cc_omp,
+    cflags = bld.env.CCFLAGS_cc_omp+["-g"],
     )
   bld.install_files('${INCDIR}', 
                     'clik_lensing.h clik.h'+' minipmc/errorlist.h '*(not bld.env.has_pmc))

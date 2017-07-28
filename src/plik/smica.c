@@ -381,7 +381,7 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //write_bin_vector(smic->rq_hat, "rq_hat.dat", sizeof(double)*(smic->nq*smic->m*smic->m), err);   
   //forwardError(*err,__LINE__,0);
   // reorganize data
-  //write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);   
+  write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);   
   //gettimeofday(&starttime1,NULL);
   m = smic->m;
   m2 = m*m;
@@ -401,8 +401,8 @@ double smica_crit_gauss(void *vsmic, error **err) {
   //uplo = 'L';
   //printMat(smic->crit_cor,smic->quad_sn,smic->quad_sn);
   //_DEBUGHER_("%d",smic->quad_sn);
-  //write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
-  //write_bin_vector(smic->crit_cor, "crit_cor.dat", sizeof(double)*(smic->quad_sn)*(smic->quad_sn), err);   
+  write_bin_vector(smic->gvec, "gvec.dat", sizeof(double)*(smic->quad_sn), err);   
+  write_bin_vector(smic->crit_cor, "crit_cor.dat", sizeof(double)*(smic->quad_sn)*(smic->quad_sn), err);   
   //_DEBUGHERE_("","");
   //for(i=0;i<smic->quad_sn;i++) {
   //  smic->gvec[smic->quad_sn+i] = smic->crit_cor[i*smic->quad_sn]*smic->gvec[0];
