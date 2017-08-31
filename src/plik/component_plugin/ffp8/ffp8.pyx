@@ -116,6 +116,6 @@ def rename_e2e_2017_tot(v,rups):
          }
   if v in renint:
     rups[v] = renint[v]
-e2e_2017 = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_e2e_2017_tot,data_file="e2e_2017_fgs.dat")
+e2e_2017 = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_e2e_2017_tot,data_file="e2e_2017_fgs_v2.dat")
 
 component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "cib_NOPS_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11","grcT","e2e_2017"]
