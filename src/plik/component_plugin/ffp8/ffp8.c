@@ -33,6 +33,9 @@ parametric *ffp8_gal_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist,
   int f1,f2;
 
   testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  testErrorRet(ndet_T!=0 && has_TEB[0]==0,-11111,"incoherent definition, ndet_T !0 and hascl[0]=1",*err,__LINE__,NULL);
+  testErrorRet(ndet_P!=0 && (has_TEB[1]==0 && has_TEB[2]==0),-11111,"incoherent definition, ndet_P !0 and hascl[1]=0 and hascl[2]=0",*err,__LINE__,NULL);
+
 
   // init
   egl = parametric_pol_init(ndet_T, ndet_P, has_TEB, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
@@ -183,6 +186,7 @@ parametric *ffp8_gcib_init(int ndet, double *detlist, int ndef, char** defkey, c
   double *conv,*A;
 
   testErrorRet(template==NULL,-11111,"template must be defined",*err,__LINE__,NULL);
+  
 
   egl = parametric_init(ndet, detlist, ndef, defkey, defvalue, nvar, varkey, lmin, lmax, err);
   forwardError(*err,__LINE__,NULL);

@@ -3,6 +3,7 @@ from clik.parametric import norename,rename_machine,rename_replace
 
 cdef extern c_parametric *bleak_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
 cdef extern c_parametric *cnoise_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, double* rq_in, error **err)
+cdef extern c_parametric *cnoise_freepow_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *dip_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *feature_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *mul0_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
@@ -23,6 +24,10 @@ cdef class cnoise(parametric_pol_template):
     self.template_name = "cnoise_F100_143_217_353.dat"
     self.plugin_name = "systematics"
 
+cdef class cnoise_freepow(parametric_pol):
+  def __cinit__(self):
+    self.initfunc = <void*> cnoise_freepow_init;
+    
 cdef class dip(parametric):
   def __cinit__(self):
     self.initfunc = <void*> dip_init;
@@ -96,6 +101,6 @@ beamnl_DX11_defs = {"beamnl_nfreq_template":"3",
 
 beamnl_DX11 = rename_machine(beamnl,beamnl_DX11_defs,norename)
 
-component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature",
+component_list = ["bleak","cnoise","dip","cnoise_gpe","cnoise_t2","cnoise_t3","cnoise_v17","bleak_v15","feature","cnoise_freepow",
                   "cleak_v1","cleak_v2","mul0","beamnl","beamnl_DX11","cleak_rd12rc3_v1","cnoise_EEBB","nslb","cleak_rd12rc3_v1_oe","trans","trans2","cr_143E_OE","cr_143E_HM","subpix_rd12rc3_v4_hm"]
  
