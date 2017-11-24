@@ -481,6 +481,8 @@ void smica_set_crit_gauss(Smica *smic, double *crit_cor, int *mask,int *ordering
   forwardError(*err,__LINE__,);
   smic->quad_sn = nv;
 
+  //write_bin_vector(smic->quad_mask, "quad_mask.dat", sizeof(int)*(smic->quad_sn), err);
+
   smic->crit_cor = malloc_err(sizeof(double)*nv*nv,err);
   forwardError(*err,__LINE__,);
   

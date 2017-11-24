@@ -62,7 +62,10 @@ def main(argv):
 
   root["clik_lensing/cors"] = cors.flat[:]  
 
-  root["clik_lensing/cor0"] = nm.loadtxt(osp.join(osp.dirname(pars.str.dataset),dars.linear_correction_fiducial_file))[bmin:bmax,1]  
+  if "linear_correction_fiducial_file" in dars:
+    root["clik_lensing/cor0"] = nm.loadtxt(osp.join(osp.dirname(pars.str.dataset),dars.linear_correction_fiducial_file))[bmin:bmax,1]  
+  else:
+    root["clik_lensing/cor0"] = nm.loadtxt(osp.join(osp.dirname(pars.str.dataset),dars.linear_correction_fiducial))[bmin:bmax,1]  
 
 
   root["clik_lensing/renorm"] = pars.int(default=1).renorm
@@ -74,24 +77,26 @@ def main(argv):
   clrf = nm.zeros((1+hascl.sum(),lmax+1))
   ell = clf[:,0][:lmax+1-2]
 
-  clrf[0,2:] = (clf[:,-1][:lmax+1-2] /  ((ell*(ell+1))*(ell*(ell+1)))) *2*nm.pi
+  llmax = ell[-1]+1
+
+  clrf[0,2:llmax] = (clf[:,-1][:lmax+1-2] /  ((ell*(ell+1))*(ell*(ell+1)))) *2*nm.pi
   print clrf[0,40],clf[40-2,-1],clf[40-2,-1]*2*nm.pi/40/41./40/41.
   ii = 1
   print hascl
   if hascl[0]:
-    clrf[ii,2:] = clf[:,1][:lmax+1-2] /ell/(ell+1)*2*nm.pi
+    clrf[ii,2:llmax] = clf[:,1][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
     print clrf[:,-3:]
   if hascl[1]:
-    clrf[ii,2:] = clf[:,3][:lmax+1-2] /ell/(ell+1)*2*nm.pi
+    clrf[ii,2:llmax] = clf[:,3][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
     print clrf[:,-3:]
   if hascl[2]:
-    clrf[ii,2:] = clf[:,4][:lmax+1-2] /ell/(ell+1)*2*nm.pi
+    clrf[ii,2:llmax] = clf[:,4][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
     print clrf[:,-3:]
   if hascl[3]:
-    clrf[ii,2:] = clf[:,2][:lmax+1-2] /ell/(ell+1)*2*nm.pi
+    clrf[ii,2:llmax] = clf[:,2][:lmax+1-2] /ell/(ell+1)*2*nm.pi
     ii+=1
     print clrf[:,-3:]
 

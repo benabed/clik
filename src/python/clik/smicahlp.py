@@ -845,7 +845,8 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
   #print hascl
   nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   m2 = m*m
-  ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
+  msk.shape = (-1,m,m)
+  ordr =  nm.concatenate([nm.arange(nb)[msk[:,iv,jv]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
   if jac==True:
     Jt = []
     ps = ordr//m2
@@ -888,15 +889,75 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
     #return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
   fi.close()
 
+def bffile_from_cosmomc(dffile,bffile):
+  import hpy
+  import lkl
+  cls = nm.loadtxt(bffile[0])
+  fi = hpy.File(dffile)
+  ridx = [1,3,4,2]
+  hascl = fi["clik/lkl_0/has_cl"]
+  lmax = fi["clik/lkl_0/lmax"]
+  mcls = []
+  for i in range(4):
+    if hascl[i]:
+      lcls = nm.zeros(lmax+1)
+      print i, ridx[i]
+      lcls[2:] = cls[:lmax+1-2,ridx[i]]*2*nm.pi/((cls[:lmax+1-2,0]+1.)*cls[:lmax+1-2,0])
+      mcls += [lcls]
+    
+  for i in range(4,6):
+    if hascl[i]:
+      lcls = nm.zeros(lmax+1)
+      mcls += [lcls]
+ 
+  fmin = open(bffile[1])
+  fmintxt = fmin.readlines()
+
+  fpar = open(bffile[2])
+  extra = []
+  
+  for l in fpar:
+    fnd = False
+    parname = l.strip().split()
+    if parname:
+      parname = parname[0]
+    else:
+      continue
+    print "--->",parname
+    for lmin in fmintxt:
+      #print "test",lmin
+      if len(lmin.strip().split())<3:
+        continue
+      if parname == lmin.strip().split()[2]:
+        extra+=[float(lmin.strip().split()[1])]
+        print parname, extra[-1]
+        fnd = True
+    assert fnd,"cannot find %s"%parname
+
+  if len(bffile)==4:
+    mpars = bffile[3]
+    for ii,nms in enumerate(lkl.clik(dffile).extra_parameter_names):
+      if nms in mpars:
+        extra[ii] = float(mpars[nms])
+  return nm.concatenate(mcls+[extra])
+
+
 def get_bestfit_and_cl(dffile,bffile):
   import hpy
   import lkl
 
   fi = hpy.File(dffile)
+  print bffile
   if not bool(bffile):
+    print "1"
     bff = php.get_selfcheck(dffile)[0]
-  else:
+  elif isinstance(bffile,str):
+    print "2"
     bff = nm.loadtxt(bffile)
+  else:
+    print "3"
+    bff = bffile_from_cosmomc(dffile,bffile)
+  print "there"
   lmax = fi["clik/lkl_0/lmax"]
   hascl = fi["clik/lkl_0/has_cl"]
   cls = nm.zeros((6,lmax+1))
@@ -1019,8 +1080,9 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
 
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   import hpy
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+
   fi = hpy.File(dffile)
   cal = calTP_from_smica(dffile)
   cvec = [bestfit[nn] for nn in cal.varpar]
@@ -1097,7 +1159,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
 def full_calib(dffile,bestfit):
   import hpy
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   
   fi = hpy.File(dffile)
@@ -1240,7 +1302,7 @@ def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
   import hpy
   
   tm, tVec,eVec,Jt_siginv_J,good = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal,goodmask=True)
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
   lmin = fi["clik/lkl_0/lmin"]
@@ -1262,7 +1324,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
-  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_full = lkl(bffile_from_cosmomc(dffile,bestfit))
   lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
@@ -1276,7 +1338,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
-  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_full = lkl(bffile_from_cosmomc(dffile,bestfit))
   lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
@@ -1396,6 +1458,57 @@ def conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
   mu_hat = mu + nm.dot(M_cross_dot_M_cond_inv,mu_b)
 
   
+def _cutarr(arrin,olmin,olmax,lmin,lmax):
+  arr.shape=(olmax+1-olmin,-1)
+  narr = arr[lmin-olmin:lmax+1-olmin]
+  return narr.flat[:]
+
+def _lrangemat(nms,dct,hascl = [1,0,0]):
+  import re
+  if (len(nms.strip().split()))==1:
+    lms = list(nms.strip())
+  else:
+    lms = nms.strip().split()
+  nc = len(lms)
+  tt = nm.sum(hascl)
+  lmins = - nm.ones((nc*tt,nc*tt))
+  lmaxs = - nm.ones((nc*tt,nc*tt))
+  for k in dct:
+    A,B = re.split("x|X",k)
+    exA = 0
+    tA = A
+    if A[-1]=="E":
+      exA = nc*hascl[0]
+      tA = A[:-1]
+    if A[-1]=="B":
+      exA = nc*hascl[0]+nc*hascl[1]
+      tA = A[:-1]
+    if A[-1]=="T":
+      tA = A[:-1]
+
+    exB = 0
+    tB = B
+    if B[-1]=="E":
+      exB = nc*hascl[0]
+      tB = B[:-1]
+    if B[-1]=="B":
+      exB = nc*hascl[0]+nc*hascl[1]
+      tB = B[:-1]
+    if B[-1]=="T":
+      tB = B[:-1]
+    iA = lms.index(tA)
+    iB = lms.index(tB)
+
+    lmins[iA+exA,iB+exB] = dct[k][0]
+    lmaxs[iA+exA,iB+exB] = dct[k][1]
+    lmins[iB+exA,iA+exB] = dct[k][0]
+    lmaxs[iB+exA,iA+exB] = dct[k][1]
+    lmins[iA+exB,iB+exA] = dct[k][0]
+    lmaxs[iA+exB,iB+exA] = dct[k][1]
+    lmins[iB+exB,iA+exA] = dct[k][0]
+    lmaxs[iB+exB,iA+exA] = dct[k][1]
+  return lmins,lmaxs
 
 
 
+  
