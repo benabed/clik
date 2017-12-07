@@ -887,6 +887,7 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
     
     return ordr,nm.concatenate(Jt)
     #return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
+  return ordr
   fi.close()
 
 def bffile_from_cosmomc(dffile,bffile):
@@ -1433,7 +1434,7 @@ def mask_frq(dffile,lmins,lmaxs):
   return nnmsk,kp
 
 
-def conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
+def __conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
   lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
   Yo = -rq-nm.sum(oqb,0)+rqh
   nmsk,kp = mask_frq(dffile,lmins,lmaxs)
@@ -1512,3 +1513,38 @@ def _lrangemat(nms,dct,hascl = [1,0,0]):
 
 
   
+def conditional(x,x_bar,sigma,mask):
+  xa = x_bar[mask]
+  nmask = mask==False
+  xb = x_bar[nmask]
+  sigma_aa = sigma[mask,:][:,mask]
+  sigma_bb = sigma[nmask,:][:,nmask]
+  sigma_ab = sigma[mask,:][:,nmask]
+  sigma_bb_inv = nm.linalg.inv(sigma_bb)
+  sigma_ab_DOT_sigma_bb_inv = nm.dot(sigma_ab,sigma_bb_inv)
+  x_tilde = xa + nm.dot(sigma_ab_DOT_sigma_bb_inv, (x[nmask]-xb))
+  sigma_tilde = sigma_aa - nm.dot(sigma_ab_DOT_sigma_bb_inv,sigma_ab.T)
+
+  return x_tilde,sigma_tilde
+
+def prep_cond(dffile,bestfit,i,j):
+  import hpy
+  
+  lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
+
+  rqt = rq + nm.sum(oqb,0)
+  fi = hpy.File(dffile)
+  siginv = fi["clik/lkl_0/criterion_gauss_mat"]
+  oo = ordering_from_smica(dffile,False)
+  siginv.shape=(len(oo),len(oo))
+  sig = nm.linalg.inv(siginv)
+  rqz = rqt*0
+  rqz[:,i,j] = nm.arange(len(lm))+1
+  tk0 = rqz.flat[oo]
+  msk = tk0 !=0
+  lmk = lm[tk0[msk].astype(nm.int)-1]
+  return rqh.flat[oo],rqt.flat[oo],sig,msk,lmk
+
+
+
+
