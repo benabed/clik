@@ -322,14 +322,14 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
   // update rq matrix according to each component
   for(isc=0;isc<smic->nc;isc++) {
     char nn[40];
-    //_DEBUGHERE_("comp %d update (off %d) %d %d %d",isc,smic->offset_nc[isc],smic->nq,smic->m,smic->nq*smic->m*smic->m);
+    _DEBUGHERE_("comp %d update (off %d) %d %d %d",isc,smic->offset_nc[isc],smic->nq,smic->m,smic->nq*smic->m*smic->m);
     //printMat(smic->rq, smic->m, smic->m);
     //_DEBUGHERE_("%g",*(pars+smic->offset_nc[isc]));
     smic->SC[isc]->update(smic->SC[isc],pars+smic->offset_nc[isc], smic->rq, err);
     forwardError(*err,__LINE__,0);
-    //sprintf(nn,"pq_%d.la",isc);
-    //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    //forwardError(*err,__LINE__,-1);
+    sprintf(nn,"pq_%d.la",isc);
+    write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
+    forwardError(*err,__LINE__,-1);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);
