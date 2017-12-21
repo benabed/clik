@@ -67,7 +67,7 @@ cdef class trans2(parametric_pol_template):
 cnoise_EEBB = rename_machine(cnoise,{},rename_replace("cnoise","cnEEBB"),data_file="base_cnoise_EE_BB_rd12_rc3plik.txt")
 cr_143E_HM = rename_machine(cnoise,{"A_cr_143E_143_143_EE":"1","A_cr_143E_100_143_EE":"1","A_cr_143E_143_217_EE":"1"},rename_replace("cnoise","cr_143E"),data_file="cr_hdr_HM_2017.dat")
 cr_143E_OE = rename_machine(cnoise,{"A_cr_143E_143_143_EE":"1","A_cr_143E_100_143_EE":"1","A_cr_143E_143_217_EE":"1"},rename_replace("cnoise","cr_143E"),data_file="cr_hdr_OE_2017.dat")
-cnoise_e2e = rename_machine(cnoise,{"A_cnoise_e2e_143_143_EE":"1","A_cnoise_e2e_100_100_EE":"1","A_cnoise_e2e_217_217_EE":"1"},rename_replace("cnoise","cnoise_e2e"),data_file="cnoise_e2e_v1.dat")
+cnoise_e2e = rename_machine(cnoise,{"A_cnoise_e2e_143_143_EE":"1","A_cnoise_e2e_100_100_EE":"1","A_cnoise_e2e_217_217_EE":"1"},rename_replace("cnoise","cnoise_e2e"),data_file="cnoise_e2e_v2.dat")
 
 
 cnoise_gpe = rename_machine(cnoise,{},norename,data_file="cnoise_GPE_F100_143_217_353.dat")
