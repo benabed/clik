@@ -637,7 +637,6 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
       color = None
     try:
       data = hgrp["component_%d/template"%i][:]
-      
     except Exception,e:
       data = None
     if lmin==-1:
@@ -656,7 +655,14 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     if data is not None:
       kargs["data"]=data
     a = cmpr(*args,**kargs)
+    try:
+      component_name = hgrp["component_%d/component_name"%i]
+      a.set_name(component_name)
+    except Exception,e:
+      pass
+    
     prms += [a]
+
   return prms  
 
 def calTP_from_smica(dffile):
@@ -1061,7 +1067,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   for p in prms:
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
-    nrms += [p.__class__.__name__]
+    nrms += [p.get_name()]
   oq = nm.array(oq)
   oq = nm.sum(oq,0)
   print "generate fg"
@@ -1109,7 +1115,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
       bet = nm.zeros((oq[-1].shape[0],rqh.shape[1],rqh.shape[1]))
       bet[:,:oq[-1].shape[1],:oq[-1].shape[1]]=oq[-1]
       oq[-1]=bet
-    nrms += [p.__class__.__name__]
+    nrms += [p.get_name()]
   oq = nm.array(oq)
   blmin = fi["clik/lkl_0/bin_lmin"]
   blmax = fi["clik/lkl_0/bin_lmax"]
@@ -1547,4 +1553,15 @@ def prep_cond(dffile,bestfit,i,j):
 
 
 
+def cond_freq(dffile,bestfit,i,j):
+  pcond = prep_cond(dffile,bestfit,i,j)
+  lm = pcond[-1]
+  cond = conditional(*pcond[:-1])
+  delta = pcond[0][msk]-cond[0],cond[1].diagonal()**.5
 
+def cond_coadd(dffile,bestfit,i):
+  lm,cls,baderr,siginv = best_fit_cmb(dffile,bestfit)
+  lm0 = nm.array(lm)*0
+  lm0[i]=1
+  msk = lm0.flat[:]==1
+  cond = conditional()

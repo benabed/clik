@@ -89,7 +89,16 @@ cdef class parametric:
   def __cinit__(self):
     self.initfunc=NULL
     self.ismul=0
+    self.component_name=""
 
+  def set_name(self,name):
+    self.component_name = name
+  def get_name(self):
+    if self.component_name =="":
+      return self.__class__.__name__
+    else:
+      return "%s"%self.component_name
+      
   def test_derivative(self,key,value=None,h = 1e-3):
     """test_derivative(key,value=None,h = 1e-3) -> exact, approx, diff, reldiff"""
     if value == None:
