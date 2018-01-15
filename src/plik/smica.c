@@ -329,7 +329,7 @@ double Smica_lkl(void* vsmic, double* pars, error **err) {
     forwardError(*err,__LINE__,0);
     //sprintf(nn,"pq_%d.la",isc);
     //write_bin_vector(smic->rq, nn, sizeof(double)*(smic->nq*smic->m*smic->m), err);  
-    forwardError(*err,__LINE__,-1);
+    //forwardError(*err,__LINE__,-1);
   
     //_DEBUGHERE_("comp %d update done",isc);
     //printMat(smic->rq, smic->m, smic->m);
@@ -1203,10 +1203,10 @@ void comp_icalTP_update(void* data,double* locpars, double* rq, error **err) {
         w_prime = gc->w[mpos+1];
         im1_prime = gc->other[mpos];
         im2_prime = gc->other[mpos+1];
-        //if (iq==0) {
-        //  _DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
-        //  _DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
-        // }
+        if (iq==0) {
+          //_DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
+          //_DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
+         }
         rq[imo+im2] *= w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime];
         //rq[imo+im2] *= gc->calvec[im1]*gc->calvec[im2];
       } 

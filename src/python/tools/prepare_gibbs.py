@@ -10,7 +10,7 @@ import os.path as osp
 def main(argv):
   pars = clik.miniparse(argv[1])
   if "version" in pars:
-    if pars.str.version.lower()=="gauss":
+    if "gauss" in pars.str.version.lower():
       main_v2(argv)
       return
   main_v1(argv)
@@ -94,6 +94,8 @@ def main_v2(argv):
   
   lkl_grp = php.add_lkl_generic(root_grp,"gibbs_gauss",1,hascl,lmax,lmin)
   
+  if pars.str.version.lower()=="gauss3":
+    lkl_grp.attrs["version"] = 3
   lkl_grp.attrs["delta_l"] = delta_l
   php.add_pid(lkl_grp,pars.str(default="").pid)
 
