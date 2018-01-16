@@ -84,7 +84,7 @@ def build(bld):
   if bld.env.has_gibbs and bld.env.has_f90:
     bld.objects(
       features = 'fc',
-      source = lst('clik_gibbs.f90 comm_br_mod.f90 comm_gauss_br_mod.f90 comm_gauss_br_mod_V3.f90 comm_lowl_mod_dist.f90',"gibbs"),
+      source = lst('clik_gibbs.f90 comm_br_mod.f90 comm_gauss_br_mod.f90 comm_gauss_br_mod_v3.f90 comm_lowl_mod_dist.f90',"gibbs"),
       target = 'gibbs',
       uselib = 'healpix_f90 pmc cfitsio lapack fc_omp fc_runtime',
       fcflags = bld.env.FCFLAGS_fpic,
