@@ -21,6 +21,9 @@ def build(bld):
   
   clik_defines = []
 
+  #bld.env.FCFLAGS_fpic.append("-g")
+  #bld.env.CFLAGS_fpic.append("-g")
+
   # plik
   source_plik = lst('smica.c clik_hfipack.c clik_parametric.c clik_parametric_addon.c clik_plik.c',"plik",test=bld.env.has_plik)
   source_plik += lst('smica_ext.c clik_hfipack_ext.c',"plik",test=bld.env.has_plik and (not bld.env.plik_release))
