@@ -5,7 +5,9 @@ module Plik_CMBonly
   integer, parameter :: campc = KIND(1.d0)
 
   character(LEN=500),public :: data_dir 
-  character(LEN=*), parameter, public :: plik_like='Plik_v18_cmbonly_like'
+  character(LEN=500), public :: plik_like='Plik_v18_cmbonly_like'
+
+  integer,public::version = 18
 
   !Possible combinations: TT only, TE only, EE only, TT+TE+EE
   logical :: use_tt  = .true.
@@ -42,6 +44,8 @@ module Plik_CMBonly
   character(LEN=1024) :: like_file, cov_file, blmin_file, blmax_file, binw_file
   logical  :: good
     
+  write(plik_like,'(A,I2,A)') 'Plik_v',version,'_cmbonly_like'
+
   print *, 'Initializing Planck likelihood, version '//plik_like
  
   bin_min_tt = rbin_min_tt
@@ -54,9 +58,9 @@ module Plik_CMBonly
   nbintt = 215 !30-2508 
   nbinte = 199 !30-1996
   nbinee = 199 !30-1996
-    
-  like_file = trim(data_dir)//'cl_cmb_plik_v18.dat'
-  cov_file  = trim(data_dir)//'c_matrix_plik_v18.dat'
+  
+  write(like_file,'(A,i2,A)')  trim(data_dir)//'cl_cmb_plik_v',version,'.dat'
+  write(cov_file,'(A,i2,A)')  trim(data_dir)//'c_matrix_plik_v',version,'.dat'
   blmin_file = trim(data_dir)//'blmin.dat'
   blmax_file = trim(data_dir)//'blmax.dat'
   binw_file = trim(data_dir)//'bweight.dat'
@@ -69,14 +73,12 @@ module Plik_CMBonly
      write(*,*) 'file not found', trim(like_file), trim(data_dir)
      stop
   endif
-   
   call get_free_lun(lun)
   open(unit=lun,file=like_file,form='formatted',status='unknown',action='read')
   do i=1,nbin !read Planck
      read(lun,*) bval(i),X_data(i),X_sig(i)
   enddo
   close(lun)
-
   inquire(file=cov_file, exist=good)
   if(.not.good)then
      write(*,*) 'file not found', trim(cov_file), trim(data_dir)
@@ -137,8 +139,10 @@ module Plik_CMBonly
           fisher(ip,jp) = covmat(i,j)
           jp = jp+1
         enddo
+        jp=1
         ip = ip+1
        enddo
+           
   else
      write(*,*) 'Fail: no possible options chosen'
   endif
@@ -194,7 +198,7 @@ module Plik_CMBonly
 !!  do i=1,nbintt !binned ell
 !!     bm(i) = sum(bl(blmin(i)+plmin:blmax(i)+plmin)*bin_w(blmin(i):blmax(i)))
 !!  end do
-
+  
   end subroutine like_init_cmbonly
   
   ! ===========================================================================
