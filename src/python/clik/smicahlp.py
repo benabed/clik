@@ -173,6 +173,11 @@ def add_totcalTP_component(lkl_grp,calname,position=-1):
   agrp = add_component(lkl_grp,typ,position)
   agrp["calnameTP"] = calname
   return agrp
+def add_totcalPP_component(lkl_grp,calname,position=-1):
+  typ = "totcalPP"
+  agrp = add_component(lkl_grp,typ,position)
+  agrp["calnamePP"] = calname
+  return agrp
 
 
 def add_calTP_component(lkl_grp,names,calib_order,P_track_T,symetrize,position=-1):
@@ -684,30 +689,48 @@ def calTP_from_smica(dffile):
   hgrp = fi["clik/lkl_0"]
   nc = hgrp.attrs["n_component"]
   fnd=0
-  TP = {"T":"","P":""}
+  TP = {"T":"","P":"","TP":"","PP":""}
   for i in range(1,nc):
     compot = hgrp["component_%d"%i].attrs["component_type"]
     if compot == "totcal":
-      TP["T"] = hgrp["component_%d"%i].attrs["calname"]
+      TP["T"] = (hgrp["component_%d"%i].attrs["calname"])
       fnd+=1
     if compot == "totcalP":
-      TP["P"] = hgrp["component_%d"%i].attrs["calnameP"]
+      TP["P"] = (hgrp["component_%d"%i].attrs["calnameP"])
       fnd+=1
-    if fnd==2:
+    if compot == "totcalTP":
+      TP["TP"] = (hgrp["component_%d"%i].attrs["calnameTP"])
+      fnd+=1
+    if compot == "totcalPP":
+      TP["PP"] = (hgrp["component_%d"%i].attrs["calnamePP"])
+      fnd+=1
+    if fnd==4:
       break
   if fnd==0:
     return cal0
+  varpar = [v for v in list(cal0.varpar) + [TP["PP"]] +[TP["TP"]]+ [TP["P"]] +[TP["T"]] if v]
   def cal(vals):
     rqd = cal0(vals[:-fnd])
+    if TP["PP"]!="":
+      calPP = 1./(vals[varpar.find(TP["PP"])])
+      rP = nm.ones((m,m))
+      rP[mt:,mt:] = calP**2
+      rqd = rqd*rP[nm.newaxis,:,:]
+    if TP["TP"]!="":
+      calTP = 1./(vals[varpar.find(TP["TP"])])
+      rP = nm.ones((m,m))
+      rP[:mt,mt:] = calP
+      rP[mt:,:mt] = calP
+      rqd = rqd*rP[nm.newaxis,:,:]
     if TP["P"]:
-      calP = 1./(vals[-fnd])
+      calP = 1./(vals[varpar.find(TP["P"])])
       rP = nm.ones((m,m))
       rP[:mt,mt:] = calP
       rP[mt:,:mt] = calP
       rP[mt:,mt:] = calP**2
       rqd = rqd*rP[nm.newaxis,:,:]
     if TP["T"]:
-      calT = 1./vals[-1]
+      calT = 1./vals[varpar.find(TP["T"])]
       rqd = rqd*calT**2
     return rqd
   cal.varpar = [v for v in list(cal0.varpar) + [TP["P"]] +[TP["T"]] if v]
