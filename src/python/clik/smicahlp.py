@@ -712,25 +712,25 @@ def calTP_from_smica(dffile):
   def cal(vals):
     rqd = cal0(vals[:-fnd])
     if TP["PP"]!="":
-      calPP = 1./(vals[varpar.find(TP["PP"])])
+      calPP = 1./(vals[varpar.index(TP["PP"])])
       rP = nm.ones((m,m))
       rP[mt:,mt:] = calP**2
       rqd = rqd*rP[nm.newaxis,:,:]
     if TP["TP"]!="":
-      calTP = 1./(vals[varpar.find(TP["TP"])])
+      calTP = 1./(vals[varpar.index(TP["TP"])])
       rP = nm.ones((m,m))
       rP[:mt,mt:] = calP
       rP[mt:,:mt] = calP
       rqd = rqd*rP[nm.newaxis,:,:]
     if TP["P"]:
-      calP = 1./(vals[varpar.find(TP["P"])])
+      calP = 1./(vals[varpar.index(TP["P"])])
       rP = nm.ones((m,m))
       rP[:mt,mt:] = calP
       rP[mt:,:mt] = calP
       rP[mt:,mt:] = calP**2
       rqd = rqd*rP[nm.newaxis,:,:]
     if TP["T"]:
-      calT = 1./vals[varpar.find(TP["T"])]
+      calT = 1./vals[varpar.index(TP["T"])]
       rqd = rqd*calT**2
     return rqd
   cal.varpar = [v for v in list(cal0.varpar) + [TP["P"]] +[TP["T"]] if v]
