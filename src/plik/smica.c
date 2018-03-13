@@ -1203,11 +1203,13 @@ void comp_icalTP_update(void* data,double* locpars, double* rq, error **err) {
         w_prime = gc->w[mpos+1];
         im1_prime = gc->other[mpos];
         im2_prime = gc->other[mpos+1];
-        if (iq==0) {
-          //_DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
-          //_DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
-         }
-        rq[imo+im2] *= w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime];
+        //if (iq==0) {
+        //  _DEBUGHERE_("%d | %d %d -> %g %g %g %g, %d %d -> %g %g %g %g,",mpos,im1,im2,w,gc->calvec[im1],gc->calvec[im2],w*gc->calvec[im1]*gc->calvec[im2],im1_prime,im2_prime,w_prime,gc->calvec[im1_prime],gc->calvec[im2_prime],w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime]);  
+        //  _DEBUGHERE_("%g %g",w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime],gc->calvec[im1]*gc->calvec[im2]);
+        // }
+        if (w+w_prime!=0) {
+          rq[imo+im2] *= w*gc->calvec[im1]*gc->calvec[im2]+w_prime*gc->calvec[im1_prime]*gc->calvec[im2_prime];
+        }
         //rq[imo+im2] *= gc->calvec[im1]*gc->calvec[im2];
       } 
     }

@@ -936,7 +936,7 @@ def bffile_from_cosmomc(dffile,bffile):
   for i in range(4):
     if hascl[i]:
       lcls = nm.zeros(lmax+1)
-      print i, ridx[i]
+      #print i, ridx[i]
       lcls[2:] = cls[:lmax+1-2,ridx[i]]*2*nm.pi/((cls[:lmax+1-2,0]+1.)*cls[:lmax+1-2,0])
       mcls += [lcls]
     
@@ -958,14 +958,14 @@ def bffile_from_cosmomc(dffile,bffile):
       parname = parname[0]
     else:
       continue
-    print "--->",parname
+    #print "--->",parname
     for lmin in fmintxt:
       #print "test",lmin
       if len(lmin.strip().split())<3:
         continue
       if parname == lmin.strip().split()[2]:
         extra+=[float(lmin.strip().split()[1])]
-        print parname, extra[-1]
+        #print parname, extra[-1]
         fnd = True
     assert fnd,"cannot find %s"%parname
 
@@ -982,17 +982,17 @@ def get_bestfit_and_cl(dffile,bffile):
   import lkl
 
   fi = hpy.File(dffile)
-  print bffile
+  #print bffile
   if not bool(bffile):
-    print "1"
+    #print "1"
     bff = php.get_selfcheck(dffile)[0]
   elif isinstance(bffile,str):
-    print "2"
+    #print "2"
     bff = nm.loadtxt(bffile)
   else:
-    print "3"
+    #print "3"
     bff = bffile_from_cosmomc(dffile,bffile)
-  print "there"
+  #print "there"
   lmax = fi["clik/lkl_0/lmax"]
   hascl = fi["clik/lkl_0/has_cl"]
   cls = nm.zeros((6,lmax+1))
@@ -1112,7 +1112,29 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   return maps
 
 
+def get_binned_ell(dffile):
+  import hpy
+  import parobject as php
+  fi = hpy.File(dffile)
+  lmin = fi["clik/lkl_0/lmin"]
+  lmax = fi["clik/lkl_0/lmax"]
+  ell = n.arange(lmin,lmax+1)
+  bns = php.read_bins(fi["clik/lkl_0"])
+  return nm.dot(bns,ell)
 
+def get_rqh(dffile):
+  import hpy
+  fi = hpy.File(dffile)
+  rqh = fi["clik/lkl_0/Rq_hat"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  rqh.shape=(nb,m,m)
+  return rqh
+    
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   import hpy
   if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
