@@ -45,15 +45,18 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   blmin = inhf["clik/lkl_0/bin_lmin"][:nb/nm.sum(hascl)]
   blmax = inhf["clik/lkl_0/bin_lmax"][:nb/nm.sum(hascl)]
   
+  
   bmins = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in lmins])
   bmaxs = nm.array([nm.argmin((blmax+olmin-lm)**2) for lm in lmaxs])
 
+  
   bbeg_notch = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in beg_notch])
   bend_notch = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in end_notch])
 
   lmins = nm.array([blmin[bm]+olmin for bm in bmins])
   lmaxs = nm.array([blmax[bm]+olmin for bm in bmaxs])
 
+  
   beg_notch = nm.array([blmin[bm]+olmin for bm in bbeg_notch])
   end_notch = nm.array([blmax[bm]+olmin for bm in bend_notch])
 
