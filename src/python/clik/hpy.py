@@ -16,7 +16,7 @@ except Exception,e:
 import os.path as osp
 
 def is_h5py_object(oo):
-	if oo==None:
+	if oo is None:
 		return False
 	if not _has_h5py:
 		return False

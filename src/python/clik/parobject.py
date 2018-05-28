@@ -66,8 +66,8 @@ def add_lkl_generic(root_grp,lkl_type,unit,has_cl,lmax=-1,lmin=-1,ell=None,wl=No
   lkl_grp.attrs["has_cl"]   = has_cl
   ncl = nm.sum(has_cl)
   
-  assert not (lmax == -1 and ell == None)
-  assert not (lmax != -1 and ell != None)
+  assert not (lmax == -1 and ell is None)
+  assert not (lmax != -1 and ell is not None)
 
   if ell != None:
     lkl_grp.attrs["ell"] = nm.sort(ell)

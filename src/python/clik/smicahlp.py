@@ -3,7 +3,7 @@ import numpy as nm
 import re
 
 def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
-  if bins==None:
+  if bins is None:
     nbins = 0
   else:
     bins.shape=(-1,(lmax+1-lmin)*nm.sum(hascl))
@@ -585,7 +585,7 @@ def set_criterion(lkl_grp,typ,**extra):
   
 def build_tensormat(rq ,mask=None):
   n = len(rq)
-  if mask==None:
+  if mask is None:
     mask = nm.ones((n,n))
   M = nm.zeros((n**2,n**2))
   for i in range(n):

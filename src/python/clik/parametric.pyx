@@ -373,7 +373,7 @@ cdef class parametric_template(parametric):
 
   
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
-    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
+    if data_dir=="" and data_path=="" and data_file=="" and data is None and self._template is not None:
       return self._template
     if data is None:
       if data_path:
@@ -551,7 +551,7 @@ cdef class parametric_pol_template(parametric_pol):
 
   
   def get_template(self,data_dir="",data_path="",data_file="",data=None):
-    if data_dir=="" and data_path=="" and data_file=="" and data==None and self._template!=None:
+    if data_dir=="" and data_path=="" and data_file=="" and data is None and self._template is not None:
       return self._template
     if data is None:
       if data_path:
@@ -608,7 +608,7 @@ def register_all(gl=sys.modules[__name__],verb=False):
 def rename_machine(component, bdefs, rename_func=None,data_dir="",data_path="",data_file="",data=None):
   import types
   renf = rename_func
-  if rename_func==None:
+  if rename_func is None:
     renf = norename
   if isinstance(rename_func,dict):
     renf = rename_dict(rename_func)

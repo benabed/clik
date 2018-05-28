@@ -15,7 +15,7 @@ import clik.hpy as hpy
 
 
 def cutarr(inhf,outhf,olmin,olmax,lmin,lmax,nn,inarr=None):
-  if inarr==None:
+  if inarr is None:
     arr = inhf[nn]
   else:
     arr = inarr
