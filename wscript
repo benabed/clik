@@ -102,8 +102,8 @@ def configure(ctx):
     ctx.fatal('The configuration failed') 
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
-  ctx.load("c_openmp","waf_tools")
-  ctx.check_openmp_cflags(mandatory=False)
+  #ctx.load("c_openmp","waf_tools")
+  #ctx.check_openmp_cflags(mandatory=False)
 
   try:
     ctx.load("try_ifort","waf_tools")

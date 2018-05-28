@@ -2,6 +2,7 @@ from waflib import Logs
 import sys
 import os.path as osp
 
+
 def add_lib_option(libname,opt,default="/usr/local/",install=True):
   import optparse
   grp=optparse.OptionGroup(opt.parser,libname+" options")
