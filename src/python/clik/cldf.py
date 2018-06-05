@@ -2,7 +2,7 @@ import os
 import os.path as osp
 import shutil as shu
 try:
-  import pyfits as pf
+  import astropy.io.fits as pf
 except Exception,e:
   pass
 

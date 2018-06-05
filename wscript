@@ -595,8 +595,10 @@ def configure_numpy(ctx):
 
 def configure_pyfits(ctx):
   import autoinstall_lib as atl
-  atl.configure_python_module(ctx,"pyfits","http://pypi.python.org/packages/source/p/pyfits/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz","pyfits-3.2.2")
-  
+  #atl.configure_python_module(ctx,"pyfits","https://files.pythonhosted.org/packages/06/e5/52c495099da816e385361f5c787fc8039a36fc96fa17fb7ce419a2ba9c5d/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz","pyfits-3.2.2")
+  atl.check_python_module(ctx,"astropy")
+
+
 def configure_cython(ctx):
   import autoinstall_lib as atl
   from waflib import Utils
