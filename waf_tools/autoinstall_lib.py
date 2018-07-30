@@ -299,6 +299,34 @@ def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",f
   except Exception as e: 
     if upgrade(ctx,name) or getattr(ctx.options,name+"_forceinstall",False) or iall:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
+      cmdline = "PYTHONUSERBASE=%s %s -m pip install --user --upgrade %s"%(ctx.env["PREFIX"],ctx.env["PYTHON"][0],name)
+      ret = ctx.exec_command(cmdline)
+      waflib.Logs.pprint("PINK",cmdline)
+      ret = ctx.exec_command(cmdline)
+      if ret!=0:
+        # default to old way
+        configure_python_module_old(ctx,name,url,packtgz,pack,cmdline,extracmd,forceinstall,postinstall)
+      check_python_module(ctx,name,extracmd)
+      if postinstall:
+        postinstall()
+
+def configure_python_module_old(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False,postinstall=None):
+  import waflib.Logs
+  import os
+  from waflib import Errors
+  import os.path as osp
+  import autoinstall_lib as atl
+  ctx.load("python")
+  doit = False
+  import sys
+
+  iall = shouldIinstall_all(ctx,name)
+  try:
+    assert forceinstall==False and getattr(ctx.options,name+"_forceinstall")==False and iall==False
+    check_python_module(ctx,name,extracmd)
+  except Exception as e: 
+    if upgrade(ctx,name) or getattr(ctx.options,name+"_forceinstall",False) or iall:
+      waflib.Logs.pprint("PINK","Install python module '%s'"%name)
       atl.installsmthg_pre(ctx,url,packtgz)
       if not osp.exists(ctx.env.PYTHONDIR):
         os.makedirs(ctx.env.PYTHONDIR)

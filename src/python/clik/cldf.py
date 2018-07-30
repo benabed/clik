@@ -1,10 +1,12 @@
 import os
 import os.path as osp
 import shutil as shu
+
 try:
   import pyfits as pf
-except Exception as e:
-  pass
+except Exception.ImportError as e:
+  # try astropy then
+  from astropy.io import fits as pf  
 
 import re
 import numpy as nm
@@ -22,6 +24,8 @@ def is_cldf(name):
     return True
   except Exception as e:
     return False
+
+_protect_open = open
 
 def open(name,mode="r"):
   return File(name,mode)
@@ -43,7 +47,7 @@ class File(object):
   def _parsemetadata(self,path=""):
     if not path:
       path = self._name
-    f=file(osp.join(path,_metadata))
+    f=_protect_open(osp.join(path,_metadata))
     dct = {}
     for l in f:
       if not l.strip():
@@ -69,7 +73,7 @@ class File(object):
   def _writemetadata(self,dct,path=""):
     if not path:
       path = self._name
-    f=file(osp.join(path,_metadata),"w")
+    f=_protect_open(osp.join(path,_metadata),"w")
     for k,v in list(dct.items()):
       if type(v)==str:
         typ="str"
@@ -102,7 +106,7 @@ class File(object):
     if osp.isdir(name):
       shu.rmtree(name)
     os.mkdir(name)
-    f=file(osp.join(name,_metadata),"w")
+    f=_protect_open(osp.join(name,_metadata),"w")
     f.write("")
     f.close()
     self._name = name
@@ -125,7 +129,7 @@ class File(object):
       try:
         return pf.open(fkey)[0].data
       except Exception:
-        value = file(fkey).read()
+        value = _protect_open(fkey).read()
         if key+"__type__" in self and self[key+"__type__"] == "str_array":
           rvalue = []
           p0 = value.find("\n")
@@ -158,7 +162,7 @@ class File(object):
         tvalue = "%d\n"%len(value)
         for v in value:
           tvalue += "%d\n"%len(v)+v+"\n"
-        f=file(fkey,"w")
+        f=_protect_open(fkey,"w")
         f.write(tvalue)
         f.close()
         self[key+"__type__"] = "str_array"
@@ -172,7 +176,7 @@ class File(object):
     if type(value) == str and ("\n" in value or "\0" in value or len(value)>50):
       #print key,len(value)
 
-      f=file(fkey,"w")
+      f=_protect_open(fkey,"w")
       f.write(value)
       f.close()
       return
@@ -242,7 +246,7 @@ try:
         dts = hdf[kk][:]
         install_path = osp.join(fdf._name,"_external")
         os.mkdir(install_path)
-        f=file(osp.join(install_path,"data.tar"),"w")
+        f=_protect_open(osp.join(install_path,"data.tar"),"w")
         f.write(dts.tostring())
         f.close()
         assert os.system("cd %s;tar xvf data.tar"%install_path)==0
@@ -271,10 +275,10 @@ except ImportError as e:
 class forfile:
   def __init__(self,fi):
     
-    if isinstance(fi,file):
+    if hasattr(fi,read):
       self.fi = fi
     else :
-      self.fi=file(fi)
+      self.fi=_protect_open(fi)
     self.bf=""
   def read(self,fmt=''):
     if self.bf=='':

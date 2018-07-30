@@ -1,7 +1,12 @@
 import re
 import numpy as nm
 import os.path as osp
-import pyfits as pf
+try:
+  import pyfits as pf
+except Exception.ImportError as e:
+  # try astropy then
+  from astropy.io import fits as pf
+  
 
 def scarray(li,scal=False):
   if len(li)==1 and scal:

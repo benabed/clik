@@ -672,7 +672,7 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     try:
       component_name = hgrp["component_%d/component_name"%i]
       a.set_name(component_name)
-    except Exception,e:
+    except Exception as e:
       pass
     
     prms += [a]

@@ -150,8 +150,8 @@ def try_lensing(fl):
   cdef error *_err,**err
   _err = NULL
   err = &_err
-    
-  r = clik_try_lensing(fl,err)
+
+  r = clik_try_lensing( str.encode(fl),err)
   er=doError(err)
   if er:
     raise er

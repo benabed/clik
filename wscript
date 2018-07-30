@@ -146,7 +146,9 @@ def configure(ctx):
       # remove unwanted flags for darwin
       ctx.env.FRAMEWORK_ST=""
       ctx.check_python_version()
-      ctx.env["PYTHONDIR"]=ctx.get_python_variables(["get_python_lib(standard_lib=0, prefix=%r) or ''"%ctx.env['PREFIX']])[0]
+      #ctx.env["PYTHONDIR"]=ctx.get_python_variables(["get_python_lib(standard_lib=0, prefix=%r) or ''"%ctx.env['PREFIX']])[0]
+      ctx.env["PYTHONDIR"]="%s/lib/python/site-packages"%ctx.env['PREFIX']
+      #print(ctx.env["PYTHONDIR"])
       ctx.check_python_headers("pyembed")
       ctx.env.INCLUDES_PYEXT = ctx.env.INCLUDES_PYEMBED
       # remove unwanted flags for darwin
@@ -599,7 +601,11 @@ def configure_numpy(ctx):
 
 def configure_pyfits(ctx):
   import autoinstall_lib as atl
-  atl.configure_python_module(ctx,"pyfits","http://pypi.python.org/packages/source/p/pyfits/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz","pyfits-3.2.2")
+  try:
+    atl.check_python_module(ctx,"astropy")
+  except ImportError as e:
+    Logs.pprint("PINK","Astropy not found, try pyfits instead")
+    atl.configure_python_module(ctx,"pyfits","http://pypi.python.org/packages/source/p/pyfits/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz","pyfits-3.2.2")
   
 def configure_cython(ctx):
   import autoinstall_lib as atl
@@ -607,7 +613,7 @@ def configure_cython(ctx):
   import os.path as osp
   import os
   
-  os.environ["PATH"] = os.environ["PATH"]+":"+osp.dirname(osp.realpath(ctx.env.PYTHON[0]))
+  os.environ["PATH"] = ctx.env["PREFIX"][0]+"/bin:"+os.environ["PATH"]+":"+osp.dirname(osp.realpath(ctx.env.PYTHON[0]))
   vv=False
   def postinstallcython():
     ctx.env.CYTHON=[osp.join(ctx.env.BINDIR,"cython")]
@@ -627,12 +633,15 @@ def configure_cython(ctx):
     atl.check_python_module(ctx,"cython")
     vv=True
     version_str = "unknown"
-    ctx.start_msg("Checking cython version (>0.20)")
+    mincyver = 20
+    if int(ctx.env["PYTHON_VERSION"].split(".")[0])>2 and int(ctx.env["PYTHON_VERSION"].split(".")[1])>6:
+      mincyver = 28
+    ctx.start_msg("Checking cython version (>0.%s)"%mincyver)
     import Cython.Compiler.Version
     version_str = Cython.Compiler.Version.version
     version = [int(v) for v in version_str.split(".")]
     #print version
-    assert version[1]>=20
+    assert version[0]>1 or version[1]>=mincyver
     ctx.end_msg(version_str)
   except Exception as e:
     if vv:
