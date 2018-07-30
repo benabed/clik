@@ -94,4 +94,29 @@ cib_NOPS_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"30
 tsz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"A_sz":"A_grcT_143"},data_file="tsz_e2e_2015_11.dat")
 ksz_e2e_2015_11 = rename_machine(grcT, appdct(xtra_grct,{"grcT_l_pivot":"3000","grcT_rigid":"143"}),{"ksz_norm":"A_grcT_143"},data_file="ksz_e2e_2015_11.dat")
 
-component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "cib_NOPS_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11","grcT"]
+def rename_e2e_2017_tot(v,rups):
+  renint={ "e2e_A_100_EE":"A_ffp8_gal_100_100_EE",
+           "e2e_A_100_143_EE":"A_ffp8_gal_100_143_EE",
+           "e2e_A_100_217_EE":"A_ffp8_gal_100_217_EE",
+           "e2e_A_143_EE":"A_ffp8_gal_143_143_EE",
+           "e2e_A_217_EE":"A_ffp8_gal_217_217_EE",
+           "e2e_A_143_217_EE":"A_ffp8_gal_143_217_EE",
+           "e2e_A_100_TE":"A_ffp8_gal_100_100_TE",
+           "e2e_A_143_TE":"A_ffp8_gal_143_143_TE",
+           "e2e_A_217_TE":"A_ffp8_gal_217_217_TE",
+           "e2e_A_100_143_TE":"A_ffp8_gal_100_143_TE",
+           "e2e_A_100_217_TE":"A_ffp8_gal_100_217_TE",
+           "e2e_A_143_217_TE":"A_ffp8_gal_143_217_TE",
+           "e2e_A_100_TT":"A_ffp8_gal_100_100_TT",
+           "e2e_A_143_TT":"A_ffp8_gal_143_143_TT",
+           "e2e_A_217_TT":"A_ffp8_gal_217_217_TT",
+           "e2e_A_100_143_TT":"A_ffp8_gal_100_143_TT",
+           "e2e_A_100_217_TT":"A_ffp8_gal_100_217_TT",
+           "e2e_A_143_217_TT":"A_ffp8_gal_143_217_TT",
+         }
+  if v in renint:
+    rups[v] = renint[v]
+e2e_2017 = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_e2e_2017_tot,data_file="e2e_2017_fgs_v2.dat")
+e2e_2017_v3 = rename_machine(ffp8_gal,{"ffp8_gal_l_pivot":"500"},rename_e2e_2017_tot,data_file="e2e_2017_fgs_v3.dat")
+
+component_list = ["cib_ffp8","dust_ffp8_TT","dust_ffp8_EE","dust_ffp8_TE","cib_ffp8_v2","dust_ffp8_v2_TT","dust_ffp8_v2_EE","dust_ffp8_v2_TE","ffp8_gal","ffp8_gcib", "dust_e2e_2015_11", "cib_e2e_2015_11", "cib_NOPS_e2e_2015_11", "tsz_e2e_2015_11", "ksz_e2e_2015_11","grcT","e2e_2017","e2e_2017_v3"]

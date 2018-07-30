@@ -56,7 +56,7 @@ def ifort_conf(ctx):
     ctx.env.LINKFLAGS_fcshlib = ['-dynamiclib']
   ctx.env.append_value('FCFLAGS',ctx.env.mopt)
   ctx.env["FCFLAGS_fc_omp"]=[]
-  ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
+  
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
   ctx.start_msg("Check ifort version") 
@@ -68,6 +68,11 @@ def ifort_conf(ctx):
   rl0 = []
   if majver>13:
     rl0 = ["irc"]
+  if majver>15:
+    ctx.env.append_value("FCFLAGS_fc_omp","-qopenmp")  
+  else:
+    ctx.env.append_value("FCFLAGS_fc_omp","-openmp")
+  
   ctx.check_cc(
     errmsg="failed",msg='Compile a test code with ifort',
     mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')

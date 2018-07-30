@@ -17,7 +17,7 @@ def read_array(fname,dirname):
   try:
     pfits = pf.open(fname)
     ii=0
-    while pfits[ii].data == None:
+    while pfits[ii].data is None:
       ii+=1
     return pfits[ii].data
   except Exception:
@@ -42,7 +42,7 @@ class transformme:
         vl = self.pf.pf[val]
         self.pf._access_list += [val]
       except Exception as e:
-        if self.df==None:
+        if self.df is None:
           raise e
         else:
           vl = self.df

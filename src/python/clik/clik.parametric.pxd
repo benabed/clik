@@ -21,7 +21,8 @@ cdef class parametric:
   cdef readonly object rename,emaner,voidmask,name
   cdef readonly object _template
   cdef readonly object ismul
-
+  cdef object component_name
+  
 cdef class parametric_template(parametric):
   cdef object template_name
   cdef object plugin_name

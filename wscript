@@ -79,7 +79,7 @@ def options(ctx):
   
   grp=optparse.OptionGroup(ctx.parser,"Plugins options")
   grp.add_option("--no_bopix",action="store_true",default=True,help="do not build bopix")
-  grp.add_option("--bopix",action="store_true",default=False,help="do not build bopix")
+  grp.add_option("--bopix",action="store_true",default=False,help="build bopix")
   grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_7_install",action="store_true",default=False,help="download wmap 7 likelihood for me")
@@ -92,7 +92,8 @@ def options(ctx):
   
   ctx.add_option("--extra_libpath",action="store",default="",help="libpath for extra lib to be linked")
   ctx.add_option("--extra_lib",action="store",default="",help="extra lib to be linked")
-  
+  ctx.add_option("--debug",action="store_true",default=False,help="if present compile with debug on")
+
 def configure(ctx):
   import os
   import os.path as osp
@@ -105,8 +106,8 @@ def configure(ctx):
     ctx.fatal('The configuration failed') 
   ctx.load("mbits","waf_tools")
   ctx.load("osx_shlib","waf_tools")
-  ctx.load("c_openmp","waf_tools")
-  ctx.check_openmp_cflags(mandatory=False)
+  #ctx.load("c_openmp","waf_tools")
+  #ctx.check_openmp_cflags(mandatory=False)
 
   try:
     ctx.load("try_ifort","waf_tools")
@@ -170,6 +171,17 @@ def configure(ctx):
   # rpath
   ctx.env.append_value("RPATH",ctx.env.PREFIX+"/lib")
 
+  # debug
+  ctx.start_msg("compile with debug option")
+  if ctx.options.debug:
+    ctx.env.FCFLAGS_fpic.append("-g")
+    ctx.env.FCFLAGS.append("-g")
+    ctx.env.CFLAGS_fpic.append("-g")
+    ctx.env.CFLAGS.append("-g")
+    ctx.end_msg("ON")
+  else:
+    ctx.end_msg("OFF")
+  
   #configure pmc
   ctx.env.has_pmc = False
   ctx.env.silent_pmc = True

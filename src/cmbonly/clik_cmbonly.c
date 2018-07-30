@@ -7,7 +7,7 @@
 void plik_cmbonly_extra_free_();
 void plik_cmbonly_extra_lkl_(double*,double*);
 void plik_cmbonly_extra_only_one_(int*);
-void plik_cmbonly_extra_init_(char*,int*,int*,int*,int*,int*,int*,int*,int*,int*,int*);
+void plik_cmbonly_extra_init_(char*,int*,int*,int*,int*,int*,int*,int*,int*,int*,int*,int*);
 
 typedef struct {
   char tmpdir[800];
@@ -43,7 +43,7 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
   version = cldf_readint(df,"cmbonly_version",err);
   
   forwardError(*err,__LINE__,NULL);
-  testErrorRet(version!=18,-132,"cmbonly plik <v17 not supported anymore",*err, __LINE__,NULL);
+  testErrorRet(version<18,-132,"cmbonly plik <v17 not supported anymore",*err, __LINE__,NULL);
   plik_cmbonly_extra_only_one_(&bok);
   testErrorRet(bok!=0,-100,"plik_cmbonly already initialized",*err,__LINE__,NULL);
   // get data and change dir
@@ -83,8 +83,8 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
     forwardError(*err,__LINE__,NULL);
   }
     
-  plik_cmbonly_extra_init_(dir_data,&ldd,&use_tt, &use_ee, &use_te,&bin_min_tt,&bin_max_tt,&bin_min_te,&bin_max_te,&bin_min_ee,&bin_max_ee);
-
+  plik_cmbonly_extra_init_(dir_data,&ldd,&use_tt, &use_ee, &use_te,&bin_min_tt,&bin_max_tt,&bin_min_te,&bin_max_te,&bin_min_ee,&bin_max_ee,&version);
+  
   cldf_external_cleanup(directory_name,pwd,err);  
   forwardError(*err,__LINE__,NULL);
   

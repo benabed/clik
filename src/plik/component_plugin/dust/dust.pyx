@@ -93,14 +93,14 @@ gal545_2017_defs = {"gal545_abs" : "1",
                     "gal545_l_pivot" : "200",
                     "gal545_A_100" : "7",
                     "gal545_A_143" : "9",
-                    "gal545_A_143217" : "20",
+                    "gal545_A_143_217" : "20",
                     "gal545_A_217" : "83",
                   }
 
 gal545_2017_rename = {"gal545_A_217" : "A_cnoise_217_217_TT",
                       "gal545_A_100" : "A_cnoise_100_100_TT",
                       "gal545_A_143" : "A_cnoise_143_143_TT",
-                      "gal545_A_143_217" : "A_cnoise_143_217_217_TT",
+                      "gal545_A_143_217" : "A_cnoise_143_217_TT",
                       "gal545_abs" : "cnoise_abs",
                       "gal545_l_pivot" : "cnoise_l_pivot"}
               

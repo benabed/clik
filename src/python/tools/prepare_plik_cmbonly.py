@@ -20,7 +20,7 @@ def main(argv):
   hascl = nm.array(pars.bool_array.hascl,dtype=nm.int)
   
   lkl_grp = php.add_lkl_generic(root_grp,"plik_cmbonly",1,hascl,2508,30)
-  lkl_grp["cmbonly_version"]=18
+  lkl_grp["cmbonly_version"]=pars.int(default=18).version
   php.add_external_data(osp.realpath(pars.data),lkl_grp,tar=bool(pars.int(default=1).include))
   #assert os.system("cd %s;tar cvf data.tar *"%dr)==0
   #f=open(osp.join(dr,"data.tar"),"r")

@@ -7,7 +7,7 @@ import numpy as nm
 import re
 
 def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
-  if bins==None:
+  if bins is None:
     nbins = 0
   else:
     bins.shape=(-1,(lmax+1-lmin)*nm.sum(hascl))
@@ -171,6 +171,16 @@ def add_totcalP_component(lkl_grp,calname,position=-1):
   typ = "totcalP"
   agrp = add_component(lkl_grp,typ,position)
   agrp["calnameP"] = calname
+  return agrp
+def add_totcalTP_component(lkl_grp,calname,position=-1):
+  typ = "totcalTP"
+  agrp = add_component(lkl_grp,typ,position)
+  agrp["calnameTP"] = calname
+  return agrp
+def add_totcalPP_component(lkl_grp,calname,position=-1):
+  typ = "totcalPP"
+  agrp = add_component(lkl_grp,typ,position)
+  agrp["calnamePP"] = calname
   return agrp
 
 
@@ -579,7 +589,7 @@ def set_criterion(lkl_grp,typ,**extra):
   
 def build_tensormat(rq ,mask=None):
   n = len(rq)
-  if mask==None:
+  if mask is None:
     mask = nm.ones((n,n))
   M = nm.zeros((n**2,n**2))
   for i in range(n):
@@ -641,7 +651,6 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
       color = None
     try:
       data = hgrp["component_%d/template"%i][:]
-      
     except Exception as e:
       data = None
     if lmin==-1:
@@ -660,7 +669,14 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     if data is not None:
       kargs["data"]=data
     a = cmpr(*args,**kargs)
+    try:
+      component_name = hgrp["component_%d/component_name"%i]
+      a.set_name(component_name)
+    except Exception,e:
+      pass
+    
     prms += [a]
+
   return prms  
 
 def calTP_from_smica(dffile):
@@ -677,30 +693,48 @@ def calTP_from_smica(dffile):
   hgrp = fi["clik/lkl_0"]
   nc = hgrp.attrs["n_component"]
   fnd=0
-  TP = {"T":"","P":""}
+  TP = {"T":"","P":"","TP":"","PP":""}
   for i in range(1,nc):
     compot = hgrp["component_%d"%i].attrs["component_type"]
     if compot == "totcal":
-      TP["T"] = hgrp["component_%d"%i].attrs["calname"]
+      TP["T"] = (hgrp["component_%d"%i].attrs["calname"])
       fnd+=1
     if compot == "totcalP":
-      TP["P"] = hgrp["component_%d"%i].attrs["calnameP"]
+      TP["P"] = (hgrp["component_%d"%i].attrs["calnameP"])
       fnd+=1
-    if fnd==2:
+    if compot == "totcalTP":
+      TP["TP"] = (hgrp["component_%d"%i].attrs["calnameTP"])
+      fnd+=1
+    if compot == "totcalPP":
+      TP["PP"] = (hgrp["component_%d"%i].attrs["calnamePP"])
+      fnd+=1
+    if fnd==4:
       break
   if fnd==0:
     return cal0
+  varpar = [v for v in list(cal0.varpar) + [TP["PP"]] +[TP["TP"]]+ [TP["P"]] +[TP["T"]] if v]
   def cal(vals):
     rqd = cal0(vals[:-fnd])
+    if TP["PP"]!="":
+      calPP = 1./(vals[varpar.index(TP["PP"])])
+      rP = nm.ones((m,m))
+      rP[mt:,mt:] = calP**2
+      rqd = rqd*rP[nm.newaxis,:,:]
+    if TP["TP"]!="":
+      calTP = 1./(vals[varpar.index(TP["TP"])])
+      rP = nm.ones((m,m))
+      rP[:mt,mt:] = calP
+      rP[mt:,:mt] = calP
+      rqd = rqd*rP[nm.newaxis,:,:]
     if TP["P"]:
-      calP = 1./(vals[-fnd])
+      calP = 1./(vals[varpar.index(TP["P"])])
       rP = nm.ones((m,m))
       rP[:mt,mt:] = calP
       rP[mt:,:mt] = calP
       rP[mt:,mt:] = calP**2
       rqd = rqd*rP[nm.newaxis,:,:]
     if TP["T"]:
-      calT = 1./vals[-1]
+      calT = 1./vals[varpar.index(TP["T"])]
       rqd = rqd*calT**2
     return rqd
   cal.varpar = [v for v in list(cal0.varpar) + [TP["P"]] +[TP["T"]] if v]
@@ -849,7 +883,8 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
   #print hascl
   nb = fi["clik/lkl_0/nbins"]/hascl.sum()
   m2 = m*m
-  ordr =  nm.concatenate([nm.arange(nb)[msk[iv+jv*m::m2]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
+  msk.shape = (-1,m,m)
+  ordr =  nm.concatenate([nm.arange(nb)[msk[:,iv,jv]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
   if jac==True:
     Jt = []
     ps = ordr//m2
@@ -890,17 +925,78 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
     
     return ordr,nm.concatenate(Jt)
     #return ordr,nm.array([ordr/m2==i for i in range(nb)],dtype=nm.int)
+  return ordr
   fi.close()
+
+def bffile_from_cosmomc(dffile,bffile):
+  import hpy
+  import lkl
+  cls = nm.loadtxt(bffile[0])
+  fi = hpy.File(dffile)
+  ridx = [1,3,4,2]
+  hascl = fi["clik/lkl_0/has_cl"]
+  lmax = fi["clik/lkl_0/lmax"]
+  mcls = []
+  for i in range(4):
+    if hascl[i]:
+      lcls = nm.zeros(lmax+1)
+      #print i, ridx[i]
+      lcls[2:] = cls[:lmax+1-2,ridx[i]]*2*nm.pi/((cls[:lmax+1-2,0]+1.)*cls[:lmax+1-2,0])
+      mcls += [lcls]
+    
+  for i in range(4,6):
+    if hascl[i]:
+      lcls = nm.zeros(lmax+1)
+      mcls += [lcls]
+ 
+  fmin = open(bffile[1])
+  fmintxt = fmin.readlines()
+
+  fpar = open(bffile[2])
+  extra = []
+  
+  for l in fpar:
+    fnd = False
+    parname = l.strip().split()
+    if parname:
+      parname = parname[0]
+    else:
+      continue
+    #print "--->",parname
+    for lmin in fmintxt:
+      #print "test",lmin
+      if len(lmin.strip().split())<3:
+        continue
+      if parname == lmin.strip().split()[2]:
+        extra+=[float(lmin.strip().split()[1])]
+        #print parname, extra[-1]
+        fnd = True
+    assert fnd,"cannot find %s"%parname
+
+  if len(bffile)==4:
+    mpars = bffile[3]
+    for ii,nms in enumerate(lkl.clik(dffile).extra_parameter_names):
+      if nms in mpars:
+        extra[ii] = float(mpars[nms])
+  return nm.concatenate(mcls+[extra])
+
 
 def get_bestfit_and_cl(dffile,bffile):
   from . import hpy
   from . import lkl
 
   fi = hpy.File(dffile)
+  #print bffile
   if not bool(bffile):
+    #print "1"
     bff = php.get_selfcheck(dffile)[0]
-  else:
+  elif isinstance(bffile,str):
+    #print "2"
     bff = nm.loadtxt(bffile)
+  else:
+    #print "3"
+    bff = bffile_from_cosmomc(dffile,bffile)
+  #print "there"
   lmax = fi["clik/lkl_0/lmax"]
   hascl = fi["clik/lkl_0/has_cl"]
   cls = nm.zeros((6,lmax+1))
@@ -1003,7 +1099,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   for p in prms:
     pvec = [bestfit[nn] for nn in p.varpar]
     oq += [p(pvec)]
-    nrms += [p.__class__.__name__]
+    nrms += [p.get_name()]
   oq = nm.array(oq)
   oq = nm.sum(oq,0)
   print("generate fg")
@@ -1020,11 +1116,34 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   return maps
 
 
+def get_binned_ell(dffile):
+  import hpy
+  import parobject as php
+  fi = hpy.File(dffile)
+  lmin = fi["clik/lkl_0/lmin"]
+  lmax = fi["clik/lkl_0/lmax"]
+  ell = n.arange(lmin,lmax+1)
+  bns = php.read_bins(fi["clik/lkl_0"])
+  return nm.dot(bns,ell)
 
+def get_rqh(dffile):
+  import hpy
+  fi = hpy.File(dffile)
+  rqh = fi["clik/lkl_0/Rq_hat"]
+  hascl = fi["clik/lkl_0/has_cl"]
+  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
+  me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
+  mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
+  m = mt+me+mb
+  rqh.shape=(nb,m,m)
+  return rqh
+    
 def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   from . import hpy
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
+
   fi = hpy.File(dffile)
   cal = calTP_from_smica(dffile)
   cvec = [bestfit[nn] for nn in cal.varpar]
@@ -1049,7 +1168,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
       bet = nm.zeros((oq[-1].shape[0],rqh.shape[1],rqh.shape[1]))
       bet[:,:oq[-1].shape[1],:oq[-1].shape[1]]=oq[-1]
       oq[-1]=bet
-    nrms += [p.__class__.__name__]
+    nrms += [p.get_name()]
   oq = nm.array(oq)
   blmin = fi["clik/lkl_0/bin_lmin"]
   blmax = fi["clik/lkl_0/bin_lmax"]
@@ -1099,7 +1218,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   
 def full_calib(dffile,bestfit):
   from . import hpy
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   
   fi = hpy.File(dffile)
@@ -1242,7 +1361,7 @@ def get_lkl_coadd(dffile,bestfit,cal=True,rcal=False,all=False):
   from . import hpy
   
   tm, tVec,eVec,Jt_siginv_J,good = best_fit_cmb(dffile,bestfit,cal=cal,rcal=rcal,goodmask=True)
-  if isinstance(bestfit,str):
+  if isinstance(bestfit,str) or isinstance(bestfit,tuple) or not bool(bestfit):
     bestfit,cls = get_bestfit_and_cl(dffile,bestfit)
   fi = hpy.File(dffile)
   lmin = fi["clik/lkl_0/lmin"]
@@ -1264,7 +1383,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
-  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_full = lkl(bffile_from_cosmomc(dffile,bestfit))
   lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
@@ -1278,7 +1397,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
-  lkl_full = lkl(nm.loadtxt(bestfit))
+  lkl_full = lkl(bffile_from_cosmomc(dffile,bestfit))
   lkl_add = get_lkl_coadd(dffile,bestfit,all=True)
   n_add = len(lkl_add[1])
   lkl_add=lkl_add[-1]
@@ -1373,7 +1492,7 @@ def mask_frq(dffile,lmins,lmaxs):
   return nnmsk,kp
 
 
-def conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
+def __conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
   lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
   Yo = -rq-nm.sum(oqb,0)+rqh
   nmsk,kp = mask_frq(dffile,lmins,lmaxs)
@@ -1398,6 +1517,103 @@ def conditonal(dffile, bestfit,lmins, lmaxs,lmins_cond, lmaxs_cond):
   mu_hat = mu + nm.dot(M_cross_dot_M_cond_inv,mu_b)
 
   
+def _cutarr(arrin,olmin,olmax,lmin,lmax):
+  arr.shape=(olmax+1-olmin,-1)
+  narr = arr[lmin-olmin:lmax+1-olmin]
+  return narr.flat[:]
+
+def _lrangemat(nms,dct,hascl = [1,0,0]):
+  import re
+  if (len(nms.strip().split()))==1:
+    lms = list(nms.strip())
+  else:
+    lms = nms.strip().split()
+  nc = len(lms)
+  tt = nm.sum(hascl)
+  lmins = - nm.ones((nc*tt,nc*tt))
+  lmaxs = - nm.ones((nc*tt,nc*tt))
+  for k in dct:
+    A,B = re.split("x|X",k)
+    exA = 0
+    tA = A
+    if A[-1]=="E":
+      exA = nc*hascl[0]
+      tA = A[:-1]
+    if A[-1]=="B":
+      exA = nc*hascl[0]+nc*hascl[1]
+      tA = A[:-1]
+    if A[-1]=="T":
+      tA = A[:-1]
+
+    exB = 0
+    tB = B
+    if B[-1]=="E":
+      exB = nc*hascl[0]
+      tB = B[:-1]
+    if B[-1]=="B":
+      exB = nc*hascl[0]+nc*hascl[1]
+      tB = B[:-1]
+    if B[-1]=="T":
+      tB = B[:-1]
+    iA = lms.index(tA)
+    iB = lms.index(tB)
+
+    lmins[iA+exA,iB+exB] = dct[k][0]
+    lmaxs[iA+exA,iB+exB] = dct[k][1]
+    lmins[iB+exA,iA+exB] = dct[k][0]
+    lmaxs[iB+exA,iA+exB] = dct[k][1]
+    lmins[iA+exB,iB+exA] = dct[k][0]
+    lmaxs[iA+exB,iB+exA] = dct[k][1]
+    lmins[iB+exB,iA+exA] = dct[k][0]
+    lmaxs[iB+exB,iA+exA] = dct[k][1]
+  return lmins,lmaxs
 
 
 
+  
+def conditional(x,x_bar,sigma,mask):
+  xa = x_bar[mask]
+  nmask = mask==False
+  xb = x_bar[nmask]
+  sigma_aa = sigma[mask,:][:,mask]
+  sigma_bb = sigma[nmask,:][:,nmask]
+  sigma_ab = sigma[mask,:][:,nmask]
+  sigma_bb_inv = nm.linalg.inv(sigma_bb)
+  sigma_ab_DOT_sigma_bb_inv = nm.dot(sigma_ab,sigma_bb_inv)
+  x_tilde = xa + nm.dot(sigma_ab_DOT_sigma_bb_inv, (x[nmask]-xb))
+  sigma_tilde = sigma_aa - nm.dot(sigma_ab_DOT_sigma_bb_inv,sigma_ab.T)
+
+  return x_tilde,sigma_tilde
+
+def prep_cond(dffile,bestfit,i,j):
+  import hpy
+  
+  lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
+
+  rqt = rq + nm.sum(oqb,0)
+  fi = hpy.File(dffile)
+  siginv = fi["clik/lkl_0/criterion_gauss_mat"]
+  oo = ordering_from_smica(dffile,False)
+  siginv.shape=(len(oo),len(oo))
+  sig = nm.linalg.inv(siginv)
+  rqz = rqt*0
+  rqz[:,i,j] = nm.arange(len(lm))+1
+  tk0 = rqz.flat[oo]
+  msk = tk0 !=0
+  lmk = lm[tk0[msk].astype(nm.int)-1]
+  return rqh.flat[oo],rqt.flat[oo],sig,msk,lmk
+
+
+
+def cond_freq(dffile,bestfit,i,j):
+  pcond = prep_cond(dffile,bestfit,i,j)
+  lm = pcond[-1]
+  cond = conditional(*pcond[:-1])
+  delta = pcond[0][msk]-cond[0],cond[1].diagonal()**.5
+
+def cond_coadd(dffile,bestfit,i):
+  lm,cls,baderr,siginv = best_fit_cmb(dffile,bestfit)
+  lm0 = nm.array(lm)*0
+  lm0[i]=1
+  msk = lm0.flat[:]==1
+  cond = conditional()

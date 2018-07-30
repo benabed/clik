@@ -262,6 +262,13 @@ def main_v2(argv):
       
   php.add_external_data(dr,lkl_grp,tar=True)
 
+  if "default_name" in pars:
+    name = pars.str_array.default_name
+    loc = pars.float_array.default_val
+    assert len(name)==len(loc),"name and loc have different sizes"
+    php.add_default(hf["clik"],name,loc,nuisance_pars)
+  
+
   hf.close()
 
   shutil.rmtree(dr)
