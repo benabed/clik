@@ -8,8 +8,8 @@ import sys
 import os.path as osp
 import re
 
-clik_version = "8.1b2"
-plc_version = "1.2b1"
+clik_version = "XXX"
+plc_version = "XXX"
 
 sys.path+=["waf_tools"]
 import autoinstall_lib as atl
@@ -78,8 +78,8 @@ def options(ctx):
   options_cython(ctx)
   
   grp=optparse.OptionGroup(ctx.parser,"Plugins options")
-  grp.add_option("--no_bopix",action="store_true",default=True,help="do not build bopix")
-  grp.add_option("--bopix",action="store_true",default=False,help="build bopix")
+  #grp.add_option("--no_bopix",action="store_true",default=True,help="do not build bopix")
+  #grp.add_option("--bopix",action="store_true",default=False,help="build bopix")
   grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
   grp.add_option("--wmap_src",action="store",default="",help="location of wmap likelihood sources")
   grp.add_option("--wmap_7_install",action="store_true",default=False,help="download wmap 7 likelihood for me")
@@ -204,7 +204,7 @@ def configure(ctx):
   ctx.env.has_lenslike = not (ctx.options.no_lenslike or not osp.exists("src/lenslike"))
   
   #bopix
-  ctx.env.has_bopix = not ((not ctx.env.bopix) or ctx.options.no_bopix or not osp.exists("src/bopix"))
+  #ctx.env.has_bopix = not ((not ctx.env.bopix) or ctx.options.no_bopix or not osp.exists("src/bopix"))
   
   #lowlike
   ctx.env.has_lowlike =   not (ctx.options.no_lowlike or not osp.exists("src/lowlike"))
@@ -226,22 +226,22 @@ def configure(ctx):
 
   #egfs 
   #ctx.env.has_egfs = osp.exists("src/egfs")
-  ctx.env.has_egfs = False
+  #ctx.env.has_egfs = False
 
   #bflike
   ctx.env.has_bflike = osp.exists("src/bflike")
 
   #bicep
-  ctx.env.has_bicep = osp.exists("src/bicep") and False
+  #ctx.env.has_bicep = osp.exists("src/bicep") and False
 
   #mspec
   ctx.env.has_mspec = osp.exists("src/mspec")
 
-  #mspec
-  ctx.env.has_momento = osp.exists("src/momento")
+  #momento
+  #ctx.env.has_momento = osp.exists("src/momento")
 
   #lollipop
-  ctx.env.has_lollipop = osp.exists("src/lollipop")
+  #ctx.env.has_lollipop = osp.exists("src/lollipop")
 
   # wmap
   if (ctx.options.wmap_7_install or ctx.options.wmap_9_install or ctx.options.wmap_install) and not ctx.options.wmap_src :
@@ -362,9 +362,9 @@ def build(ctx):
     os.mkdir("%s/share/clik"%ctx.env["PREFIX"])
 
   # install data
-  if ctx.env.has_egfs:
-    ctx.install_files('${PREFIX}/share/clik/egfs', 
-                    'src/egfs/egfs_data/clustered_150.dat src/egfs/egfs_data/clustered_flat.dat src/egfs/egfs_data/ksz_ov.dat src/egfs/egfs_data/ksz_patchy.dat src/egfs/egfs_data/tsz.dat src/egfs/egfs_data/clustered_1108.4614.dat')
+  #if ctx.env.has_egfs:
+  #  ctx.install_files('${PREFIX}/share/clik/egfs', 
+  #                  'src/egfs/egfs_data/clustered_150.dat src/egfs/egfs_data/clustered_flat.dat src/egfs/egfs_data/ksz_ov.dat src/egfs/egfs_data/ksz_patchy.dat src/egfs/egfs_data/tsz.dat src/egfs/egfs_data/clustered_1108.4614.dat')
 
   for plg in ctx.env.PLG:
     data = getattr(ctx.env,"PLG_%s_DATA"%plg)
@@ -409,12 +409,12 @@ def dist(ctx):
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
   dist_list += "src/mspec/* "
-  dist_list += "src/lollipop/* "
+  #dist_list += "src/lollipop/* "
   dist_list += "src/bflike/* "
   dist_list += "src/cmbonly/* "
-  dist_list += "src/ftau/* "
-  dist_list += "src/simbal/* "
-  dist_list += "src/momento/* "
+  #dist_list += "src/ftau/* "
+  #dist_list += "src/simbal/* "
+  #dist_list += "src/momento/* "
   dist_list += "src/simall/* "
   #dist_list += "src/bicep/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
@@ -596,7 +596,8 @@ def options_cython(ctx):
 def configure_numpy(ctx):
   import autoinstall_lib as atl
   atl.configure_python_module(ctx,"numpy","http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz","numpy-1.6.0")
-  import numpy
+  import imp
+  numpy = imp.load_module("numpy",*imp.find_module("numpy"))
   ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
 
 def configure_pyfits(ctx):

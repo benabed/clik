@@ -447,12 +447,12 @@ def add_gcal_component_pars(lkl_grp,pars):
 def setnames(agrp,names):
   agrp.attrs["names"] = php.pack256(*names) 
   
-def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering,position=-1):
-  from . import egfs
-  agrp = add_component(lkl_grp,"egfs",position)
-  egfs.add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
-  agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
-  return agrp
+##def add_egfs_component(lkl_grp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering,position=-1):
+##  from . import egfs
+##  agrp = add_component(lkl_grp,"egfs",position)
+##  egfs.add_xxx(agrp,vpars,defaults,values,lmin,lmax,template_names,tpls,cib_decor_clustering)
+##  agrp.attrs["A_cmb"] = lkl_grp.attrs["A_cmb"]
+##  return agrp
 
 def add_from_pars(lkl_grp,parfile):
   from . import miniparse
@@ -668,6 +668,8 @@ def parametric_from_smica_group(hgrp,lmin=-1,lmax=-1):
     kargs = {"rename":rename,"defs":defdir,"color":color}
     if data is not None:
       kargs["data"]=data
+    #print (args)
+    #print (kargs)
     a = cmpr(*args,**kargs)
     try:
       component_name = hgrp["component_%d/component_name"%i]
@@ -685,7 +687,7 @@ def calTP_from_smica(dffile):
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -745,7 +747,7 @@ def calTP0_from_smica(dffile):
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -799,7 +801,7 @@ def beamTP_from_smica(dffile):
   
   fi = hpy.File(dffile)
   hascl = fi["clik/lkl_0/has_cl"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -881,7 +883,7 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
   m =  mB + mP*hascl[2]
   #print mT,mP,mE,mB,m
   #print hascl
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   m2 = m*m
   msk.shape = (-1,m,m)
   ordr =  nm.concatenate([nm.arange(nb)[msk[:,iv,jv]==1]*m2+iv*m+jv for iv,jv in zip(ord[::2],ord[1::2])])
@@ -929,8 +931,8 @@ def ordering_from_smica(dffile,jac=True,omsk=None):
   fi.close()
 
 def bffile_from_cosmomc(dffile,bffile):
-  import hpy
-  import lkl
+  from . import hpy
+  from . import lkl
   cls = nm.loadtxt(bffile[0])
   fi = hpy.File(dffile)
   ridx = [1,3,4,2]
@@ -1059,7 +1061,7 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
   hascl = fi["clik/lkl_0/has_cl"]
   lmin = fi["clik/lkl_0/lmin"]
   lmax = fi["clik/lkl_0/lmax"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -1117,8 +1119,8 @@ def simulate_chanels(dffile,bestfit,cls,calib=True,nside=2048,all=False):
 
 
 def get_binned_ell(dffile):
-  import hpy
-  import parobject as php
+  from . import hpy
+  from . import parobject as php
   fi = hpy.File(dffile)
   lmin = fi["clik/lkl_0/lmin"]
   lmax = fi["clik/lkl_0/lmax"]
@@ -1127,11 +1129,11 @@ def get_binned_ell(dffile):
   return nm.dot(bns,ell)
 
 def get_rqh(dffile):
-  import hpy
+  from . import hpy
   fi = hpy.File(dffile)
   rqh = fi["clik/lkl_0/Rq_hat"]
   hascl = fi["clik/lkl_0/has_cl"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -1176,7 +1178,7 @@ def get_binned_calibrated_model_and_data(dffile,bestfit,cls=None):
   hascl = fi["clik/lkl_0/has_cl"]
   lmin = fi["clik/lkl_0/lmin"]
   lmax = fi["clik/lkl_0/lmax"]
-  nb = fi["clik/lkl_0/nbins"]/hascl.sum()
+  nb = fi["clik/lkl_0/nbins"]//hascl.sum()
   mt = fi["clik/lkl_0/m_channel_T"]*hascl[0]
   me = fi["clik/lkl_0/m_channel_P"]*hascl[1]
   mb = fi["clik/lkl_0/m_channel_P"]*hascl[2]
@@ -1394,7 +1396,7 @@ def do_all_chi2(dffile,bestfit,npar=0):
   print ("coadd lkl : %g (%g deg) -> %g PTE %g"%(lkl_add,n_add-nextra-npar, -lkl_add*2./(n_add-nextra-npar), chi2.sf(lkl_add*-2,n_add-nextra-npar)))
 
 def do_all_chi2(dffile,bestfit,npar=0):
-  import clik
+  from . import clik
   from scipy.stats.distributions import chi2
   lkl = clik.clik(dffile)
   lkl_full = lkl(bffile_from_cosmomc(dffile,bestfit))
@@ -1416,7 +1418,7 @@ def get_unbinned(dffile):
   return nm.dot(bns.T,nm.linalg.inv(nm.dot(bns,bns.T)))
 
 def change_cls(dffile,bestfit,cls):
-  import clik
+  import  clik
   clo = nm.loadtxt(bestfit)
   clo[:len(clik.clik(dffile).cc.get_extra_parameter_names())] = cls
   return cls
@@ -1586,7 +1588,7 @@ def conditional(x,x_bar,sigma,mask):
   return x_tilde,sigma_tilde
 
 def prep_cond(dffile,bestfit,i,j):
-  import hpy
+  from . import hpy
   
   lm,oqb,nrms,rqh,rq = get_binned_calibrated_model_and_data(dffile,bestfit)
 

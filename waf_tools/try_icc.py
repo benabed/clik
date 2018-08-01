@@ -38,9 +38,9 @@ def do_icc(ctx):
     ctx.env.append_value("CCFLAGS_cc_omp","-openmp")
   try:
     #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
-    llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.CC[0]," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
+    llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.c"%(ctx.env.CC[0]," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
     #print "RET",llgo,llge
-    L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
+    L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("icc" in ll.lower()) or ("intel" in ll.lower())])
     l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
     rL = set()
     rl = set()
@@ -86,6 +86,13 @@ def do_clang(ctx):
     errmsg="failed",msg="Compile a test code with clang",
     mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
   ctx.env["CCFLAGS_cc_omp"]=[]
+  # try if omp is installed somewhere !
+  try:
+    ctx.env["CCFLAGS_cc_omp"]=['-Xpreprocessor','-fopenmp','-lomp']
+    ctx.check_cc(lib="omp", libpath = "/usr/local/lib",rpath="/usr/local/lib" ,uselib_store="cc_omp",mandatory=1,uselib="cc_omp")
+  except Exception as e:
+    ctx.env["CCFLAGS_cc_omp"]=[]
+    
   #ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
 
 def do_gcc(ctx):

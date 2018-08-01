@@ -44,27 +44,42 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
 
   // apply wl and binning
   one=1;
+  int rn =0;
   if (p_pay->wl==NULL) {
     wl0 = &one;
     inc = 0;
   } else {
     wl0 = p_pay->wl;
     inc = 1;
+    rn = 1;
   }
   
-  //_DEBUGHERE_("","");
-  wl=wl0;
-  for(il=0;il<p_pay->nell;il++) {
-    int ip;
-    int im1,im2;
-    ip = il * ndet * ndet;
+  if ((rn==0) && (fabs((p_pay->unit-1))>1e-7)) {
+    rn = 1;
+  }
 
-    for(im1=0;im1<ndet;im1++) {
-      for(im2=0;im2<ndet;im2++) {
-        p_pay->rq[il*ndet*ndet+im1*ndet+im2] = p_pay->rq[il*ndet*ndet+im1*ndet+im2] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
+  if (rn==0) {
+    for(im=0;im<ndet;im++) {
+      if (fabs(p_pay->A[im]-1)>1e-7) {
+        rn=1;
       }
     }
-    wl+=inc;
+  }
+  //_DEBUGHERE_("%d",rn);
+  if (rn==1) {
+    #pragma parallel for private(il)
+    for(il=0;il<p_pay->nell;il++) {
+      int ip;
+      int im1,im2;
+      ip = il * ndet * ndet;
+
+      for(im1=0;im1<ndet;im1++) {
+        for(im2=0;im2<ndet;im2++) {
+          p_pay->rq[il*ndet*ndet+im1*ndet+im2] = p_pay->rq[il*ndet*ndet+im1*ndet+im2] * *wl * p_pay->unit * p_pay->A[im1]*p_pay->A[im2];  
+        }
+      }
+      wl+=inc;
+    }
   }
   //_DEBUGHERE_("%g %g %g %g",egfs_pay->A[0],egfs_pay->A[1],egfs_pay->A[2],egfs_pay->A[3])
   //_DEBUGHERE_("%g %g %g",egfs_pay->rq[0],egfs_pay->rq[2],egfs_pay->unit);
@@ -88,6 +103,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         int il,iq,if1,if2,bb;
         double w;
         bb=0;
+        #pragma parallel for private(iq,il,if1,if2)
         for(iq=0;iq<nbns;iq++) {
           for(il=p_pay->bi[iq];il<p_pay->bo[iq];il++) {
             w = p_pay->wbins[bb];
@@ -103,6 +119,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
       }
     } else {
       int if1,if2;
+      #pragma parallel for private(il,if1,if2)
       for(il=0;il<p_pay->nell;il++) {
         for(if1=0;if1<ndet;if1++) {
           for(if2=0;if2<ndet;if2++) {
@@ -126,6 +143,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         int il,iq,if1,if2,bb,b0;
         double w,acc;
         b0=0;
+        #pragma parallel for private(il,iq,if1,if2)
         for(iq=0;iq<nbns;iq++) {
           for(if1=0;if1<ndet;if1++) {
             for(if2=0;if2<ndet;if2++) {
@@ -147,6 +165,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
       }
     } else {
       int if1,if2;
+      #pragma parallel for private(il,if1,if2)
       for(il=0;il<p_pay->nell;il++) {
         for(if1=0;if1<ndet;if1++) {
           for(if2=0;if2<ndet;if2++) {

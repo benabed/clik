@@ -145,16 +145,22 @@ cdef class parametric:
       p_detlist[i] = detlist[i]
 
     i = 0
+    tmp_nk = []
+    tmp_v =[]
     for k,v in defs.items():
       nk = rename.get(k,k)
-      defkey[i] = nk
-      defvalue[i] = v
+      tmp_nk += [str.encode(nk)]
+      defkey[i] = tmp_nk[-1]
+      tmp_v += [str.encode(v)]
+      defvalue[i] = tmp_v[-1]
       i+=1
     
     nvar = len(vars)
+    tmp_key = []
     for i in range(nvar):
-      nk = rename.get(vars[i],vars[i])
-      key[i] = nk
+      tmp_key += [str.encode(rename.get(vars[i],vars[i]))]
+      key[i] = tmp_key[-1]
+
 
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
@@ -225,8 +231,10 @@ cdef class parametric:
 
     parametric_dnofail(self.celf,int(dnofail))
     prs = vars
+    #print prs
     if not dnofail:
       prs = [p for p in vars if self.has_parameter(p)]
+      #print prs
       if len(prs)!= len(vars):
         parametric_free(<void**>&(self.celf))
         self.__init__(detlist,prs,lmin,lmax,defs,False,color,voidmask,*other)
@@ -239,7 +247,7 @@ cdef class parametric:
     _err = NULL
     err = &_err
     
-    nk = self.rename.get(key,key)
+    nk = str.encode(self.rename.get(key,key))
     res = parametric_get_default(self.celf,nk, err)
     er=doError(err)
     if er:
@@ -249,6 +257,7 @@ cdef class parametric:
 
   def has_parameter(self,key):
     try:
+      #print key
       self.get_default_value(key)
       return True
     except Exception,e:
@@ -337,16 +346,22 @@ cdef class parametric_template(parametric):
       p_detlist[i] = detlist[i]
 
     i = 0
+    tmp_nk = []
+    tmp_v =[]
     for k,v in defs.items():
       nk = rename.get(k,k)
-      defkey[i] = nk
-      defvalue[i] = v
+      tmp_nk += [str.encode(nk)]
+      defkey[i] = tmp_nk[-1]
+      tmp_v += [str.encode(v)]
+      defvalue[i] = tmp_v[-1]
       i+=1
-    
+        
     nvar = len(vars)
+    tmp_key = []
     for i in range(nvar):
-      nk =  rename.get(vars[i],vars[i])
-      key[i] = nk
+      tmp_key += [str.encode(rename.get(vars[i],vars[i]))]
+      key[i] = tmp_key[-1]
+
 
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
@@ -415,7 +430,7 @@ cdef class parametric_pol(parametric):
     
     _err = NULL
     err = &_err
-    
+  
     ndef = len(defs)
     ndet_T = len(detlist_T)
     ndet_P = len(detlist_P)
@@ -426,25 +441,32 @@ cdef class parametric_pol(parametric):
       p_detlist[i+ndet_T] = detlist_P[i]
 
     i = 0
+    tmp_nk = []
+    tmp_v =[]
     for k,v in defs.items():
       nk = rename.get(k,k)
-      defkey[i] = nk
-      defvalue[i] = v
+      tmp_nk += [str.encode(nk)]
+      defkey[i] = tmp_nk[-1]
+      tmp_v += [str.encode(v)]
+      defvalue[i] = tmp_v[-1]
       i+=1
+    
     
     p_has_TEB[0] = int(has_TEB[0])
     p_has_TEB[1] = int(has_TEB[1])
     p_has_TEB[2] = int(has_TEB[2])
 
     nvar = len(vars)
+    tmp_key = []
     for i in range(nvar):
-      nk = rename.get(vars[i],vars[i])
-      key[i] = nk
+      tmp_key += [str.encode(rename.get(vars[i],vars[i]))]
+      key[i] = tmp_key[-1]
 
+    
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
 
-
+    
     if self.initfunc==NULL:
       raise NotImplementedError("Must fill self.initfunc with a valid c function")
       #self.celf = parametric_init(ndet,p_detlist,ndef,defkey,defvalue,nvar,key,lmin,lmax,err)
@@ -510,10 +532,14 @@ cdef class parametric_pol_template(parametric_pol):
       p_detlist[i+ndet_T] = detlist_P[i]
 
     i = 0
+    tmp_nk = []
+    tmp_v =[]
     for k,v in defs.items():
       nk = rename.get(k,k)
-      defkey[i] = nk
-      defvalue[i] = v
+      tmp_nk += [str.encode(nk)]
+      defkey[i] = tmp_nk[-1]
+      tmp_v += [str.encode(v)]
+      defvalue[i] = tmp_v[-1]
       i+=1
     
     p_has_TEB[0] = int(has_TEB[0])
@@ -521,9 +547,11 @@ cdef class parametric_pol_template(parametric_pol):
     p_has_TEB[2] = int(has_TEB[2])
 
     nvar = len(vars)
+    tmp_key = []
     for i in range(nvar):
-      nk = rename.get(vars[i],vars[i])
-      key[i] = nk
+      tmp_key += [str.encode(rename.get(vars[i],vars[i]))]
+      key[i] = tmp_key[-1]
+
 
     self.rename = rename
     self.emaner = dict([(rename[k],k) for k in rename])
@@ -581,14 +609,17 @@ simple_parametric_list = component_list
 def register_plugin(plg,gl,verb):
   import sys
   if verb:
-    print plg
+    print(plg)
+  #print("import %s"%plg)
   mlg =__import__("clik."+plg,fromlist=[plg])
+  #print("done %s"%plg)
   global component_list
   component_list += mlg.component_list
   for cp in mlg.component_list:
+    #print("register %s"%cp)
     setattr(gl,cp,getattr(mlg,cp))
     if verb:
-      print "add %s"%cp
+      print("add %s"%cp)
 
 import sys
 def register_all(gl=sys.modules[__name__],verb=False):
@@ -599,8 +630,8 @@ def register_all(gl=sys.modules[__name__],verb=False):
   for plg in plgs:
     try:
       register_plugin(plg,gl,verb)
-    except Exception,e:
-      print "cannot register %s (%s)"%(plg,e)
+    except Exception as e:
+      print ("cannot register %s (%s)"%(plg,e))
       #print e
       pass
 
@@ -653,7 +684,10 @@ def rename_machine(component, bdefs, rename_func=None,data_dir="",data_path="",d
       def __init__(self,detlist,vars,lmin,lmax,defs={},dnofail=False,color=None,voidmask=None,rename={}):
         rename,bdef = rename_update(defs,vars,rename)
         component.__init__(self,detlist,vars,lmin,lmax,bdef,dnofail,color,voidmask,rename)
-  rmch.__init__ = types.UnboundMethodType(__init__,None,rmch)
+  if sys.version_info[0]==2:
+    rmch.__init__ = types.UnboundMethodType(__init__,None,rmch)
+  else:
+    rmch.__init__ = __init__
   
   return rmch
 
