@@ -189,6 +189,11 @@ void cnoise_compute(parametric *egl, double *Rq, error **err) {
         //Rq[IDX_R(egl,ell,m2,m1)] = Rq[IDX_R(egl,ell,m1,m2)];
     }  
   }
+  free(m1list);
+  free(m2list);
+  free(offlist);
+  free(Alist);
+
   //  for(ell=egl->lmin;ell<=egl->lmax;ell++) {
   //  for(m1=0;m1<egl->nfreq;m1++) {
   //    for(m2=m1;m2<egl->nfreq;m2++) {

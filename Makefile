@@ -75,7 +75,7 @@ COLORS = 1
 ECHO = echo 
 
 
-# what is the openmp option for your C compiler (leave empty to cmpile without openmp)
+# what is the openmp option for your C compiler (leave empty to compile without openmp)
 COPENMP = -fopenmp
 # what is the openmp option for your F90 compiler (leave empty to cmpile without openmp)
 FOPENMP = -openmp

@@ -116,13 +116,13 @@ def build(ctx):
       install_path = ctx.env.BINDIR
       )    
 
-  if osp.exists("src/bicep"):
-    ctx(
-      execrule = injectpath,
-      source = "../bicep/bicep_main.py",
-      target = "bicep_main",
-      install_path = ctx.env.BINDIR
-      )    
+  ##if osp.exists("src/bicep"):
+  ##  ctx(
+  ##    execrule = injectpath,
+  ##    source = "../bicep/bicep_main.py",
+  ##    target = "bicep_main",
+  ##    install_path = ctx.env.BINDIR
+  ##    )    
   if osp.exists("src/mspec"):
     ctx(
       execrule = injectpath,
@@ -130,29 +130,29 @@ def build(ctx):
       target = "mspec_main",
       install_path = ctx.env.BINDIR
       )    
-  if ctx.env.has_momento:
-    ctx(
-      execrule = injectpath,
-      source = "../momento/momento_main.py",
-      target = "momento_main",
-      install_path = ctx.env.BINDIR
-      )    
-    ctx(
-      source = "../momento/momento.py",
-      install_path = "${PYTHONDIR}",
-      target = "momento",
-      install_from=ctx.path.find_dir('../momento'),
-    )
-    ctx(
-      features = "c cshlib pyext",
-      source = "../momento/momento_fast.pyx ../momento/momento_support.c",
-      target  = "momento_fast",
-      includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
-      use = "clik",
-      #uselib = uselib_clik,
-      #cflags = "-fopenmp",
-      install_path = "${PYTHONDIR}"
-    )
+  ##if ctx.env.has_momento:
+  ##  ctx(
+  ##    execrule = injectpath,
+  ##    source = "../momento/momento_main.py",
+  ##    target = "momento_main",
+  ##    install_path = ctx.env.BINDIR
+  ##    )    
+  ##  ctx(
+  ##    source = "../momento/momento.py",
+  ##    install_path = "${PYTHONDIR}",
+  ##    target = "momento",
+  ##    install_from=ctx.path.find_dir('../momento'),
+  ##  )
+  ##  ctx(
+  ##    features = "c cshlib pyext",
+  ##    source = "../momento/momento_fast.pyx ../momento/momento_support.c",
+  ##    target  = "momento_fast",
+  ##    includes = "../"+" ../minipmc/"*(not ctx.env.has_pmc),
+  ##    use = "clik",
+  ##    #uselib = uselib_clik,
+  ##    #cflags = "-fopenmp",
+  ##    install_path = "${PYTHONDIR}"
+  ##  )
 
 
   ###    if (ctx.env.has_f90 and ctx.env.has_egfs):

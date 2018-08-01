@@ -135,12 +135,9 @@ int main(int argc, char **argv) {
     cl_and_pars = read_double_vector(argv[i],ndim,err);
     quitOnError(*err,__LINE__,stderr);
 
-    for (int jj=0;jj<100;jj++) {
-
-
     log_clikid = clik_compute(clikid,cl_and_pars,err);
     quitOnError(*err,__LINE__,stderr);
-    }
+    
     fprintf(stdout,"Log likelihood for file %s : %g\n",argv[i],log_clikid);
     
     free(cl_and_pars);
