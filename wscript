@@ -266,12 +266,13 @@ def configure(ctx):
   
   if not ctx.options.no_pytools:
     # check_python version
-    ctx.start_msg("Check python version")
+    ctx.start_msg("Python version allows for automatic install")
+    vr = sys.version_info[0:3]
     ver = ".".join(str(v) for v in sys.version_info[0:3])
-    if ver[0]==2 and ((ver[1]<7) or (ver[1]==7 and ver[2]<9)):
-      ctx.end_msg("%s (with version <2.7.9, the extra python package will need to be manually installed)"%ver,"YELLOW")
+    if vr[0]==2 and ((vr[1]<7) or (vr[1]==7 and vr[2]<9)):
+      ctx.end_msg("no (%s<2.7.9, the extra python package will need to be manually installed)"%ver,"YELLOW")
     else:
-      ctx.end_msg("%s"%ver)
+      ctx.end_msg("yes (%s)"%ver)
     try:
       configure_numpy(ctx)
       configure_pyfits(ctx)
