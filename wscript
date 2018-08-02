@@ -270,7 +270,7 @@ def configure(ctx):
     vr = sys.version_info[0:3]
     ver = ".".join(str(v) for v in sys.version_info[0:3])
     if vr[0]==2 and ((vr[1]<7) or (vr[1]==7 and vr[2]<9)):
-      ctx.end_msg("no (%s<2.7.9, the extra python package will need to be manually installed)"%ver,"YELLOW")
+      ctx.end_msg("no (%s<2.7.9, the extra python packages will need to be manually installed)"%ver,"YELLOW")
     else:
       ctx.end_msg("yes (%s)"%ver)
     try:

@@ -204,7 +204,7 @@ def getfromurl(fromurl,tofile):
   #if luaf.code!=200 and luaf.code!=None:
   #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
   f=open(tofile,"w")
-  print(luaf.read(), end=' ', file=f)
+  print(luaf.read(), end='', file=f)
   luaf.close()
   f.close()
 
