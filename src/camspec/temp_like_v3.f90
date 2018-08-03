@@ -56,7 +56,7 @@
 
     public like_init,calc_like,CAMSpec_like_version, camspec_beam_mcmc_num, &
         want_spec,camspec_lmins,camspec_lmaxs, make_cov_marged, marge_file_variant,&
-        compute_fg, Nspec,CAMSpec_lmax_foreground,camspec_fiducial_foregrounds,camspec_fiducial_cl, apply_tight_sz_prior,lminX,lmaxX,beam_factor
+        compute_fg, Nspec,CAMSpec_lmax_foreground,camspec_fiducial_foregrounds,camspec_fiducial_cl, apply_tight_sz_prior,lminX,lmaxX,beam_factor,camspec_clean
 
     contains
 
@@ -747,6 +747,47 @@
           end do
       end do
     end subroutine Matrix_inverse_internal
+
+    subroutine camspec_clean()
+        deallocate(lminX)
+        deallocate(lmaxX)
+        deallocate(npt)
+        if (allocated(X_data)) then
+            deallocate(X_data)
+        endif
+        if (allocated(c_inv)) then
+            deallocate(c_inv)
+        endif
+        if (allocated(beam_modes)) then
+            deallocate(beam_modes)
+        endif
+        if (allocated(beam_cov_inv)) then
+            deallocate(beam_cov_inv)
+        endif
+        if (allocated(marge_indices)) then
+            deallocate(marge_indices)
+        endif
+        if (allocated(want_marge)) then
+            deallocate(want_marge)
+        endif
+        if (allocated(marge_indices_reverse)) then
+            deallocate(marge_indices_reverse)
+        endif
+        if (allocated(keep_indices)) then
+            deallocate(keep_indices)
+        endif
+        if (allocated(keep_indices_reverse)) then
+            deallocate(keep_indices_reverse)
+        endif
+        if (allocated(beam_conditional_mean)) then
+            deallocate(beam_conditional_mean)
+        endif
+        if (allocated(beam_cov)) then
+            deallocate(beam_cov)
+        endif
+
+    end subroutine camspec_clean
+
 
 !!    !Just for checking eigenvalues etc. slower than cholesky
 !!    subroutine Matrix_Inverse2(M)

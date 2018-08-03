@@ -94,14 +94,14 @@ subroutine main_CMB
       do i=1,6
         if (has_cl(i)==1) then
           do l=0,lmax(i)
-            read(100,*),cl_and_pars(counter)
+            read(100,*) cl_and_pars(counter)
             counter = counter + 1
           enddo
         endif
       enddo
 
       do i=1,numnames
-        read(100,*),cl_and_pars(counter)
+        read(100,*) cl_and_pars(counter)
         counter = counter + 1
       enddo
       
@@ -168,7 +168,7 @@ subroutine main_lensing
     call getarg(j,clfilename)  
     open(unit=100,file=clfilename,form='formatted')
     do l=1,nl
-      read(100,*),cl_and_pars(l)
+      read(100,*) cl_and_pars(l)
     enddo
 
     lkl = clik_lensing_compute(pself,cl_and_pars)

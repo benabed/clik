@@ -36,6 +36,12 @@ int _set_str(char* ptr, char* val, int mlen) {
 #define _flen_ 100
 
 #ifndef CAMSPEC_V1
+void camspec_extra_free_v3_();
+
+void free_CAMspec_v3(void **none) {
+  camspec_extra_free_v3_();
+}
+
 cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   cmblkl *cing;
   int hk;
@@ -188,7 +194,7 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
   // get some way to count the number of external parameters and pass them...
 
   cing = init_cmblkl(NULL, &CAMspec_lkl, 
-                     &free_CAMspec,
+                     &free_CAMspec_v3,
                      nell,ell,
                      has_cl,ell[nell-1],unit,wl,0,bins,nbins,xdim,err);
   forwardError(*err,__LINE__,NULL);

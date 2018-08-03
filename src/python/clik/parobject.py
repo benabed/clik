@@ -158,7 +158,7 @@ def read_bins(lkl_grp):
     return uncompress_bins(shape,lkl_grp["bin_ws"],lkl_grp["bin_lmin"],lkl_grp["bin_lmax"])
 
 def add_selfcheck(fname,pars):
-  import lkl
+  from . import lkl
   mlkl = lkl.clik(fname)
   res = mlkl(pars)
   del(mlkl)
