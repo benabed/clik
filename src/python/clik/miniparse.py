@@ -1,6 +1,7 @@
 import re
 import numpy as nm
 import os.path as osp
+
 try:
   import pyfits as pf
 except Exception.ImportError as e:

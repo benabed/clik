@@ -1,10 +1,23 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from waflib import Logs
+from waflib import Logs, Utils
+
 import sys
 import os.path as osp
 
+SNIP_FUNCTION = '''
+int main(int argc, char **argv) {
+void (*p)();
+(void)argc; (void)argv;
+p=(void(*)())(%s);
+return !p;
+}'''
+def to_header(**dct):
+  if'header_name'in dct:
+    dct=Utils.to_list(dct['header_name'])
+    return''.join(['#include <%s>\n'%x for x in dct])
+  return''
 
 def add_lib_option(libname,opt,default="/usr/local/",install=True):
   import optparse
@@ -66,8 +79,8 @@ def add_lib(conf,prefix,include,libpath,libname, funcname="",headername="",libs 
   conf.check_cc(lib=libs, libpath = noemptylist(libpath),rpath=noemptylist(libpath) ,uselib_store=libname,mandatory=1,uselib=uselib+[libname],defines=defines,frameworkpath=frameworkpath,framework=framework)
   for fnc in funcname:
     conf.check_cc(
-      errmsg="failed (check whether lib is compiled in 32 or 64bits)",
-      function_name=fnc,header_name=headername,uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework)
+      errmsg="failed",msg="checking for function '%s'"%fnc,
+      fragment=to_header(header_name=headername)+SNIP_FUNCTION%fnc,header_name=headername,uselib=" ".join([libname]+uselib),mandatory=1,frameworkpath=frameworkpath,framework=framework)
     conf.undefine("HAVE_"+fnc.upper())
 
 def add_lib_f90(conf,prefix,include,libpath,libname, funcname="",headername="",libs = [], uselib=[],defines=[],frameworkpath=[],framework=[],flagline=""):
@@ -200,14 +213,21 @@ def getfromurl(fromurl,tofile):
     import urllib2
     urlopen = urllib2.urlopen
   
-  luaf = urlopen(fromurl)
-  #if luaf.code!=200 and luaf.code!=None:
-  #  raise Utils.WscriptError("Cannot install : %d reported error %d"%(luaf.code,where))
-  f=open(tofile,"w")
-  print(luaf.read(), end='', file=f)
-  luaf.close()
-  f.close()
+  try:
+    luaf = urlopen(fromurl)
+    aa = luaf.read()
+    luaf.close()
+  except Exception as e:
+    import subprocess
+    print("curl %s %s"%(fromurl,tofile))
+    aa = subprocess.check_output(["curl",fromurl])
 
+  f=open(tofile,"w")
+
+  print(aa, end='', file=f)
+  
+  f.close()
+  
 def installsmthg_pre(ctx,where,what,whereto="build/"):
 
   from waflib import Utils,Errors
