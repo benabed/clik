@@ -20,7 +20,8 @@ END SUBROUTINE 	plik_cmbonly_EXTRA_only_ONE
 
 SUBROUTINE plik_cmbonly_extra_FREE()
 	USE plik_cmbonly_EXTRA
-	BOK =0
+	!BOK =0
+	! forbid double init. Need more work in the fortran main code to allow that.
 	deallocate(cltt)
 	deallocate(clte)
 	deallocate(clee)
