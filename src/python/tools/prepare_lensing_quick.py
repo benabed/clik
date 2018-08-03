@@ -77,7 +77,7 @@ def main(argv):
   clrf = nm.zeros((1+hascl.sum(),lmax+1))
   ell = clf[:,0][:lmax+1-2]
 
-  llmax = ell[-1]+1
+  llmax = int(ell[-1]+1)
 
   clrf[0,2:llmax] = (clf[:,-1][:lmax+1-2] /  ((ell*(ell+1))*(ell*(ell+1)))) *2*nm.pi
   ii = 1
