@@ -4,7 +4,7 @@ import shutil as shu
 
 try:
   import pyfits as pf
-except Exception.ImportError as e:
+except ImportError as e:
   # try astropy then
   from astropy.io import fits as pf  
 

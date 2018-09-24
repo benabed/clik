@@ -4,7 +4,7 @@ import os.path as osp
 
 try:
   import pyfits as pf
-except Exception.ImportError as e:
+except ImportError as e:
   # try astropy then
   from astropy.io import fits as pf
   

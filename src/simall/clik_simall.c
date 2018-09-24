@@ -45,6 +45,7 @@ double simall_lkl(void* ot, double *pars, error **err) {
       ell=il+2;
       dl=pars[il+offset]*ell*(ell+1)/2/M_PI;
       position = (int) (dl/ft->stepEE);
+      testErrorRetVA(position>ft->nstepsEE,-1233,"multipole EE %d too large (got %g expected <%g)",*err,__LINE__,-1e10,ell,dl,ft->stepEE*ft->nstepsEE);
       res+=ft->probEE[position+il*ft->nstepsEE];
 //      printf("%i %e %i %e\n",ell,pars[il],position,ft->probEE[position+ft->nell*ft->nstepsEE]);
     }
@@ -57,6 +58,7 @@ double simall_lkl(void* ot, double *pars, error **err) {
       ell=il+2;
       dl=pars[il+offset]*ell*(ell+1)/2/M_PI;
       position = (int) (dl/ft->stepBB);
+      testErrorRetVA(position>ft->nstepsBB,-1233,"multipole BB %d too large (got %g expected <%g)",*err,__LINE__,-1e10,ell,dl,ft->stepBB*ft->nstepsBB);
       res+=ft->probBB[position+il*ft->nstepsBB];
 //      printf("%i %e %e %e\n",ell,pars[il],like,res);
     }
@@ -69,6 +71,7 @@ double simall_lkl(void* ot, double *pars, error **err) {
       ell=il+2;
       dl=pars[il+offset]*ell*(ell+1)/2/M_PI;
       position = (int) (dl/ft->stepTE);
+      testErrorRetVA(position>ft->nstepsTE,-1233,"multipole TE %d too large (got %g expected <%g)",*err,__LINE__,-1e10,ell,dl,ft->stepTE*ft->nstepsTE);
       res+=ft->probTE[position+il*ft->nstepsTE];
 //      printf("%i %e %e %e\n",ell,pars[il],like,res);
     }

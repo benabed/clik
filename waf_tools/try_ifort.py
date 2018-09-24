@@ -60,7 +60,7 @@ def ifort_conf(ctx):
   ctx.env.FCSHLIB_MARKER = [""]
   ctx.env.FCSTLIB_MARKER = [""]
   ctx.start_msg("Check ifort version") 
-  v90 = ctx.cmd_and_log(ctx.env.FC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  v90 = ctx.cmd_and_log(" ".join(ctx.env.FC)+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   v90 = v90.split("\n")[0].strip().split(" ")[2]
   ctx.end_msg(v90)
   ctx.env.IFORT_VERSION = v90
@@ -80,7 +80,7 @@ def ifort_conf(ctx):
     ctx.start_msg("retrieve ifort link line")
     try:
       #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
-      llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC[0]," ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp)), output=waflib.Context.BOTH)
+      llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(" ".join(ctx.env.FC)," ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp)), output=waflib.Context.BOTH)
       #print "RET",llgo,llge
       L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
       l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
@@ -175,7 +175,7 @@ def gfortran_conf(ctx):
   else:
     ctx.env.append_value('FCFLAGS',ctx.env.mopt)
   ctx.start_msg("Check gfortran version") 
-  v90 = ctx.cmd_and_log(ctx.env.FC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  v90 = ctx.cmd_and_log(" ".join(ctx.env.FC)+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
   if len(version90)<1:
     #Logs.pprint("PINK","Can't get gfortran version... Let's hope for the best")
@@ -196,9 +196,9 @@ def gfortran_conf(ctx):
       mandatory=1,fragment = "program test\n  WRITE(*,*) 'hello world'\n end program test\n",compile_filename='test.f90',features='fc fcprogram')
 
   ctx.start_msg("retrieve gfortran link line")
-  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgfortran.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
+  lgfpath = ctx.cmd_and_log(" ".join(ctx.env.FC)+" %s -print-file-name=libgfortran.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
   lpath = [osp.dirname(osp.realpath(lgfpath))]
-  lgfpath = ctx.cmd_and_log(ctx.env.FC[0]+" %s -print-file-name=libgomp.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
+  lgfpath = ctx.cmd_and_log(" ".join(ctx.env.FC)+" %s -print-file-name=libgomp.dylib"%(" ".join(mopt)),quiet=Context.STDOUT)    
   lpath += [osp.dirname(osp.realpath(lgfpath))]
   lpath = set(lpath)
 

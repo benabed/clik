@@ -38,7 +38,7 @@ def do_icc(ctx):
     ctx.env.append_value("CCFLAGS_cc_omp","-openmp")
   try:
     #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
-    llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.c"%(ctx.env.CC[0]," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
+    llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.c"%(" ".join(ctx.env.CC)," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
     #print "RET",llgo,llge
     L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("icc" in ll.lower()) or ("intel" in ll.lower())])
     l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
@@ -70,7 +70,7 @@ def do_clang(ctx):
   ctx.env.LINK_CC=[]
   ctx.load('clang')
   ctx.start_msg("Check clang version") 
-  v90 = ctx.cmd_and_log(ctx.env.CC[0]+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
+  v90 = ctx.cmd_and_log(" ".join(ctx.env.CC)+" --version",quiet=Context.STDOUT).split("\n")[0].strip()
   #version90 = re.findall("(4\.[0-9]\.[0-9])",v90)
   #if len(version90)<1:
     #Logs.pprint("PINK","Can't get gfortran version... Let's hope for the best")

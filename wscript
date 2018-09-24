@@ -622,7 +622,7 @@ def configure_cython(ctx):
   import os.path as osp
   import os
   
-  os.environ["PATH"] = ctx.env["PREFIX"][0]+"/bin:"+os.environ["PATH"]+":"+osp.dirname(osp.realpath(ctx.env.PYTHON[0]))
+  os.environ["PATH"] = ctx.env["PREFIX"][0]+"/bin:"+os.environ["PATH"]+":"+osp.dirname(osp.realpath(" ".join(ctx.env.PYTHON)))
   vv=False
   def postinstallcython():
     ctx.env.CYTHON=[osp.join(ctx.env.BINDIR,"cython")]
