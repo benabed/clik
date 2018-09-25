@@ -212,7 +212,7 @@ void powerlaw_free_emissivity_XX_compute(parametric* egl, double *Rq,  error **e
     A[i] = v/nrmit;
   }
 
-  #pragma parallel for private(ell,v, mell,i,m1,m2,lA)
+  #pragma omp parallel for private(ell,v, mell,i,m1,m2,lA)
   for(ell=egl->lmin;ell<=egl->lmax;ell++) {
     v = pow(ell/l_pivot,index);
     mell = (ell-egl->lmin)*nfreq*nfreq;

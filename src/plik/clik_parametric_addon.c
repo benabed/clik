@@ -67,7 +67,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
   }
   //_DEBUGHERE_("%d",rn);
   if (rn==1) {
-    #pragma parallel for private(il)
+    //#pragma omp parallel for private(il,ndet)
     for(il=0;il<p_pay->nell;il++) {
       int ip;
       int im1,im2;
@@ -103,7 +103,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         int il,iq,if1,if2,bb;
         double w;
         bb=0;
-        #pragma parallel for private(iq,il,if1,if2)
+        //#pragma omp parallel for private(iq,il,if1,if2,w,bb,ndet,m)
         for(iq=0;iq<nbns;iq++) {
           for(il=p_pay->bi[iq];il<p_pay->bo[iq];il++) {
             w = p_pay->wbins[bb];
@@ -119,7 +119,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
       }
     } else {
       int if1,if2;
-      #pragma parallel for private(il,if1,if2)
+      //#pragma omp parallel for private(il,if1,if2,m)
       for(il=0;il<p_pay->nell;il++) {
         for(if1=0;if1<ndet;if1++) {
           for(if2=0;if2<ndet;if2++) {
@@ -143,7 +143,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
         int il,iq,if1,if2,bb,b0;
         double w,acc;
         b0=0;
-        #pragma parallel for private(il,iq,if1,if2)
+        //#pragma omp parallel for private(il,iq,if1,if2,b0,bb,acc,w,m,ndet)
         for(iq=0;iq<nbns;iq++) {
           for(if1=0;if1<ndet;if1++) {
             for(if2=0;if2<ndet;if2++) {
@@ -165,7 +165,7 @@ void comp_parametric_update(void* data,double* locpars, double* rq, error **err)
       }
     } else {
       int if1,if2;
-      #pragma parallel for private(il,if1,if2)
+      //#pragma omp parallel for private(il,if1,if2,m,ndet)
       for(il=0;il<p_pay->nell;il++) {
         for(if1=0;if1<ndet;if1++) {
           for(if2=0;if2<ndet;if2++) {
