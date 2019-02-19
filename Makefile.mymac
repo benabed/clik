@@ -27,8 +27,8 @@ CFITSIO_LIBPATH := $(CFITSIOPATH)/lib
 
 #define your compilers and stuff
 CC = gcc
-FC = ifort
-#FC = gfortran
+#FC = ifort
+FC = gfortran
 
 # ifort
 # if you are using ifort set here where its lib are installed
@@ -51,7 +51,8 @@ IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcor
 # gfortran
 # if you are using gfortran set here where the lib are installed
 # and check the runtime libs
-GFORTRANLIBPATH = /usr/lib
+#GFORTRANLIBPATH = /usr/lib
+GFORTRANLIBPATH = /usr/local/Cellar/gcc/8.1.0/lib/gcc/8/
 GFORTRANRUNTIME = -L$(GFORTRANLIBPATH) -lgfortran -lgomp
 
 # if you are on linux and using mkl, you need to set this 
@@ -77,8 +78,8 @@ ECHO = echo
 
 
 # what is the openmp option for your C compiler (leave empty to compile without openmp)
-#COPENMP =
-COPENMP = -fopenmp
+COPENMP =
+#COPENMP = -fopenmp
 # what is the openmp option for your F90 compiler (leave empty to cmpile without openmp)
 FOPENMP = -openmp
 

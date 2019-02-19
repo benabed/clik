@@ -462,6 +462,7 @@ def dist_public(ctx):
   dist_list += "src/cmbonly/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/bflike/* "
+  dist_list += "src/simall/* "
   
   dist_list += " src/plik/component_plugin/rel2015/* src/plik/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "
@@ -470,12 +471,12 @@ def dist_public(ctx):
               "clik_example_py.py",
               "clik_print.py",
               "prepare_wmap.py",
-              "clik_change_lrange.py"])
+              "clik_change_lrange.py", "clik_change_lrange_bychannel_pol.py"])
   
   exclude_list = []
   exclude_list += ["src/actspt/test.f90","src/actspt/test_actspt.f90"]
   exclude_list += ["src/bflike/test_bflike.f90","src/bflike/test_bflike_smw.f90"]
-  exclude_list += ["src/camspec/CAMtst.f90","src/camspec/temp_like.f90","src/camspec/temp_like.f90","src/camspec/temp_like_v3.f90"]
+  exclude_list += ["src/camspec/CAMtst.f90"]
   exclude_list += ["src/cldf/test_cldf.c"]
   exclude_list += ["src/cmbonly/plik_cmbonly_test.f90"]
   exclude_list += ["src/gibbs/test_comm.c","src/gibbs/validate_comm_lowl.c",]

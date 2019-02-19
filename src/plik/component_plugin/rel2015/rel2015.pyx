@@ -4,6 +4,11 @@ from clik.parametric import powerlaw_free_emissivity,rename_machine,rename_repla
 cdef extern c_parametric *gal545_init(int ndet, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_free_emissivity_EE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
 cdef extern c_parametric *powerlaw_free_emissivity_TE_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+cdef extern c_parametric *powerlaw_free_emissivity_XX_init(int ndet_T, int ndet_P, int *has_TEB, double *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
+
+cdef class powerlaw_free_emissivity_XX(parametric_pol):
+  def __cinit__(self):
+    self.initfunc = <void*>powerlaw_free_emissivity_XX_init
 
 cdef class powerlaw_free_emissivity_EE(parametric_pol):
   def __cinit__(self):
@@ -35,7 +40,7 @@ cdef class gal545(parametric):
     self.initfunc = <void*> gal545_init;
 
 
-component_list = ["gal545","powerlaw_free_emissivity_EE","powerlaw_free_emissivity_TE","galf_TE","galf_EE","ps_TE","ps_EE"]
+component_list = ["gal545","powerlaw_free_emissivity_EE","powerlaw_free_emissivity_TE","galf_TE","galf_EE","ps_TE","ps_EE","powerlaw_free_emissivity_XX"]
 
 
 cdef extern c_parametric *pointsource_init(int ndet, int *detlist, int ndef, char** defkey, char **defvalue, int nvar, char **varkey, int lmin, int lmax, error **err)
