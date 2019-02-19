@@ -222,10 +222,8 @@ def getfromurl(fromurl,tofile):
     print("curl %s %s"%(fromurl,tofile))
     aa = subprocess.check_output(["curl",fromurl])
 
-  f=open(tofile,"w")
-
-  print(aa, end='', file=f)
-  
+  f=open(tofile,"wb")
+  f.write(aa)  
   f.close()
   
 def installsmthg_pre(ctx,where,what,whereto="build/"):
