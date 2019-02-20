@@ -317,7 +317,7 @@ install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C 
 	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
 
 ifdef PYTHON
-PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print 'python%s/site-packages'%sys.version[0:3]"`
+PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print('python%s/site-packages'%sys.version[0:3])"`
 PYTHONEXE := `which $(PYTHON)`
 else
 PYTHONPATH := 
