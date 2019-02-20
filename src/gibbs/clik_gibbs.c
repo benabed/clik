@@ -8,6 +8,7 @@ void gibbs_extra_free_(int*);
 void gibbs_extra_lkl_(double*,int*,double*);
 void   gibbs_extra_parameter_init_(int*, char*,int*,int*,int*,int*,int*,int*,int*,int*,int*);
 void gibbs_gauss_extra_free_(int*);
+void gibbs_gauss_extra_v3_free_(int*);
 void gibbs_gauss_extra_lkl_(double*,int*,double*);
 void gibbs_gauss_extra_parameter_init_(int*,int*,int*,int*);
 void comm_lowl_extra_free_(int*);
@@ -165,6 +166,7 @@ void free_gauss_gibbs_v3(void **none) {
   free(gb);
 }
 
+void gibbs_gauss_extra_v3_lkl_(double*,int*,double*);
 double gibbs_gauss_v3_lkl(void* none, double* pars, error **err) {
   double lkl;
   gibbs *gb;
@@ -175,6 +177,7 @@ double gibbs_gauss_v3_lkl(void* none, double* pars, error **err) {
   return lkl;
 }
 
+void gibbs_gauss_extra_parameter_v3_init_(int*,int*,int*,int*);
 cmblkl* clik_gibbs_gauss_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   char directory_name[4096],pwd[4096],pwd2[4096];
   int status;

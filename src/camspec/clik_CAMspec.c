@@ -42,6 +42,12 @@ void free_CAMspec_v3(void **none) {
   camspec_extra_free_v3_();
 }
 
+
+void camspec_extra_init_v3_(int*,char*,int*,char*,int*,char*,int*,char*,int*,
+                         char*,int*,char*,int*,int*,char*,int*,char*,
+                         int*,char*,int*,char*,int*,char*,
+                         char*,int*,char*,int*,int*,int*,
+                         int*,int*,int*,int*,int*,int*,double*,int*);
 cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   cmblkl *cing;
   int hk;
@@ -209,6 +215,8 @@ cmblkl* clik_CAMspec_v3_init(cldf *df, int nell, int* ell, int* has_cl, double u
 
   return cing;
 }
+
+void camspec_extra_init_v2_(int*,char*,int*,char*,int*,char*,int*,char*,int*,char*,int*,char*,int*,char*,int*,char*,int*,int*,int*,int*,int*,int*,int*,int*,int*,double*);
 
 cmblkl* clik_CAMspec_v2_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
   cmblkl *cing;

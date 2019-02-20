@@ -94,7 +94,7 @@ FM64 =
 #FM64 = -m64
 
 # set the variable to the python cli to compile and install the python tools
-PYTHON = python
+PYTHON = python3
 
 
 ################################################################################################
@@ -318,7 +318,7 @@ install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C 
 	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
 
 ifdef PYTHON
-PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print 'python%s/site-packages'%sys.version[0:3]"`
+PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print('python%s/site-packages'%sys.version[0:3])"`
 PYTHONEXE := `which $(PYTHON)`
 else
 PYTHONPATH := 
@@ -376,8 +376,8 @@ $(ODIR)/%.f90.o : %.F90
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 
 $(ODIR)/%.py: src/python/tools/%.py 
-	@sed "s@PYTHONEXE@$(PYTHONEXE)@g;s@REPLACEPATH@$(PYTHONPATH)@g" <$< >$@
-	@$(INSTALL) $@ $(PREFIX)/bin/$(subst .py,,$(@F))
+	sed "s@PYTHONEXE@$(PYTHONEXE)@g;s@REPLACEPATH@$(PYTHONPATH)@g" <$< >$@
+	$(INSTALL) $@ $(PREFIX)/bin/$(subst .py,,$(@F))
 	@$(ECHO) "install python tools $(BLUE_COLOR)  $(subst .py,,$(@F)) $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
 
 $(ODIR)/.print_info: |$(ODIR)

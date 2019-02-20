@@ -41,6 +41,7 @@ void clik_get_has_cl(clik_object *clikid, int has_cl[6],error **err);
 // retrieve the number of extra parameters and their names
 // names is allocated by the function. It has to be cleaned after.
 int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error **err);
+int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err);
 
 // retrieve the lmax for each power spectrum
 // -1 --> no cl
