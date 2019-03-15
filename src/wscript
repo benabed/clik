@@ -299,3 +299,4 @@ def build(bld):
 ###    cflags = bld.env.CFLAGS_cpic,
 ###    )
 ###  uselib_bopix = [ff for ff in ('healpix_f90 cfitsio pmc lapack fc_omp fc_runtime').split() if ff]
+
