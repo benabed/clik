@@ -100,6 +100,20 @@ def configure(ctx):
   allgood = True
 
   try:
+    # read extra env file
+    f=open("clik_extra_env")
+    for li in f:
+      li = li.split("#")[0]
+      if (not li.strip()):
+        continue
+      left,right = li.split("=")
+      left = left.strip()
+      right = right.strip()
+      ctx.env[left] = right
+  except Exception as e:
+    pass
+
+  try:
     ctx.load("try_icc","waf_tools")
   except Exception as e:
     Logs.pprint("RED","No suitable c compiler found (cause: '%s')"%e)
@@ -657,7 +671,8 @@ def options_cython(ctx):
 
 def configure_numpy(ctx):
   import autoinstall_lib as atl
-  atl.configure_python_module(ctx,"numpy","http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz","numpy-1.6.0")
+  url,tar = atl.get_lib_url(ctx,"numpy",["http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz"])
+  atl.configure_python_module(ctx,"numpy",url,tar,"numpy")
   import imp
   numpy = imp.load_module("numpy",*imp.find_module("numpy"))
   ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
@@ -668,7 +683,8 @@ def configure_pyfits(ctx):
     atl.check_python_module(ctx,"astropy")
   except ImportError as e:
     Logs.pprint("PINK","Astropy not found, try pyfits instead")
-    atl.configure_python_module(ctx,"pyfits","http://pypi.python.org/packages/source/p/pyfits/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz","pyfits-3.2.2")
+    url,tar = atl.get_lib_url(ctx,"pyfits",["http://pypi.python.org/packages/source/p/pyfits/pyfits-3.2.2.tar.gz","pyfits-3.2.2.tar.gz"])
+    atl.configure_python_module(ctx,"pyfits",url,tar,"pyfits")
   
 def configure_cython(ctx):
   import autoinstall_lib as atl
@@ -689,7 +705,8 @@ def configure_cython(ctx):
     f.close()
     os.chmod(osp.join(ctx.env.BINDIR,"cython"),Utils.O755)
 
-  atl.configure_python_module(ctx,"cython","https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz","Cython-0.25.2",postinstall=postinstallcython)
+  url,tar = atl.get_lib_url(ctx,"cython",["https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz"])
+  atl.configure_python_module(ctx,"cython",url,tar,"Cython",postinstall=postinstallcython)
 
   try:
     # check for cython
@@ -710,7 +727,8 @@ def configure_cython(ctx):
     if vv:
       ctx.end_msg("no (%s)"%version_str,'YELLOW')
     # no cython, install it !
-    atl.configure_python_module(ctx,"cython","https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz","Cython-0.25.2",postinstall=postinstallcython)
+    url,tar = atl.get_lib_url(ctx,"cython",["https://pypi.python.org/packages/b7/67/7e2a817f9e9c773ee3995c1e15204f5d01c8da71882016cac10342ef031b/Cython-0.25.2.tar.gz#md5=642c81285e1bb833b14ab3f439964086","Cython-0.25.2.tar.gz"])
+    atl.configure_python_module(ctx,"cython",url,tar,"Cython",postinstall=postinstallcython)
 
   try:
     ctx.load("cython")

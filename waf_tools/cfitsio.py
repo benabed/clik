@@ -16,7 +16,8 @@ def configure(ctx):
   atl.conf_lib(ctx,"cfitsio",["cfitsio"],"fits_init_cfitsio","fitsio.h",msg="",opt_name="cfitsio",uselib=["cshlib"],install=install_cfitsio)
   
 def install_cfitsio(ctx):
-  atl.installsmthg_pre(ctx,"ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz")
+  url,tar = atl.get_lib_url(ctx,"cfitsio",("ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz"))
+  atl.installsmthg_pre(ctx,url,tar)
   CCMACRO = "\"%s %s\""%(ctx.env.CC[0]," ".join(ctx.env.mopt))
   CCMACRO = "CC=%s CXX=%s "%(CCMACRO,CCMACRO)
   CPPMACRO = "CPP=\"%s -E\" CXXCPP=\"g++ -E\" "%(ctx.env.CC[0])

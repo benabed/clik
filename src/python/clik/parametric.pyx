@@ -1,8 +1,8 @@
 cimport numpy as nm
 import numpy as nm
 nm.import_array()
-cimport stdlib as stdlib
-cimport stdio as stdio
+cimport libc.stdlib as stdlib
+cimport libc.stdio as stdio
 import os.path as osp
 import re
 
