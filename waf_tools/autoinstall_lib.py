@@ -373,7 +373,7 @@ def configure_python_module_old(ctx,name,url,packtgz,pack,cmdline=None,extracmd=
 
 def get_lib_url(ctx,packname,default=["",""]):
   if packname+"_url" in ctx.env:
-    print("-->>",ctx.env[packname+"_url"],ctx.env[packname+"_tar"])
+    #print("-->>",ctx.env[packname+"_url"],ctx.env[packname+"_tar"])
     return ctx.env[packname+"_url"],ctx.env[packname+"_tar"]
   return default
 
