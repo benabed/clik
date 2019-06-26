@@ -167,7 +167,7 @@ def build(bld):
   #simbal
   #source_simbal = ["simbal/clik_simbal.c"]
   
-  simall
+  #simall
   source_simall = ["simall/clik_simall.c"]
 
 
