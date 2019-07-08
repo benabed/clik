@@ -33,7 +33,7 @@ cmblkl* clik_plik_cmbonly_init(cldf *df, int nell, int* ell, int* has_cl, double
   int mlmax;
   char dir_data[2048];
   int ldd,hk;
-  char *xnames_def[] = {"A_Planck"};
+  char *xnames_def[] = {"A_planck"};
   int use_tt, use_te, use_ee;
   int version, bin_min_tt, bin_max_tt, bin_min_te, bin_max_te, bin_min_ee, bin_max_ee;
 
