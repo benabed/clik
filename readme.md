@@ -115,16 +115,16 @@ They are not required for basic uses of the library.
 Waf (http://waf.io) is a tool based on python. Installing with waf requires 
 python v>2.7.8. The tool first need to be configured with
 
-  waf configure [OPTIONS]
+	waf configure [OPTIONS]
 
 A complete list of the install options can be obtained by doing
 
-  waf --help
+	waf --help
 
 
 The building and installing of the code is done using
 
-  waf install
+	waf install
 
 
 #### Simple configuration recipes
@@ -140,8 +140,8 @@ compiler will be either gcc, icc or clang (tested in that order). The fortran
 compiler will be eiher ifort or gfortran (tested in that order). Installation 
 will be performed in the current plc directory.
 
-  waf configure --install_all_deps 
-  waf install
+	waf configure --install_all_deps 
+	waf install
 
 
 On macos, the installer will test whether the optional openmp clang support is 
@@ -160,8 +160,8 @@ icc or clang (tested in that order). The fortran compiler will be eiher ifort or
 gfortran (tested in that order). 
 Installation will be performed in the current plc directory.
 
-  waf configure --install_all_deps --lapack_mkl=$MKLROOT
-  waf install
+	waf configure --install_all_deps --lapack_mkl=$MKLROOT
+	waf install
 
 
 #### Detailed configuration instructions
@@ -169,7 +169,7 @@ Installation will be performed in the current plc directory.
 ##### Install automatically the prerequisites
 
 
-  waf configure --install_all_deps [OPTIONS]
+	waf configure --install_all_deps [OPTIONS]
  
 asks the tool to *try* to install all of the absent prerequisites.
 
@@ -178,7 +178,7 @@ asks the tool to *try* to install all of the absent prerequisites.
 By default, plc is installed in the source directory. To select a different
 directory, use
 
-  waf configure --prefix=/some/other/path [OPTIONS]
+	waf configure --prefix=/some/other/path [OPTIONS]
 
 
 ##### Selecting C and fortran compiler.
@@ -195,8 +195,12 @@ one of ``--ifort`` or ``--gfortran``.
 
 By default, the library python wrapper and tools are compiled using the default python. To impose a particular version of python, run the configuration step by calling this particular version
 
-  /path/to/some/pythonbin waf configure [OPTIONS]
+	/path/to/some/pythonbin waf configure [OPTIONS]
 
+and then compile and install wil
+
+	/path/to/some/pythonbin waf install [OPTIONS]
+  
 ##### ``blas/lapack``
 
 By default, on macos, the stock ``blas/lapack`` will be used. On linux, the waf 
@@ -210,12 +214,12 @@ The simplest option is to use the intel ``mkl`` library. Assuming that the libra
 is installed at ``$MKLROOT`` and that the version of the library is 10.3 or 
 better (which should be the case is the library was installed post 2011), use
 
-  waf configure --lapack_mkl=$MKLROOT [OPTIONS]
+	waf configure --lapack_mkl=$MKLROOT [OPTIONS]
 
 To use an earlier version of the library (10.0, 10.1 or 10.2), for example 
 version 10.2 use
 
-  waf configure --lapack_mkl=$MKLROOT --lapack_mkl_version=10.2 [OPTIONS]
+	waf configure --lapack_mkl=$MKLROOT --lapack_mkl_version=10.2 [OPTIONS]
 
 
 ##### Other ``blas/lapack``
