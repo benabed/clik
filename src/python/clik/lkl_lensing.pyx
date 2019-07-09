@@ -108,7 +108,7 @@ cdef class clik_lensing:
     cdef parname *names
     
     n_names = clik_lensing_get_extra_parameter_names(self.celf, &names, self.err)    
-    res = ["%s"%names[i] for i in range(n_names)]
+    res = ["%s"%str(names[i].decode()) for i in range(n_names)]
     stdlib.free(names)
     return tuple(res)
 

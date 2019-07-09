@@ -131,7 +131,7 @@ cdef class clik:
     er=doError(self.err)
     if er:
       raise er  
-    res = [names[i].decode() for i in range(n_names)]
+    res = [str(names[i].decode()) for i in range(n_names)]
     res = tuple(res)
     stdlib.free(names)
     return tuple(res)
@@ -140,7 +140,7 @@ cdef class clik:
     cdef parname *names
 
     n_names = clik_get_extra_parameter_names_by_lkl(self.celf,ilkl, &names, self.err)    
-    res = ["%s"%names[i] for i in range(n_names)]
+    res = [str("%s"%names[i].decode()) for i in range(n_names)]
     stdlib.free(names)
     return tuple(res)
     
