@@ -82,8 +82,8 @@ def ifort_conf(ctx):
       #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
       llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(" ".join(ctx.env.FC)," ".join(ctx.env.FCFLAGS+ctx.env.FCFLAGS_fc_omp)), output=waflib.Context.BOTH)
       #print "RET",llgo,llge
-      L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
-      l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
+      L = set([ll.strip() for ll in re.findall("^\s+-L(.+)\s*\\\\", re.split("^\s*ld\s*\\\\",llge,flags=re.M)[1],flags=re.M)  if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
+      l = set([ll.strip() for ll in re.findall("^\s+-l(.+)\s*\\\\", re.split("^\s*ld\s*\\\\",llge,flags=re.M)[1],flags=re.M)])
       rL = set()
       rl = set(rl0)
       for Li in L:

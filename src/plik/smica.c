@@ -424,7 +424,8 @@ double smica_crit_gauss(void *vsmic, error **err) {
   int qsn = smic->quad_sn;
   double *crit_cor = smic->crit_cor;
   double *gvec = smic->gvec;
-#pragma omp parallel for private(les,i,j) reduction(+:res) firstprivate(crit_cor,gvec) schedule(dynamic,512)
+//#pragma omp parallel for private(les,i,j) reduction(+:res) firstprivate(crit_cor,gvec) schedule(dynamic,512)
+#pragma omp parallel for private(les,i,j) reduction(+:res) firstprivate(crit_cor,gvec) schedule(auto) //fix for gcc9/intel2019 openmp incompatibilities
   //_DEBUGHERE_("tt","");
   for(i=0;i<qsn;i++) {
     les = crit_cor[i*qsn+i]*gvec[i];

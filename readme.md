@@ -1,5 +1,5 @@
-# plc 3.0 
-June 2019
+# plc 3.01 
+August 2019
 
 ``plc`` is the public Planck Likelihood Code.  It provides C and Fortran 
 libraries that allow users to compute the log likelihoods of the temperature, 
@@ -74,6 +74,15 @@ marginalized agressive range files
 are also available.
 
 All the extended cases are available in different PLA files.
+
+## code 
+The code is at version 3.01
+
+###changes sinces v3.00
+
+- Improve parsing of intel fortran dryrun output to fix an issue with the building of the intel fortran link line which was broken for version 2019
+- Change an openmp scheduling option in src/plik/smica.c to go aroung an API incompatibility between intel 2019 openmp and gcc9 openmp which was preventing the code to correctely compile in this particular case.
+
 
 ## Installing
 
