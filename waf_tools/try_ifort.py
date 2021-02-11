@@ -72,7 +72,7 @@ def retrieve_intel_linkline(ctx,flavour,wafname,execnm,flags,rl0=[],optionname="
             if ctx.env.cshlib_PATTERN%li in oli:
               rl.add(li)
               rL.add(Li)
-    except Exception,e:
+    except Exception as e:
       #print(e)
       ctx.end_msg(False)
       Logs.pprint("RED","Cannot retrieve the %s link line"%flavour)

@@ -18,7 +18,10 @@ from waflib.Configure import conf
 
 
 def get_version(ctx):
-  res = ctx.cmd_and_log("hg identify --id", output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
+  cmd = "hg identify --id"
+  cmd = "git describe --abbrev=12 --always "
+  res = ctx.cmd_and_log(cmd, output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
+  
   svnversion = res
   f=open("svnversion","w")
   print(svnversion, file=f)
