@@ -28,7 +28,8 @@ def get_version(ctx):
   f.close()
   
 def get_tag(ctx):
-  res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
+  #res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
+  res = "clik_spt3g"
   clik_v = None
   plc_v = None
   for r in res.split("\n"):
@@ -431,6 +432,7 @@ def dist(ctx):
   dist_list += "src/plik/component_plugin/** src/plik/* "
   dist_list += "src/* src/camspec/* "
   dist_list += "src/actspt/* "
+  dist_list += "src/spt3g/* "
   dist_list += "src/lowlike/* "
   dist_list += "src/gibbs/* "
   dist_list += "src/mspec/* "

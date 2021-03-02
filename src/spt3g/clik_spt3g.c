@@ -39,7 +39,7 @@ double spt3g_lkl(void* none, double* pars, error **err) {
   double lkl;
   
   spt3g_lkl_(&lkl,pars);
-  return lkl;
+  return -lkl;
 }
 
 
