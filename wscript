@@ -65,14 +65,17 @@ def get_tag(ctx):
         if "commit" in l:
           comm = l.split()[1]
           dss = sbp.run(["git","show",comm],capture_output=True)
+          #print(dss.stdout.decode("utf-8"))
           for d in dss.stdout.decode("utf-8").split("\n"):
             if "Date" in d:
+              #print(d)
               dt = time.strptime(d.strip()[len("Date:"):].strip(),"%a %b %d %H:%M:%S %Y %z")
               if what in last:
                 if dt>last[what][1]:
                   last[what]=[t,dt]
               else:
                 last[what]=[t,dt]
+              break
   #print(last)
   global clik_version,plc_version
   if "clik" in last:
