@@ -27,9 +27,9 @@ def get_version(ctx):
   print(svnversion, file=f)
   f.close()
   
-def get_tag(ctx):
-  #res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
-  res = "clik_spt3g"
+def get_tag_hg(ctx):
+  res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
+  #res = "clik_spt3g"
   clik_v = None
   plc_v = None
   for r in res.split("\n"):
@@ -46,6 +46,40 @@ def get_tag(ctx):
     clik_version = clik_v
   if plc_v:
     plc_version = plc_v
+
+def get_tag(ctx):
+  import subprocess as sbp
+  import time
+  last = {}
+  ff = sbp.run(["git","tag"],capture_output=True).stdout.decode("utf-8")
+  for t in ff.split("\n"):
+      if t.startswith("plc_"):
+        what = "plc"
+      elif t.startswith("clik_"):
+        what = "clik"
+      else:
+        continue
+      #print(t,what)
+      mss = sbp.run(["git","show",t],capture_output=True)
+      for l in mss.stdout.decode("utf-8").split("\n"):
+        if "commit" in l:
+          comm = l.split()[1]
+          dss = sbp.run(["git","show",comm],capture_output=True)
+          for d in dss.stdout.decode("utf-8").split("\n"):
+            if "Date" in d:
+              dt = time.strptime(d.strip()[len("Date:"):].strip(),"%a %b %d %H:%M:%S %Y %z")
+              if what in last:
+                if dt>last[what][1]:
+                  last[what]=[t,dt]
+              else:
+                last[what]=[t,dt]
+  #print(last)
+  global clik_version,plc_version
+  if "clik" in last:
+    clik_version = last["clik"][0][len("clik_"):]
+  if "plc" in last:
+    plc_version = last["plc"][0][len("plc_"):]
+
 
 
 def options(ctx):
