@@ -21,7 +21,7 @@ def get_version(ctx):
   cmd = "hg identify --id"
   cmd = "git describe --abbrev=12 --always "
   res = ctx.cmd_and_log(cmd, output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
-   
+  
   svnversion = res
   f=open("svnversion","w")
   print(svnversion, file=f)
