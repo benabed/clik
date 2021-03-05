@@ -247,9 +247,10 @@ def installsmthg_pre(ctx,where,what,whereto="build/"):
     tf = tarfile.open(osp.join(whereto,what))
   except tarfile.ReadError:
     os.remove(osp.join(whereto,what))
-    installsmthg_pre(ctx,where,what,whereto)
-    return
+    return installsmthg_pre(ctx,where,what,whereto)
   #Logs.pprint("RED","LALALALA")
+  ss = set([v.name.split("/")[0] for v in tf.getmembers()])
+  assert len(ss)==1,"cannot understand the directory structure of %s"%osp.join(whereto,what)
   for ff in [ff.name for ff in tf.getmembers()]:
     if osp.exists(osp.join(whereto,ff)):
       if osp.isdir(osp.join(whereto,ff)):
@@ -260,6 +261,7 @@ def installsmthg_pre(ctx,where,what,whereto="build/"):
   Logs.pprint("PINK","untar "+what)
   if ctx.exec_command("cd %s/;tar -zxf %s"%(whereto,what))!=0:
     raise Errors.WafError("Cannot untar "+what)
+  return ss.pop()
 
 def installsmthg_post(ctx,where,what,extra_config=""):
   from waflib import Utils,Errors
@@ -345,11 +347,11 @@ def configure_python_module_old(ctx,name,url,packtgz,pack,cmdline=None,extracmd=
   except Exception as e: 
     if upgrade(ctx,name) or getattr(ctx.options,name+"_forceinstall",False) or iall:
       waflib.Logs.pprint("PINK","Install python module '%s'"%name)
-      atl.installsmthg_pre(ctx,url,packtgz)
+      packname = atl.installsmthg_pre(ctx,url,packtgz)
       if not osp.exists(ctx.env.PYTHONDIR):
         os.makedirs(ctx.env.PYTHONDIR)
       if cmdline==None:
-        cmdline =  "cd build/%s; PYTHONPATH=%s:$PYTHONPATH %s setup.py build_ext -L=%s ;PYTHONPATH=%s:$PYTHONPATH %s setup.py install --install-lib=%s --install-scripts=%s"%(pack,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
+        cmdline =  "cd build/%s; PYTHONPATH=%s:$PYTHONPATH %s setup.py build_ext -L=%s ;PYTHONPATH=%s:$PYTHONPATH %s setup.py install --install-lib=%s --install-scripts=%s"%(packname,ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.LIBPATH_PYEMBED[0],ctx.env.PYTHONDIR,ctx.env.PYTHON[0],ctx.env.PYTHONDIR,ctx.env.BINDIR)
       waflib.Logs.pprint("PINK",cmdline)
       ret = ctx.exec_command(cmdline)
       if ret!=0:
