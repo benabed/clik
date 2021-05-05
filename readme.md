@@ -252,6 +252,7 @@ link to ``libblas.so`` and ``liblapack.so``
 -- ``--lapack_link='-I/some/path/include -L/some/path/lib -lmyblas -lmylapack',
 allow to define the full link line for the lapack/blas install.
 
+
 ##### Installing a basic blas/lapack automatically
 
 Using either ```--install_all_deps``` or ```--install_lapack``` will ask the 
@@ -466,7 +467,7 @@ void clik_cleanup(clik_object** pclikid);
 and a lensing one with 
 ```
 void clik_lensing_cleanup(clik_lensing_object **plclik);
-```.
+```
 
 #### Example code
 
