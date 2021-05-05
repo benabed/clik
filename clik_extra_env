@@ -3,7 +3,7 @@
 # where to find the automatically downloaded and installed packages
 
 #cfitsio
-cfitsio_url = http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz
+cfitsio_url = https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz
 cfitsio_tar = cfitsio_latest.tar.gz
 
 #numpy
