@@ -11,7 +11,11 @@ import clik
 import re
 import clik.hpy as h5py
 import clik.smicahlp as smh
-import pyfits as pf
+try:
+  from astropy.io import fits as pf  
+except ImportError as e:
+  # try pyfits then
+  import pyfits as pf
 import os.path as osp
 
 def read_array(fname):

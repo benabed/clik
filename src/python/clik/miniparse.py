@@ -3,11 +3,11 @@ import numpy as nm
 import os.path as osp
 
 try:
-  import pyfits as pf
+  from astropy.io import fits as pf  
 except ImportError as e:
-  # try astropy then
-  from astropy.io import fits as pf
-  
+  # try pyfits then
+  import pyfits as pf
+
 
 def scarray(li,scal=False):
   if len(li)==1 and scal:

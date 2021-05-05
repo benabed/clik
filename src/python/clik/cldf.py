@@ -3,10 +3,10 @@ import os.path as osp
 import shutil as shu
 
 try:
-  import pyfits as pf
-except ImportError as e:
-  # try astropy then
   from astropy.io import fits as pf  
+except ImportError as e:
+  # try pyfits then
+  import pyfits as pf
 
 import re
 import numpy as nm
