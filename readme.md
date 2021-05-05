@@ -1,5 +1,5 @@
-# plc 3.01 
-August 2019
+# plc 3.1 
+May 2021
 
 ``plc`` is the public Planck Likelihood Code.  It provides C and Fortran 
 libraries that allow users to compute the log likelihoods of the temperature, 
@@ -12,7 +12,7 @@ Note that all of the old likelihood files (from plc 1 and plc 2) should still
 work correctely with the new version.
 
 ## Content
-This release contains the code package `plc-3.0.tar.bz2`, as well as the low l 
+This release contains the code package `plc-3.1.tar.bz2`, as well as the low l 
 (in `low_l/`), high l CMB likelihood (in `hi_l/`) and the lensing likelihood 
 files (in `lensing/`). `cosmomc` files for the high l `plik` likelihood are 
 available in the `cosmomc` directory.
@@ -76,7 +76,14 @@ are also available.
 All the extended cases are available in different PLA files.
 
 ## code 
-The code is at version 3.01
+The code is at version 3.1
+
+###changes sinces v3.01
+- IMPORTANT : Correct a bad bug in the handling of CMBmarged lensing likelihood files. The 1st order correction (eq. 30 of Planck 2018 VIII) was not correctly applied.
+- Improve handling of automatic installation of external package (in particular cfitsio). Add a file to group all information on where to find external package (`clik_extra_env`)
+- Print warning when using CC or FC variable for C and Fortran compiler during installation
+- Correct a regression in py3 where the C generated errors could not be printed out in python
+
 
 ###changes sinces v3.00
 
@@ -180,7 +187,9 @@ Installation will be performed in the current plc directory.
 
 	waf configure --install_all_deps [OPTIONS]
  
-asks the tool to *try* to install all of the absent prerequisites.
+asks the tool to *try* to install all of the absent prerequisites (cfitsio, numpy, pyfits and cython).
+
+Note that the URL and names of the packages are defined in the file `clik_extra_env` that can be modified to point to future version of the external packages. 
 
 ##### Changing the install path
 
