@@ -292,6 +292,9 @@ def configure(ctx):
   #mspec
   ctx.env.has_mspec = osp.exists("src/mspec")
 
+  #spt3g
+  ctx.env.has_spt3g = osp.exists("src/spt3g")
+  
   #momento
   #ctx.env.has_momento = osp.exists("src/momento")
 
