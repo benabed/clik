@@ -113,6 +113,11 @@ def do_gcc(ctx):
   ctx.env.append_value("CCFLAGS_cc_omp","-fopenmp")
 
 def configure_iccfirst(ctx):
+  import os
+  if "CC" in os.environ:
+    ctx.start_msg("Using C compiler path from 'CC' environment variable")
+    ctx.end_msg(os.environ["CC"])
+
   from waflib import Logs
   ctx.env.has_icc = False
   if not Options.options.gcc:

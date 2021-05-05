@@ -122,6 +122,10 @@ def configure_(ctx):
   gfortran_conf(ctx)
 
 def configure(ctx): 
+  import os
+  if "FC" in os.environ:
+    ctx.start_msg("Using fortran compiler path from 'FC' environment variable")
+    ctx.end_msg(os.environ["FC"])
   configure_(ctx) 
   ctx.env.append_value("FCFLAGS_fcshlib",ctx.env.LINKFLAGS_fcshlib)  
   ctx.env["FCFLAGS_fpic"]=[]

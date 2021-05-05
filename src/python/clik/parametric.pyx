@@ -27,11 +27,11 @@ cdef extern from "errorlist.h":
   void printError(void* flog,error* err)
 
 class CError(Exception):
-  def __init__(self,val,str):
+  def __init__(self,val,strr):
     self.val=val
-    self.comment=str
+    self.comment=strr
   def __str__(self):
-    return self.comment.strip()
+    return self.comment.strip().decode("utf-8")
 
 cdef doError(error **err):
   cdef char estr[10000]
