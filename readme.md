@@ -79,11 +79,11 @@ All the extended cases are available in different PLA files.
 The code is at version 3.1
 
 ###changes sinces v3.01
-- IMPORTANT : Correct a bad bug in the handling of CMBmarged lensing likelihood files. The 1st order correction (eq. 30 of Planck 2018 VIII) was not correctly applied.
-- Improve handling of automatic installation of external package (in particular cfitsio). Add a file to group all information on where to find external package (`clik_extra_env`)
-- Print warning when using CC or FC variable for C and Fortran compiler during installation
-- Correct a regression in py3 where the C generated errors could not be printed out in python
-
+- Major : Correct a bug in the computation of the CMB marginalized lensing.
+- Configuration : new user modifiable file `clik_extra_env` gathers the url, names and versions of the external packages that can be installed automatically. This will hopefully simplify troubleshooting with new versions of the external packages in the future.
+- Configuration : update to latest version of waf. Print a warning when the compilation of C or fortran part will use a compiler defined by a user set CC or FC environment variable. 
+* Python wrapper : correct a bug where error messages would not be properly displayed in python 3
+* Python wrapper : when both astropy and pyfits are available, prefer astropy
 
 ###changes sinces v3.00
 
