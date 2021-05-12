@@ -17,7 +17,7 @@ def configure(ctx):
   
 def install_cfitsio(ctx):
   #url,tar = atl.get_lib_url(ctx,"cfitsio",("ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio3280.tar.gz","cfitsio3280.tar.gz"))
-  url,tar = atl.get_lib_url(ctx,"cfitsio",("http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz","cfitsio_latest.tar.gz"))
+  url,tar = atl.get_lib_url(ctx,"cfitsio",("https://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz","cfitsio_latest.tar.gz"))
   
   dirname = atl.installsmthg_pre(ctx,url,tar)
   CCMACRO = "\"%s %s\""%(ctx.env.CC[0]," ".join(ctx.env.mopt))
