@@ -20,7 +20,7 @@ def base_smica(root_grp,hascl,lmin,lmax,nT,nP,wq,rqhat,Acmb,rq0=None,bins=None):
   lkl_grp.create_dataset('wq', data=wq)
   lkl_grp.create_dataset("Rq_hat",data=rqhat.flat[:])
      
-  if rq0 !=None:
+  if rq0  is not None:
     lkl_grp.create_dataset("Rq_0",data=rq0.flat[:])
   
   lkl_grp.attrs["A_cmb"] = Acmb
