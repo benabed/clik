@@ -52,7 +52,7 @@ IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcor
 # if you are using gfortran set here where the lib are installed
 # and check the runtime libs
 #GFORTRANLIBPATH = /usr/lib
-GFORTRANLIBPATH = /usr/local/Cellar/gcc/8.1.0/lib/gcc/8/
+GFORTRANLIBPATH = /usr/local/Cellar/gcc/10.2.0/lib/gcc/10/
 GFORTRANRUNTIME = -L$(GFORTRANLIBPATH) -lgfortran -lgomp
 
 # if you are on linux and using mkl, you need to set this 
@@ -166,7 +166,6 @@ SHARED = -shared -Bdynamic
 endif
 
 # get version of the code from the svn version
-git describe --abbrev=12 --always > svnversion
 VERSION = $(strip $(shell cat svnversion)) MAKEFILE
 #VERSION = MAKEFILE
 
@@ -365,15 +364,18 @@ endif
 	@$(ECHO) "using the following command line:"
 	gcc $(SHARED)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group -L$(IFORTLIBPATH) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
 
-$(ODIR)/%.o : %.c 
+svnversion:
+	@git describe --abbrev=12 --always > svnversion
+
+$(ODIR)/%.o : %.c | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(CC) -c $(CFLAGS) $< -o$(@)
 
-$(ODIR)/%.f90.o : %.f90 
+$(ODIR)/%.f90.o : %.f90 | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 
-$(ODIR)/%.f90.o : %.F90 
+$(ODIR)/%.f90.o : %.F90 | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 

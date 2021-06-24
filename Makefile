@@ -364,15 +364,18 @@ endif
 	@$(ECHO) "using the following command line:"
 	gcc $(SHARED)  $(MKL_TO_INCLUDE) -Wl,--start-group $(MKL_LIB_FULLPATH) -Wl,--end-group -L$(IFORTLIBPATH) -L/lib -L/lib64 -liomp5 -lpthread -lm -o $@
 
-$(ODIR)/%.o : %.c 
+svnversion:
+	@git describe --abbrev=12 --always > svnversion
+
+$(ODIR)/%.o : %.c | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(CC) -c $(CFLAGS) $< -o$(@)
 
-$(ODIR)/%.f90.o : %.f90 
+$(ODIR)/%.f90.o : %.f90 | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 
-$(ODIR)/%.f90.o : %.F90 
+$(ODIR)/%.f90.o : %.F90 | svnversion
 	@$(ECHO) "$(GREEN_COLOR)$< $(NO_COLOR) -> $(GREEN_COLOR) $(@) $(NO_COLOR)"
 	@$(FC) -c $(FFLAGS) $< -o$(@)
 
