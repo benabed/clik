@@ -165,6 +165,7 @@ SHARED = -shared -Bdynamic
 endif
 
 # get version of the code from the svn version
+git describe --abbrev=12 --always > svnversion
 VERSION = $(strip $(shell cat svnversion)) MAKEFILE
 #VERSION = MAKEFILE
 
@@ -280,7 +281,7 @@ BFLIKELKL := $(addprefix $(ODIR)/,long_intrinsic_smw.f90.o fitstools_smw.f90.o b
 PLIKLITELKL := $(addprefix $(ODIR)/,plik_cmbonly.f90.o clik_cmbonly.f90.o clik_cmbonly.o)
 PLIKLKL := $(addprefix $(ODIR)/, smica.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o fg2015.o corrnoise.o leakage.o)
 SIMALLLKL := $(addprefix $(ODIR)/, clik_simall.o)
-SPTLKL := $(addprefix $(ODIR)/, clik_spt3g.o clik_spt3gf90.o)
+SPTLKL := $(addprefix $(ODIR)/, clik_spt3g.o clik_spt3g.f90.o)
 
 CMBLKL:= $(ACTSPTLKL) $(CAMSPECLKL) $(GIBBSLKL) $(LOWLIKELKL) $(BFLIKELKL) $(SIMALLLKL) $(SPTLKL) $(PLIKLITELKL) $(PLIKLKL)
 CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CMBLKL) $(LENSLKL) $(LAPACKDEP)
