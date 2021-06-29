@@ -45,6 +45,23 @@ cdef extern from "clik.h":
   int clik_get_extra_parameter_names_by_lkl(clik_object* clikid, int ilkl,parname **names, error **_err)
   char* clik_get_version(clik_object *clikid,error **_err)
 
+
+def version():
+  cdef error *_err,**err
+  cdef char* ver_str
+  
+  _err = NULL
+  err = &_err
+  ver_str = clik_get_version(NULL,err)
+  er=doError(err)
+  if er:
+    raise er
+  pyver = ver_str
+  pyver = pyver.decode("utf-8") + ""
+  pyver = pyver.replace("clik version ","")
+  stdlib.free(ver_str)
+  return pyver
+  
 cdef class clik:
   cdef clik_object* celf
   cdef error *_err,**err
@@ -58,7 +75,7 @@ cdef class clik:
     if er:
       raise er
     pyver = ver_str
-    pyver = pyver + ""
+    pyver = pyver.decode("utf-8") + ""
     stdlib.free(ver_str)
     return pyver
     

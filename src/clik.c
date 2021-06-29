@@ -35,6 +35,7 @@ char* clik_get_version(clik_object *clikid,error **_err) {
     }
 
   }
+  
   return version_str;
 }
 

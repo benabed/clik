@@ -522,6 +522,8 @@ def dist_public(ctx):
   dist_list += "src/lowlike/* "
   dist_list += "src/bflike/* "
   dist_list += "src/simall/* "
+  dist_list += "src/spt3g/* "
+
   
   dist_list += " src/plik/component_plugin/rel2015/* src/plik/* "
   dist_list += "src/lenslike/plenslike/*.c src/lenslike/plenslike/*.h "

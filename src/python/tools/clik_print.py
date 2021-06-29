@@ -8,7 +8,8 @@ import clik.hpy as hpy
 
 def main(argv):
   if len(sys.argv)!=2:
-    print("usage : %s lkl_file")
+    print("clik version "+clik.version())
+    print("usage : %s lkl_file"%(sys.argv[0]))
     sys.exit(1)
 
   if clik.try_lensing(argv[1]):

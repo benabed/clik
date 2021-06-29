@@ -75,7 +75,12 @@ int main(int argc, char **argv) {
   err = &_err;
   
   if (argc<2) {
+    char *version;
+    version = clik_get_version(NULL,err);
+    quitOnError(*err,__LINE__,stderr);
+    printf("%s\n",version);
     fprintf(stderr, "usage: %s clikfile [clfile ...]\n  Prints some info on the likelihood clikfile \n  and compute log likelihoods for each clfile\n",argv[0]);
+    free(version);
     return -1;
   }
 
