@@ -1,102 +1,33 @@
-# plc 3.1 
-May 2021
+# clik 15 
+June 2021
 
-``plc`` is the public Planck Likelihood Code.  It provides C and Fortran 
+``clik`` is the public version (including extra packages and tools) of the Planck Likelihood Code, ``plc``, distributed on the ESA website. While 
+``plc`` will only evolve in case of future discovery of major issues, ``clik`` can evolve and improve. In particular, future evolution of the installation procedure will only be available in ``clik``. 
+
+``clik`` provides C and Fortran and python 
 libraries that allow users to compute the log likelihoods of the temperature, 
-polarization, and lensing maps.  Optionally, it also provides a python version
-of this library, as well as tools to modify the predetermined options for some 
-likelihoods (e.g. changing the high-ell and low-ell lmin and lmax values of the
-temperature).
+polarization, and lensing maps of Planck data, along with new datasets, such as SPT3G. 
  
-Note that all of the old likelihood files (from plc 1 and plc 2) should still 
-work correctely with the new version.
+Note that all of the previous likelihood files (from plc 1 and plc 2) should still 
+work correctely with ``clik`` and should do so in the foreseeable future.
 
-## Content
-This release contains the code package `plc-3.1.tar.bz2`, as well as the low l 
-(in `low_l/`), high l CMB likelihood (in `hi_l/`) and the lensing likelihood 
-files (in `lensing/`). `cosmomc` files for the high l `plik` likelihood are 
-available in the `cosmomc` directory.
-All likelihood files need to be unzipped and untarred before use.
-The Planck Legacy Archive distributes in separate packages the code and data 
-files.
+The code in ``clik`` have been written by numerous authors whithin the Planck consortium. 
 
-In more details:
-
-- the low l (l=2 to 29) TT likelihood is provided by the file 
-`low_l/commander/commander_dx12_v3_2_29.clik`
-
-- the low l (l=2 to 29) EE likelihood is provided by 
-`low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik`
-
-- For the high l (l=30 to 2508 in TT, 1997 in EE and TE), the joint TTTEEE 
-likelihood is computed by the `hi_l/plik/plik_rd12_HM_v22b_TTTEEE.clik` file. 
-(*Alternatively, one can use the TT only version of the high l likelihood 
-provided by `hi_l/plik/plik_rd12_HM_v22_TT.clik`*). Note that the file 
-`hi_l/plik/plik_recommended_priors.txt` contains the list of priors and settings
-for the high l likelihood, translated in cosmomc form in the `cosmomc/` 
-directory.
-
-- The foreground marginalized likelihoods 
-`hi_l/plik_lite/plik_lite_v22_TTTEEE.clik` and TT only 
-`hi_l/plik_lite/plik_lite_v22_TT.clik` are also available.
-
-- the lensing likelihood uses the file 
-`lensing/smicadx12_Dec5_ftl_mv2_ndclpp_p_teb_consext8.clik_lensing` which uses 
-a new conservative range of multipole between L=8 to 400. A CMB marginalized file,
-`lensing/smicadx12_Dec5_ftl_mv2_ndclpp_p_teb_consext8_CMBmarged.clik_lensing` 
-is also available. 
-
-To compute the Planck TTTEEE+lowE+lensing likelihood, one should add the output 
-from the two low-l files, one high-l and one lensing file. Planck baseline is to
-use the  `hi_l/plik/plik_rd12_HM_v22b_TTTEEE.clik` high-l and 
-`lensing/smicadx12_Dec5_ftl_mv2_ndclpp_p_teb_consext8.clik_lensing` lensing files.
-
-Extra product are available (in dedicated files).
-
-- At low-ell, the updated lowTEB likelihood (`bflike`) can be found in
-`low_l/bflike/lowl_SMW_70_dx12_R1.8x_Ap.clik`
-
-- At high-ell, the `hi_l/camspec` directory contains all the different camspec 
-cases (TT, TE, EE, TTTE, TTEE, TEEE and TTTEEE), as well as 
-`camspec_recommendations.txt`, the priors
-
-- At high-ell, the `hi_l/plik_lite` directory also contains the TE and EE only 
-files
-
-- At high-ell, the `hi_l/plik` directory also contains EE and TE only 
-likelihoods, as well as the unbinned cases for TT, TE, EE, and TTTEEE 
-(`bin1` files)
-
-- The agressive range (L<2000) files  
-`lensing/smicadx12_Dec5_ftl_mv2_ndclpp_p_teb_agr2.clik_lensing` and CMB 
-marginalized agressive range files  
-`lensing/smicadx12_Dec5_ftl_mv2_ndclpp_p_teb_agr2_CMBmarged.clik_lensing` 
-are also available.
-
-All the extended cases are available in different PLA files.
+## Likelihood files
+This package only contains the code.
+Likelihood files for Planck are available on the  [Planck Legacy Archive](http://pla.esac.esa.int/pla/#cosmology). The likelihood file for spt3g is available [here](https://github.com/benabed/spt3g_y1_dist).
 
 ## code 
-The code is at version 3.1
+The code is at version clik_15.0
 
-###changes sinces v3.01
-- Major : Correct a bug in the computation of the CMB marginalized lensing.
-- Configuration : new user modifiable file `clik_extra_env` gathers the url, names and versions of the external packages that can be installed automatically. This will hopefully simplify troubleshooting with new versions of the external packages in the future.
-- Configuration : update to latest version of waf. Print a warning when the compilation of C or fortran part will use a compiler defined by a user set CC or FC environment variable. 
-* Python wrapper : correct a bug where error messages would not be properly displayed in python 3
-* Python wrapper : when both astropy and pyfits are available, prefer astropy
-
-###changes sinces v3.00
-
-- Improve parsing of intel fortran dryrun output to fix an issue with the building of the intel fortran link line which was broken for version 2019
-- Change an openmp scheduling option in src/plik/smica.c to go aroung an API incompatibility between intel 2019 openmp and gcc9 openmp which was preventing the code to correctely compile in this particular case.
+###changes sinces plc_3.1
+- Addition of sp3g year 1 likelihood code
+- Addition of a version function in python
 
 
 ## Installing
 
-In the current version ``plc`` can only be installed using the waf configuration
-and installation tool or using make and the associated `Makefile`. 
-Note that in the latter case, the installation procedure will
-not test the availability of the tools and libraries needed by plc.
+There are two way of installing  ``clik``. One can either use the ``waf`` installer (recommended) or ``make``. In the latter case, the ``Makefile`` has to be manually edited, and the external dependency must be installed. In the former case, the ``waf`` installer can try to install external dependency. Note also that there is no need to download the ``waf`` code to use the installer, since it is distributed within the package.
 
 ### Prerequisites
 
@@ -122,7 +53,7 @@ When installing manually the mandatory library, make sure that both the
 ``blas/lapack`` and ``cfitsio`` are  built as shared libraries
 (option ``make --shared`` of the ``cfitsio`` install).
 
-The optional prerequisites are only needed for the optional ``plc`` tools 
+The optional prerequisites are only needed for the optional ``clik`` tools 
 (i.e. python tools). 
 They are not required for basic uses of the library.
 
@@ -261,7 +192,7 @@ tool to install a plain vanilla, non-optimized blas/lapack library.
 
 #### ``cfitsio``
 
-``plc`` requires a ``cftisio`` library compiled as a shared library (option 
+``clik`` requires a ``cftisio`` library compiled as a shared library (option 
 ``--shared`` when building cfitsio). The tool will look for the include and 
 library in the usual locations. If it fails, one can point it to a particular 
 version of the ``cfitsio`` library using either
@@ -324,7 +255,7 @@ shell initialization script.
 Once the script is executed, the variable ``$CLIK_PATH`` will point toward the
 root directory of your plc install.
 
-### Compiling with plc
+### Compiling with clik
 
 The compilation and link options to compile a C code against the clik library
 can be obtained using the script ``clik-config``.
@@ -740,7 +671,7 @@ clik_get_selfcheck /some/clikfile /where/to/save/datavector
 
 ### Changing the lmin and lmax of some of the likelihoods
 
-As in version 2.0, the ``clik_change_lrange`` allows to change the lmin and lmax of the plik and 
+As in version plc_2.0, the ``clik_change_lrange`` allows to change the lmin and lmax of the plik and 
 commander likelihoods. This allow to reproduce the tests performed on the 
 hybridization multipole, and on the high ell lmax described in the paper.
 ```
