@@ -20,12 +20,14 @@ from waflib.Configure import conf
 def get_version(ctx):
   cmd = "hg identify --id"
   cmd = "git describe --abbrev=12 --always "
+  
   res = ctx.cmd_and_log(cmd, output=waflib.Context.STDOUT, quiet=waflib.Context.BOTH)
   
-  svnversion = res
+  svnversion = res.strip()
   f=open("svnversion","w")
   print(svnversion, file=f)
   f.close()
+  return res
   
 def get_tag_hg(ctx):
   res = ctx.cmd_and_log("hg tags", quiet=waflib.Context.BOTH)
@@ -153,6 +155,35 @@ def configure(ctx):
       ctx.env[left] = right
   except Exception as e:
     pass
+
+  ctx.start_msg("get clik version")
+  gitver = "SAFEGUARD"
+  try:
+    newgitver=False
+    gitver = get_version(ctx).strip()
+    newgitver=True
+  except Exception:
+    newgitver=False
+  try:
+    filever = False
+    f=open("svnversion")
+    gitver = f.read().strip()
+    f.close()
+    filever = True
+  except :
+    filever = False
+    
+  ctx.env.svnversion = gitver
+  clr="GREEN"
+  if newgitver:
+    extr = " (from git)"
+  elif filever:
+    extr=""
+  else:
+    extr =" NO VERSION FOUND"
+    clr="YELLOW"
+  ctx.end_msg(gitver+extr,color=clr)
+
 
   try:
     ctx.load("try_icc","waf_tools")
@@ -380,13 +411,7 @@ def configure(ctx):
       ctx.env.append_unique("PLG_%s_PYTHON"%plg,decr["python"])
 
 
-  try:
-    f=open("svnversion")
-  except :
-    get_version(ctx)
-    f=open("svnversion")
-  ctx.env.svnversion = f.read()
-  f.close()
+  
   
   # extra libs
   if ctx.options.extra_lib:
