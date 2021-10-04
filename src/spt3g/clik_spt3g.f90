@@ -108,7 +108,7 @@ function SPT3G_EETE_LogLike(ClTE, ClEE, DataParams) result(SPT_LogLike)
   real(8), intent(in) :: DataParams(20)
   real(8) :: SPT_LogLike, SPT_PriorLogLike, detcov
 
-  integer i, j, i_spec, ix, ix_1, ix_2
+  integer i, j, i_spec, ix, ix_1, ix_2,l
   character(LEN=:), allocatable :: current_spec_str, current_map_1_str, current_map_2_str, current_field, current_freq_1, current_freq_2
   
   real(8), dimension(SPT3G_windows_lmax+1) :: current_Dl_theory_unbinned_CMB_only ! Length is a buffer for derivatives
@@ -285,19 +285,21 @@ function SPT3G_EETE_LogLike(ClTE, ClEE, DataParams) result(SPT_LogLike)
   
     ! Scale by calibration
     current_Dl_theory_unbinned = current_Dl_theory_unbinned * calibration
-
     
     ! Bin
     ! Select the right bins from the window function in this step
     ! (Difference to SPTpol likelihood due to the changed window function format (already transposed)
 
     !print *,N_b,SPT3G_windows_lmax-SPT3G_windows_lmin+1,1.0d0,spectra_to_fit_bandpower_indices(i_spec)
+    !call save_1D(current_Dl_theory_unbinned,"unbinned",i_spec)
     call dgemv('N',N_b,SPT3G_windows_lmax-SPT3G_windows_lmin+1,1.0d0,&
       full_windows(bin_min:bin_max,:,spectra_to_fit_bandpower_indices(i_spec)),&
       N_b,current_Dl_theory_unbinned,1,0d0,current_Dl_theory_binned,1)
+    !call save_1D(current_Dl_theory_binned,"binned",i_spec)
     
     full_Dl_data_theory_binned((i_spec-1)*N_b+1:i_spec*N_b) = current_Dl_theory_binned
 
+    !!  
     ! Write smooth and binned theory out
     !!if (print_spectrum) then
     !!  save_arr=0
@@ -335,6 +337,7 @@ function SPT3G_EETE_LogLike(ClTE, ClEE, DataParams) result(SPT_LogLike)
     Dl_data_theory_difference((i_spec-1)*N_b+1:i_spec*N_b) = &
       current_Dl_theory_binned - full_bandpowers(bin_min:bin_max,spectra_to_fit_bandpower_indices(i_spec))
 
+
     ! Write binned model-data out
     !!if (print_spectrum) then
     !!  save_arr=0
@@ -365,25 +368,31 @@ function SPT3G_EETE_LogLike(ClTE, ClEE, DataParams) result(SPT_LogLike)
 
   ! Calculate data likelihood
   
-
+  !call save_2D(covariance,"covpre",122)
   call dpotrf ('L', N_b*N_s, covariance, N_b*N_s, info)
   if (info/=0) then 
-    print *,"argl 1"
+    print *,"argl, dpotrf failed with",info
     stop
   endif
+  !call save_2D(covariance,"covpost",122)
   SPT_LogLike = 0
   do i=1, N_b*N_s
     SPT_LogLike = SPT_LogLike  + log(covariance(i,i))
   end do
   detcov = SPT_LogLike
   tmp = Dl_data_theory_difference
+  !call save_1D(Dl_data_theory_difference,"diff_data",122)
+
   call DPOTRS('L', N_b*N_s, 1, covariance, N_b*N_s, tmp, N_b*N_s, info )
   if (info/=0) then 
-    print *,"argl 2"
+    print *,"argl dpotrs failed with",info
     stop
   endif
+  !call save_1D(tmp,"tmp",122)
   
+    
   SPT_LogLike = SPT_LogLike + dot_product(tmp,Dl_data_theory_difference)/2.0
+  
 
   !!SPT_LogLike = Matrix_GaussianLogLikeDouble(covariance, Dl_data_theory_difference)
 
@@ -407,7 +416,6 @@ function SPT3G_EETE_LogLike(ClTE, ClEE, DataParams) result(SPT_LogLike)
   SPT_PriorLogLike = SPT_PriorLogLike + Kappa_prior_switch*0.5d0*((DataParams(iKappa) - Kappa_prior_mean)/Kappa_prior_sigma)**2
   SPT_PriorLogLike = SPT_PriorLogLike + AlphaDustEE_prior_switch*0.5d0*((DataParams(iAlphaDust_EE) - AlphaDustEE_prior_mean)/AlphaDustEE_prior_sigma)**2
   SPT_PriorLogLike = SPT_PriorLogLike + AlphaDustTE_prior_switch*0.5d0*((DataParams(iAlphaDust_TE) - AlphaDustTE_prior_mean)/AlphaDustTE_prior_sigma)**2
-
   !! Print out likelihood contributions
   !if (feedback > 1) then
   !  print *, "SPT-3G Y1 EE/TE: Data LogLike: ", SPT_LogLike

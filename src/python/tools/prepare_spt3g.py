@@ -8,6 +8,49 @@ import clik
 import os.path as osp
 import clik.hpy as hpy
 
+overridekeys = [
+  "SPT3G_Y1_EETE_spectra_to_fit",
+  "SPT3G_Y1_EETE_bin_min",
+  "SPT3G_Y1_EETE_bin_max",
+  "SPT3G_Y1_EETE_super_sample_lensing",
+  "SPT3G_Y1_EETE_radio_galaxies",
+  "SPT3G_Y1_EETE_dsfg",
+  "SPT3G_Y1_EETE_dust",
+  "SPT3G_Y1_EETE_radio_galaxies_nu0",
+  "SPT3G_Y1_EETE_dsfg_nu0",
+  "SPT3G_Y1_EETE_dust_nu0",
+  "SPT3G_Y1_EETE_params_file",
+  "SPT3G_Y1_EETE_bandpower_file",
+  "SPT3G_Y1_EETE_bandpower_file_order",
+  "SPT3G_Y1_EETE_covariance_matrix",
+  "SPT3G_Y1_EETE_covariance_matrix_order",
+  "SPT3G_Y1_EETE_beam_covariance_matrix",
+  "SPT3G_Y1_EETE_beam_covariance_matrix_order",
+  "SPT3G_Y1_EETE_window_folder",
+  "SPT3G_Y1_EETE_window_folder_order",
+  "SPT3G_Y1_EETE_window_l_min",
+  "SPT3G_Y1_EETE_window_l_max",
+  "SPT3G_Y1_EETE_central_frequency_file",
+  "SPT3G_Y1_EETE_central_frequency_file_order",
+  "SPT3G_Y1_EETE_cal_covariance_matrix",
+  "SPT3G_Y1_EETE_cal_prior",
+  "SPT3G_Y1_EETE_kappa_prior",
+  "SPT3G_Y1_EETE_kappa_mean",
+  "SPT3G_Y1_EETE_kappa_sigma",
+  "SPT3G_Y1_EETE_Alpha_Dust_EE_prior",
+  "SPT3G_Y1_EETE_Alpha_Dust_EE_mean",
+  "SPT3G_Y1_EETE_Alpha_Dust_EE_sigma",
+  "SPT3G_Y1_EETE_Alpha_Dust_TE_prior",
+  "SPT3G_Y1_EETE_Alpha_Dust_TE_mean",
+  "SPT3G_Y1_EETE_Alpha_Dust_TE_sigma",
+  "SPT3G_Y1_EETE_Beam_Covariance_Scaling",
+  ]
+
+def add_data_path(data_path,path):
+  if osp.exists(path):
+    return path
+  else:
+    return osp.join(data_path,path)
 
 def main(argv):
   pars = clik.miniparse(argv[1])
@@ -18,7 +61,15 @@ def main(argv):
   hascl[3] = 1
   hascl = nm.array(hascl,dtype=nm.int)
   data_path = pars.data_path
-  dataset = clik.miniparse(pars.dataset_path)
+  override = {}
+  for k in overridekeys:
+    if k in pars:
+      override[k]=getattr(pars,k)
+  
+  print(override)
+
+  dataset = clik.miniparse(pars.dataset_path,**override)
+
   
   lmin = dataset.int.SPT3G_Y1_EETE_window_l_min
   lmax = dataset.int.SPT3G_Y1_EETE_window_l_max
@@ -53,7 +104,7 @@ def main(argv):
   lkl_grp["SPT3G_Y1_EETE_Alpha_Dust_TE_prior_sigma"] = dataset.float(default=0.02).SPT3G_Y1_EETE_Alpha_Dust_TE_prior_sigma
   lkl_grp["SPT3G_Y1_EETE_Beam_Covariance_Scaling"] = dataset.float(default=1.0).SPT3G_Y1_EETE_Beam_Covariance_Scaling
 
-  bandpowers = nm.loadtxt(data_path+"/"+dataset.SPT3G_Y1_EETE_bandpower_file)[:,1:]
+  bandpowers = nm.loadtxt(add_data_path(data_path,dataset.SPT3G_Y1_EETE_bandpower_file))[:,1:]
   lkl_grp["SPT3G_Y1_EETE_bandpower"] = bandpowers.flat[:]
 
   bdp_order = dict([(b,a) for a,b in enumerate(dataset.str_array.SPT3G_Y1_EETE_bandpower_file_order)])
@@ -68,7 +119,7 @@ def main(argv):
   N_b = bmax-bmin
   N_s = len(bdp_select)
   
-  cov = nm.loadtxt(data_path+"/"+dataset.SPT3G_Y1_EETE_covariance_matrix)
+  cov = nm.loadtxt(add_data_path(data_path,dataset.SPT3G_Y1_EETE_covariance_matrix))
   cov.shape = (N_b_0*N_s_0,N_b_0*N_s_0)
   cov_order = dict([(b,a) for a,b in enumerate(dataset.str_array.SPT3G_Y1_EETE_covariance_matrix_order)])
   cov_select = [cov_order[v] for v in dataset.str_array.SPT3G_Y1_EETE_spectra_to_fit]
@@ -81,7 +132,7 @@ def main(argv):
       ncov[j*N_b:(j+1)*N_b,i*N_b:(i+1)*N_b] = ncov[i*N_b:(i+1)*N_b,j*N_b:(j+1)*N_b].T
   lkl_grp["SPT3G_Y1_EETE_covariance_matrix"] = ncov.flat[:]
 
-  beamcov = nm.loadtxt(data_path+"/"+dataset.SPT3G_Y1_EETE_beam_covariance_matrix)
+  beamcov = nm.loadtxt(add_data_path(data_path,dataset.SPT3G_Y1_EETE_beam_covariance_matrix))
   beamcov.shape = (N_b_0*N_s_0,N_b_0*N_s_0)
   beamcov_order = dict([(b,a) for a,b in enumerate(dataset.str_array.SPT3G_Y1_EETE_beam_covariance_matrix_order)])
   beamcov_select = [beamcov_order[v] for v in dataset.str_array.SPT3G_Y1_EETE_spectra_to_fit]
@@ -111,13 +162,13 @@ def main(argv):
   lkl_grp["SPT3G_Y1_EETE_spectra_to_fit_tcal"] = nm.array(spectra_to_fit_tcal_indices).flat[:]
   lkl_grp["SPT3G_Y1_EETE_spectra_to_fit_ecal"] = nm.array(spectra_to_fit_ecal_indices).flat[:]
 
-  calcov = nm.loadtxt(data_path+"/"+dataset.SPT3G_Y1_EETE_cal_covariance_matrix)
+  calcov = nm.loadtxt(add_data_path(data_path,dataset.SPT3G_Y1_EETE_cal_covariance_matrix))
   ncalcov = calcov[calrow==1][:,calrow==1]
   icalcov = nm.linalg.inv(ncalcov)
 
   lkl_grp["SPT3G_Y1_EETE_cal_inv_covariance_matrix"] = icalcov.flat[:]
 
-  central_freq = dict([[k,v] for k,v in zip(dataset.str_array.SPT3G_Y1_EETE_central_frequency_file_order, nm.loadtxt(data_path+"/"+dataset.SPT3G_Y1_EETE_central_frequency_file))])
+  central_freq = dict([[k,v] for k,v in zip(dataset.str_array.SPT3G_Y1_EETE_central_frequency_file_order, nm.loadtxt(add_data_path(data_path,dataset.SPT3G_Y1_EETE_central_frequency_file)))])
   
   spectra_to_fit_nu_eff = [[central_freq[v.split("_")[0]] for v in sp.split("x")] for sp in dataset.str_array.SPT3G_Y1_EETE_spectra_to_fit]
   #spectra_to_fit_nu_eff = nm.arange(24)*1.
@@ -130,9 +181,9 @@ def main(argv):
 
   full_windows = nm.zeros((N_b_0,1+lmax-lmin,N_s_0))
   win_order = dict([(b,a) for a,b in enumerate(dataset.str_array.SPT3G_Y1_EETE_window_folder_order)])
-  win_select = [win_order[v] for v in bdp_order]
+  win_select = [win_order[v] for v in dataset.str_array.SPT3G_Y1_EETE_spectra_to_fit]
   for i in range(N_b_0):
-    sel_windows = nm.loadtxt(data_path+"../../"+dataset.SPT3G_Y1_EETE_window_folder+"window_%d.txt"%(i+1))[:,1:]
+    sel_windows = nm.loadtxt(add_data_path(data_path+"../../",dataset.SPT3G_Y1_EETE_window_folder)+"window_%d.txt"%(i+1))[:,1:]
     for j in range(N_s_0):
       full_windows[i,:,j] = sel_windows[:,win_select[j]]
   lkl_grp["SPT3G_Y1_EETE_windows"] = nm.array(full_windows).flat[:]
