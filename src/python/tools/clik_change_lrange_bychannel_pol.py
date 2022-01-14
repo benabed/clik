@@ -42,8 +42,8 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   mB = mE + mP*hascl[1]
   m =  mB + mP*hascl[2]
   
-  blmin = inhf["clik/lkl_0/bin_lmin"][:nb/nm.sum(hascl)]
-  blmax = inhf["clik/lkl_0/bin_lmax"][:nb/nm.sum(hascl)]
+  blmin = inhf["clik/lkl_0/bin_lmin"][:int(nb/nm.sum(hascl))]
+  blmax = inhf["clik/lkl_0/bin_lmax"][:int(nb/nm.sum(hascl))]
   
   
   bmins = nm.array([nm.argmin((blmin+olmin-lm)**2) for lm in lmins])
@@ -62,8 +62,8 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
 
   
   dnames = inhf["clik/lkl_0/dnames"]
-  dnames = [dnames[i*256:(i+1)*256].strip("\0") for i in range(len(dnames)/256)]
-  print "restrict to"
+  dnames = [dnames[i*256:(i+1)*256].strip("\0") for i in range(len(dnames)//256)]
+  print("restrict to")
   cc = 0
   for a in range(3):
     aT = "TEB"[a]
@@ -71,10 +71,10 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
       for b in range(3):
         bT = "TEB"[b]
         for jj in range(mT if b==0 else mP*hascl[b]):
-          print "  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc]),
+          print("  %s%s %s%s lmin = %d, lmax = %d"%(aT,dnames[mT*(a!=0)+ii][:-1],bT,dnames[mT*(b!=0)+jj][:-1],lmins[cc]*kpp[cc],lmaxs[cc]*kpp[cc]),end="")
           if beg_notch[cc]*kpp[cc]<end_notch[cc]*kpp[cc]:
-            print "[notch %d -> %d]"%(beg_notch[cc]*kpp[cc],end_notch[cc]*kpp[cc],),
-          print ""
+            print("[notch %d -> %d]"%(beg_notch[cc]*kpp[cc],end_notch[cc]*kpp[cc],),end="")
+          print("")
           cc+=1
 
 
@@ -88,7 +88,7 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   ord = inhf["clik/lkl_0/criterion_gauss_ordering"]
   ord.shape=(-1,2)
   nmsk = inhf["clik/lkl_0/criterion_gauss_mask"]
-  nmsk.shape=(nb/nm.sum(hascl),m,m)
+  nmsk.shape=(int(nb/nm.sum(hascl)),m,m)
 
   kp = []
   mx = 0
@@ -100,7 +100,7 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   nnmsk = nmsk*1
 
   for i,j in ord:
-    cur = nm.arange(nb/nm.sum(hascl))[nmsk[:,i,j]==1]
+    cur = nm.arange(int(nb/nm.sum(hascl)))[nmsk[:,i,j]==1]
     nnmsk[:bmins[i,j],i,j] = 0
     nnmsk[bmaxs[i,j]+1:,i,j] = 0
     nnmsk[bbeg_notch[i,j]:bend_notch[i,j]+1,i,j]=0
@@ -120,7 +120,7 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
   kp = nm.concatenate(kp)
   
   siginv = inhf["clik/lkl_0/criterion_gauss_mat"]
-  siginv.shape=(siginv.shape[0]**.5,-1)
+  siginv.shape=(int(siginv.shape[0]**.5),-1)
   sig = nm.linalg.inv(siginv)
   del(siginv)
   
@@ -164,7 +164,7 @@ def change_smica(inhf,lklfile,outfile,lmins,lmaxs,beg,nd):
 def main(argv):
 
   if len(sys.argv)!=2:
-    print "usage : %s parfile\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins.\n  Here is an example parfile\n    #input and output clik files\n    input_clik = plik_dx11dr2_HM_v18_TT.clik\n\n    output_clik = plik_dx11dr2_HM_v18_TT_no143x143.clik\n\n    #set to -1 to use default value\n    #set to anything else to change lmin\n    lmin = -1    -1    -1    &\n           -1    -1    -1    &\n           -1    -1    -1   \n\n \n    #set to -1 to use default value\n    #set to anything else to change lmax\n    #set any non negative value inferior than lmin (0 is a good example) ro remove a cross spectra\n    lmax = -1    -1    -1    &\n           -1     0    -1    &\n           -1    -1    -1   \n\n "%osp.basename(sys.argv[0])
+    print("usage : %s parfile\n  copy input_clik to output_clik, change lmin and lmax of output_clik.\n  lmin and lmax can be set to -1 to keep the input_clik values.\n  input_clik, must be a plik or commander file.\n  if input_clik is a binned plik file, the effective lmin and lmax will be the set to the closest bins.\n  Here is an example parfile\n    #input and output clik files\n    input_clik = plik_dx11dr2_HM_v18_TT.clik\n\n    output_clik = plik_dx11dr2_HM_v18_TT_no143x143.clik\n\n    #set to -1 to use default value\n    #set to anything else to change lmin\n    lmin = -1    -1    -1    &\n           -1    -1    -1    &\n           -1    -1    -1   \n\n \n    #set to -1 to use default value\n    #set to anything else to change lmax\n    #set any non negative value inferior than lmin (0 is a good example) ro remove a cross spectra\n    lmax = -1    -1    -1    &\n           -1     0    -1    &\n           -1    -1    -1   \n\n "%osp.basename(sys.argv[0]))
     sys.exit(0)
   pars = clik.miniparse(argv[1])
   lklfile = pars.str.input_clik
@@ -182,7 +182,7 @@ def main(argv):
   inhf = hpy.File(lklfile)
   ty = inhf["clik/lkl_0/lkl_type"]
   if ty not in ("smica"):
-    print "can only change lmin and lmax for plik likelihoods"
+    print("can only change lmin and lmax for plik likelihoods")
     sys.exit(-1)
   assert ty in ["smica"],"Cannot change lrange for likelihood type %s"%ty
   fnc = globals()["change_%s"%ty]
