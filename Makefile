@@ -165,7 +165,6 @@ SHARED = -shared -Bdynamic
 endif
 
 # get version of the code from the svn version
-git describe --abbrev=12 --always > svnversion
 VERSION = $(strip $(shell cat svnversion)) MAKEFILE
 #VERSION = MAKEFILE
 
@@ -302,18 +301,19 @@ install_data: | install_dir
 	@$(ECHO) "install template data $(BLUE_COLOR) $(DATAPLIK) $(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/share/clik/rel2015 $(NO_COLOR)"
 	$(INSTALL) $(DATAPLIK) $(PREFIX)/share/clik/rel2015
 
-install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 install_data | install_dir
+install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(LAPACKDEP) $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik_profile.zsh $(BDIR)/clik-config $(BDIR)/clik-config_f90 install_data | install_dir
 	@$(ECHO) "install libs $(BLUE_COLOR)libclik.$(SO) libclik_f90.$(SO)$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/lib $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(LAPACKDEP) $(PREFIX)/lib
 	@$(ECHO) "install includes $(BLUE_COLOR)clik.h clik.mod$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/include $(NO_COLOR)"
 	@$(INSTALL)  src/clik.h src/minipmc/maths_base.h src/minipmc/errorlist.h src/minipmc/io.h src/lapack_clik.h src/minipmc/pmc.h $(ODIR)/clik.mod $(PREFIX)/include
-	@$(ECHO) "install clik_profile & clik-config$(BLUE_COLOR)clik_profile.sh clik_profile.csh clik-config clik-config_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
-	@$(INSTALL)  $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik-config $(BDIR)/clik-config_f90 $(PREFIX)/bin
+	@$(ECHO) "install clik_profile & clik-config$(BLUE_COLOR)clik_profile.sh clik_profile.csh clik_profile.zsh clik-config clik-config_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
+	@$(INSTALL)  $(BDIR)/clik_profile.sh $(BDIR)/clik_profile.csh $(BDIR)/clik_profile.zsh $(BDIR)/clik-config $(BDIR)/clik-config_f90 $(PREFIX)/bin
 	@$(ECHO) "install exec tools $(BLUE_COLOR)clik_example_C clik_example_f90$(NO_COLOR) in $(BLUE_COLOR)$(PREFIX)/bin $(NO_COLOR)"
 	@$(INSTALL)  $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(PREFIX)/bin
 	@$(ECHO) "\n$(PINK_COLOR)*----------------------------------------------------*"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
-	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh (or clik_profile.csh)     $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh                           $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   (or clik_profile.csh or clik_profile.zsh)        $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   to set the environment variables needed by clik  $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
@@ -329,6 +329,9 @@ $(BDIR)/clik_profile.sh: src/clik_profile.sh.template |$(BDIR)
 	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIO_LIBPATH)@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
 
 $(BDIR)/clik_profile.csh: src/clik_profile.csh.template |$(BDIR)
+	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIO_LIBPATH)@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
+
+$(BDIR)/clik_profile.zsh: src/clik_profile.zsh.template |$(BDIR)
 	@sed "s!PREFIX!$(PREFIX)!g;s/DYLD_LIBRARY_PATH/$(LIBPATHNAME)/g;s@CFITSIOLIBPATH@$(CFITSIO_LIBPATH)@g;s!FORTRANLIBPATH!$(FLIBPATH)!g;s!LAPACKLIBPATH!$(LAPACKLIBPATH)!g;s!MPYTHONPATH!$(PYTHONPATH)!g" <$< >$@
 
 $(BDIR):
