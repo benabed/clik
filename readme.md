@@ -1,5 +1,5 @@
-# clik 15 
-June 2021
+# clik 15.1 
+July 2022
 
 ``clik`` is the public version (including extra packages and tools) of the Planck Likelihood Code, ``plc``, distributed on the ESA website. While 
 ``plc`` will only evolve in case of future discovery of major issues, ``clik`` can evolve and improve. In particular, future evolution of the installation procedure will only be available in ``clik``. 
@@ -18,7 +18,10 @@ This package only contains the code.
 Likelihood files for Planck are available on the  [Planck Legacy Archive](http://pla.esac.esa.int/pla/#cosmology). The likelihood file for spt3g is available [here](https://github.com/benabed/spt3g_y1_dist).
 
 ## code 
-The code is at version clik_15.0
+The code is at version clik_15.1
+
+###changes sinces clik_15
+- Preliminary support for M1 mac (arm64 architecture and zsh configuration file, only with the waf installer)
 
 ###changes sinces plc_3.1
 - Addition of sp3g year 1 likelihood code
@@ -79,7 +82,7 @@ The building and installing of the code is done using
 Detailed instructions on installing are found below. Here are a few simple and
 classical cases.
 
-##### MACOS
+##### MacOS (intel)
 
 Use the following instructions to install on macos, letting the tool install all 
 of the optional prerequisites and using the stock blas/lapack library. The C 
@@ -95,6 +98,43 @@ On macos, the installer will test whether the optional openmp clang support is
 installed. Please follow the isntruction at 
 [https://iscinumpy.gitlab.io/post/omp-on-high-sierra/]()
 to install openmp support on macos.
+
+Note that from version 15.1 on, a zsh profile is also available as zsh is the
+new default shell for MacOS.
+
+##### MacOS (M series)
+
+Version 15.1 implements a preliminary support of the Apple M series of precessors.
+The installer should be able to detect the Mcalss processor and target it.
+To make sure that the code is compiled for the M1, it is recommanded to specify it 
+at configuration and compilation time this way
+
+	arch -arm64 /path/to/arm64/python waf configure --install_all_deps 
+	arch -arm64 /path/to/arm64/python waf install
+
+It is also recommanded to install manually the required python libraries such as 
+numpy, astropy and cython using again the command
+	
+	arch -arm64 /path/to/arm64/pip install somepackage
+
+Finally, it is also possible to target the intel infrastructure (for example to link with
+previously compiled intel code to be executed under rosetta) using 
+
+	arch -x86_64 /path/to/x86_64/python waf configure --install_all_deps 
+	arch -x86_64 /path/to/x86_64/python waf install
+
+In both cases, the architecture flag will be propagated to the cfitsio installation.
+
+Finally, OpenMP clang support can be installed (http://https://openmp.llvm.org). 
+Recommanded way is to use homebrew (http://https://brew.sh)
+
+	brew install libomp
+
+For version 14.0.6, at least, brew install the lib in a weird location and does
+not link it to  `/usr/local/lib` or other classical locations. The location of 
+the clang open OpenMP lib can be set using the option `--clang_libomppath`
+	
+	arch -arm64 python3 waf configure --cfitsio_install --clang_libomppath=/opt/homebrew/Cellar/libomp/14.0.6/lib/
 
 ##### linux with mkl
 
