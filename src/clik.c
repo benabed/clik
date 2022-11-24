@@ -39,7 +39,18 @@ char* clik_get_version(clik_object *clikid,error **_err) {
   return version_str;
 }
 
+
+
 clik_object* clik_init(char* hdffilepath, error **_err) {
+  clik_object *target;
+  _dealwitherr;
+  target = clik_init_with_options(hdffilepath, NULL, err);
+  _forwardError(*err,__LINE__,NULL);
+  return target;
+}
+
+
+clik_object* clik_init_with_options(char* hdffilepath, cdic* options, error **_err) {
   int n_lkl,i_lkl;
   int *lmax;
   int sz;
@@ -74,7 +85,7 @@ clik_object* clik_init(char* hdffilepath, error **_err) {
     cdf = cldf_openchild(df,cur_lkl,err);
     _forwardError(*err,__LINE__,NULL);
 
-    clkl[i_lkl] = clik_lklobject_init(cdf,err);
+    clkl[i_lkl] = clik_lklobject_init_with_options(cdf,options,err);
     _forwardError(*err,__LINE__,NULL);
     
     cmblkl_check_lmax(clkl[i_lkl],lmax,err);

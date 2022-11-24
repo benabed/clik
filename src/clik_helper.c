@@ -81,7 +81,7 @@ int mtot(int mT,int mP,int *has_cl) {
   return nr_channels;
 }
 
-cmblkl * clik_lklobject_init(cldf *df,error **err) {
+cmblkl * clik_lklobject_init_with_options(cldf *df,cdic* options, error **err) {
   cmblkl *clkl;
   parname lkl_type;
   char *version;
@@ -91,6 +91,7 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   double unit;
   int lmin, lmax;
   char init_func_name[2048];
+  clik_lkl_init_with_options_func *clik_dl_options_init;
   clik_lkl_init_func *clik_dl_init;
   //clik_addon_init_func *clik_addondl_init;
   void* dlhandle;   
@@ -227,13 +228,58 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   
   clkl = NULL;
 
-  sprintf(init_func_name,"clik_%s_init",lkl_type);
-  clik_dl_init = dlsym(dlhandle,init_func_name);
-  testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,df->root,dlerror()); 
+  if (options==NULL) {
+    sprintf(init_func_name,"clik_%s_init",lkl_type);
+    clik_dl_init = dlsym(dlhandle,init_func_name);
+    testErrorRetVA(clik_dl_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,df->root,dlerror()); 
+  } else {
+    sprintf(init_func_name,"clik_%s_options_init",lkl_type);
+    clik_dl_options_init = dlsym(dlhandle,init_func_name);
+    testErrorRetVA(clik_dl_options_init==NULL,-1111,"Cannot initialize lkl type %s from %s dl error : %s",*err,__LINE__,NULL,lkl_type,df->root,dlerror()); 
+  }
+  
+  // check if the function accept options
+  hk = cldf_haskey(df,"options_table",err);
+  forwardError(*err,__LINE__,NULL);
+  if (hk==1) {
+    clkl = clik_dl_options_init(df,nell,ell,has_cl,unit,wl,bins,nbins,options,err);
+    forwardError(*err,__LINE__,NULL); 
+    if (clkl->noptions==0) {
+      int noptions;
+      char ** options_table;
+      char *options_buf;
+      int iop;
+      char curoption[256];
+      char *opt_name;
 
-  clkl = clik_dl_init(df,nell,ell,has_cl,unit,wl,bins,nbins,err);
-  forwardError(*err,__LINE__,NULL); 
+      // I have to fill in the option table
+      noptions = cldf_readint(df,"options_table/noptions",err);
+      forwardError(*err,__LINE__,NULL); 
+      
+      options_table = malloc_err(sizeof(char*)*noptions,err);
+      forwardError(*err,__LINE__,NULL);
 
+      options_buf = malloc_err(sizeof(char)*noptions*256,err);
+      forwardError(*err,__LINE__,NULL);
+
+      for(iop=0;iop<noptions;iop++) {
+        options_table[iop] = options_buf + iop*256;
+        sprintf(curoption,"options_table/option_%d",iop);
+        opt_name = cldf_readstr(df,curoption,NULL,err);
+        forwardError(*err,__LINE__,NULL);
+        sprintf(options_table[iop],"%s",opt_name);
+        free(opt_name);        
+      }
+      cmblkl_set_options(clkl, noptions, options_table,err);
+      forwardError(*err,__LINE__,NULL);
+
+      free(options_table);
+      free(options_buf);
+    }
+  } else {
+    clkl = clik_dl_init(df,nell,ell,has_cl,unit,wl,bins,nbins,err);
+    forwardError(*err,__LINE__,NULL); 
+  }
   hk = cldf_haskey(df,"pipeid",err);
   forwardError(*err,__LINE__,NULL);
   if (hk==1) { 
@@ -358,7 +404,160 @@ cmblkl * clik_lklobject_init(cldf *df,error **err) {
   //}
   
   return clkl;
+
 }
 
+cmblkl * clik_lklobject_init(cldf *df,error **err) {
+  cmblkl *clkl;
 
+  clkl = clik_lklobject_init_with_options(df,NULL,err);
+  forwardError(*err,__LINE__,NULL);
+  return clkl;
+}
+
+int options_key(char* key, cldf * trans, char **rtkey, error **err) {
+  char* tkey;
+  int hastrans,hk,ps;
+
+  *rtkey = NULL;
+  hk = cldf_haskey(trans,key,err);
+  forwardError(*err,__LINE__,0);
+  if (hk == 1) {
+    tkey = cldf_readstr(trans,key,NULL,err);
+    forwardError(*err,__LINE__,0);
+    *rtkey = tkey;  
+  }
+  return hk;
+}
+
+int options_readstr(char * key, cdic *options, cldf * trans, char **res,  error **err) {
+  char* tkey;
+  int hastrans,ps;
+  char *val;
+
+  *res = NULL;
+  hastrans = options_key(key,trans,&tkey,err);
+  forwardError(*err,__LINE__,0);
+  if (hastrans==1) {
+    ps=cdic_key_index(options,tkey,err);
+    forwardError(*err,__LINE__,0);
+    if (ps!=-1) {
+      val = cdic_get(options,tkey,NULL,err);
+      forwardError(*err,__LINE__,0);
+      *res =val;
+      free(tkey);
+      return 1;            
+    }
+    free(tkey);
+  }
+  return 0;
+}
+
+int opdf_haskey(cldf *df, char *key, cdic* options, cldf *trans,error **err) {
+  char* tkey;
+  int hastrans,hk,ps;
+
+  hastrans = options_key(key,trans,&tkey,err);
+  forwardError(*err,__LINE__,0);
+  if (hastrans==1) {
+    ps=cdic_key_index(options,tkey,err);
+    forwardError(*err,__LINE__,0);
+    free(tkey);
+    if (ps!=-1) {
+       return 1;
+    }
+  }
+  hk = cldf_haskey(df,key,err);
+  forwardError(*err,__LINE__,0);
+  
+  return hk;
+}
+
+char* opdf_readstr(cldf *df, char *key, int *sz, cdic* options, cldf *trans,error **err) {
+  int hk;
+  char *res;
+  char *val;
+
+  hk = options_readstr(key,options,trans,&val,err);
+  forwardError(*err,__LINE__,NULL);
+  
+  if (hk==1) {
+    res = malloc_err(sizeof(char)*(strlen(val)+1),err);
+    forwardError(*err,__LINE__,NULL);
+    strcpy(res,val);
+    return res;
+
+  }
+  res = cldf_readstr(df, key, sz, err);
+  forwardError(*err,__LINE__,NULL);
+  return res;
+}  
+
+long opdf_readint(cldf *df, char *key, cdic* options, cldf *trans,error **err) {
+  int hk;
+  long res;
+  char *val;
+
+  hk = options_readstr(key,options,trans,&val,err);
+  forwardError(*err,__LINE__,0);
+  
+  if (hk==1) {
+    testErrorRetVA(sscanf(val,"%ld",&res)!=1,-1234,"'%s' cannot be translated in an integer",*err,__LINE__,0,val);
+    return res;
+  }
+  res = cldf_readint(df, key, err);
+  forwardError(*err,__LINE__,0);
+  return res;
+}  
+
+long opdf_readint_default(cldf *df, char *key, long def,cdic* options, cldf *trans,error **err) {
+  int hk;
+  long res;
+  char *val;
+
+  hk = options_readstr(key,options,trans,&val,err);
+  forwardError(*err,__LINE__,def);
+  
+  if (hk==1) {
+    testErrorRetVA(sscanf(val,"%ld",&res)!=1,-1234,"'%s' cannot be translated in an integer",*err,__LINE__,def,val);
+    return res;
+  }
+  res = cldf_readint_default(df, key, def,err);
+  forwardError(*err,__LINE__,def);
+  return res;
+}  
+
+double opdf_readfloat(cldf *df, char *key, cdic* options, cldf *trans,error **err) {
+  int hk;
+  double res;
+  char *val;
+
+  hk = options_readstr(key,options,trans,&val,err);
+  forwardError(*err,__LINE__,0);
+  
+  if (hk==1) {
+    testErrorRetVA(sscanf(val,"%lg",&res)!=1,-1234,"'%s' cannot be translated in a double",*err,__LINE__,0,val);
+    return res;
+  }
+  res = cldf_readfloat(df, key, err);
+  forwardError(*err,__LINE__,0);
+  return res;
+}  
+
+double opdf_readfloat_default(cldf *df, char *key, double def,cdic* options, cldf *trans,error **err) {
+  int hk;
+  double res;
+  char *val;
+
+  hk = options_readstr(key,options,trans,&val,err);
+  forwardError(*err,__LINE__,def);
+  
+  if (hk==1) {
+    testErrorRetVA(sscanf(val,"%lg",&res)!=1,-1234,"'%s' cannot be translated in a doublw",*err,__LINE__,def,val);
+    return res;
+  }
+  res = cldf_readfloat_default(df, key, def,err);
+  forwardError(*err,__LINE__,def);
+  return res;
+}  
 
