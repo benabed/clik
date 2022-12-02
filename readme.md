@@ -134,7 +134,7 @@ For version 14.0.6, at least, brew install the lib in a weird location and does
 not link it to  `/usr/local/lib` or other classical locations. The location of 
 the clang open OpenMP lib can be set using the option `--clang_libomppath`
 	
-	arch -arm64 python3 waf configure --cfitsio_install --clang_libomppath=/opt/homebrew/Cellar/libomp/14.0.6/lib/
+	arch -arm64 python3 waf configure --cfitsio_install --clang_libomppath=/opt/homebrew/Cellar/libomp/SOMEVERSION/lib/
 
 ##### linux with mkl
 

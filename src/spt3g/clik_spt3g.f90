@@ -745,13 +745,14 @@ SUBROUTINE spt3g_ttteee2018_parameter_init(eSPT3G_windows_lmin, eSPT3G_windows_l
 
   allocate(cl_clik(3*(clik_lmax+1)))
   allocate(Dataparam(37))
-  allocate(CMBparam(7))
+  allocate(CMBparam(6))
 
 end subroutine spt3g_ttteee2018_parameter_init
 
 subroutine spt3g_ttteee2018_lkl(LKL,CL)
   USE CMB_SPT3G_TTEEE_2018_clik
   use CMB_SPT3G_2018_TTTEEE
+  use CMB_SPT3G_2018_TTTEEE_foregrounds
   use SPT3G_utils
   REAL(8),INTENT(OUT)::LKL
   REAL(8),INTENT(IN),DIMENSION((SPT3G_windows_lmax+1)*3+37+7)::CL
@@ -763,7 +764,11 @@ subroutine spt3g_ttteee2018_lkl(LKL,CL)
     cl_clik(ell+(SPT3G_windows_lmax+1)*2) = CL(ell+1+(SPT3G_windows_lmax+1)*2)*ell*(ell+1.)/2./pi
   end do
   Dataparam(:) = CL((SPT3G_windows_lmax+1)*3+1:(SPT3G_windows_lmax+1)*3+37)
-  CMBparam = CL((SPT3G_windows_lmax+1)*3+37+1:(SPT3G_windows_lmax+1)*3+37+7)
+  if (tSZCosmologyScalingEnabled.or.kSZCosmologyScalingEnabled) then
+    CMBparam = CL((SPT3G_windows_lmax+1)*3+37+1:(SPT3G_windows_lmax+1)*3+37+6)
+  else
+    CMBparam = (/0,0,0,0,0/)
+  endif
 
   lkl = SPT3G_2018_TTTEEE_LogLike_external(single_lkl, cl_clik,CMBparam,Dataparam)
 end subroutine spt3g_ttteee2018_lkl

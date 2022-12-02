@@ -260,7 +260,7 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
                         "TT_CIBClustering_Amp" ,"TT_CIBClustering_Alpha" ,"TT_CIBClustering_Beta" ,
                         "TT_CIBClustering_decorr_90" ,"TT_CIBClustering_decorr_150" ,
                         "TT_CIBClustering_decorr_220" ,"TT_tSZ_Amp" ,"TT_tSZ_CIB_corr" ,"TT_kSZ_Amp", 
-                        "H0",  "omb", "sigma_8", "omc", "omnu", "ns_index", "tau"};
+                        "H0",  "Omega_b", "sigma_8", "Omega_m", "ns", "tau"};
 
   int SPT3G_windows_lmin,SPT3G_windows_lmax;
   char *spectra_to_fit_list_string, *spec_bin_min_list_string, *spec_bin_max_list_string, *late_crop_msk_string,                \
@@ -456,7 +456,12 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   free(full_tSZ_template);
   free(full_kSZ_template);
 
-  xdim = 44;
+  if (tSZCosmologyScalingEnabled==1 || kSZCosmologyScalingEnabled ==1) {
+    xdim = 43;
+  } else {
+    xdim =37;
+  }
+  
   
   cing = init_cmblkl(NULL, &spt3g_ttteee_2018_lkl, 
                    &spt3g_ttteee2018_free,
