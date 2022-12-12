@@ -767,7 +767,7 @@ subroutine spt3g_ttteee2018_lkl(LKL,CL)
   if (tSZCosmologyScalingEnabled.or.kSZCosmologyScalingEnabled) then
     CMBparam = CL((SPT3G_windows_lmax+1)*3+37+1:(SPT3G_windows_lmax+1)*3+37+6)
   else
-    CMBparam = (/0,0,0,0,0/)
+    CMBparam = (/0,0,0,0,0,0/)
   endif
 
   lkl = SPT3G_2018_TTTEEE_LogLike_external(single_lkl, cl_clik,CMBparam,Dataparam)
