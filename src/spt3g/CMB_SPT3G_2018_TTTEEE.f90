@@ -833,7 +833,7 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
      deallocate(cov_for_logl_copy_final)
   end if
 # else
-    n = this%N_b_total
+    n = size(Delta_data_model_final)
     call dpotrf ('L', n, cov_for_logl_final, n, info)
     if (info/=0) then
       write(*,*) "total covariance not positive definite"
