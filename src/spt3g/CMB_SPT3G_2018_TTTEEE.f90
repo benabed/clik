@@ -698,7 +698,7 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
   real(mcp), allocatable :: Delta_data_model_final(:)
 
   ! Complete covariance (band powers and beam)
-  real(mcp), dimension(this%N_b_total,this%N_b_total) :: cov_for_logl, cov_for_logl_copy ! Copy needed for chisq calculation if requested
+  real(mcp), dimension(this%N_b_total,this%N_b_total) :: cov_for_logl !, cov_for_logl_copy ! Copy needed for chisq calculation if requested
   real(mcp), allocatable :: cov_for_logl_final(:,:), cov_for_logl_copy_final(:,:) ! Needed for late crop to ignore band powers in the middle of the vector
 
   ! Vector of calibration parameters
@@ -782,7 +782,7 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
   ! Add the beam coariance to the band power covariance
   cov_for_logl = this%bdp_covariance_pos_def
   call this%AddBeamCovariance(Dl_theory_binned, cov_for_logl)
-  cov_for_logl_copy = cov_for_logl
+  !cov_for_logl_copy = cov_for_logl
 
   ! Final crop to ignore select band powers
   if (do_late_crop .eqv. .true.) then
@@ -804,20 +804,23 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
         ii = ii+1
       end if
     end do
-    allocate(cov_for_logl_copy_final(this%N_b_total-num_cropped,this%N_b_total-num_cropped))
-    cov_for_logl_copy_final = cov_for_logl_final
+    !allocate(cov_for_logl_copy_final(this%N_b_total-num_cropped,this%N_b_total-num_cropped))
+    !cov_for_logl_copy_final = cov_for_logl_final
   else
     allocate(Delta_data_model_final(this%N_b_total))
     Delta_data_model_final = Delta_data_model
     allocate(cov_for_logl_final(this%N_b_total,this%N_b_total))
     cov_for_logl_final = cov_for_logl
-    allocate(cov_for_logl_copy_final(this%N_b_total,this%N_b_total))
-    cov_for_logl_copy_final = cov_for_logl_copy
+    !allocate(cov_for_logl_copy_final(this%N_b_total,this%N_b_total))
+    !cov_for_logl_copy_final = cov_for_logl_copy
   end if
 
 
   
 # ifndef _STANDALONE_
+  if (print_chisq) then
+    allocate(cov_for_logl_copy_final(shape(cov_for_logl_final)(1),shape(cov_for_logl_final)(2)))
+    cov_for_logl_copy_final = cov_for_logl_final
   SPT_LogLike = Matrix_GaussianLogLikeDouble(cov_for_logl_final, Delta_data_model_final)
   ! Print chisq
   if (print_chisq) then
@@ -827,6 +830,7 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
      chisq = 2*(SPT_LogLike - detcov)
      print *, "SPT-3G 2018 TTTEEE: chi square = ", chisq
      call MPIStop("SPT-3G 2018 TTTEEE: Completed chi square calculation.")
+     deallocate(cov_for_logl_copy_final)
   end if
 # else
     n = this%N_b_total
@@ -873,7 +877,8 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
   cal_vec_buf = MatMul(this%inv_cal_covariance,cal_vec)
   SPT_LogLike = SPT_LogLike + 0.5d0 * dot_product(cal_vec,cal_vec_buf)
 #endif
-
+  deallocate(Delta_data_model_final)
+  deallocate(cov_for_logl_final)
 end function SPT3G_2018_TTTEEE_LogLike_external
 
 
