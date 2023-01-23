@@ -33,6 +33,9 @@ typedef void clik_object;
 clik_object* clik_init(char* hdffilepath, error **err);
 clik_object* clik_init_with_options(char* hdffilepath, cdic* options, error **_err);
 
+int clik_get_options(clik_object* clikid, parname **names, error **err);
+
+
 // retrieve the list of cls as a list of flags 
 // order is  TT EE BB TE TB EB
 // for example for a likelihood acting on TT 

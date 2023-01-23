@@ -52,15 +52,15 @@ double* wcmblkl_lkl(void* data, double *pars, error **err);
 
 int mtot(int mT,int mP,int *has_cl);
 
-int opdf_haskey(cldf *df, char *key, cdic* options, cldf *trans,error **err);
-long opdf_readint(cldf *df, char *key, cdic* options, cldf *trans,error **err);
-double opdf_readfloat(cldf *df, char *key, cdic* options, cldf *trans,error **err);
-long opdf_readint_default(cldf *df, char *key, long def,cdic* options, cldf *trans,error **err);
-double opdf_readfloat_default(cldf *df, char *key,double def, cdic* options, cldf *trans,error **err);
-char* opdf_readstr(cldf *df, char *key, int* sz, cdic* options, cldf *trans,error **err);
-long* opdf_readlongarray(cldf *df, char *key, int* sz, cdic* options, cldf *trans,error **err);
-int* opdf_readintarray(cldf *df, char *key, int* sz, cdic* options, cldf *trans,error **err);
-double* opdf_readfloatarray(cldf *df, char *key, int* sz, cdic* options, cldf *trans,error **err);
+int opdf_haskey(cldf *df, char *key, cdic* options, error **err);
+long opdf_readint(cldf *df, char *key, cdic* options, error **err);
+double opdf_readfloat(cldf *df, char *key, cdic* options, error **err);
+long opdf_readint_default(cldf *df, char *key, long def,cdic* options, error **err);
+double opdf_readfloat_default(cldf *df, char *key,double def, cdic* options, error **err);
+char* opdf_readstr(cldf *df, char *key, int* sz, cdic* options, error **err);
+long* opdf_readlongarray(cldf *df, char *key, int* sz, cdic* options, error **err);
+int* opdf_readintarray(cldf *df, char *key, int* sz, cdic* options, error **err);
+double* opdf_readfloatarray(cldf *df, char *key, int* sz, cdic* options, error **err);
 
 
 #endif

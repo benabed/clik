@@ -270,7 +270,7 @@ void free_cmblkl(void **pelf) {
     free(self->xnames);
   }
   if (self->options_table!=NULL) {
-    free(self->xnames);
+    free(self->options_table);
   }
   //_DEBUGHERE_("","");
   free(self);

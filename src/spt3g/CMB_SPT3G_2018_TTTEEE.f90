@@ -707,6 +707,7 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
 
   ! Number of bdps cropped out in the last step
   integer num_cropped,n,info
+  character(len=20)::chumber
 
   !!!open(122,file="cl_retest.txt")
   !!!write(122,*) Theory_Cl
@@ -755,6 +756,13 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
     else if (current_field .eq. "EE") then
       call this%AddEEForegrounds(i_spec, DataParams, current_Dl_theory_unbinned, Dl_foregrounds)
     end if
+
+    !!write(chumber,*) i_spec
+    !!chumber=adjustl(chumber)
+    !!open(unit=334,file="fg_"//trim(chumber)//".dat")
+    !!write(*,*) "fg_"//trim(chumber)//".dat"
+    !!write(334,*) Dl_foregrounds
+    !!close(334)
 
 #ifndef _STANDALONE_
     ! Write smooth theory out with all foreground components
@@ -819,8 +827,9 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
   
 # ifndef _STANDALONE_
   if (print_chisq) then
-    allocate(cov_for_logl_copy_final(shape(cov_for_logl_final)(1),shape(cov_for_logl_final)(2)))
-    cov_for_logl_copy_final = cov_for_logl_final
+    allocate(cov_for_logl_copy_final, source=cov_for_logl_final)
+    !cov_for_logl_copy_final = cov_for_logl_final
+  end if
   SPT_LogLike = Matrix_GaussianLogLikeDouble(cov_for_logl_final, Delta_data_model_final)
   ! Print chisq
   if (print_chisq) then

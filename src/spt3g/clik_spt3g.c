@@ -248,7 +248,7 @@ void spt3g_ttteee2018_free(void **none) {
 }
 
 
-cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, cdic *options,error **err) {
   char *xnames_def[] = {"Kappa" ,"Tcal90" ,"Tcal150" ,"Tcal220" ,"Ecal90" ,"Ecal150" ,
                         "Ecal220" ,"EE_Poisson_90x90" ,"EE_Poisson_90x150" ,"EE_Poisson_90x220", 
                         "EE_Poisson_150x150" ,"EE_Poisson_150x220" ,"EE_Poisson_220x220" ,
@@ -286,11 +286,18 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
 
   int bok;
   int xdim;
+  int version;
+
   cmblkl *cing;
 
   // make sure we have only one instance of the likelihood
   spt3g_only_one_(&bok);
   testErrorRet(bok!=0,-100,"spt3g ttteee 2018 already initialized",*err,__LINE__,NULL);
+
+  version = cldf_readint(df,"version",err);
+  forwardError(*err,__LINE__,NULL);
+  testErrorRet((version!=1) && (version!=2),-100,"spt3g ttteee 2018 version unknown",*err,__LINE__,NULL);
+  
 
   SPT3G_windows_lmin = cldf_readint(df,"SPT3G_2018_TTTEEE_window_l_min",err);
   forwardError(*err,__LINE__,NULL);
@@ -317,18 +324,18 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   forwardError(*err,__LINE__,NULL);
   
   l_spec_bin_min_list_string = -1;
-  spec_bin_min_list_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_min",&l_spec_bin_min_list_string,err);
+  spec_bin_min_list_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_min",&l_spec_bin_min_list_string,options,err);
   forwardError(*err,__LINE__,NULL);
   
   l_spec_bin_max_list_string = -1;
-  spec_bin_max_list_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_max",&l_spec_bin_max_list_string,err);
+  spec_bin_max_list_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_max",&l_spec_bin_max_list_string,options,err);
   forwardError(*err,__LINE__,NULL);
   
-  hk = cldf_haskey(df,"SPT3G_2018_TTTEEE_late_crop_msk",err);
+  hk = opdf_haskey(df,"SPT3G_2018_TTTEEE_late_crop_msk",options,err);
   forwardError(*err,__LINE__,NULL);
   if (hk==1) {
     l_late_crop_msk_string = -1;
-    late_crop_msk_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_late_crop_msk",&l_late_crop_msk_string,err);
+    late_crop_msk_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_late_crop_msk",&l_late_crop_msk_string,options,err);
     forwardError(*err,__LINE__,NULL);
   } else {
     late_crop_msk_string = malloc_err(sizeof(char),err);
@@ -355,7 +362,7 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   full_beam_covariance_list_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_beam_covariance_matrix_order",&l_full_beam_covariance_list_string,err);
   forwardError(*err,__LINE__,NULL);
 
-  beam_cov_scale  = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_beam_covariance_scale",1,err);
+  beam_cov_scale  = opdf_readfloat_default(df,"SPT3G_2018_TTTEEE_beam_covariance_scale",1,options,err);
   forwardError(*err,__LINE__,NULL);
 
   l_full_window_list_string = -1;
@@ -366,7 +373,7 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   nu_eff_list_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_central_frequency_file_order",&l_nu_eff_list_string,err);
   forwardError(*err,__LINE__,NULL);
 
-  aberration_coefficient = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_aberration_coefficient",0.0,err);
+  aberration_coefficient = opdf_readfloat_default(df,"SPT3G_2018_TTTEEE_aberration_coefficient",0.0,options,err);
   forwardError(*err,__LINE__,NULL);
 
   sz_full_bandpowers = N_b_0_total;
@@ -396,26 +403,26 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   nu_0_galdust = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_galdust_nu0",150.0,err);
   forwardError(*err,__LINE__,NULL);
   
-  T_galdust = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_galdust_T",19.6,err);
+  T_galdust = opdf_readfloat_default(df,"SPT3G_2018_TTTEEE_galdust_T",19.6,options,err);
   forwardError(*err,__LINE__,NULL);
 
   nu_0_CIB = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_galdust_nu0",150.0,err);
   forwardError(*err,__LINE__,NULL);
   
-  T_CIB = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_CIB_T",25.,err);
+  T_CIB = opdf_readfloat_default(df,"SPT3G_2018_TTTEEE_CIB_T",25.,options,err);
   forwardError(*err,__LINE__,NULL);
 
   nu_0_tSZ = cldf_readfloat_default(df,"SPT3G_2018_TTTEEE_tSZ_nu0",143.0,err);
   forwardError(*err,__LINE__,NULL);
 
-  tSZCosmologyScalingEnabled = cldf_readint(df,"SPT3G_2018_TTTEEE_tSZ_cosmology_scaling",err);
+  tSZCosmologyScalingEnabled = opdf_readint(df,"SPT3G_2018_TTTEEE_tSZ_cosmology_scaling",options,err);
   forwardError(*err,__LINE__,NULL);
 
   sz_full_tSZ_template = (1+SPT3G_windows_lmax-SPT3G_windows_lmin);
   full_tSZ_template = cldf_readfloatarray(df,"SPT3G_2018_TTTEEE_tSZ_template",&sz_full_tSZ_template,err);
   forwardError(*err,__LINE__,NULL);
 
-  kSZCosmologyScalingEnabled = cldf_readint(df,"SPT3G_2018_TTTEEE_kSZ_cosmology_scaling",err);
+  kSZCosmologyScalingEnabled = opdf_readint(df,"SPT3G_2018_TTTEEE_kSZ_cosmology_scaling",options,err);
   forwardError(*err,__LINE__,NULL);
 
   sz_full_kSZ_template = (1+SPT3G_windows_lmax-SPT3G_windows_lmin);
@@ -473,4 +480,18 @@ cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, d
   forwardError(*err,__LINE__,NULL);
   
   return cing;
+}
+
+cmblkl* clik_spt3g_ttteee_2018_init(cldf *df, int nell, int* ell, int* has_cl, double unit,double* wl, double *bins, int nbins, error **err) {
+  cdic  *options;
+  cmblkl * res;
+
+  options = cdic_init(err);
+  forwardError(*err,__LINE__,NULL);
+  
+  res = clik_spt3g_ttteee_2018_options_init(df, nell, ell, has_cl, unit,wl, bins, nbins, options,err);
+  forwardError(*err,__LINE__,NULL);
+
+  return res;  
+
 }

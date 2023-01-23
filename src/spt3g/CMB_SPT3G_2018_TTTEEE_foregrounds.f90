@@ -93,18 +93,20 @@ subroutine SPT3G_2018_TTTEEE_ReadIni_Foregrounds(Ini)
   T_CIB = Ini%Read_Real("SPT3G_2018_TTTEEE_CIB_T", 25.0)
   nu_0_tSZ = Ini%Read_Real("SPT3G_2018_TTTEEE_tSZ_nu0", 143.0)
 
-  ! Read in tSZ template, cosmology scaling switch, and normalise
+  ! Read in tSZ template and normalise
+  ! Cosmology scaling is not supported!
   tSZ_template_name = Ini%ReadFileName("SPT3G_2018_TTTEEE_tSZ_template_file",relative = .true., NotFoundFail=.true.)
-  tSZCosmologyScalingEnabled = Ini%Read_Logical("SPT3G_2018_TTTEEE_tSZ_cosmology_scaling", .true.)
+  tSZCosmologyScalingEnabled = Ini%Read_Logical("SPT3G_2018_TTTEEE_tSZ_cosmology_scaling", .false.)! not supported!
 
   allocate(full_tSZ_template(1+SPT3G_windows_lmax-SPT3G_windows_lmin,2)) ! File contains column of ell
   call File%ReadTextMatrix(tSZ_template_name, full_tSZ_template)
   allocate(tSZ_template(1+SPT3G_windows_lmax-SPT3G_windows_lmin))
   tSZ_template = full_tSZ_template(:,2) / full_tSZ_template(3000,2) ! Ensure normalisation
 
-  ! Read in kSZ template, cosmology scaling switch, and normalise
+  ! Read in kSZ template and normalise
+  ! Cosmology scaling is not supported!
   kSZ_template_name = Ini%ReadFileName("SPT3G_2018_TTTEEE_kSZ_template_file",relative = .true., NotFoundFail=.true.)
-  kSZCosmologyScalingEnabled = Ini%Read_Logical("SPT3G_2018_TTTEEE_kSZ_cosmology_scaling", .true.)
+  kSZCosmologyScalingEnabled = Ini%Read_Logical("SPT3G_2018_TTTEEE_kSZ_cosmology_scaling", .false.)! not supported!
 
   allocate(full_kSZ_template(1+SPT3G_windows_lmax-SPT3G_windows_lmin,2)) ! File contains column of ell
   call File%ReadTextMatrix(kSZ_template_name, full_kSZ_template)
@@ -132,19 +134,21 @@ subroutine SPT3G_2018_TTTEEE_Ini_Foregrounds(eSPT3G_windows_lmin,eSPT3G_windows_
   T_CIB        = eT_CIB
   nu_0_tSZ     = enu_0_tSZ
 
-  ! Read in tSZ template, cosmology scaling switch, and normalise
+  ! Read in tSZ template and normalise
+  ! Cosmology scaling not supported
   tSZCosmologyScalingEnabled = .false.
   if (etSZCosmologyScalingEnabled .eq. 1) then
-    tSZCosmologyScalingEnabled = .true.
+    tSZCosmologyScalingEnabled = .false.
   endif
 
   allocate(tSZ_template(1+SPT3G_windows_lmax-SPT3G_windows_lmin))
   tSZ_template = full_tSZ_template(:) / full_tSZ_template(3000) ! Ensure normalisation
 
-  ! Read in kSZ template, cosmology scaling switch, and normalise
+  ! Read in kSZ template and normalise
+  ! Cosmology scaling not supported
   kSZCosmologyScalingEnabled = .false.
   if (ekSZCosmologyScalingEnabled .eq. 1) then
-    kSZCosmologyScalingEnabled = .true.
+    kSZCosmologyScalingEnabled = .false.
   endif
 
 
@@ -253,7 +257,7 @@ end subroutine AddCIBClustering
 
 ! Add tSZ contribution
 ! Template normalised at ell=3000
-! Optionally with cosmology scaling
+! Cosmology scaling not supported
 subroutine AddtSZ(pow_at_3000, nu1, nu2, H0, sigma_8, omb, Dl_theory, Dl_foregrounds)
   real(mcp), intent(in) :: pow_at_3000, nu1, nu2, H0, sigma_8, omb
   real(mcp), dimension(SPT3G_windows_lmin:SPT3G_windows_lmax), intent(out) :: Dl_theory
@@ -265,9 +269,9 @@ subroutine AddtSZ(pow_at_3000, nu1, nu2, H0, sigma_8, omb, Dl_theory, Dl_foregro
   Dl_tSZ = Dl_tSZ * tSZFrequencyScaling(nu1, nu_0_tSZ, T_CMB) * tSZFrequencyScaling(nu2, nu_0_tSZ, T_CMB) ! Frequency scaling
 
   ! Cosmology scaling
-  if (tSZCosmologyScalingEnabled) then
-    Dl_tSZ = Dl_tSZ * tSZCosmologyScaling(H0, sigma_8, omb)
-  end if
+  !if (tSZCosmologyScalingEnabled) then
+  !  Dl_tSZ = Dl_tSZ * tSZCosmologyScaling(H0, sigma_8, omb)
+  !end if
 
   ! Add to model
   Dl_theory = Dl_theory + Dl_tSZ
@@ -313,7 +317,7 @@ end subroutine AddtSZCIBCorrelation
 
 ! Add kSZ contribution
 ! Template normalised at ell=3000
-! Optionally with cosmology scaling
+! Cosmology scaling not supported
 subroutine AddkSZ(pow_at_3000, H0, sigma_8, omb, omegam, ns, tau, Dl_theory, Dl_foregrounds)
   real(mcp), intent(in) :: pow_at_3000, H0, sigma_8, omb, omegam, ns, tau
   real(mcp), dimension(SPT3G_windows_lmin:SPT3G_windows_lmax), intent(out) :: Dl_theory
@@ -324,9 +328,9 @@ subroutine AddkSZ(pow_at_3000, H0, sigma_8, omb, omegam, ns, tau, Dl_theory, Dl_
   Dl_kSZ = pow_at_3000 * kSZ_template ! Template
 
   ! Cosmology scaling
-  if (kSZCosmologyScalingEnabled) then
-    Dl_kSZ = Dl_kSZ * kSZCosmologyScaling(H0, sigma_8, omb, omegam, ns, tau)
-  end if
+  !if (kSZCosmologyScalingEnabled) then
+  !  Dl_kSZ = Dl_kSZ * kSZCosmologyScaling(H0, sigma_8, omb, omegam, ns, tau)
+  !end if
 
   ! Add to model
   Dl_theory = Dl_theory + Dl_kSZ
@@ -491,6 +495,7 @@ function tSZFrequencyScaling(nu, nu0, T) result(tSZfac)
 end function tSZFrequencyScaling
 
 ! Taken from Reichardt et al. 2020 likelihood
+! NOT SUPPORTED - DO NOT USE
 function tSZCosmologyScaling(H0, sigma8, omegab) result(tSZfac)
   double precision :: H0, sigma8, omegab
   double precision :: tSZfac
@@ -500,6 +505,7 @@ function tSZCosmologyScaling(H0, sigma8, omegab) result(tSZfac)
 end function tSZCosmologyScaling
 
 ! Taken from Reichardt et al. 2020 likelihood
+! NOT SUPPORTED - DO NOT USE
 function kSZCosmologyScaling(H0, sigma8, omegab, omegam, ns, tau) result(kSZfac)
   double precision :: H0, sigma8, omegab, omegam, ns, tau
   double precision :: kSZfac

@@ -297,6 +297,38 @@ void clik_get_lmax(clik_object *clikid, int lmax[6],error **_err) {
   }
 }
 
+int clik_get_options(clik_object* clikid, parname **names, error **_err) {
+  distribution *target;
+  lklbs *lbs;
+  int totoptions,j,i,ii;
+  parname *pn;
+  _dealwitherr;
+
+  target = _clik_dig2(clikid,err);
+  _forwardError(*err,__LINE__,-1);
+  lbs = _clik_dig(clikid,err);
+  _forwardError(*err,__LINE__,-1);
+  totoptions = 0;
+  for (j=0;j<lbs->nlkl;j++) {
+    totoptions += lbs->lkls[j]->noptions;
+  }
+  if (names!=NULL) {
+    pn = malloc_err((1+totoptions)*sizeof(parname),err);
+    _forwardError(*err,__LINE__,-1);
+    ii = 0;
+    for (j=0;j<lbs->nlkl;j++) {
+      for (i=0;i<lbs->lkls[j]->noptions;i++) {
+        sprintf(pn[ii],"%s",lbs->lkls[j]->options_table[i]);
+  
+        ii++;
+      }
+    }
+    _testErrorRetVA(ii!=totoptions,-11011,"error when couting options (%d %d)",*err,__LINE__,-1,ii,totoptions);
+    *names=pn;
+  }
+  return totoptions;
+}  
+
 int clik_get_extra_parameter_names(clik_object* clikid, parname **names, error **_err) {
   parname *pn;
   distribution *target;
