@@ -326,6 +326,7 @@ cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* h
   l_spec_bin_min_list_string = -1;
   spec_bin_min_list_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_min",&l_spec_bin_min_list_string,options,err);
   forwardError(*err,__LINE__,NULL);
+  //_DEBUGHERE_("%s",spec_bin_min_list_string);
   
   l_spec_bin_max_list_string = -1;
   spec_bin_max_list_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit_bin_max",&l_spec_bin_max_list_string,options,err);
