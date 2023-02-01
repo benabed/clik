@@ -27,8 +27,8 @@ CFITSIO_LIBPATH := $(CFITSIOPATH)/lib
 
 #define your compilers and stuff
 CC = gcc
-FC = ifort
-#FC = gfortran
+#FC = ifort
+FC = gfortran
 
 # ifort
 # if you are using ifort set here where its lib are installed
@@ -36,9 +36,9 @@ FC = ifort
 # PLEASE note that gcc 4.9 and ifort <14.0.4 have an imcompativbility
 # (see https://software.intel.com/en-us/articles/gcc-49-openmp-code-cannot-be-linked-with-intel-openmp-runtime)
 
-# on my mac I got
-IFORTLIBPATH = /usr/bin/ifort-2011-base/compiler/lib
-IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcoremt -lpthread
+# on my intel mac I got an old version of ifort !
+#IFORTLIBPATH = /usr/bin/ifort-2011-base/compiler/lib
+#IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcoremt -lpthread
 
 # on a linux machine, ifort 11.1
 #IFORTLIBPATH = /softs/intel/fce/11.1.075/lib/intel64
@@ -53,6 +53,8 @@ IFORTRUNTIME = -L$(IFORTLIBPATH) -lintlc -limf -lsvml -liomp5 -lifportmt -lifcor
 # and check the runtime libs
 GFORTRANLIBPATH = /usr/lib
 GFORTRANRUNTIME = -L$(GFORTRANLIBPATH) -lgfortran -lgomp
+# on my m1 mac I use homebrew to install gfortran so that
+#GFORTRANLIBPATH = /opt/homebrew/bin/
 
 # if you are on linux and using mkl, you need to set this 
 MKLROOT = 
@@ -79,7 +81,17 @@ ECHO = echo
 # what is the openmp option for your C compiler (leave empty to compile without openmp)
 #COPENMP =
 COPENMP = -fopenmp
-# what is the openmp option for your F90 compiler (leave empty to cmpile without openmp)
+COPENMP_LIB = 
+
+# it is more complicated in the case of Mxx Apple silicon
+# you have to install openmp for clang by yourself I recommand using homebrew
+# modify this line to point to your install
+COPENMPMACM_LIBPATH = /opt/homebrew/Cellar/libomp/15.0.4/lib
+COPENMPMACM = -Xpreprocessor -fopenmp 
+COPENMPMACM_LIB = -Wl,-rpath,$(COPENMPMACM_LIBPATH) -L$(COPENMPMACM_LIBPATH) -lomp 
+
+
+# what is the openmp option for your F90 compiler (leave empty to compile without openmp)
 FOPENMP = -openmp
 
 # what is the 32/64 bit option for your C compiler (leave empty if you don't want to know)
@@ -111,6 +123,7 @@ INSTALL = install
 
 # get the os
 UNAME := $(shell uname -s)
+UNAMEARCH := $(shell uname -m)
 
 ifeq ($(UNAME),Darwin)
 OS = macos
@@ -174,16 +187,16 @@ DEFINESMACOS = -D HAS_RTLD_DEFAULT
 #linux
 DEFINESLINUX = 
 
-DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CLIKSVNVERSION="$(VERSION)"' -D CAMSPEC_V1
+DEFINESCOMMON = -D HAS_LAPACK -D LAPACK_CLIK -D NOHEALPIX -D CLIK_LENSING -D 'CLIKSVNVERSION="$(VERSION)"' -D CAMSPEC_V1 -D _STANDALONE_
 
 
 ifeq ($(OS),macos)
 DEFINES = $(DEFINESMACOS) $(DEFINESCOMMON)
 ifndef CM64
-CM64 = -arch x86_64
+CM64 = -arch $(UNAMEARCH)
 endif
 ifndef FM64
-FM64 = -arch x86_64
+FM64 = -arch $(UNAMEARCH)
 endif
 else
 DEFINES = $(DEFINESLINUX) $(DEFINESCOMMON)
@@ -197,6 +210,14 @@ endif
 
 INCLUDES = -I$(CFITSIO_INCPATH)
 
+COPENMP_LIB = 
+# deal with openmp and Mxx mac
+ifeq ($(OS),macos)
+ifeq ($(UNAMEARCH),arm64)
+COPENMP = $(COPENMPMAC)
+COPENMP_LIB = $(COPENMPMACM_LIB)
+endif
+endif
 # final CFLAG and FFLAGS
 CFLAGS = $(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I src -I src/cldf -I src/minipmc -I src/lenslike/plenslike -I src/plik $(INCLUDES)
 FFLAGS += $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
@@ -250,7 +271,7 @@ endif
 CFITSIO =  -L$(CFITSIO_LIBPATH) -lcfitsio
 
 #final LDFLAG
-LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) -ldl -lm -lpthread
+LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) $(COPENMP_LIB)-ldl -lm -lpthread
 
 # define some path to find the codes
 SRCPATHLIST := src src/minipmc src/cldf src/camspec src/bflike src/simall src/lenslike/plenslike src/cmbonly src/gibbs src/actspt src/spt3g src/simall src/lowlike src/plik src/plik/component_plugin/rel2015 
