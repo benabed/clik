@@ -1,12 +1,13 @@
-# clik 15.1 
-July 2022
+# clik 16.0
+
+February 2023
 
 ``clik`` is the public version (including extra packages and tools) of the Planck Likelihood Code, ``plc``, distributed on the ESA website. While 
 ``plc`` will only evolve in case of future discovery of major issues, ``clik`` can evolve and improve. In particular, future evolution of the installation procedure will only be available in ``clik``. 
 
 ``clik`` provides C and Fortran and python 
 libraries that allow users to compute the log likelihoods of the temperature, 
-polarization, and lensing maps of Planck data, along with new datasets, such as SPT3G. 
+polarization, and lensing maps of Planck data, along with new datasets, such as SPT-3G. 
  
 Note that all of the previous likelihood files (from plc 1 and plc 2) should still 
 work correctely with ``clik`` and should do so in the foreseeable future.
@@ -15,10 +16,14 @@ The code in ``clik`` have been written by numerous authors whithin the Planck co
 
 ## Likelihood files
 This package only contains the code.
-Likelihood files for Planck are available on the  [Planck Legacy Archive](http://pla.esac.esa.int/pla/#cosmology). The likelihood file for spt3g is available [here](https://github.com/benabed/spt3g_y1_dist).
+Likelihood files for Planck are available on the  [Planck Legacy Archive](http://pla.esac.esa.int/pla/#cosmology). The likelihood file for SPT-3G is available [here](https://github.com/benabed/spt3g_y1_dist).
 
 ## code 
-The code is at version clik_15.1
+The code is at version clik_16.0
+
+###changes sinces clik_15.1
+- Numerous modifications allowing for parameters usually found in the clik file to be modified at initialization time through a new initialization API. Previous initialization API still supported but do not allow the same capability
+- New TTTEEE SPT-3G likelihood, supporting the new initizaliation API
 
 ###changes sinces clik_15
 - Preliminary support for M1 mac (arm64 architecture and zsh configuration file, only with the waf installer)
