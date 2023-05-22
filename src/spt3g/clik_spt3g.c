@@ -320,7 +320,7 @@ cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* h
   forwardError(*err,__LINE__,NULL);
 
   l_spectra_to_fit_list_string = -1;
-  spectra_to_fit_list_string = cldf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit",&l_spectra_to_fit_list_string,err);
+  spectra_to_fit_list_string = opdf_readstr(df,"SPT3G_2018_TTTEEE_spectra_to_fit",&l_spectra_to_fit_list_string,options,err);
   forwardError(*err,__LINE__,NULL);
   
   l_spec_bin_min_list_string = -1;
