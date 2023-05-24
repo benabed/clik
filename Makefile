@@ -52,17 +52,17 @@ FC = gfortran
 # if you are using gfortran set here where the lib are installed
 # and check the runtime libs
 GFORTRANLIBPATH = /usr/lib
-GFORTRANRUNTIME = -L$(GFORTRANLIBPATH) -lgfortran -lgomp
 # on my m1 mac I use homebrew to install gfortran so that
-#GFORTRANLIBPATH = /opt/homebrew/bin/
+#GFORTRANLIBPATH = /opt/homebrew/lib/gcc/12/
+GFORTRANRUNTIME = -L$(GFORTRANLIBPATH) -lgfortran -lgomp
 
 # if you are on linux and using mkl, you need to set this 
 MKLROOT = 
 LAPACKLIBPATHMKL = 
 #some example
 #MKLROOT = /softs/intel/mkl/10.2.6.038/
-# on mkl 10.3
-#LAPACKLIBPATHMKL = -L$(MKLROOT)/lib/intel64
+# on mkl 10.3 or more
+LAPACKLIBPATHMKL = -L$(MKLROOT)/lib/intel64
 # on mkl 10.2
 #LAPACKLIBPATHMKL = -L$(MKLROOT)/lib/em64t
 
@@ -85,7 +85,8 @@ COPENMP_LIB =
 
 # it is more complicated in the case of Mxx Apple silicon
 # you have to install openmp for clang by yourself I recommand using homebrew
-# modify this line to point to your install
+# modify this line to point to your install - mine is here
+# ignore if not on mac or m1 mac
 COPENMPMACM_LIBPATH = /opt/homebrew/Cellar/libomp/15.0.4/lib
 COPENMPMACM = -Xpreprocessor -fopenmp 
 COPENMPMACM_LIB = -Wl,-rpath,$(COPENMPMACM_LIBPATH) -L$(COPENMPMACM_LIBPATH) -lomp 
@@ -105,7 +106,7 @@ FM64 =
 #FM64 = -m64
 
 # set the variable to the python cli to compile and install the python tools
-PYTHON = python
+PYTHON = python3
 
 
 ################################################################################################
@@ -210,17 +211,16 @@ endif
 
 INCLUDES = -I$(CFITSIO_INCPATH)
 
-COPENMP_LIB = 
 # deal with openmp and Mxx mac
 ifeq ($(OS),macos)
 ifeq ($(UNAMEARCH),arm64)
-COPENMP = $(COPENMPMAC)
+COPENMP = $(COPENMPMACM)
 COPENMP_LIB = $(COPENMPMACM_LIB)
 endif
 endif
 # final CFLAG and FFLAGS
 CFLAGS = $(CM64) $(COPENMP) $(CFPIC) $(DEFINES) -I src -I src/cldf -I src/minipmc -I src/lenslike/plenslike -I src/plik $(INCLUDES)
-FFLAGS += $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
+FFLAGS += -cpp $(FM64) $(FOPENMP) $(FFPIC) $(DEFINES) $(FMODULEPATH) $(ODIR)
 
 
 # Lapack section
@@ -271,7 +271,7 @@ endif
 CFITSIO =  -L$(CFITSIO_LIBPATH) -lcfitsio
 
 #final LDFLAG
-LDFLAG = $(CM64) $(CFITSIO) $(LAPACK) $(FRUNTIME) $(COPENMP_LIB)-ldl -lm -lpthread
+LDFLAG = $(CM64) $(FRUNTIME) $(COPENMP_LIB) $(CFITSIO) $(LAPACK) -ldl -lm -lpthread
 
 # define some path to find the codes
 SRCPATHLIST := src src/minipmc src/cldf src/camspec src/bflike src/simall src/lenslike/plenslike src/cmbonly src/gibbs src/actspt src/spt3g src/simall src/lowlike src/plik src/plik/component_plugin/rel2015 
@@ -301,7 +301,7 @@ BFLIKELKL := $(addprefix $(ODIR)/,long_intrinsic_smw.f90.o fitstools_smw.f90.o b
 PLIKLITELKL := $(addprefix $(ODIR)/,plik_cmbonly.f90.o clik_cmbonly.f90.o clik_cmbonly.o)
 PLIKLKL := $(addprefix $(ODIR)/, smica.o clik_hfipack.o clik_parametric.o clik_parametric_addon.o fg2015.o corrnoise.o leakage.o)
 SIMALLLKL := $(addprefix $(ODIR)/, clik_simall.o)
-SPTLKL := $(addprefix $(ODIR)/, clik_spt3g.o clik_spt3g.f90.o)
+SPTLKL := $(addprefix $(ODIR)/, CMB_SPT3G_2018_TTTEEE_utils.f90.o CMB_SPT3G_2018_TTTEEE_foregrounds.f90.o CMB_SPT3G_2018_TTTEEE.f90.o clik_spt3g.o clik_spt3g.f90.o )
 
 CMBLKL:= $(ACTSPTLKL) $(CAMSPECLKL) $(GIBBSLKL) $(LOWLIKELKL) $(BFLIKELKL) $(SIMALLLKL) $(SPTLKL) $(PLIKLITELKL) $(PLIKLKL)
 CLIKLIB := $(TOOLS) $(CLIKMAIN) $(CMBLKL) $(LENSLKL) $(LAPACKDEP)
@@ -333,14 +333,14 @@ install: $(BDIR)/libclik.$(SO) $(BDIR)/libclik_f90.$(SO) $(BDIR)/clik_example_C 
 	@$(INSTALL)  $(BDIR)/clik_example_C $(BDIR)/clik_example_f90 $(PREFIX)/bin
 	@$(ECHO) "\n$(PINK_COLOR)*----------------------------------------------------*"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
-	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh                           $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source bin/clik_profile.sh                       $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   (or clik_profile.csh or clik_profile.zsh)        $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   to set the environment variables needed by clik  $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
 
 ifdef PYTHON
-PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print('python%s/site-packages'%sys.version[0:3])"`
+PYTHONPATH = $(PREFIX)/lib/`$(PYTHON) -c"import sys;print('python%s/site-packages'%('.'.join(sys.version.split('.')[:2])))"`
 PYTHONEXE := `which $(PYTHON)`
 else
 PYTHONPATH := 
@@ -365,7 +365,7 @@ $(CLIKLIB): | $(ODIR) $(ODIR)/.print_info $(ODIR)/.test_cfitsio
 
 $(BDIR)/libclik.$(SO): $(CLIKLIB) 
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
-	@$(LD)  $(SHARED)  $(LAPACK) $(LDFLAG) $^ -o $@
+	$(LD)  $(SHARED)  $(LAPACK) $(LDFLAG) $^ -o $@
 
 $(BDIR)/libclik_f90.$(SO): $(BDIR)/libclik.$(SO) $(addprefix $(ODIR)/,clik_fortran.o clik.f90.o)
 	@$(ECHO) "build $(BLUE_COLOR)$(@) $(NO_COLOR)"
@@ -417,6 +417,7 @@ $(ODIR)/.print_info: |$(ODIR)
 	@$(ECHO) "$(BLUE_COLOR)Using the following lapack link line:$(NO_COLOR) $(LAPACK)"
 	@$(ECHO) "$(BLUE_COLOR)Using the following cfitsio link line:$(NO_COLOR) $(CFITSIO)"
 	@$(ECHO) "$(BLUE_COLOR)Using the following fortran runtime link line:$(NO_COLOR) $(FRUNTIME)"
+	@$(ECHO) "$(BLUE_COLOR)Using the following openmp link line:$(NO_COLOR) $(COPENMP_LIB)"
 	@$(ECHO) "$(BLUE_COLOR)Build dir:$(NO_COLOR) $(BDIR)"
 	@$(ECHO)
 	@touch $(@)
@@ -424,10 +425,11 @@ $(ODIR)/.print_info: |$(ODIR)
 PYTOOLS := $(shell cd src/python/tools/;ls *.py;cd ../../../)
 
 install_python: install $(addprefix $(ODIR)/, $(PYTOOLS)) |$(ODIR)
-	@LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) setup.py build --build-base=$(ODIR) install --install-lib=$(PYTHONPATH)
+	PYTHONPATH=$(PYTHONPATH) LINK_CLIK="$(LDFLAG) $(LAPACK) -L$(PREFIX)/lib -lclik " $(PYTHON) -m pip  install .  --prefix=.
 	@$(ECHO) "\n$(PINK_COLOR)*----------------------------------------------------*"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
-	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source clik_profile.sh (or clik_profile.csh)     $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   Source bin/clik_profile.sh                       $(PINK_COLOR)|"
+	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   (or clik_profile.csh or clik_profile.zsh)        $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)   to set the environment variables needed by clik  $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)|$(NO_COLOR)                                                    $(PINK_COLOR)|"
 	@$(ECHO) "$(PINK_COLOR)*----------------------------------------------------*\n$(NO_COLOR)"
