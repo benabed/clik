@@ -127,6 +127,7 @@ Type, extends(TCMBLikelihood) :: TSPT3G_2018_TTTEEE_Likelihood
   real(mcp), allocatable :: inv_cal_covariance(:,:)
   real(mcp), allocatable :: theory_spectrum_overwrite(:,:)
   real(mcp) :: beam_cov_scale ! Scales the beam covariance artificially
+  integer :: include_logdet
 contains
 #ifndef _STANDALONE_
   procedure :: ReadIni => SPT3G_2018_TTTEEE_ReadIni
@@ -433,6 +434,8 @@ subroutine SPT3G_2018_TTTEEE_InitData(this, bandpower_filename, covariance_filen
   call GetPoissonParamIx(spectra_to_fit_list, spectra_to_fit_Poisson_ix) ! Poisson power indices
   call GrabCIBClusteringDecorrelationParamIx(spectra_to_fit_list, spectra_to_fit_CIB_cl_decorr_ix) ! CIB clustering decorrelation indices
 
+  this%include_logdet = 1
+
   ! Give feedback
   print *, "SPT-3G 2018 TTTEEE: Likelihood successfully initialised!"
   print *, "Fitting spectra: (bins)"
@@ -460,7 +463,7 @@ subroutine SPT3G_2018_TTTEEE_Ini_external(this,eSPT3G_windows_lmin, eSPT3G_windo
                                           nu_eff_matrix,nu_eff_list_string, spectra_to_fit_list_string,      &
                                           spec_bin_min_list_string,  spec_bin_max_list_string,late_crop_msk_string, &
                                           ecov_eval_cut_threshold,ecov_eval_large_number_replacement,beam_cov_scale, &
-                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template)
+                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template,einclude_logdet)
   class(TSPT3G_2018_TTTEEE_Likelihood),intent(inout) :: this
   !issue here....
 
@@ -491,7 +494,7 @@ subroutine SPT3G_2018_TTTEEE_Ini_external(this,eSPT3G_windows_lmin, eSPT3G_windo
   character(LEN=*),intent(in) :: late_crop_msk_string
   real(mcp),intent(in):: ecov_eval_cut_threshold,ecov_eval_large_number_replacement,beam_cov_scale,aberration_coefficient
   real(mcp),intent(in):: enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ
-  integer,intent(in) :: etSZCosmologyScalingEnabled,ekSZCosmologyScalingEnabled
+  integer,intent(in) :: etSZCosmologyScalingEnabled,ekSZCosmologyScalingEnabled,einclude_logdet
 
   real(mcp),intent(in) :: full_tSZ_template(1+eSPT3G_windows_lmax-eSPT3G_windows_lmin)
   real(mcp),intent(in) :: full_kSZ_template(1+eSPT3G_windows_lmax-eSPT3G_windows_lmin)
@@ -632,6 +635,11 @@ subroutine SPT3G_2018_TTTEEE_Ini_external(this,eSPT3G_windows_lmin, eSPT3G_windo
 
   call SPT3G_2018_TTTEEE_Ini_Foregrounds(eSPT3G_windows_lmin,eSPT3G_windows_lmax, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template)
 
+  if (einclude_logdet.NE.0) then
+    this%include_logdet = 1
+  else
+    this%include_logdet = 0
+  endif
 
 end subroutine SPT3G_2018_TTTEEE_Ini_external
 # endif
@@ -851,10 +859,12 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
       return
     endif
     SPT_LogLike = 0
-    !Log Det term:
-    do i=1, n
-        SPT_LogLike = SPT_LogLike  + log(cov_for_logl_final(i,i))
-    end do
+    if (this%include_logdet.NE.0) then
+      !Log Det term:
+      do i=1, n
+          SPT_LogLike = SPT_LogLike  + log(cov_for_logl_final(i,i))
+      end do
+    endif
     tmp = Delta_data_model_final
     call DPOTRS('L', N, 1, cov_for_logl_final, n, tmp, n, INFO )
     if (info/=0) then
@@ -865,7 +875,9 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
     endif
 
     !Add together
+    !print *,SPT_LogLike
     SPT_LogLike = SPT_LogLike + dot_product(tmp,Delta_data_model_final)/2.
+    !print *,SPT_LogLike
 #endif
   ! Grab vector of calibration parameters used and offset from unity
   ix = 1

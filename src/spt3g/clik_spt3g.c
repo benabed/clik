@@ -228,7 +228,7 @@ void spt3g_ttteee2018_parameter_init_(int*, int*, double*, char*, int* , double*
                                           double*,char*, int* , char*, int* ,      
                                           char*, int* ,  char*, int* ,char*, int* ,
                                           double*,double*,double*, 
-                                          double*, double*, double*, double*, double*, double*, int*,double*,int*,double*);
+                                          double*, double*, double*, double*, double*, double*, int*,double*,int*,double*,int*);
 
 
 
@@ -283,6 +283,7 @@ cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* h
   double *full_tSZ_template, *full_kSZ_template;
   int sz_full_tSZ_template, sz_full_kSZ_template;
 
+  int include_logdet;
 
   int bok;
   int xdim;
@@ -430,6 +431,10 @@ cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* h
   full_kSZ_template = cldf_readfloatarray(df,"SPT3G_2018_TTTEEE_kSZ_template",&sz_full_kSZ_template,err);
   forwardError(*err,__LINE__,NULL);
 
+  include_logdet = opdf_readint_default(df,"SPT3G_2018_TTTEEE_include_logdet",1,options,err);
+  forwardError(*err,__LINE__,NULL);
+
+
   spt3g_ttteee2018_parameter_init_(&SPT3G_windows_lmin, &SPT3G_windows_lmax,                                                              
                                    full_bandpowers, full_bandpower_list_string, &l_full_bandpower_list_string,                            
                                    full_covariance_matrix, full_covariance_list_string, &l_full_covariance_list_string,                  
@@ -444,7 +449,8 @@ cmblkl* clik_spt3g_ttteee_2018_options_init(cldf *df, int nell, int* ell, int* h
                                    &beam_cov_scale, &aberration_coefficient,                                                              
                                    &nu_0_galdust, &T_galdust, &nu_0_CIB, &T_CIB, &nu_0_tSZ,                                                  
                                    &tSZCosmologyScalingEnabled,full_tSZ_template,                                                        
-                                   &kSZCosmologyScalingEnabled,full_kSZ_template);                                                               
+                                   &kSZCosmologyScalingEnabled,full_kSZ_template,
+                                   &include_logdet);                                                               
   
   free(spectra_to_fit_list_string);
   free(spec_bin_min_list_string);

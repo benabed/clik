@@ -687,7 +687,7 @@ SUBROUTINE spt3g_ttteee2018_parameter_init(eSPT3G_windows_lmin, eSPT3G_windows_l
                                           nu_eff_matrix,nu_eff_list_string, l_nu_eff_list_string, spectra_to_fit_list_string, l_spectra_to_fit_list_string,      &
                                           spec_bin_min_list_string, l_spec_bin_min_list_string,  spec_bin_max_list_string, l_spec_bin_max_list_string,late_crop_msk_string, l_late_crop_msk_string,&
                                           ecov_eval_cut_threshold,ecov_eval_large_number_replacement,beam_cov_scale, &
-                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template)
+                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template,einclude_logdet)
 
   USE CMB_SPT3G_TTEEE_2018_clik
   use CMB_SPT3G_2018_TTTEEE
@@ -726,7 +726,7 @@ SUBROUTINE spt3g_ttteee2018_parameter_init(eSPT3G_windows_lmin, eSPT3G_windows_l
   character(LEN=l_late_crop_msk_string),intent(in) :: late_crop_msk_string
   real(mcp),intent(in):: ecov_eval_cut_threshold,ecov_eval_large_number_replacement,beam_cov_scale,aberration_coefficient
   real(mcp),intent(in):: enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ
-  integer,intent(in) :: etSZCosmologyScalingEnabled,ekSZCosmologyScalingEnabled
+  integer,intent(in) :: etSZCosmologyScalingEnabled,ekSZCosmologyScalingEnabled,einclude_logdet
 
   real(mcp),intent(in) :: full_tSZ_template(1+eSPT3G_windows_lmax-eSPT3G_windows_lmin)
   real(mcp),intent(in) :: full_kSZ_template(1+eSPT3G_windows_lmax-eSPT3G_windows_lmin)
@@ -739,7 +739,7 @@ SUBROUTINE spt3g_ttteee2018_parameter_init(eSPT3G_windows_lmin, eSPT3G_windows_l
                                           nu_eff_matrix,nu_eff_list_string, spectra_to_fit_list_string,      &
                                           spec_bin_min_list_string,  spec_bin_max_list_string,late_crop_msk_string, &
                                           ecov_eval_cut_threshold,ecov_eval_large_number_replacement,beam_cov_scale, &
-                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template)
+                                          aberration_coefficient, enu_0_galdust, eT_galdust, enu_0_CIB, eT_CIB, enu_0_tSZ, etSZCosmologyScalingEnabled,full_tSZ_template,ekSZCosmologyScalingEnabled,full_kSZ_template,einclude_logdet)
   
   clik_lmax = eSPT3G_windows_lmax
 
