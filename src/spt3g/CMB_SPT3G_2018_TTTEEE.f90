@@ -717,6 +717,8 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
   integer num_cropped,n,info
   character(len=20)::chumber
 
+  real(mcp)::SPT_LogDet
+
   !!!open(122,file="cl_retest.txt")
   !!!write(122,*) Theory_Cl
   !!!write(122,*) DataParams
@@ -859,11 +861,16 @@ function SPT3G_2018_TTTEEE_LogLike_external(this, Theory_Cl,CMBParams,DataParams
       return
     endif
     SPT_LogLike = 0
+
+    !Log Det term:
+    SPT_LogDet = 0
+    do i=1, n
+        SPT_LogDet = SPT_LogDet  + log(cov_for_logl_final(i,i))
+    end do
     if (this%include_logdet.NE.0) then
-      !Log Det term:
-      do i=1, n
-          SPT_LogLike = SPT_LogLike  + log(cov_for_logl_final(i,i))
-      end do
+      SPT_LogLike = SPT_LogDet
+    else
+      print *,"LogDet is not included. LogDet = ",SPT_LogDet
     endif
     tmp = Delta_data_model_final
     call DPOTRS('L', N, 1, cov_for_logl_final, n, tmp, n, INFO )
