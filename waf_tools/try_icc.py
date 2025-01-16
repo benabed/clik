@@ -85,7 +85,7 @@ def do_clang(ctx):
   ctx.end_msg(v90)
   ctx.check_cc(
     errmsg="failed",msg="Compile a test code with clang",
-    mandatory=1,fragment = "#include <stdio.h>\nmain() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
+    mandatory=1,fragment = "#include <stdio.h>\nint main() {fprintf(stderr,\"hello world\");}\n",compile_filename='test.c',features='c cprogram')
   ctx.env["CCFLAGS_cc_omp"]=[]
   # try if omp is installed somewhere !
   try:
