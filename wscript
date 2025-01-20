@@ -773,8 +773,8 @@ def configure_numpy(ctx):
   import autoinstall_lib as atl
   url,tar = atl.get_lib_url(ctx,"numpy",["http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz"])
   atl.configure_python_module(ctx,"numpy",url,tar,"numpy")
-  import imp
-  numpy = imp.load_module("numpy",*imp.find_module("numpy"))
+  import importlib
+  numpy = importlib.import_module("numpy")
   ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
 
 def configure_pyfits(ctx):
