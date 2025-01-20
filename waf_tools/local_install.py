@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 def options(ctx):
   import os
-  grp = ctx.parser.get_option_group("--prefix")
+  grp = ctx.add_option_group("--prefix")
   ctx.parser.remove_option("--prefix")
   default_prefix = os.getcwd()
   grp.add_option("--prefix",action="store",default=default_prefix,help="installation prefix [default: %r]"%default_prefix)

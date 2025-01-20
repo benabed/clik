@@ -11,9 +11,9 @@ import os
 
 def options(ctx):
   import optparse
-  grp = ctx.parser.get_option_group("--gfortran")
-  if grp==None:
-    grp=optparse.OptionGroup(ctx.parser,"compiler options")
+  grp = ctx.add_option_group("--gfortran")
+  #if grp==None:
+  #  grp=optparse.OptionGroup(ctx.parser,"compiler options")
   grp.add_option("--gcc",action="store_true",default=False,help="Do not test for icc and only use gcc")
   grp.add_option("--icc",action="store_true",default=False,help="Do not test for gcc and only use icc")
   grp.add_option("--clang",action="store_true",default=False,help="Do not test for gcc and only use clang")

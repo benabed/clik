@@ -4,7 +4,7 @@ from __future__ import print_function
 def options(ctx):
 
   import optparse
-  grp=optparse.OptionGroup(ctx.parser,"architecture options")
+  grp=ctx.add_option_group("architecture options")
   grp.add_option("--m32",action="store_true",default=False,help="compile & link in 32bits")
   grp.add_option("--m64",action="store_true",default=False,help="compile & link in 64bits [default]")
   ctx.add_option_group(grp)  

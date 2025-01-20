@@ -91,14 +91,14 @@ def options(ctx):
   ctx.add_option('--forceinstall_all_deps',action='store_true',default=False,help='Install all dependencies',dest="install_all_deps")
   ctx.add_option('--install_all_deps',action='store_true',default=False,help='Install all dependencies (if they have not already been installed)',dest="upgrade_all_deps")
   
-  ctx.load("local_install","waf_tools")
-  ctx.load("try_icc","waf_tools")
-  ctx.load("try_ifort","waf_tools")
-  ctx.load("mbits","waf_tools")
-  ctx.load("any_lapack","waf_tools")
-  ctx.load("cfitsio","waf_tools")
+  ctx.load("local_install",tooldir="waf_tools")
+  ctx.load("try_icc",tooldir="waf_tools")
+  ctx.load("try_ifort",tooldir="waf_tools")
+  ctx.load("mbits",tooldir="waf_tools")
+  ctx.load("any_lapack",tooldir="waf_tools")
+  ctx.load("cfitsio",tooldir="waf_tools")
 
-  ctx.load("pmclib","waf_tools")
+  ctx.load("pmclib",tooldir="waf_tools")
   ctx.load("python")
 
   try:
@@ -110,17 +110,17 @@ def options(ctx):
     pass
   
   import optparse
-  grp=optparse.OptionGroup(ctx.parser,"Python options")
+  grp=ctx.add_option_group("Python options")
   grp.add_option('--nopyc',action='store_false',default=1,help='Do not install bytecode compiled .pyc files (configuration) [Default:install]',dest='pyc')
   grp.add_option('--nopyo',action='store_false',default=1,help='Do not install optimised compiled .pyo files (configuration) [Default:install]',dest='pyo')
 
   grp.add_option("--no_pytools",action="store_true",default=False,help="do not build the python tools")
-  ctx.add_option_group(grp)
+  #ctx.add_option_group(grp)
   options_numpy(ctx)
   options_pyfits(ctx)
   options_cython(ctx)
   
-  grp=optparse.OptionGroup(ctx.parser,"Plugins options")
+  grp=ctx.add_option_group("Plugins options")
   #grp.add_option("--no_bopix",action="store_true",default=True,help="do not build bopix")
   #grp.add_option("--bopix",action="store_true",default=False,help="build bopix")
   grp.add_option("--no_lowlike",action="store_true",default=False,help="do not build lowlike")
@@ -131,7 +131,7 @@ def options(ctx):
   #grp.add_option("--wmap_dh_install",action="store_true",default=False,help="download D&H modified wmap likelihood for me")
   grp.add_option("--no_lenslike",action="store_true",default=False,help="do not build the lensing likelihood")
   
-  ctx.add_option_group(grp)
+  #ctx.add_option_group(grp)
   
   ctx.add_option("--extra_libpath",action="store",default="",help="libpath for extra lib to be linked")
   ctx.add_option("--extra_lib",action="store",default="",help="extra lib to be linked")
@@ -186,24 +186,24 @@ def configure(ctx):
 
 
   try:
-    ctx.load("try_icc","waf_tools")
+    ctx.load("try_icc",tooldir="waf_tools")
   except Exception as e:
     Logs.pprint("RED","No suitable c compiler found (cause: '%s')"%e)
     ctx.fatal('The configuration failed') 
-  ctx.load("mbits","waf_tools")
-  ctx.load("osx_shlib","waf_tools")
+  ctx.load("mbits",tooldir="waf_tools")
+  ctx.load("osx_shlib",tooldir="waf_tools")
   #ctx.load("c_openmp","waf_tools")
   #ctx.check_openmp_cflags(mandatory=False)
 
   try:
-    ctx.load("try_ifort","waf_tools")
+    ctx.load("try_ifort",tooldir="waf_tools")
     ctx.env.has_f90 = True
   except Exception as e:
     Logs.pprint("RED","No suitable fortran compiler found (cause: '%s')"%e)
     ctx.fatal('The configuration failed') 
     ctx.env.has_f90 = False
     allgood = False
-  ctx.load("local_install","waf_tools")
+  ctx.load("local_install",tooldir="waf_tools")
   if ctx.env.GCC_VERSION and ctx.env.IFORT_VERSION:
     ctx.start_msg("check compatibility of ifort and gcc versions")
     gcc_v = [int(v) for v in ctx.env.GCC_VERSION.split(".")]
@@ -273,18 +273,18 @@ def configure(ctx):
   #configure pmc
   ctx.env.has_pmc = False
   ctx.env.silent_pmc = True
-  ctx.load("pmclib","waf_tools")
+  ctx.load("pmclib",tooldir="waf_tools")
 
   
   if (not ctx.env.has_pmc) or ("HAS_LAPACK" not in ctx.env.DEFINES_pmc):
     #configure lapack
     ctx.env.has_lapack = True
-    ctx.load("any_lapack","waf_tools")
+    ctx.load("any_lapack",tooldir="waf_tools")
 
   
   #configure cfitsio
   ctx.env.has_cfitsio = True
-  ctx.load("cfitsio","waf_tools")
+  ctx.load("cfitsio",tooldir="waf_tools")
 
   #lenslike
   ctx.env.has_lenslike = not (ctx.options.no_lenslike or not osp.exists("src/lenslike"))

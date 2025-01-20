@@ -20,7 +20,7 @@ lapack_funcs= " ".join(open("waf_tools/lapack_funcs.txt").read().strip().split()
 
 def options(ctx):
   atl.add_lib_option("lapack",ctx,install=True)
-  grp = ctx.parser.get_option_group("--lapack_install")
+  grp = ctx.add_option_group("--lapack_install")
   grp.add_option("--lapack_mkl",action="store",default="",help="if lapack is mkl, location of the mkl install")
   grp.add_option("--lapack_mkl_version",action="store",default="10.3",help="only needed if version of the mkl library is lower than 10.3 (could be 10.2, 10.1 or 10.0)")
   grp.add_option("--lapack_apple",action="store_true",default=sys.platform.lower()=="darwin",help="use apple version of blas/lapack")

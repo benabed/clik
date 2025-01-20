@@ -21,7 +21,7 @@ def to_header(**dct):
 
 def add_lib_option(libname,opt,default="/usr/local/",install=True):
   import optparse
-  grp=optparse.OptionGroup(opt.parser,libname+" options")
+  grp=opt.add_option_group(opt.parser,libname+" options")
   grp.add_option("--%s_islocal"%libname,action="store_true",default=False,help="%s has been installed previsouly using --%s_install or --%s_forceinstall"%(libname,libname,libname))
   grp.add_option("--%s_prefix"%libname,action="store",default="",help="%s include/lib path prefix"%libname)
   grp.add_option("--%s_include"%libname,action="store",default="",help="%s include path"%libname)
@@ -30,7 +30,7 @@ def add_lib_option(libname,opt,default="/usr/local/",install=True):
   if install:
     grp.add_option("--%s_installifneeded"%libname,action="store_true",default=False,help="if %s is not found, install it try to install"%libname,dest="%s_install"%libname)
     grp.add_option("--%s_install"%libname,action="store_true",default=False,help="install %s"%libname,dest="%s_forceinstall"%libname)
-  opt.add_option_group(grp)
+  #opt.add_option_group(grp)
     
 
 def noemptylist(li):
@@ -294,13 +294,13 @@ def check_python_module(ctx,name,extracmd=""):
 
 def add_python_option(ctx,name):
   import optparse
-  grp = ctx.parser.get_option_group("--nopyo")
-  if grp==None:
-    grp=optparse.OptionGroup(ctx.parser,"python module options")
+  grp = ctx.add_option_group("--nopyo")
+  #if grp==None:
+  #  grp=optparse.OptionGroup(ctx.parser,"python module options")
   
   grp.add_option("--%s_install"%name,action="store_true",default=False,help="install %s"%name,dest="%s_forceinstall"%name)
   grp.add_option("--%s_installifneeded"%name,action="store_true",default=False,help="if %s is not found, install it try to install"%name,dest="%s_install"%name)
-  ctx.add_option_group(grp)  
+  #ctx.add_option_group(grp)  
 
 def configure_python_module(ctx,name,url,packtgz,pack,cmdline=None,extracmd="",forceinstall=False,postinstall=None):
   import waflib.Logs
