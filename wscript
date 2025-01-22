@@ -395,9 +395,9 @@ def configure(ctx):
         f = open(osp.join(pth,"plugin.txt"))
         txt = f.read()
         decr = {"source":"","data":"","python":""}
-        decr.update(dict(re.findall("(.+?)\s+(?::|=)\s+(.+)",txt)))
+        decr.update(dict(re.findall("(.+?)\\s+(?::|=)\\s+(.+)",txt)))
         for k in decr:
-          decr[k] = [l.strip() for l in re.split("(?:\s|,|;)+",decr[k]) if l.strip()]
+          decr[k] = [l.strip() for l in re.split("(?:\\s|,|;)+",decr[k]) if l.strip()]
           for f in decr[k]:
             if not osp.exists(osp.join(pth,f)):
               raise Exception((osp.join(pth,f))+" does not exists")
@@ -773,8 +773,15 @@ def configure_numpy(ctx):
   import autoinstall_lib as atl
   url,tar = atl.get_lib_url(ctx,"numpy",["http://sourceforge.net/projects/numpy/files/NumPy/1.6.0/numpy-1.6.0.tar.gz/download","numpy-1.6.0.tar.gz"])
   atl.configure_python_module(ctx,"numpy",url,tar,"numpy")
-  import imp
-  numpy = imp.load_module("numpy",*imp.find_module("numpy"))
+  try :
+    import imp
+    numpy = imp.load_module("numpy",*imp.find_module("numpy"))
+  except ImportError:
+    import importlib
+    numpy_specs = importlib.util.find_spec("numpy")
+    numpy = importlib.util.module_from_spec(numpy_specs)
+    numpy_specs.loader.exec_module(numpy)
+  #numpy = load_module("numpy",*imp.find_module("numpy"))
   ctx.env.append_value("INCLUDES_PYEXT",numpy.get_include())
 
 def configure_pyfits(ctx):

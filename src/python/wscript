@@ -41,7 +41,7 @@ def build(ctx):
   
   uselib_clik = [ff for ff in ('hdf5 chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime' ).split() if ff]
     
-  ctx.load("execconfig","waf_tools")
+  ctx.load("execconfig",tooldir="waf_tools")
   if ctx.env.CYTHON:
     ctx(
       features = "c cshlib pyext",

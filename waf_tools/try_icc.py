@@ -41,8 +41,8 @@ def do_icc(ctx):
     #print "%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.f90"%(ctx.env.FC," ".join(ctx.env.FCFLAGS))
     llgo,llge = ctx.cmd_and_log("%s %s -dryrun -dynamiclib -shared-intel -no-cxxlib dummy.c"%(" ".join(ctx.env.CC)," ".join(ctx.env.CCFLAGS+ctx.env.CCFLAGS_cc_omp)), output=waflib.Context.BOTH)
     #print "RET",llgo,llge
-    L = set([ll.strip() for ll in re.findall("-L(.+)\s*\\\\", llge.split("ld ")[1]) if ("icc" in ll.lower()) or ("intel" in ll.lower())])
-    l = set([ll.strip() for ll in re.findall("-l(.+)\s*\\\\", llge.split("ld ")[1])])
+    L = set([ll.strip() for ll in re.findall("-L(.+)\\s*\\\\", llge.split("ld ")[1]) if ("icc" in ll.lower()) or ("intel" in ll.lower())])
+    l = set([ll.strip() for ll in re.findall("-l(.+)\\s*\\\\", llge.split("ld ")[1])])
     rL = set()
     rl = set()
     for Li in L:

@@ -247,7 +247,7 @@ def build(bld):
 
 
   # clik_config tools    
-  bld.load("execconfig","waf_tools")  
+  bld.load("execconfig",tooldir="waf_tools")  
   bld(features="build_pkgconfig", use='clik chealpix lapack pmc dl cfitsio extra cc_omp fc_runtime', flavor='c',target='clik-config')
   
   if bld.env.has_f90:  

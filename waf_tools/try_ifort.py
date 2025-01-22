@@ -29,11 +29,11 @@ def retrieve_intel_linkline(ctx,flavour,wafname,execnm,flags,rl0=[],optionname="
       # now try to parse the hell out of it !
       # first, look for the location of the ld command  
       # assume it is spelled ld
-      parts = re.split("^\s*ld\s*\\\\",llge,flags=re.M)
+      parts = re.split("^\\s*ld\\s*\\\\",llge,flags=re.M)
       if len(parts)!=2:
         # it is not called ld, or there is a specific path!!!
         # is it set by a -Qlocation command ?
-        gotcha = re.findall("-Qlocation,ld,.+?\s",llge)
+        gotcha = re.findall("-Qlocation,ld,.+?\\s",llge)
         if gotcha:
           # I am picking the last one...
           nloc = gotcha[-1].strip()
@@ -46,14 +46,14 @@ def retrieve_intel_linkline(ctx,flavour,wafname,execnm,flags,rl0=[],optionname="
           ldname = re.escape(ldpath+"/ld")
           
           stillnot=True
-          parts = re.split("^\s*%s\s*\\\\"%ldname,llge,flags=re.M)
+          parts = re.split("^\\s*%s\\s*\\\\"%ldname,llge,flags=re.M)
           if len(parts)==2:
             stillnot=False
         
         if stillnot:
           # ah ! That did not work ! I am getting a bit desperate here...
           # at this point I will grab anything that starts from the begining of the line with something different from a space and ends with  /ld some spaces and a trailing \ in it you know !
-          parts = re.split("^\S.+?/ld\s+\\\\",llge,flags=re.M)
+          parts = re.split("^\\S.+?/ld\\s+\\\\",llge,flags=re.M)
           if len(parts)==2:
             # ok, I call it quit...
             stillnot = False
@@ -64,7 +64,7 @@ def retrieve_intel_linkline(ctx,flavour,wafname,execnm,flags,rl0=[],optionname="
           i = len(llgeli)
           while True:
             i=i-1
-            if not(re.match("^\s*rm\s+",llgeli[i]) or llgeli[i].strip()==''):
+            if not(re.match("^\\s*rm\\s+",llgeli[i]) or llgeli[i].strip()==''):
               break
           last = i+1
           i=0
@@ -83,10 +83,10 @@ def retrieve_intel_linkline(ctx,flavour,wafname,execnm,flags,rl0=[],optionname="
       # now parts[1] contains the link command ! Yeah !
       
       # grab the paths (assuming that they contains either intel or ifort in them)
-      L = set([ll.strip() for ll in re.findall("^\s+-L(.+)\s*\\\\", parts[1],flags=re.M)  if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
+      L = set([ll.strip() for ll in re.findall("^\\s+-L(.+)\\s*\\\\", parts[1],flags=re.M)  if ("ifort" in ll.lower()) or ("intel" in ll.lower())])
 
       # grab the libs
-      l = set([ll.strip() for ll in re.findall("^\s+-l(.+)\s*\\\\", parts[1],flags=re.M)])
+      l = set([ll.strip() for ll in re.findall("^\\s+-l(.+)\\s*\\\\", parts[1],flags=re.M)])
       
       # reduce to what's really relevant
       rL = set()
@@ -318,7 +318,7 @@ def NOTUSEDANYMORE_OLD_ifort_conf_(ctx):
       sp = "DYLD_LIBRARY_PATH"
     else:
       sp = "LD_LIBRARY_PATH"
-    res = re.findall("\s"+sp+"\s*=\s*\"(.+)\"",txt)[0]
+    res = re.findall("\\s"+sp+"\\s*=\\s*\"(.+)\"",txt)[0]
     for pth in res.split(":"):
       ctx.env.append_value("LIBPATH_fc_runtime",pth)
       ctx.env.append_value("RPATH_fc_runtime",pth)

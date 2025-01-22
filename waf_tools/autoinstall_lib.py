@@ -276,14 +276,19 @@ def installsmthg_post(ctx,where,what,extra_config=""):
 
 def check_python_module(ctx,name,extracmd=""):
   import sys
-  import imp
+  try:
+    import imp
+    find_module = imp.find_module
+  except ImportError:
+    import importlib
+    find_module = importlib.util.find_spec
   import site
   site.addsitedir(ctx.env.PYTHONDIR)
   if ctx.env.PYTHONDIR not in sys.path:
     sys.path=[ctx.env.PYTHONDIR]+sys.path
   try:
     ctx.start_msg("Checking python module '%s'"%name)
-    imp.find_module(name)
+    assert find_module(name)
     if extracmd:
       #print extracmd
       exec(extracmd)
